@@ -54,18 +54,17 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-sys.path.insert(0, "..")
+from msbook.paths import NOTEBOOKS_DIR, chapter_images, chapter_artifacts
+sys.path.insert(0, str(NOTEBOOKS_DIR))
 from _retail_data import (
     load_dunnhumby_transactions,
     load_dunnhumby_products,
     load_dunnhumby_demographics,
     load_dunnhumby_campaigns,
 )
-from msbook.paths import chapter_images, chapter_artifacts
 
 # ── Configuration ────────────────────────────────────────────────────────────
 CONFIG = {
-    "data_dir": "../Retail_open_data_set/Dunnhumby_kaggle/archive/",
     "cal_end_week": 52,       # last week of calibration period
     "cal_mid_week": 26,       # H1/H2 boundary for trend features
     "holdout_end_week": 102,  # last week in dataset
@@ -116,11 +115,10 @@ def step(title):
 # %%
 step("Load raw data")
 
-d = CONFIG["data_dir"]
-txn = load_dunnhumby_transactions(data_dir=d)
-product = load_dunnhumby_products(data_dir=d)
-demographics = load_dunnhumby_demographics(data_dir=d)
-campaigns = load_dunnhumby_campaigns(data_dir=d)
+txn = load_dunnhumby_transactions()
+product = load_dunnhumby_products()
+demographics = load_dunnhumby_demographics()
+campaigns = load_dunnhumby_campaigns()
 
 print(f"Transactions:  {len(txn):>10,} rows  |  {txn['household_key'].nunique():,} households")
 print(f"Products:      {len(product):>10,} rows")
