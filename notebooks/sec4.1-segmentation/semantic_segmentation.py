@@ -15,8 +15,6 @@
 
 # %% [markdown]
 # [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/takechanman1228/marketing-science-in-python/blob/main/notebooks/sec4.1-segmentation/semantic_segmentation.ipynb)
-#
-# *Source of truth is the paired `.py`; this `.ipynb` is generated — see CONTRIBUTING.md.*
 
 # %% [markdown]
 # # Embedding-Based Customer Segmentation with BERTopic
