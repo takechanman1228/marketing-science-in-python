@@ -654,7 +654,7 @@ window.Quarto = {
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<div id="f1b8228e" class="cell" data-execution_count="1">
+<div id="3f3b19f6" class="cell" data-execution_count="1">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
@@ -716,10 +716,10 @@ window.Quarto = {
 </div>
 </div>
 <p><a href="#fig-revenue-basket-pareto" class="quarto-xref">Figure&nbsp;<span>1</span></a> shows the dual Pareto curves from real grocery data: ranking the ~39,000 Dunnhumby GROCERY SKUs (after filtering out 38 SKUs with no sales) by <strong>revenue</strong> and by <strong>basket reach</strong> separately. Both curves are heavily concentrated — roughly 17–20% of SKUs account for 80% of either metric — and the low-revenue pool (<code>abc_revenue == "C"</code>) holds 63% of SKUs but only 5% of revenue. A large share of those low-revenue candidates are also C-rank on basket reach, meaning few shoppers ever touch them — that secondary signal is what makes the candidate pool worth testing rather than blindly defending on volume grounds.</p>
-<div id="fig-revenue-basket-pareto" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Two Pareto curves for ~39,000 grocery SKUs. Left: cumulative revenue share. Right: cumulative basket-reach share (number of distinct baskets containing the SKU). Dashed lines at 80% and 95% mark the A/B/C boundaries. Both curves are steep — fewer than 20% of SKUs account for 80% of either metric. Data: Dunnhumby Complete Journey, GROCERY department.">
+<div id="fig-revenue-basket-pareto" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Two Pareto curves for ~39,000 SKUs—cumulative revenue share and basket reach; fewer than 20% of SKUs drive 80% of either.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-revenue-basket-pareto-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part5/sec5.2/revenue_basket_pareto_curves.png" class="fig-lg img-fluid figure-img" alt="Two Pareto curves for ~39,000 grocery SKUs. Left: cumulative revenue share. Right: cumulative basket-reach share (number of distinct baskets containing the SKU). Dashed lines at 80% and 95% mark the A/B/C boundaries. Both curves are steep — fewer than 20% of SKUs account for 80% of either metric. Data: Dunnhumby Complete Journey, GROCERY department.">
+<img src="../images/part5/sec5.2/revenue_basket_pareto_curves.png" class="fig-lg img-fluid figure-img" alt="Two Pareto curves for ~39,000 SKUs—cumulative revenue share and basket reach; fewer than 20% of SKUs drive 80% of either.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-revenue-basket-pareto-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Figure&nbsp;1: Cumulative revenue and basket-reach share across the Dunnhumby GROCERY SKUs.
@@ -747,7 +747,7 @@ Figure&nbsp;1: Cumulative revenue and basket-reach share across the Dunnhumby GR
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<div id="80d6c3c8" class="cell" data-execution_count="2">
+<div id="43072e62" class="cell" data-execution_count="2">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> collections <span class="im">import</span> defaultdict</span>
@@ -908,20 +908,20 @@ Figure&nbsp;1: Cumulative revenue and basket-reach share across the Dunnhumby GR
 <p>The decision logic: if multiple plausible substitutes exist among A/B-rank peers (by revenue or by basket reach) and no strong halo is detected, the candidate is a <strong>lower-risk test candidate</strong>—but still a <em>candidate to test</em>, not a confirmed removal. If no substitutes exist, run a matched-store test before making any move. For products with no substitute and no way to test, keep them for now, but look for ways to reduce their cost—smaller pack sizes, better supplier terms, or lower safety stock. Not every low-revenue SKU belongs in the candidate pool, either. Some SKUs earn their shelf space by driving store trips, anchoring price image, or establishing category credibility—roles that ABC and Lift alone cannot capture.</p>
 <p>One important caveat before finalising the removal list: watch for halo effects. Some low-revenue products help drive sales of other, higher-revenue items. For example, a C-revenue snack might often be bought with a premium beverage in a different category. You can spot these by looking for Lift above 1 across sub-categories—the opposite of the substitution check—anchored on A/B-revenue <em>or</em> A/B-basket-reach partners. In practice, treat this as a guardrail, not a hard rule. In dense grocery data, almost every C-rank product will co-occur with some A or B item. Set a high bar—as a rule of thumb, look for very high Lift or a large number of cross-category partners—and only flag a candidate as “test carefully, halo risk” if it clearly stands out. The exact thresholds are context-dependent; the companion notebook uses Lift &gt; 15 or 30+ cross-category partners as starting points, but these should be calibrated to your data density.</p>
 <p><a href="#fig-decision-matrix" class="quarto-xref">Figure&nbsp;<span>2</span></a> is the <strong>primary decision view</strong>: a 2×2 of low-revenue candidates indexed by whether a credible substitute exists and whether a strong halo is detected. The four cells map directly to the four actions defined above. <a href="#fig-decision-scatter" class="quarto-xref">Figure&nbsp;<span>3</span></a> is a complementary scatter view of the same candidates plotted by revenue and basket reach — useful to inspect the within-cell distribution but <strong>not</strong> the decision criterion.</p>
-<div id="fig-decision-matrix" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="2x2 decision matrix for low-revenue candidates. Rows: has credible substitute (top) vs no credible substitute (bottom). Columns: halo weak/none (left) vs halo strong (right). Cells contain action labels and counts: Lower-risk test candidate (top-left), Test carefully halo risk (top-right), Test first no clear substitute (bottom-left), Keep or deprioritize removal (bottom-right). Data: Dunnhumby GROCERY department, top-200 product analysis set.">
+<div id="fig-decision-matrix" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="2×2 decision matrix for low-revenue candidates by substitute availability and halo strength, with an action label per cell.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-decision-matrix-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part5/sec5.2/decision_matrix_2x2.png" class="fig-lg img-fluid figure-img" alt="2x2 decision matrix for low-revenue candidates. Rows: has credible substitute (top) vs no credible substitute (bottom). Columns: halo weak/none (left) vs halo strong (right). Cells contain action labels and counts: Lower-risk test candidate (top-left), Test carefully halo risk (top-right), Test first no clear substitute (bottom-left), Keep or deprioritize removal (bottom-right). Data: Dunnhumby GROCERY department, top-200 product analysis set.">
+<img src="../images/part5/sec5.2/decision_matrix_2x2.png" class="fig-lg img-fluid figure-img" alt="2×2 decision matrix for low-revenue candidates by substitute availability and halo strength, with an action label per cell.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-decision-matrix-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Figure&nbsp;2: Decision matrix for low-revenue candidates: substitution signal × halo signal.
 </figcaption>
 </figure>
 </div>
-<div id="fig-decision-scatter" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Low-revenue candidates plotted by revenue (x) vs basket reach (y), coloured by recommended action. Green = Lower-risk test candidate. Orange = Test carefully (halo risk). Blue = Test first (no clear substitute). Red = Keep or deprioritise removal. Marker size scales with revenue. Caption notes that the 2x2 above is the decision matrix; this scatter is supplementary. Data: Dunnhumby GROCERY department.">
+<div id="fig-decision-scatter" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Low-revenue candidates plotted by revenue vs. basket reach, colored by recommended action; marker size scales with revenue.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-decision-scatter-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part5/sec5.2/low_revenue_candidates_scatter.png" class="fig-lg img-fluid figure-img" alt="Low-revenue candidates plotted by revenue (x) vs basket reach (y), coloured by recommended action. Green = Lower-risk test candidate. Orange = Test carefully (halo risk). Blue = Test first (no clear substitute). Red = Keep or deprioritise removal. Marker size scales with revenue. Caption notes that the 2x2 above is the decision matrix; this scatter is supplementary. Data: Dunnhumby GROCERY department.">
+<img src="../images/part5/sec5.2/low_revenue_candidates_scatter.png" class="fig-lg img-fluid figure-img" alt="Low-revenue candidates plotted by revenue vs. basket reach, colored by recommended action; marker size scales with revenue.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-decision-scatter-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Figure&nbsp;3: Low-revenue candidates by revenue and basket reach (supplementary view).
@@ -945,7 +945,7 @@ Figure&nbsp;3: Low-revenue candidates by revenue and basket reach (supplementary
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<div id="ad2d25a3" class="cell" data-execution_count="3">
+<div id="a70a9235" class="cell" data-execution_count="3">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> statsmodels.formula.api <span class="im">as</span> smf</span>
@@ -1004,10 +1004,10 @@ Figure&nbsp;3: Low-revenue candidates by revenue and basket reach (supplementary
 </div>
 </div>
 <p><a href="#fig-parallel-trends" class="quarto-xref">Figure&nbsp;<span>4</span></a> shows the output from a simulated matched-store removal test on Dunnhumby grocery data, focused on the EGGS - LARGE sub-category. Nine treatment stores had a low-revenue SKU removed (with 60% of demand redirected to substitutes); nine control stores, matched on pre-period sub-category revenue, remained unchanged. The treatment and control lines run roughly parallel in the pre-period, supporting the DiD assumption. In the post-period, treatment sub-category revenue sits modestly below control, producing a borderline-insignificant DiD estimate (-$0.42 per store-week, p ≈ 0.06). That kind of result is <strong>inconclusive</strong> — it is <em>not</em> a green light to scale. The decision rule in the implementation above is honest about this: an inconclusive p-value with a negative point estimate means “extend the test, expand the sample, or test a different candidate”, not “ship the removal”.</p>
-<div id="fig-parallel-trends" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Matched-store removal test — parallel trends for treatment (red, solid) vs. control (blue, dashed) stores in the EGGS - LARGE sub-category. Left: sub-category revenue per store-week. Center: revenue per basket. Right: sub-category baskets per store-week. The black dashed line marks the intervention week; each panel is annotated with its DiD estimate and p-value. Data: Dunnhumby Complete Journey, GROCERY department, EGGS - LARGE sub-category.">
+<div id="fig-parallel-trends" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Matched-store removal test: parallel pre-trends for treatment vs. control stores, each panel annotated with its DiD estimate.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-parallel-trends-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part5/sec5.2/parallel_trends.png" class="fig-lg img-fluid figure-img" alt="Matched-store removal test — parallel trends for treatment (red, solid) vs. control (blue, dashed) stores in the EGGS - LARGE sub-category. Left: sub-category revenue per store-week. Center: revenue per basket. Right: sub-category baskets per store-week. The black dashed line marks the intervention week; each panel is annotated with its DiD estimate and p-value. Data: Dunnhumby Complete Journey, GROCERY department, EGGS - LARGE sub-category.">
+<img src="../images/part5/sec5.2/parallel_trends.png" class="fig-lg img-fluid figure-img" alt="Matched-store removal test: parallel pre-trends for treatment vs. control stores, each panel annotated with its DiD estimate.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-parallel-trends-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Figure&nbsp;4: Matched-store removal test: parallel trends for treatment vs.&nbsp;control stores (EGGS - LARGE).

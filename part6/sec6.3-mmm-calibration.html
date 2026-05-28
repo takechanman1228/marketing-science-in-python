@@ -606,10 +606,10 @@ window.Quarto = {
 <p>MMM also has a structural identification problem. Media channels are usually correlated — brands raise spend across all of them during the same peak periods. When Meta, Google, and TikTok spend all spike in Q4, the model cannot cleanly separate their individual effects. The result is wide credible intervals and unstable ROI estimates.</p>
 <p>Controlled experiments close the gap. A <strong>geo-lift test</strong> measures the causal incremental effect of a specific channel by varying spend across test and control geos. Feeding that estimate back into the MMM as an informative prior tightens the posterior and anchors one channel’s ROI in experimental evidence.</p>
 <p>This section walks through the loop: design the experiment, estimate the lift, convert it to a prior, plug it back into the model, and run calibration as a continuous program.</p>
-<div id="fig-calibration-workflow" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Calibration workflow: run an experiment, estimate lift, convert to a prior, and feed it back into the MMM. The calibrated model produces tighter posteriors and more trustworthy budget recommendations.">
+<div id="fig-calibration-workflow" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Calibration workflow: run an experiment, estimate lift, convert it to a prior, and feed it back into the MMM.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-calibration-workflow-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part6/sec6.3/calibration_workflow.png" class="fig-lg img-fluid figure-img" alt="Calibration workflow: run an experiment, estimate lift, convert to a prior, and feed it back into the MMM. The calibrated model produces tighter posteriors and more trustworthy budget recommendations.">
+<img src="../images/part6/sec6.3/calibration_workflow.png" class="fig-lg img-fluid figure-img" alt="Calibration workflow: run an experiment, estimate lift, convert it to a prior, and feed it back into the MMM.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-calibration-workflow-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Figure&nbsp;1: MMM calibration workflow: experiment → lift → prior → posterior.
@@ -662,10 +662,10 @@ Important
 <h2 class="anchored" data-anchor-id="marginal-vs.-average-roas">Marginal vs.&nbsp;Average ROAS</h2>
 <p>This point deserves emphasis because it is the most common source of confusion in calibration.</p>
 <p>The geo-lift experiment measures <strong>marginal ROAS</strong> — the return on the incremental dollar of spend above the baseline level. The MMM posterior for <code>roi_m</code> reflects <strong>average ROAS</strong> — total media-driven revenue divided by total spend over the modeling period. Because of the Hill saturation curve, these are different quantities.</p>
-<div id="fig-marginal-vs-average" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Marginal vs. average ROAS on a saturation curve. Marginal ROAS is the slope of the tangent line at the current spend level; average ROAS is the slope of the line from the origin to the curve.">
+<div id="fig-marginal-vs-average" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Marginal vs. average ROAS on a saturation curve: marginal is the tangent slope, average is the slope from the origin.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-marginal-vs-average-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part6/sec6.3/marginal_vs_average_roas.png" class="fig-lg img-fluid figure-img" alt="Marginal vs. average ROAS on a saturation curve. Marginal ROAS is the slope of the tangent line at the current spend level; average ROAS is the slope of the line from the origin to the curve.">
+<img src="../images/part6/sec6.3/marginal_vs_average_roas.png" class="fig-lg img-fluid figure-img" alt="Marginal vs. average ROAS on a saturation curve: marginal is the tangent slope, average is the slope from the origin.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-marginal-vs-average-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Figure&nbsp;2: Marginal vs.&nbsp;average ROAS on a saturation curve.
@@ -731,10 +731,10 @@ Figure&nbsp;2: Marginal vs.&nbsp;average ROAS on a saturation curve.
 <span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>The calibrated channel should show a tighter credible interval and a posterior mean closer to the experimental estimate. Other channels may also benefit from reduced uncertainty, since tightening one channel helps the model attribute remaining variation more precisely.</p>
 <p>The companion notebook applies this same recipe to <strong>Google Search</strong> — the channel whose uncalibrated posterior was the demo’s least well-identified — and produces the before/after comparison in <a href="#fig-prior-posterior-shift" class="quarto-xref">Figure&nbsp;<span>3</span></a>. The TikTok worked example above and the Google Search illustration below run through the same <code>to_lognormal_params</code> → <code>roi_m</code> prior → refit pipeline; only the input DID estimate differs.</p>
-<div id="fig-prior-posterior-shift" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Prior vs. posterior ROI distributions for Google Search before and after calibration. The calibrated posterior tightens dramatically around the experimental estimate, while the uncalibrated posterior was wide and biased toward the prior median.">
+<div id="fig-prior-posterior-shift" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Prior vs. posterior ROI for Google Search; calibration tightens the posterior around the experimental estimate.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-prior-posterior-shift-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part6/sec6.3/prior_posterior_shift.png" class="fig-lg img-fluid figure-img" alt="Prior vs. posterior ROI distributions for Google Search before and after calibration. The calibrated posterior tightens dramatically around the experimental estimate, while the uncalibrated posterior was wide and biased toward the prior median.">
+<img src="../images/part6/sec6.3/prior_posterior_shift.png" class="fig-lg img-fluid figure-img" alt="Prior vs. posterior ROI for Google Search; calibration tightens the posterior around the experimental estimate.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-prior-posterior-shift-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Figure&nbsp;3: Prior vs.&nbsp;posterior ROI distributions before and after calibration on Google Search.
