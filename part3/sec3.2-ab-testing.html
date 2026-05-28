@@ -100,9 +100,9 @@ div.csl-indent {
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-6db118872d73c30eb042c90a43881b2b.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../site_libs/bootstrap/bootstrap-dark-c2049c7ebcbffb157baee8f8c0e3e09d.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../site_libs/bootstrap/bootstrap-6db118872d73c30eb042c90a43881b2b.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-a488b2dd3ad89cad7223384457a5ed4f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-b6700dac069853c8655a6c346ad35f5e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-a488b2dd3ad89cad7223384457a5ed4f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
@@ -645,7 +645,11 @@ Figure&nbsp;1: Statistical power: H0 and H1 distributions with alpha, beta, and 
 <li>Significance level (<span class="math inline">\(\alpha\)</span>, typically 0.05): the false positive rate you’re willing to tolerate.</li>
 <li>Power (<span class="math inline">\(1 - \beta\)</span>, typically 0.80): the probability of detecting the effect when it truly exists.</li>
 </ul>
-<p>The intuition is simple: finding small effects in noisy data takes big samples. If your baseline conversion rate is 2% and you want to detect a 0.5 point lift, you’ll need about 15,000 users per group. If you want to detect an even smaller lift, you’ll need about four times as many.</p>
+<p>The intuition is simple: finding small effects in noisy data takes big samples. For a two-sample test of proportions with equal group sizes, the required sample size per group is approximately:</p>
+<p><span class="math display">\[n \approx \frac{(z_{1-\alpha/2} + z_{1-\beta})^2 \cdot 2\bar{p}(1-\bar{p})}{\delta^2}\]</span></p>
+<p>where <span class="math inline">\(\bar{p} = (p_0 + p_1)/2\)</span> is the average rate, <span class="math inline">\(\delta = p_1 - p_0\)</span> is the MDE, and the <span class="math inline">\(z\)</span>-values are critical values from the standard normal distribution (≈1.96 for <span class="math inline">\(\alpha = 0.05\)</span> two-sided and ≈0.84 for power = 0.80).</p>
+<p>Two things follow from this. First, <span class="math inline">\(n\)</span> scales with <span class="math inline">\(1/\delta^2\)</span>: halving the MDE roughly quadruples the required sample. Second, <span class="math inline">\(n\)</span> grows with baseline variance through <span class="math inline">\(\bar{p}(1-\bar{p})\)</span>, so low-conversion metrics are doubly punishing—both the rate you’re trying to move and the lift you’re trying to detect are tiny.</p>
+<p>Plugging in a 2% baseline and a 0.5-point MDE gives about 14,000 users per group. Tightening the MDE to 0.25 points pushes it to roughly 52,000 per group.</p>
 <div id="fig-sample-size-sensitivity" class="fig-md quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-sample-size-sensitivity-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">

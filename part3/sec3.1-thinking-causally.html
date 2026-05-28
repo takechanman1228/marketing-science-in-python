@@ -65,9 +65,9 @@ div.csl-indent {
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-6db118872d73c30eb042c90a43881b2b.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../site_libs/bootstrap/bootstrap-dark-c2049c7ebcbffb157baee8f8c0e3e09d.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../site_libs/bootstrap/bootstrap-6db118872d73c30eb042c90a43881b2b.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-a488b2dd3ad89cad7223384457a5ed4f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-b6700dac069853c8655a6c346ad35f5e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-a488b2dd3ad89cad7223384457a5ed4f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
@@ -530,9 +530,12 @@ window.Quarto = {
    
   <ul>
   <li><a href="#selection-bias" id="toc-selection-bias" class="nav-link active" data-scroll-target="#selection-bias">Selection Bias</a></li>
+  <li><a href="#what-is-causal-inference" id="toc-what-is-causal-inference" class="nav-link" data-scroll-target="#what-is-causal-inference">What Is Causal Inference?</a></li>
   <li><a href="#the-counterfactual" id="toc-the-counterfactual" class="nav-link" data-scroll-target="#the-counterfactual">The Counterfactual</a></li>
-  <li><a href="#simpsons-paradox" id="toc-simpsons-paradox" class="nav-link" data-scroll-target="#simpsons-paradox">Simpson’s Paradox</a></li>
   <li><a href="#why-not-just-run-an-ab-test" id="toc-why-not-just-run-an-ab-test" class="nav-link" data-scroll-target="#why-not-just-run-an-ab-test">Why Not Just Run an A/B Test?</a></li>
+  <li><a href="#limitations-of-ab-testing" id="toc-limitations-of-ab-testing" class="nav-link" data-scroll-target="#limitations-of-ab-testing">Limitations of A/B Testing</a></li>
+  <li><a href="#simpsons-paradox-challenges-of-observed-data" id="toc-simpsons-paradox-challenges-of-observed-data" class="nav-link" data-scroll-target="#simpsons-paradox-challenges-of-observed-data">Simpson’s Paradox — Challenges of Observed Data</a></li>
+  <li><a href="#confounding-variables" id="toc-confounding-variables" class="nav-link" data-scroll-target="#confounding-variables">Confounding Variables</a></li>
   <li><a href="#road-map-for-part-3" id="toc-road-map-for-part-3" class="nav-link" data-scroll-target="#road-map-for-part-3">Road Map for Part 3</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/part3/sec3.1-thinking-causally.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/takechanman1228/marketing-science-in-python/edit/main/part3/sec3.1-thinking-causally.qmd" class="toc-action"><i class="bi empty"></i>Edit this page</a></li><li><a href="https://github.com/takechanman1228/marketing-science-in-python/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
@@ -560,7 +563,7 @@ window.Quarto = {
 </header>
 
 
-<p>Imagine the following scenario. You’re assisting a colleague from the marketing team, and they say:</p>
+<p>Let’s consider a typical situation that many data scientists face in business. Imagine you’re assisting a colleague from the marketing team, and they say:</p>
 <p>“The marketing team sent coupons to some users, and their purchase rate was twice as high as those who didn’t receive them. So, the coupons must have doubled the purchase rate!”</p>
 <div id="fig-coupon-results" class="fig-sm quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
@@ -572,25 +575,12 @@ Figure&nbsp;1: Coupon campaign results: 20% purchase rate with coupon vs.&nbsp;1
 </figcaption>
 </figure>
 </div>
-<p>Would you agree with this conclusion? At first, it sounds reasonable. But what if you found out the marketing team sent coupons only to customers who had just browsed the product page, added items to their cart, or showed other signs they were ready to buy?</p>
-<p>That should raise a red flag. These customers were already more likely to buy, with or without the coupon.</p>
+<p>Would you agree with this conclusion? At first glance, you might be inclined to agree. But wait—what if you knew this additional detail?</p>
+<p>“We sent the coupons only to customers who had purchased within the last 12 months.”</p>
+<p>Now this raises a red flag. So what’s the potential issue here?</p>
 <section id="selection-bias" class="level2">
 <h2 class="anchored" data-anchor-id="selection-bias">Selection Bias</h2>
-<p>The real question is: what did the coupons actually change? If we send coupons based on specific criteria, we can’t fairly compare purchase rates. The people who got coupons might have bought anyway, since they were already more engaged.</p>
-<div class="callout callout-style-default callout-tip callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-Tip
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Selection Bias</p>
-<p>The distortion of a causal effect due to non-random assignment of participants, which leads to comparing groups that are not truly comparable.</p>
-</div>
-</div>
+<p>The key question is: what is the <em>true</em> impact of the coupons? If we distribute coupons based on intentional criteria, we can’t make a fair comparison between purchase rates. The customers who received the coupons might have made a purchase regardless—they were already more engaged, and may have been influenced by other factors like newsletters or social media. These factors introduce what’s known as <strong>selection bias</strong>: the distortion that arises when the treated and untreated groups aren’t comparable to begin with.</p>
 <div id="fig-selection-bias" class="fig-sm quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-selection-bias-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -604,31 +594,33 @@ Figure&nbsp;2: Most of the apparent effect is selection bias, not the true effec
 <p>The 10-point gap between groups looks impressive, but most of it was already there before the coupons went out. The real lift from the coupon—the part that wouldn’t have happened otherwise—might be just a few points. The rest is selection bias: the coupon went to people who were likely to buy anyway.</p>
 <p>You see this pattern all the time in marketing. Retargeting campaigns show high conversion rates, but that’s because they reach people who already visited your site. Email campaigns look great on revenue per recipient, but those emails go to your most engaged subscribers. In both cases, the treatment and the outcome are linked because of customer intent, not because the treatment caused the outcome.</p>
 </section>
+<section id="what-is-causal-inference" class="level2">
+<h2 class="anchored" data-anchor-id="what-is-causal-inference">What Is Causal Inference?</h2>
+<p>So how do we move past these traps? This is where causal inference comes in.</p>
+<p>Causal inference is about figuring out whether there is a cause-and-effect relationship between a specific action (the “treatment”) and its result (the “outcome”). Traditionally, it has been a cornerstone in fields like healthcare. For example, one common use case is assessing whether a new medication effectively treats a disease. In that context, administering the medication is the “treatment,” and the patient’s recovery is the “outcome.”</p>
+<p>But causal inference isn’t just for healthcare. In e-commerce and marketing, “treatments” include actions like sending coupons, running advertisements, or sending direct mail campaigns, and “outcomes” are things like purchases, sign-ups, or revenue.</p>
+<div id="fig-treatment-outcome" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Treatment-and-outcome arrow diagram. Top row: a sick face with pills (treatment) arrow with a question mark leading to a smiling face with a green check (outcome) — the healthcare case. Bottom row: a shopper pushing a cart holding a coupon (treatment) arrow with a question mark leading to the same shopper with a cart full of purchased items (outcome) — the marketing case.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-treatment-outcome-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part3/sec3.1/treatment_outcome.png" class="fig-md img-fluid figure-img" alt="Treatment-and-outcome arrow diagram. Top row: a sick face with pills (treatment) arrow with a question mark leading to a smiling face with a green check (outcome) — the healthcare case. Bottom row: a shopper pushing a cart holding a coupon (treatment) arrow with a question mark leading to the same shopper with a cart full of purchased items (outcome) — the marketing case.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-treatment-outcome-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3: Treatment and outcome: the same framework applies across domains, from medication and recovery in healthcare to coupons and purchases in marketing.
+</figcaption>
+</figure>
+</div>
+</section>
 <section id="the-counterfactual" class="level2">
 <h2 class="anchored" data-anchor-id="the-counterfactual">The Counterfactual</h2>
-<p>This leads to the key question: what would have happened if we hadn’t done anything?</p>
-<p>The main challenge in causal inference is that we only get to see one outcome for each person. If we had a time machine, we could give a customer a coupon, rewind, and see what happens if we didn’t. But in reality, we only see one version of the story for each customer.</p>
-<div class="callout callout-style-default callout-tip callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-Tip
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Counterfactual</p>
-<p>The hypothetical outcome that we cannot observe for the same individual. The treatment effect is the difference between what would happen under treatment and what would happen under control.</p>
-</div>
-</div>
+<p>The main challenge in causal inference is that we can only observe one outcome for each individual. If we had a time machine, we could give a customer a coupon, then rewind time and see what happens if we didn’t give them the coupon. Unfortunately, in the real world, we can’t do this—we only see one version of the story for each customer.</p>
+<p>This is where causal inference steps in: it lets us estimate the outcome that didn’t happen, known as the <strong>counterfactual</strong>.</p>
 <div id="fig-counterfactual" class="fig-sm quarto-float quarto-figure quarto-figure-center anchored" alt="The fundamental problem of causal inference: we observe the outcome with the coupon, but we cannot observe what the same customer would have done without it.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-counterfactual-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="../images/part3/sec3.1/counterfactual.png" class="fig-sm img-fluid figure-img" alt="The fundamental problem of causal inference: we observe the outcome with the coupon, but we cannot observe what the same customer would have done without it.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-counterfactual-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;3: Fundamental problem of causal inference: we observe one outcome, never the counterfactual.
+Figure&nbsp;4: Fundamental problem of causal inference: we observe one outcome, never the counterfactual.
 </figcaption>
 </figure>
 </div>
@@ -636,66 +628,61 @@ Figure&nbsp;3: Fundamental problem of causal inference: we observe one outcome, 
 <p><span class="math display">\[\tau = Y(1) - Y(0)\]</span></p>
 <p>Here, <span class="math inline">\(Y(1)\)</span> is what happens if someone gets the treatment, and <span class="math inline">\(Y(0)\)</span> is what happens if they don’t. The problem is, we only ever see one of these for each person. If we just compare treated and untreated groups without accounting for this, we mix up the true effect with differences that were already there. That’s selection bias.</p>
 </section>
-<section id="simpsons-paradox" class="level2">
-<h2 class="anchored" data-anchor-id="simpsons-paradox">Simpson’s Paradox</h2>
-<p>You might think, “If confounders are the problem, I’ll just look at the overall data more carefully.” But confounders can produce wildly misleading results, even reversing the direction of an effect.</p>
-<p>Consider a classic example from Judea Pearl’s The Book of Why. Imagine a graph with exercise amount on the x-axis and cholesterol levels on the y-axis. At first glance, the data seems to show that people who exercise more actually have higher cholesterol levels. But that doesn’t make sense!</p>
-<p>What’s missing? Age. If you break down the data by age group, you see a different story: within each group, people who exercise more usually have lower cholesterol. The overall trend reversed because older people both exercise more and have higher cholesterol. When you combine the groups, age acts as a confounder.</p>
-<div class="callout callout-style-default callout-tip callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-Tip
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Simpson’s Paradox</p>
-<p>A phenomenon where a trend appears in different groups of data but reverses or disappears when these groups are combined.</p>
-</div>
-</div>
-<div id="fig-simpsons-paradox" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Simpson's Paradox: the overall trend can reverse when you condition on a confounder. Without segmentation, exercise appears to increase cholesterol — but within each age group, the relationship is negative.">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-simpsons-paradox-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part3/sec3.1/simpsons_paradox.png" class="fig-md img-fluid figure-img" alt="Simpson's Paradox: the overall trend can reverse when you condition on a confounder. Without segmentation, exercise appears to increase cholesterol — but within each age group, the relationship is negative.">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-simpsons-paradox-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;4: Simpson’s Paradox: the overall trend reverses once you condition on age group.
-</figcaption>
-</figure>
-</div>
-<p>This shows up frequently in marketing data. A channel might look unprofitable in aggregate but perform well within specific customer segments, or vice versa. The lesson: always ask whether there is a confounding variable hiding behind the numbers.</p>
-</section>
 <section id="why-not-just-run-an-ab-test" class="level2">
 <h2 class="anchored" data-anchor-id="why-not-just-run-an-ab-test">Why Not Just Run an A/B Test?</h2>
 <p>You might wonder, “Why not just run an A/B test?”</p>
-<p>In causal inference, A/B testing is known as a Randomized Controlled Trial (RCT) and is often considered the “gold standard” for answering causal questions. By randomly assigning customers to treatment and control groups, we ensure that other factors (such as customer preferences or behavior) are balanced across both groups, which eliminates the bias that would otherwise distort the comparison.</p>
-<div class="callout callout-style-default callout-tip callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
+<p>Great question. In marketing, this approach is called <strong>A/B testing</strong>, and in the broader causal inference literature it’s also known as a <strong>Randomized Controlled Trial (RCT)</strong>. It is often considered the “gold standard” for answering causal questions. Here’s how it works.</p>
+<p>You randomly divide your customers into two groups: the “treatment group” and the “control group.” The treatment group receives the coupon; the control group does not. Say the treatment group’s purchase rate ends up at 40% and the control group’s at 20%. The difference—20 percentage points—is the effect of the coupon.</p>
+<div id="fig-rct" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="A pool of customers is randomly split (a die in the middle) into a treatment group that receives a coupon and a control group that does not. The treatment group's post-period purchase rate is 40% and the control group's is 20% — a +20 percentage-point lift.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-rct-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part3/sec3.1/rct.png" class="fig-md img-fluid figure-img" alt="A pool of customers is randomly split (a die in the middle) into a treatment group that receives a coupon and a control group that does not. The treatment group's post-period purchase rate is 40% and the control group's is 20% — a +20 percentage-point lift.">
 </div>
-<div class="callout-title-container flex-fill">
-Tip
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-rct-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5: A randomized controlled trial: random assignment splits customers into treatment and control groups; the difference in purchase rates is the causal effect.
+</figcaption>
+</figure>
 </div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Randomized Controlled Trial (RCT)</p>
-<p>An experimental method where participants are randomly assigned to groups to test the effect of an intervention. Because the assignment is random, any difference in outcomes can be attributed to the treatment rather than pre-existing differences.</p>
-</div>
-</div>
-<p>So if we understand RCTs, does that mean they’re always the perfect solution? Unfortunately, no. While RCTs are the strongest evidence available, there are many situations where they just aren’t feasible:</p>
+<p>The critical point is <strong>randomization</strong>. By randomly assigning customers, we ensure that other factors (customer preferences, past behavior, channel exposure) are balanced across both groups. That balance is what removes the selection bias that would otherwise distort the comparison.</p>
+</section>
+<section id="limitations-of-ab-testing" class="level2">
+<h2 class="anchored" data-anchor-id="limitations-of-ab-testing">Limitations of A/B Testing</h2>
+<p>So if we understand A/B testing, does that mean it’s always the perfect solution? Unfortunately, no. While A/B testing provides the strongest evidence available, there are many situations where it just isn’t feasible:</p>
 <ol type="1">
-<li><p>Opportunity loss. If you run an RCT, half your customers might not get the new product or offer. That could mean missing out on sales, which isn’t always acceptable for the business.</p></li>
-<li><p>Time constraints. RCTs can be time-consuming. They often require weeks or even months to gather enough data to draw reliable conclusions. Time is money, after all!</p></li>
-<li><p>Stakeholder complexity. RCTs become even more complex when multiple stakeholders are involved. Not every client or partner has the resources or ability to execute an RCT effectively.</p></li>
+<li><p><strong>Opportunity loss.</strong> If you run an A/B test, half your customers won’t receive the new product or offer. That could mean missing out on sales and growth, an “opportunity loss” the business can’t always afford.</p></li>
+<li><p><strong>Time constraints.</strong> A/B tests can be time-consuming. They often require weeks or even months to gather enough data to draw reliable conclusions. That delay can mean missing a market window or losing a competitive edge.</p></li>
+<li><p><strong>Stakeholder complexity.</strong> A/B tests become harder when multiple stakeholders are involved. Not every client or partner has the resources or ability to execute one effectively.</p></li>
 </ol>
-<p>That’s why the rest of this section focuses on tools for measuring causal effects when you can’t run an RCT, and for figuring out who actually benefits when you can.</p>
+<p>When A/B testing isn’t an option, we have to fall back on <strong>observational data</strong>—data collected without any deliberate experiment.</p>
+</section>
+<section id="simpsons-paradox-challenges-of-observed-data" class="level2">
+<h2 class="anchored" data-anchor-id="simpsons-paradox-challenges-of-observed-data">Simpson’s Paradox — Challenges of Observed Data</h2>
+<p>Observational marketing data can be misleading even when the pattern looks obvious.</p>
+<p>Suppose we want to understand the relationship between email frequency and unsubscribe risk. We plot each subscriber by how many marketing emails they receive and whether they are likely to unsubscribe. In the aggregate data, the pattern looks surprising: subscribers who receive more emails appear <em>less</em> likely to unsubscribe.</p>
+<p>At first glance, this might suggest that sending more emails reduces unsubscribe risk. But that conclusion should make us uncomfortable. For the same type of subscriber, sending too many emails should usually increase the chance that they unsubscribe, not reduce it.</p>
+<p>So what is missing? Prior email engagement.</p>
+<p>Marketing teams rarely send emails at random. Subscribers who often open and click emails usually receive more campaigns, because they are active and responsive. Subscribers who rarely engage often receive fewer campaigns, or are suppressed from some sends. These groups have very different baseline unsubscribe risks.</p>
+<p>Once we segment subscribers by prior email engagement, the pattern reverses. Within each engagement group, higher email frequency is associated with higher unsubscribe risk. Low-engagement subscribers are more likely to unsubscribe than high-engagement subscribers overall, but within each engagement group, sending more emails still increases unsubscribe risk.</p>
+<p>This is <strong>Simpson’s Paradox</strong>: the aggregate trend says one thing, while the pattern within comparable groups says the opposite.</p>
+<div id="fig-simpsons-paradox" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Simpson's Paradox in email marketing. Left panel (without segmentation): a single negative-slope regression line through a cloud of subscribers — more emails appear to reduce unsubscribe rate. Right panel (segmenting by engagement): the same subscribers, split into low / medium-low / medium-high / high engagement bands, each band's regression line slopes positively — within every band, more emails increase unsubscribe rate. The two panels are joined by an equals sign to emphasize they show the same data.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-simpsons-paradox-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part3/sec3.1/simpsons_paradox.png" class="fig-md img-fluid figure-img" alt="Simpson's Paradox in email marketing. Left panel (without segmentation): a single negative-slope regression line through a cloud of subscribers — more emails appear to reduce unsubscribe rate. Right panel (segmenting by engagement): the same subscribers, split into low / medium-low / medium-high / high engagement bands, each band's regression line slopes positively — within every band, more emails increase unsubscribe rate. The two panels are joined by an equals sign to emphasize they show the same data.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-simpsons-paradox-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;6: Simpson’s Paradox: in the aggregate, more emails appear to lower unsubscribe risk, but within each engagement segment the relationship reverses.
+</figcaption>
+</figure>
+</div>
+</section>
+<section id="confounding-variables" class="level2">
+<h2 class="anchored" data-anchor-id="confounding-variables">Confounding Variables</h2>
+<p>In the email example, prior engagement is a <strong>confounding variable</strong>—a variable that influences both the treatment (email frequency) and the outcome (unsubscribe risk). Failing to account for confounders can lead to misleading conclusions, including, as we just saw, a completely reversed effect. That’s why identifying and controlling for these variables is central to causal inference with observational data.</p>
+<p>The lesson: with observational data, always ask whether there is a confounding variable hiding behind the numbers.</p>
 </section>
 <section id="road-map-for-part-3" class="level2">
 <h2 class="anchored" data-anchor-id="road-map-for-part-3">Road Map for Part 3</h2>
-<p>Here’s the plan. If you can randomize, A/B testing gives you the most reliable answers—but it’s easy to make mistakes. If you can’t randomize, quasi-experimental methods use natural variation to get as close as possible to what an experiment would show. Once you have a causal estimate, meta-learners and uplift modeling help you see which customers actually respond, so you can avoid spending on people who would have converted anyway.</p>
+<p>Here’s the plan. If you can randomize, A/B testing gives you the most reliable answers—but it’s easy to make mistakes. If you can’t randomize, quasi-experimental methods exploit natural variation in how the treatment was assigned to get as close as possible to what an experiment would show. Once you have a causal estimate, meta-learners and uplift modeling help you see which customers actually respond, so you can avoid spending on people who would have converted anyway.</p>
 <p>The next chapter starts with A/B testing, the gold standard. But even the gold standard has pitfalls that can lead you to the wrong answer.</p>
 
 
