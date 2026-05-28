@@ -33,25 +33,35 @@
 
 /* ==========================================================
    Tables — keep wide tables readable on the web.
-   Wide markdown pipe tables and pandas DataFrame outputs
-   become their own horizontal-scroll region instead of
-   squishing the page or overflowing off-screen.
+   Render tables as real, content-sized tables. The previous
+   `display: block` rule turned each table into a full-width
+   block while its columns stayed content-width, so the outer
+   border ran full width while the content sat on the left —
+   making tables look lopsided. Wide pandas DataFrame outputs
+   instead scroll inside their own wrapper.
    ========================================================== */
+.cell-output-display {
+  overflow-x: auto;
+}
+
 main table,
 .cell-output-display table {
-  display: block;
-  width: fit-content;
-  max-width: 100%;
-  overflow-x: auto;
+  width: auto !important;   /* beats Bootstrap's .table { width: 100% } */
   font-size: 0.9rem;
+}
+
+main table {
+  max-width: 100%;          /* authored tables stay in the text column */
+}
+
+.cell-output-display table {
+  max-width: none;          /* wide DataFrames scroll via the wrapper */
 }
 
 main table th,
 main table td,
 .cell-output-display table th,
 .cell-output-display table td {
-  white-space: normal;
-  overflow-wrap: anywhere;
   vertical-align: top;
 }
 
