@@ -500,7 +500,8 @@ div.csl-indent {
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#difference-in-differences-did" id="toc-difference-in-differences-did" class="nav-link active" data-scroll-target="#difference-in-differences-did">Difference-in-Differences (DiD)</a>
+  <li><a href="#choosing-the-right-method" id="toc-choosing-the-right-method" class="nav-link active" data-scroll-target="#choosing-the-right-method">Choosing the Right Method</a></li>
+  <li><a href="#difference-in-differences-did" id="toc-difference-in-differences-did" class="nav-link" data-scroll-target="#difference-in-differences-did">Difference-in-Differences (DiD)</a>
   <ul class="collapse">
   <li><a href="#the-parallel-trends-assumption" id="toc-the-parallel-trends-assumption" class="nav-link" data-scroll-target="#the-parallel-trends-assumption">The Parallel Trends Assumption</a></li>
   </ul></li>
@@ -509,7 +510,6 @@ div.csl-indent {
   <li><a href="#regression-discontinuity-rdd" id="toc-regression-discontinuity-rdd" class="nav-link" data-scroll-target="#regression-discontinuity-rdd">Regression Discontinuity (RDD)</a></li>
   <li><a href="#synthetic-control" id="toc-synthetic-control" class="nav-link" data-scroll-target="#synthetic-control">Synthetic Control</a></li>
   </ul></li>
-  <li><a href="#choosing-the-right-method" id="toc-choosing-the-right-method" class="nav-link" data-scroll-target="#choosing-the-right-method">Choosing the Right Method</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/part3/sec3.3-quasi-experiments.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/takechanman1228/marketing-science-in-python/edit/main/part3/sec3.3-quasi-experiments.qmd" class="toc-action"><i class="bi empty"></i>Edit this page</a></li><li><a href="https://github.com/takechanman1228/marketing-science-in-python/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
@@ -537,7 +537,22 @@ div.csl-indent {
 
 
 <p>Sometimes you can’t run an A/B test. The intervention has already happened. Legal or ethical constraints prevent randomization. The treatment is applied at a level (store, region, time period) where randomization is impractical. In these cases, quasi-experimental methods let you estimate causal effects by exploiting structure in how the treatment was assigned.</p>
-<p>This chapter focuses on the most widely used workhorse: Difference-in-Differences. We’ll also briefly cover two other methods (Regression Discontinuity and Synthetic Control) so you can recognize when your data supports them.</p>
+<section id="choosing-the-right-method" class="level2">
+<h2 class="anchored" data-anchor-id="choosing-the-right-method">Choosing the Right Method</h2>
+<p>Which method fits depends on how the treatment was assigned and what comparison you can build. No design is assumption-free, so the goal is to pick the one whose assumptions are most defensible in your setting. Use the decision tree below as your map.</p>
+<div id="fig-method-decision-tree" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Decision tree: random assignment leads to an A/B test; a cutoff rule leads to RDD; before/after data for treated and untreated groups leads to DiD; one treated unit with a long pre-period leads to Synthetic Control; otherwise other methods.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-method-decision-tree-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part3/sec3.3/method_decision_tree.png" class="fig-md img-fluid figure-img" alt="Decision tree: random assignment leads to an A/B test; a cutoff rule leads to RDD; before/after data for treated and untreated groups leads to DiD; one treated unit with a long pre-period leads to Synthetic Control; otherwise other methods.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-method-decision-tree-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: Decision tree for choosing a causal design
+</figcaption>
+</figure>
+</div>
+<p>Read it top-down. The first question comes before any quasi-experiment: if you can randomly assign the treatment, run an experiment — the cleanest design, and the subject of the previous chapter. Quasi-experimental methods are what you reach for when you can’t, and the route you take follows from the assignment mechanism you’re stuck with. The bottom branch is where you land when no clean design fits: typically matching, propensity-score weighting, or instrumental variables. It’s also a cue to set up your next intervention for a cleaner read — for example, a staggered rollout that enables a future DiD analysis.</p>
+<p>Of the three quasi-experimental designs, Difference-in-Differences is the one you’ll reach for most often in marketing, so we start there and treat it in the most depth, then turn more briefly to Regression Discontinuity and Synthetic Control.</p>
+</section>
 <section id="difference-in-differences-did" class="level2">
 <h2 class="anchored" data-anchor-id="difference-in-differences-did">Difference-in-Differences (DiD)</h2>
 <p>Here’s a concrete scenario. A retailer rolls out a new loyalty program in 50 stores (treatment) while keeping 50 stores without it (control). You measure average basket size before and after the rollout in both groups.</p>
@@ -582,7 +597,7 @@ div.csl-indent {
 <img src="../images/part3/sec3.3/did_parallel_trends.png" class="fig-md img-fluid figure-img" alt="Difference-in-Differences: parallel pre-trends, then post-intervention divergence; the gap is the causal effect.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-did-parallel-trends-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;1: Difference-in-Differences: pre-trends and divergence.
+Figure&nbsp;2: Difference-in-Differences: pre-trends and divergence.
 </figcaption>
 </figure>
 </div>
@@ -607,7 +622,7 @@ Figure&nbsp;1: Difference-in-Differences: pre-trends and divergence.
 <img src="../images/part3/sec3.3/rdd_discontinuity.png" class="fig-md img-fluid figure-img">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-rdd-discontinuity-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;2: Regression Discontinuity Design: a jump at the threshold.
+Figure&nbsp;3: Regression Discontinuity Design: a jump at the threshold.
 </figcaption>
 </figure>
 </div>
@@ -623,22 +638,11 @@ Figure&nbsp;2: Regression Discontinuity Design: a jump at the threshold.
 <img src="../images/part3/sec3.3/synthetic_control.png" class="fig-md img-fluid figure-img" alt="Synthetic Control: actual vs. synthetic counterfactual—lines overlap before the intervention, and the post gap is the effect.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-synthetic-control-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;3: Synthetic Control: actual vs.&nbsp;synthetic counterfactual.
+Figure&nbsp;4: Synthetic Control: actual vs.&nbsp;synthetic counterfactual.
 </figcaption>
 </figure>
 </div>
 <p>Synthetic Control works best when you have a single (or few) treated units with a long pre-treatment time series. The pre-treatment fit must be tight. If the synthetic control can’t reproduce the treated unit’s pre-treatment trajectory, the estimate is unreliable.</p>
-</section>
-</section>
-<section id="choosing-the-right-method" class="level2">
-<h2 class="anchored" data-anchor-id="choosing-the-right-method">Choosing the Right Method</h2>
-<p>No method is assumption-free. The goal is to choose the method whose assumptions are most defensible for your specific setting:</p>
-<ul>
-<li>Sharp threshold that determines treatment? Consider RDD.</li>
-<li>Clear before/after period with treated and untreated groups? Consider DiD.</li>
-<li>Single treated unit with a long time series? Consider Synthetic Control.</li>
-<li>None of the above? You may need matching, propensity score weighting, or instrumental variables, and you should consider redesigning the next intervention to enable a cleaner evaluation (e.g., a staggered rollout for future DiD analysis).</li>
-</ul>
 <p>These methods tell us the average effect of a treatment. But what if different customers respond differently? A coupon might boost purchases by 5% on average, but that average blends customers for whom the lift was 20% with customers who saw zero effect. The next chapter tackles that question.</p>
 
 
@@ -680,6 +684,7 @@ Vaver, Jon, and Jim Koehler. 2011. <em>Measuring Ad Effectiveness Using Geo Expe
 Vizard, Sarah. 2019. <span>“<span>P&amp;G</span> Shifts from Targeting <span>‘Generic Demographics’</span> to <span>‘Smart Audiences’</span>.”</span> <em>Marketing Week</em>, July. <a href="https://www.marketingweek.com/pg-targeting-generic-demographics-to-smart-audiences/">https://www.marketingweek.com/pg-targeting-generic-demographics-to-smart-audiences/</a>.
 </div>
 </div>
+</section>
 </section>
 
 </main> <!-- /main -->
