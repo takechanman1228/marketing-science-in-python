@@ -650,69 +650,23 @@ window.Quarto = {
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Note</span>Full Implementation: revenue_basket_abc
+<span class="screen-reader-only">Note</span>Implementation sketch: <code>revenue_basket_abc</code>
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<div id="95c4f4c0" class="cell" data-execution_count="1">
+<p>The core is a dual ABC: rank SKUs by cumulative share on <strong>revenue</strong> and on <strong>basket reach</strong>, cut each axis into A/B/C tiers, and take the C-rank-by-revenue long tail as the candidate pool.</p>
+<div id="06765acd" class="cell" data-execution_count="1">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> revenue_basket_abc(sku_summary: pd.DataFrame) <span class="op">-&gt;</span> pd.DataFrame:</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co">    Assign ABC ranks on revenue AND basket reach (n_baskets).</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co">    SKUs with zero or negative revenue / n_baskets are filtered out</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co">    before ABC is computed — they are out of scope for assortment</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co">    rationalisation (no sales = no assortment decision to make).</span></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="co">    Parameters</span></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="co">    ----------</span></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co">    sku_summary : DataFrame with columns ['sku', 'revenue', 'n_baskets']</span></span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="co">    Returns</span></span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="co">    -------</span></span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="co">    DataFrame with added columns: 'abc_revenue', 'abc_basket_reach'.</span></span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="co">    Rows with revenue&lt;=0 or n_baskets&lt;=0 are NOT present in the output.</span></span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="co">    """</span></span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    df <span class="op">=</span> sku_summary.loc[</span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>        (sku_summary[<span class="st">'revenue'</span>] <span class="op">&gt;</span> <span class="dv">0</span>) <span class="op">&amp;</span> (sku_summary[<span class="st">'n_baskets'</span>] <span class="op">&gt;</span> <span class="dv">0</span>)</span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>    ].copy()</span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> metric, col_name <span class="kw">in</span> [(<span class="st">'revenue'</span>, <span class="st">'abc_revenue'</span>),</span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>                              (<span class="st">'n_baskets'</span>, <span class="st">'abc_basket_reach'</span>)]:</span>
-<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>        sorted_df <span class="op">=</span> df.sort_values(metric, ascending<span class="op">=</span><span class="va">False</span>)</span>
-<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>        cumulative <span class="op">=</span> sorted_df[metric].cumsum() <span class="op">/</span> sorted_df[metric].<span class="bu">sum</span>()</span>
-<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>        sorted_df[col_name] <span class="op">=</span> pd.cut(</span>
-<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>            cumulative,</span>
-<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>            bins<span class="op">=</span>[<span class="dv">0</span>, <span class="fl">0.80</span>, <span class="fl">0.95</span>, <span class="fl">1.0</span>],</span>
-<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>            labels<span class="op">=</span>[<span class="st">'A'</span>, <span class="st">'B'</span>, <span class="st">'C'</span>],</span>
-<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>            include_lowest<span class="op">=</span><span class="va">True</span>,</span>
-<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>        )</span>
-<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>        <span class="co"># In case pd.cut returns NaN at a boundary edge, fall back to</span></span>
-<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>        <span class="co"># the most conservative label so the output is NaN-free.</span></span>
-<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>        sorted_df[col_name] <span class="op">=</span> sorted_df[col_name].astype(<span class="bu">object</span>).fillna(<span class="st">'C'</span>)</span>
-<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>        df[col_name] <span class="op">=</span> sorted_df[col_name]</span>
-<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> df</span>
-<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a><span class="co"># Build a SKU-level summary (revenue, n_baskets per SKU)</span></span>
-<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>sku_summary <span class="op">=</span> (</span>
-<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a>    transactions</span>
-<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a>    .groupby(<span class="st">'sku'</span>)</span>
-<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a>    .agg(revenue<span class="op">=</span>(<span class="st">'revenue'</span>, <span class="st">'sum'</span>), n_baskets<span class="op">=</span>(<span class="st">'basket_id'</span>, <span class="st">'nunique'</span>))</span>
-<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a>    .reset_index()</span>
-<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a>sku_summary <span class="op">=</span> revenue_basket_abc(sku_summary)</span>
-<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a><span class="co"># Candidate pool: C-rank on revenue (the long tail by money in)</span></span>
-<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a>candidates <span class="op">=</span> sku_summary[sku_summary[<span class="st">'abc_revenue'</span>] <span class="op">==</span> <span class="st">'C'</span>]</span>
-<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Low-revenue candidate pool: </span><span class="sc">{</span><span class="bu">len</span>(candidates)<span class="sc">}</span><span class="ss"> SKUs "</span></span>
-<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a>      <span class="ss">f"(</span><span class="sc">{</span><span class="bu">len</span>(candidates)<span class="op">/</span><span class="bu">len</span>(sku_summary)<span class="op">*</span><span class="dv">100</span><span class="sc">:.0f}</span><span class="ss">% of assortment, "</span></span>
-<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a>      <span class="ss">f"</span><span class="sc">{</span>candidates[<span class="st">'revenue'</span>]<span class="sc">.</span><span class="bu">sum</span>()<span class="op">/</span>sku_summary[<span class="st">'revenue'</span>]<span class="sc">.</span><span class="bu">sum</span>()<span class="op">*</span><span class="dv">100</span><span class="sc">:.1f}</span><span class="ss">% of revenue)"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># For each metric (revenue, then n_baskets): rank by cumulative share, bin A/B/C</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>cumulative <span class="op">=</span> df.sort_values(metric, ascending<span class="op">=</span><span class="va">False</span>)[metric].cumsum() <span class="op">/</span> df[metric].<span class="bu">sum</span>()</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>df[col] <span class="op">=</span> pd.cut(cumulative, bins<span class="op">=</span>[<span class="dv">0</span>, <span class="fl">0.80</span>, <span class="fl">0.95</span>, <span class="fl">1.0</span>], labels<span class="op">=</span>[<span class="st">"A"</span>, <span class="st">"B"</span>, <span class="st">"C"</span>])</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Candidate pool = C-rank on revenue (the long tail by money in)</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>candidates <span class="op">=</span> sku_summary[sku_summary[<span class="st">"abc_revenue"</span>] <span class="op">==</span> <span class="st">"C"</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
+<p>The full function — zero/negative-sales filtering and NaN-safe binning — is in the companion script <code>notebooks/part5-commercial-analytics/sec5.2_assortment_optimization.py</code>.</p>
 </div>
 </div>
 <p><a href="#fig-revenue-basket-pareto" class="quarto-xref">Figure&nbsp;<span>1</span></a> shows the dual Pareto curves from real grocery data: ranking the ~39,000 Dunnhumby GROCERY SKUs (after filtering out 38 SKUs with no sales) by <strong>revenue</strong> and by <strong>basket reach</strong> separately. Both curves are heavily concentrated — roughly 17–20% of SKUs account for 80% of either metric — and the low-revenue pool (<code>abc_revenue == "C"</code>) holds 63% of SKUs but only 5% of revenue. A large share of those low-revenue candidates are also C-rank on basket reach, meaning few shoppers ever touch them — that secondary signal is what makes the candidate pool worth testing rather than blindly defending on volume grounds.</p>
@@ -743,104 +697,24 @@ Figure&nbsp;1: Cumulative revenue and basket-reach share by SKU.
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Note</span>Full Implementation: build_substitution_map
+<span class="screen-reader-only">Note</span>Implementation sketch: <code>build_substitution_map</code>
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<div id="a9aa1cea" class="cell" data-execution_count="2">
+<p>For each C-rank candidate, scan its same-subcategory peers — restricted to A/B-rank SKUs that can absorb redirected demand — and flag the ones with low Lift. Zero co-occurrence is the strongest substitution signal.</p>
+<div id="a08a0810" class="cell" data-execution_count="2">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> collections <span class="im">import</span> defaultdict</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> build_substitution_map(</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    basket_sets, candidates, subcat_map, total_baskets,</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    high_rank_skus<span class="op">=</span><span class="va">None</span>, lift_threshold<span class="op">=</span><span class="fl">0.8</span>,</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>):</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""</span></span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co">    Identify substitutes for each candidate SKU using pairwise Lift.</span></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co">    Lift(A,B) = P(A ∩ B) / (P(A) × P(B)).</span></span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co">    A substitute is a same-subcategory peer with Lift &lt; threshold.</span></span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="co">    Zero co-occurrence is treated as the strongest substitution signal.</span></span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="co">    If `high_rank_skus` is supplied (the set of SKUs that are A/B-rank</span></span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="co">    on revenue OR A/B-rank on basket reach), the substitute pool is</span></span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="co">    restricted to that set — a peer needs either enough revenue volume</span></span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="co">    or enough shopper reach to credibly absorb redirected demand.</span></span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="co">    Parameters</span></span>
-<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="co">    ----------</span></span>
-<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="co">    basket_sets : dict mapping sku -&gt; set of basket_ids</span></span>
-<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="co">    candidates : DataFrame with column 'sku'</span></span>
-<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="co">    subcat_map : dict mapping sku -&gt; subcategory</span></span>
-<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="co">    total_baskets : int, total number of baskets</span></span>
-<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="co">    high_rank_skus : set of SKUs eligible as substitutes</span></span>
-<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a><span class="co">                     (A/B revenue or A/B basket reach).  If None,</span></span>
-<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a><span class="co">                     no rank filter is applied.</span></span>
-<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a><span class="co">    lift_threshold : Lift below this indicates substitution</span></span>
-<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a><span class="co">    Returns</span></span>
-<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a><span class="co">    -------</span></span>
-<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a><span class="co">    dict: {candidate_sku: [{"substitute": sku, "lift": float, "method": str}, ...]}</span></span>
-<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a><span class="co">    """</span></span>
-<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Group products by sub-category</span></span>
-<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>    subcat_groups <span class="op">=</span> defaultdict(<span class="bu">set</span>)</span>
-<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> sku <span class="kw">in</span> basket_sets:</span>
-<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>        sc <span class="op">=</span> subcat_map.get(sku, <span class="st">''</span>)</span>
-<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> sc:</span>
-<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>            subcat_groups[sc].add(sku)</span>
-<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>    candidate_ids <span class="op">=</span> <span class="bu">set</span>(candidates[<span class="st">'sku'</span>])</span>
-<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>    substitution_map <span class="op">=</span> {}</span>
-<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> cand_id <span class="kw">in</span> candidate_ids <span class="op">&amp;</span> <span class="bu">set</span>(basket_sets):</span>
-<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a>        cand_subcat <span class="op">=</span> subcat_map.get(cand_id, <span class="st">''</span>)</span>
-<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="kw">not</span> cand_subcat:</span>
-<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a>            <span class="cf">continue</span></span>
-<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a>        cand_baskets <span class="op">=</span> basket_sets[cand_id]</span>
-<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="bu">len</span>(cand_baskets) <span class="op">&lt;</span> <span class="dv">5</span>:</span>
-<span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a>            <span class="cf">continue</span></span>
-<span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a>        peers <span class="op">=</span> subcat_groups.get(cand_subcat, <span class="bu">set</span>()) <span class="op">-</span> {cand_id}</span>
-<span id="cb2-53"><a href="#cb2-53" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Restrict to peers that can absorb redirected demand —</span></span>
-<span id="cb2-54"><a href="#cb2-54" aria-hidden="true" tabindex="-1"></a>        <span class="co"># high on revenue OR high on basket reach.</span></span>
-<span id="cb2-55"><a href="#cb2-55" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> high_rank_skus <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span>:</span>
-<span id="cb2-56"><a href="#cb2-56" aria-hidden="true" tabindex="-1"></a>            peers <span class="op">=</span> peers <span class="op">&amp;</span> high_rank_skus</span>
-<span id="cb2-57"><a href="#cb2-57" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-58"><a href="#cb2-58" aria-hidden="true" tabindex="-1"></a>        subs <span class="op">=</span> []</span>
-<span id="cb2-59"><a href="#cb2-59" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> peer_id <span class="kw">in</span> peers:</span>
-<span id="cb2-60"><a href="#cb2-60" aria-hidden="true" tabindex="-1"></a>            peer_baskets <span class="op">=</span> basket_sets.get(peer_id, <span class="bu">set</span>())</span>
-<span id="cb2-61"><a href="#cb2-61" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="bu">len</span>(peer_baskets) <span class="op">&lt;</span> <span class="dv">5</span>:</span>
-<span id="cb2-62"><a href="#cb2-62" aria-hidden="true" tabindex="-1"></a>                <span class="cf">continue</span></span>
-<span id="cb2-63"><a href="#cb2-63" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-64"><a href="#cb2-64" aria-hidden="true" tabindex="-1"></a>            co_occur <span class="op">=</span> <span class="bu">len</span>(cand_baskets <span class="op">&amp;</span> peer_baskets)</span>
-<span id="cb2-65"><a href="#cb2-65" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> co_occur <span class="op">==</span> <span class="dv">0</span>:</span>
-<span id="cb2-66"><a href="#cb2-66" aria-hidden="true" tabindex="-1"></a>                <span class="co"># Never bought together → strong substitution signal</span></span>
-<span id="cb2-67"><a href="#cb2-67" aria-hidden="true" tabindex="-1"></a>                subs.append({<span class="st">"substitute"</span>: peer_id, <span class="st">"lift"</span>: <span class="fl">0.0</span>,</span>
-<span id="cb2-68"><a href="#cb2-68" aria-hidden="true" tabindex="-1"></a>                             <span class="st">"method"</span>: <span class="st">"zero_cooccurrence"</span>})</span>
-<span id="cb2-69"><a href="#cb2-69" aria-hidden="true" tabindex="-1"></a>            <span class="cf">else</span>:</span>
-<span id="cb2-70"><a href="#cb2-70" aria-hidden="true" tabindex="-1"></a>                p_cand <span class="op">=</span> <span class="bu">len</span>(cand_baskets) <span class="op">/</span> total_baskets</span>
-<span id="cb2-71"><a href="#cb2-71" aria-hidden="true" tabindex="-1"></a>                p_peer <span class="op">=</span> <span class="bu">len</span>(peer_baskets) <span class="op">/</span> total_baskets</span>
-<span id="cb2-72"><a href="#cb2-72" aria-hidden="true" tabindex="-1"></a>                lift <span class="op">=</span> (co_occur <span class="op">/</span> total_baskets) <span class="op">/</span> (p_cand <span class="op">*</span> p_peer)</span>
-<span id="cb2-73"><a href="#cb2-73" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> lift <span class="op">&lt;</span> lift_threshold:</span>
-<span id="cb2-74"><a href="#cb2-74" aria-hidden="true" tabindex="-1"></a>                    subs.append({<span class="st">"substitute"</span>: peer_id, <span class="st">"lift"</span>: <span class="bu">round</span>(lift, <span class="dv">3</span>),</span>
-<span id="cb2-75"><a href="#cb2-75" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"method"</span>: <span class="st">"lift"</span>})</span>
-<span id="cb2-76"><a href="#cb2-76" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-77"><a href="#cb2-77" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> subs:</span>
-<span id="cb2-78"><a href="#cb2-78" aria-hidden="true" tabindex="-1"></a>            substitution_map[cand_id] <span class="op">=</span> subs</span>
-<span id="cb2-79"><a href="#cb2-79" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-80"><a href="#cb2-80" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> substitution_map</span>
-<span id="cb2-81"><a href="#cb2-81" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-82"><a href="#cb2-82" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-83"><a href="#cb2-83" aria-hidden="true" tabindex="-1"></a><span class="co"># Build the high-rank substitute pool from the ABC table.</span></span>
-<span id="cb2-84"><a href="#cb2-84" aria-hidden="true" tabindex="-1"></a>high_rank_skus <span class="op">=</span> <span class="bu">set</span>(</span>
-<span id="cb2-85"><a href="#cb2-85" aria-hidden="true" tabindex="-1"></a>    sku_summary[</span>
-<span id="cb2-86"><a href="#cb2-86" aria-hidden="true" tabindex="-1"></a>        sku_summary[<span class="st">'abc_revenue'</span>].isin([<span class="st">'A'</span>, <span class="st">'B'</span>])</span>
-<span id="cb2-87"><a href="#cb2-87" aria-hidden="true" tabindex="-1"></a>        <span class="op">|</span> sku_summary[<span class="st">'abc_basket_reach'</span>].isin([<span class="st">'A'</span>, <span class="st">'B'</span>])</span>
-<span id="cb2-88"><a href="#cb2-88" aria-hidden="true" tabindex="-1"></a>    ][<span class="st">'sku'</span>]</span>
-<span id="cb2-89"><a href="#cb2-89" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>co_occur <span class="op">=</span> <span class="bu">len</span>(cand_baskets <span class="op">&amp;</span> peer_baskets)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> co_occur <span class="op">==</span> <span class="dv">0</span>:                       <span class="co"># never bought together → strongest signal</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    subs.append({<span class="st">"substitute"</span>: peer_id, <span class="st">"lift"</span>: <span class="fl">0.0</span>})</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="cf">else</span>:</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    lift <span class="op">=</span> (co_occur <span class="op">/</span> total_baskets) <span class="op">/</span> (p_cand <span class="op">*</span> p_peer)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> lift <span class="op">&lt;</span> lift_threshold:           <span class="co"># low Lift within a sub-category → likely substitute</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>        subs.append({<span class="st">"substitute"</span>: peer_id, <span class="st">"lift"</span>: <span class="bu">round</span>(lift, <span class="dv">3</span>)})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
+<p>The full function — sub-category grouping, the A/B-rank substitute pool (<code>high_rank_skus</code>), and minimum-basket guards — is in the companion script.</p>
 </div>
 </div>
 <p><strong>Cross-price elasticity as reinforcement.</strong> If cross-price elasticity data is available, positive cross-price elasticity between two products confirms substitution: when product A’s price goes up, product B’s quantity goes up. Treat it as a bonus signal, not a requirement.</p>
@@ -941,66 +815,25 @@ Figure&nbsp;3: Low-revenue candidates by revenue and basket reach.
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Note</span>Implementation: evaluate_removal_test
+<span class="screen-reader-only">Note</span>Implementation sketch: <code>evaluate_removal_test</code>
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<div id="f9347262" class="cell" data-execution_count="3">
+<p>The analysis is a Difference-in-Differences regression with store and week fixed effects; the <code>treatment:post</code> coefficient is the causal estimate.</p>
+<div id="3f786449" class="cell" data-execution_count="3">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> statsmodels.formula.api <span class="im">as</span> smf</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> evaluate_removal_test(test_data):</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""</span></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co">    Evaluate a matched-store assortment test using DiD on revenue.</span></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co">    Parameters</span></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co">    ----------</span></span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co">    test_data : DataFrame with columns:</span></span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="co">        - store, week, treatment, post</span></span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="co">        - subcategory_revenue, revenue_per_basket, basket_count</span></span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="co">    """</span></span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    metrics <span class="op">=</span> [</span>
-<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>        (<span class="st">'subcategory_revenue'</span>, <span class="st">'Sub-category Revenue'</span>),</span>
-<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>        (<span class="st">'revenue_per_basket'</span>,  <span class="st">'Revenue per Basket'</span>),</span>
-<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>        (<span class="st">'basket_count'</span>,        <span class="st">'Sub-category Traffic (baskets)'</span>),</span>
-<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    ]</span>
-<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>    fits <span class="op">=</span> {}</span>
-<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"=== Assortment Test Results (DiD) ==="</span>)</span>
-<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> col, label <span class="kw">in</span> metrics:</span>
-<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>        model <span class="op">=</span> smf.ols(</span>
-<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>            <span class="ss">f'</span><span class="sc">{</span>col<span class="sc">}</span><span class="ss"> ~ treatment * post + C(store) + C(week)'</span>,</span>
-<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>            data<span class="op">=</span>test_data</span>
-<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>        ).fit(cov_type<span class="op">=</span><span class="st">'HC1'</span>)</span>
-<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>        did_coeff <span class="op">=</span> model.params.get(<span class="st">'treatment:post'</span>, <span class="dv">0</span>)</span>
-<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>        did_pval <span class="op">=</span> model.pvalues.get(<span class="st">'treatment:post'</span>, <span class="dv">1</span>)</span>
-<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>        fits[col] <span class="op">=</span> {<span class="st">'coeff'</span>: did_coeff, <span class="st">'p_value'</span>: did_pval}</span>
-<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>        sig <span class="op">=</span> <span class="st">'*'</span> <span class="cf">if</span> did_pval <span class="op">&lt;</span> <span class="fl">0.05</span> <span class="cf">else</span> <span class="st">''</span></span>
-<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="sc">{</span>label<span class="sc">}</span><span class="ss">:"</span>)</span>
-<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="ss">f"  DiD estimate: </span><span class="sc">{</span>did_coeff<span class="sc">:+.2f}</span><span class="ss"> (p=</span><span class="sc">{</span>did_pval<span class="sc">:.3f}</span><span class="ss">) </span><span class="sc">{</span>sig<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Decision logic on revenue (the primary metric).</span></span>
-<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>    rev <span class="op">=</span> fits[<span class="st">'subcategory_revenue'</span>]</span>
-<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> rev[<span class="st">'p_value'</span>] <span class="op">&lt;</span> <span class="fl">0.05</span> <span class="kw">and</span> rev[<span class="st">'coeff'</span>] <span class="op">&lt;</span> <span class="dv">0</span>:</span>
-<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">RESULT: Significant revenue decline. Do not scale removal."</span>)</span>
-<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>    <span class="cf">elif</span> rev[<span class="st">'coeff'</span>] <span class="op">&gt;=</span> <span class="dv">0</span>:</span>
-<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">RESULT: No revenue decline. "</span></span>
-<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>              <span class="st">"Candidate may proceed to broader rollout or extended test."</span>)</span>
-<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
-<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">RESULT: Inconclusive. Extend test period — do NOT call this a success."</span>)</span>
-<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> {</span>
-<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>        <span class="st">'revenue_change'</span>:            rev[<span class="st">'coeff'</span>],</span>
-<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a>        <span class="st">'revenue_pval'</span>:              rev[<span class="st">'p_value'</span>],</span>
-<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a>        <span class="st">'revenue_per_basket_change'</span>: fits[<span class="st">'revenue_per_basket'</span>][<span class="st">'coeff'</span>],</span>
-<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a>        <span class="st">'traffic_change'</span>:            fits[<span class="st">'basket_count'</span>][<span class="st">'coeff'</span>],</span>
-<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a>    }</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> smf.ols(</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"subcategory_revenue ~ treatment * post + C(store) + C(week)"</span>,</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    data<span class="op">=</span>test_data,</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>).fit(cov_type<span class="op">=</span><span class="st">"HC1"</span>)</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>did <span class="op">=</span> model.params[<span class="st">"treatment:post"</span>]    <span class="co"># change in sub-category revenue from removal</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
+<p>The full function runs the same DiD across sub-category revenue, revenue per basket, and basket count, and applies the decision rule — an inconclusive result is <em>not</em> a success. It is in the companion script.</p>
 </div>
 </div>
 <p><a href="#fig-parallel-trends" class="quarto-xref">Figure&nbsp;<span>4</span></a> shows the output from a simulated matched-store removal test on Dunnhumby grocery data, focused on the EGGS - LARGE sub-category. Nine treatment stores had a low-revenue SKU removed (with 60% of demand redirected to substitutes); nine control stores, matched on pre-period sub-category revenue, remained unchanged. The treatment and control lines run roughly parallel in the pre-period, supporting the DiD assumption. In the post-period, treatment sub-category revenue sits modestly below control, producing a borderline-insignificant DiD estimate (-$0.42 per store-week, p ≈ 0.06). That kind of result is <strong>inconclusive</strong> — it is <em>not</em> a green light to scale. The decision rule in the implementation above is honest about this: an inconclusive p-value with a negative point estimate means “extend the test, expand the sample, or test a different candidate”, not “ship the removal”.</p>
