@@ -14,7 +14,7 @@
 # ---
 
 # %% [markdown]
-# [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/takechanman1228/marketing-science-in-python/blob/main/notebooks/sec4.1-segmentation/traditional_segmentation.ipynb)
+# [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_traditional_segmentation.ipynb)
 
 # %% [markdown]
 # # Customer Segmentation — Traditional Methods
@@ -24,7 +24,7 @@
 # K-Means — and ends with a CRM-ready export.
 #
 # For embedding-based segmentation (BERTopic + LLM naming), see the companion
-# script `semantic_segmentation.py`.
+# script `sec4.1_semantic_segmentation.py`.
 #
 # **Learning objectives**
 #

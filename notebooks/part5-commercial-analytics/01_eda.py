@@ -23,7 +23,7 @@
 #
 # **Goal:** Aggregate transactions to a weekly commodity × store panel with
 # price and promotional features, outputting clean Nixtla-format parquet
-# for the `demand_forecasting` notebook.
+# for the `sec5.3_demand_forecasting` notebook.
 
 # %%
 import warnings

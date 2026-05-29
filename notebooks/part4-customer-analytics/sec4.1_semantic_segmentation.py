@@ -14,7 +14,7 @@
 # ---
 
 # %% [markdown]
-# [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/takechanman1228/marketing-science-in-python/blob/main/notebooks/sec4.1-segmentation/semantic_segmentation.ipynb)
+# [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_semantic_segmentation.ipynb)
 
 # %% [markdown]
 # # Embedding-Based Customer Segmentation with BERTopic
@@ -25,7 +25,7 @@
 # product purchase text, then interpret them with an LLM.
 #
 # For traditional methods (decile, RFM, K-Means, GMM), see the companion script
-# `traditional_segmentation.py`.
+# `sec4.1_traditional_segmentation.py`.
 #
 # **Dataset**: UCI Online Retail II (Kaggle, CC0). ~1M transaction rows from a
 # UK-based online retailer, with product descriptions.
