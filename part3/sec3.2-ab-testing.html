@@ -564,10 +564,11 @@ window.Quarto = {
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#the-power-problem" id="toc-the-power-problem" class="nav-link active" data-scroll-target="#the-power-problem">The Power Problem</a></li>
-  <li><a href="#design-before-you-run" id="toc-design-before-you-run" class="nav-link" data-scroll-target="#design-before-you-run">Design Before You Run</a></li>
-  <li><a href="#cuped-getting-a-larger-sample-for-free" id="toc-cuped-getting-a-larger-sample-for-free" class="nav-link" data-scroll-target="#cuped-getting-a-larger-sample-for-free">CUPED: Getting a Larger Sample for Free</a></li>
-  <li><a href="#how-to-interpret-null-results" id="toc-how-to-interpret-null-results" class="nav-link" data-scroll-target="#how-to-interpret-null-results">How to Interpret Null Results</a></li>
+  <li><a href="#statistical-power" id="toc-statistical-power" class="nav-link active" data-scroll-target="#statistical-power">Statistical Power</a></li>
+  <li><a href="#calculating-sample-size" id="toc-calculating-sample-size" class="nav-link" data-scroll-target="#calculating-sample-size">Calculating Sample Size</a></li>
+  <li><a href="#decide-before-you-launch" id="toc-decide-before-you-launch" class="nav-link" data-scroll-target="#decide-before-you-launch">Decide Before You Launch</a></li>
+  <li><a href="#cuped-getting-more-precision-from-the-same-sample" id="toc-cuped-getting-more-precision-from-the-same-sample" class="nav-link" data-scroll-target="#cuped-getting-more-precision-from-the-same-sample">CUPED: Getting More Precision from the Same Sample</a></li>
+  <li><a href="#when-a-test-is-inconclusive" id="toc-when-a-test-is-inconclusive" class="nav-link" data-scroll-target="#when-a-test-is-inconclusive">When a Test Is Inconclusive</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/part3/sec3.2-ab-testing.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/takechanman1228/marketing-science-in-python/edit/main/part3/sec3.2-ab-testing.qmd" class="toc-action"><i class="bi empty"></i>Edit this page</a></li><li><a href="https://github.com/takechanman1228/marketing-science-in-python/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
@@ -607,24 +608,31 @@ window.Quarto = {
 <tbody>
 <tr class="odd">
 <td>Control</td>
-<td>4,800</td>
-<td>112</td>
-<td>2.34%</td>
+<td>5,000</td>
+<td>115</td>
+<td>2.30%</td>
 </tr>
 <tr class="even">
 <td>Treatment</td>
-<td>4,900</td>
-<td>112</td>
-<td>2.28%</td>
+<td>5,000</td>
+<td>127</td>
+<td>2.54%</td>
 </tr>
 </tbody>
 </table>
-<p>The p-value is 0.42. The team says, “No significant difference. The redesign doesn’t work. Let’s move on.”</p>
-<p>But that conclusion isn’t right—or at least, it’s not backed up by the data. A p-value of 0.42 doesn’t mean there’s no effect. It just means the test couldn’t tell a small effect from random noise. The difference between “no effect” and “we can’t tell” comes down to whether your test had enough power.</p>
-<section id="the-power-problem" class="level2">
-<h2 class="anchored" data-anchor-id="the-power-problem">The Power Problem</h2>
-<p>Statistical power is the chance your test will spot a real effect if it’s there. Most teams aim for 80% power, which still means there’s a 20% chance you’ll miss a real effect even if it exists.</p>
-<p>Here’s the uncomfortable truth: for low-conversion events like purchases (say, a 2% conversion rate), you need tens of thousands of users per group to detect a 0.5 point lift. Most teams run tests with far fewer. This is the 1/10 problem: you often need about 10 times more samples than you think.</p>
+<p>Treatment looks a little better—a 0.24-point lift. But a two-proportion z-test puts the p-value at 0.43:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> statsmodels.stats.proportion <span class="im">import</span> proportions_ztest</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>conversions <span class="op">=</span> np.array([<span class="dv">127</span>, <span class="dv">115</span>])   <span class="co"># treatment, control</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>users <span class="op">=</span> np.array([<span class="dv">5000</span>, <span class="dv">5000</span>])</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>stat, p_value <span class="op">=</span> proportions_ztest(conversions, users, alternative<span class="op">=</span><span class="st">"two-sided"</span>)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"p-value: </span><span class="sc">{</span>p_value<span class="sc">:.2f}</span><span class="ss">"</span>)     <span class="co"># 0.43</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>So the team says, “Not significant. The redesign doesn’t work. Let’s move on.” That conclusion isn’t backed up by the data. A p-value of 0.43 doesn’t mean there’s no effect—it means the test couldn’t separate a small effect from random noise. The treatment might really be better; the data just can’t say. The gap between “no effect” and “we can’t tell” comes down to whether the test had enough power.</p>
+<section id="statistical-power" class="level2">
+<h2 class="anchored" data-anchor-id="statistical-power">Statistical Power</h2>
+<p>Statistical power is the chance your test will detect an effect of a specific size if that effect truly exists. Most teams aim for 80% power, which still leaves a 20% chance of missing an effect that large.</p>
+<p>Imagine repeating the same A/B test many times. If the redesign has no real effect, the estimated lift will bounce around zero. If the redesign truly improves conversion, the estimated lift will bounce around the real lift. Power is the chance that the test lands far enough from zero for us to detect that effect.</p>
 <div id="fig-power-concept" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Statistical power: overlapping H0 and H1 distributions with the alpha, beta, and power (1−beta) regions shaded.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-power-concept-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -635,98 +643,94 @@ Figure&nbsp;1: Statistical power: the H0 and H1 distributions.
 </figcaption>
 </figure>
 </div>
+<p>For a low-conversion event like a purchase—say a 2% conversion rate—detecting a 0.5-point lift takes many thousands of users per group, and most teams run with far fewer. This is the part most teams underestimate: detecting small lifts usually requires far more traffic than intuition suggests.</p>
 </section>
-<section id="design-before-you-run" class="level2">
-<h2 class="anchored" data-anchor-id="design-before-you-run">Design Before You Run</h2>
-<p>The answer isn’t to give up on A/B testing. It’s to figure out the sample size you need before you start. The key inputs are:</p>
-<ul>
-<li>Baseline conversion rate (<span class="math inline">\(p_0\)</span>): the current rate under the control condition.</li>
-<li>Minimum Detectable Effect (MDE): the smallest effect size you consider practically meaningful.</li>
-<li>Significance level (<span class="math inline">\(\alpha\)</span>, typically 0.05): the false positive rate you’re willing to tolerate.</li>
-<li>Power (<span class="math inline">\(1 - \beta\)</span>, typically 0.80): the probability of detecting the effect when it truly exists.</li>
-</ul>
-<p>The intuition is simple: finding small effects in noisy data takes big samples. For a two-sample test of proportions with equal group sizes, the required sample size per group is approximately:</p>
-<p><span class="math display">\[n \approx \frac{\left(z_{1-\alpha/2}\sqrt{2\bar{p}(1-\bar{p})} + z_{1-\beta}\sqrt{p_0(1-p_0) + p_1(1-p_1)}\right)^2}{(p_1 - p_0)^2}\]</span></p>
-<p>where <span class="math inline">\(p_0\)</span> is the control rate, <span class="math inline">\(p_1 = p_0 + \text{MDE}\)</span> is the treatment rate you want to detect, <span class="math inline">\(\bar{p} = (p_0 + p_1)/2\)</span> is the pooled rate, and the <span class="math inline">\(z\)</span>-values are critical values from the standard normal distribution (≈1.96 for <span class="math inline">\(\alpha = 0.05\)</span> two-sided and ≈0.84 for power = 0.80). The two square-root terms are the standard deviations of the difference under the null (using the pooled rate) and under the alternative (using each arm’s own rate); <span class="math inline">\(\delta = p_1 - p_0\)</span> is the MDE in the denominator.</p>
-<p>Two things follow from this. First, <span class="math inline">\(n\)</span> scales with <span class="math inline">\(1/\delta^2\)</span>: halving the MDE roughly quadruples the required sample. Second, <span class="math inline">\(n\)</span> grows with baseline variance through <span class="math inline">\(\bar{p}(1-\bar{p})\)</span>, so low-conversion metrics are doubly punishing—both the rate you’re trying to move and the lift you’re trying to detect are tiny.</p>
-<p>Plugging in <span class="math inline">\(p_0 = 2.0\%\)</span> and <span class="math inline">\(p_1 = 2.5\%\)</span> (a 0.5-point lift) with <span class="math inline">\(\alpha = 0.05\)</span> and 80% power gives about 13,800 users per group. In practice, after rounding and allowing for tracking loss and excluded users, teams plan for roughly 15,000 per group. Tightening the MDE to 0.25 points roughly quadruples this, to about 52,000 per group.</p>
-<div id="fig-sample-size-sensitivity" class="fig-md quarto-float quarto-figure quarto-figure-center anchored">
+<section id="calculating-sample-size" class="level2">
+<h2 class="anchored" data-anchor-id="calculating-sample-size">Calculating Sample Size</h2>
+<p>So how many users do you actually need? Sizing a test takes four inputs: the baseline conversion rate, the minimum lift worth detecting (the MDE), the false-positive rate you’ll tolerate (<span class="math inline">\(\alpha\)</span>, usually 0.05), and the power you want (<span class="math inline">\(1 - \beta\)</span>, usually 0.80).</p>
+<p>The key intuition is:</p>
+<p><span class="math display">\[n \propto \frac{1}{\text{MDE}^2}\]</span></p>
+<p>If you want to detect half the lift, you need roughly four times as many users. In Python:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> statsmodels.stats.power <span class="im">import</span> NormalIndPower</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> statsmodels.stats.proportion <span class="im">import</span> proportion_effectsize</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>baseline_cvr <span class="op">=</span> <span class="fl">0.02</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>target_cvr <span class="op">=</span> <span class="fl">0.025</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>effect_size <span class="op">=</span> <span class="bu">abs</span>(proportion_effectsize(target_cvr, baseline_cvr))</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>analysis <span class="op">=</span> NormalIndPower()</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>required_n <span class="op">=</span> analysis.solve_power(</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    effect_size<span class="op">=</span>effect_size,</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    alpha<span class="op">=</span><span class="fl">0.05</span>,</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    power<span class="op">=</span><span class="fl">0.80</span>,</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    ratio<span class="op">=</span><span class="dv">1</span>,</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    alternative<span class="op">=</span><span class="st">"two-sided"</span>,</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Required sample size per group: </span><span class="sc">{</span>required_n<span class="sc">:.0f}</span><span class="ss">"</span>)  <span class="co"># ~13,800</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Detecting a lift from a 2% baseline to 2.5% needs about 13,800 users per group. In practice teams round up and pad for tracking loss and excluded users, so they would plan for roughly 15,000.</p>
+<div id="fig-sample-size-sensitivity" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Required sample size per group rises sharply as the minimum detectable effect shrinks, at a 2% baseline and 80% power.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-sample-size-sensitivity-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part3/sec3.2/sample_size_sensitivity.png" class="fig-md img-fluid figure-img">
+<img src="../images/part3/sec3.2/sample_size_sensitivity.png" class="fig-md img-fluid figure-img" alt="Required sample size per group rises sharply as the minimum detectable effect shrinks, at a 2% baseline and 80% power.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-sample-size-sensitivity-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Figure&nbsp;2: Sample-size sensitivity to the MDE.
 </figcaption>
 </figure>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> statsmodels.stats.power <span class="im">import</span> NormalIndPower</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> statsmodels.stats.proportion <span class="im">import</span> proportion_effectsize</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Example: CVR baseline 2%, MDE 0.5 pp, alpha=0.05, power=0.80</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>effect_size <span class="op">=</span> proportion_effectsize(<span class="fl">0.02</span>, <span class="fl">0.025</span>)</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>analysis <span class="op">=</span> NormalIndPower()</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>n <span class="op">=</span> analysis.solve_power(effect_size<span class="op">=</span>effect_size, alpha<span class="op">=</span><span class="fl">0.05</span>, power<span class="op">=</span><span class="fl">0.80</span>)</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Required sample size per group: </span><span class="sc">{</span>n<span class="sc">:.0f}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Here, <code>proportion_effectsize</code> converts the two proportions into the effect size that statsmodels’ power routines expect, and <code>NormalIndPower.solve_power</code> solves for the sample size that satisfies the power equation. The result (~13,800) matches the closed-form formula above.</p>
-<p>Do this calculation before you run the test, not after. Also, pre-register guardrail metrics—like revenue per user, page load time, or support tickets—that shouldn’t get worse even if your main metric improves.</p>
+<p>The curve makes the main lesson visible: sample size does not grow linearly. Moving from a 1.0 percentage point lift to a 0.5 percentage point lift roughly quadruples the required sample. This is why small improvements on low-conversion metrics are expensive to measure.</p>
 </section>
-<section id="cuped-getting-a-larger-sample-for-free" class="level2">
-<h2 class="anchored" data-anchor-id="cuped-getting-a-larger-sample-for-free">CUPED: Getting a Larger Sample for Free</h2>
-<p>You’ve done the sample size math, and the number is huge. Your product doesn’t get enough traffic to hit it anytime soon. Is there a way to get the same precision with fewer users? CUPED (Controlled-experiment Using Pre-Experiment Data) helps by reducing the variance of your metric using data you already have. It’s like getting a bigger sample for free.</p>
-<p>Take a customer who bought a lot in the month before the experiment. They’ll probably keep buying a lot during the experiment, no matter which group they’re in. Their high spending is mostly due to their past behavior, not the treatment. CUPED subtracts this predictable part from each user’s outcome, so the treatment effect is easier to see. The stronger the link between pre-experiment and in-experiment behavior, the more variance CUPED removes, and the fewer users you need.</p>
-<p>Formally, let <span class="math inline">\(Y\)</span> be the outcome and <span class="math inline">\(X\)</span> a pre-experiment covariate (e.g., purchases in the prior 30 days). The adjusted outcome is:</p>
-<p><span class="math display">\[Y_{\text{CUPED}} = Y - \theta \cdot (X - \bar{X})\]</span></p>
-<p>where <span class="math inline">\(\theta = \text{Cov}(Y, X) / \text{Var}(X)\)</span>. The key result: the variance of the adjusted outcome reduces to <span class="math inline">\(\text{Var}(Y_{\text{CUPED}}) = \text{Var}(Y)(1 - \rho^2)\)</span>, where <span class="math inline">\(\rho\)</span> is the Pearson correlation between <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span>. If <span class="math inline">\(\rho = 0.7\)</span>, CUPED removes roughly half the variance, equivalent to doubling your sample size. Netflix and Microsoft report 20–50% reductions in required sample sizes using this technique. The most common covariate choice is the same metric measured in the pre-experiment period, which typically yields the strongest correlation.</p>
-<div class="callout callout-style-default callout-warning callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-Warning
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Peeking Inflates False Positives</p>
-<p>Checking results repeatedly before the test reaches its planned sample size increases the false-positive rate. If you check daily for 14 days and stop as soon as you see significance, the effective alpha can be 2–3 times higher than your nominal 0.05. Either commit to a fixed horizon or use sequential testing methods (such as confidence sequences) that formally budget alpha across interim looks.</p>
-<div id="fig-peeking-alpha" class="fig-md quarto-float quarto-figure quarto-figure-center anchored">
+<section id="decide-before-you-launch" class="level2">
+<h2 class="anchored" data-anchor-id="decide-before-you-launch">Decide Before You Launch</h2>
+<p>Before launching the test, write down four decisions:</p>
+<ol type="1">
+<li><strong>Primary metric</strong> — which metric decides the test?</li>
+<li><strong>MDE</strong> — what lift is large enough to matter?</li>
+<li><strong>Sample size and duration</strong> — how much data will you collect before judging the result?</li>
+<li><strong>Guardrail metrics</strong> — what should not get worse (revenue per user, page-load time, support tickets)?</li>
+</ol>
+<p>Writing these down up front guards against two habits that quietly inflate false positives: <em>peeking</em>—stopping the test the moment it looks significant—and <em>metric fishing</em>—reporting whichever of many metrics happened to move.</p>
+</section>
+<section id="cuped-getting-more-precision-from-the-same-sample" class="level2">
+<h2 class="anchored" data-anchor-id="cuped-getting-more-precision-from-the-same-sample">CUPED: Getting More Precision from the Same Sample</h2>
+<p>When the required sample is out of reach, you can’t always add more users, stores, or markets. CUPED can sometimes give you more precision from the same data by using information from before the experiment.</p>
+<p>The idea is simple. If a customer was already a high spender before the experiment, they will probably keep spending during it too, treatment or not. CUPED subtracts that predictable part of the outcome, so the comparison focuses on what actually changed during the test.</p>
+<div id="fig-cuped" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Three-step diagram: each customer's pre-campaign spend, their campaign spend, and the CUPED-adjusted lift above expected spend, with narrower distributions and the same average effect after adjustment.">
 <figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-peeking-alpha-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part3/sec3.2/peeking_alpha_inflation.png" class="fig-md img-fluid figure-img">
+<div aria-describedby="fig-cuped-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part3/sec3.2/cuped_how_it_works.png" class="fig-md img-fluid figure-img" alt="Three-step diagram: each customer's pre-campaign spend, their campaign spend, and the CUPED-adjusted lift above expected spend, with narrower distributions and the same average effect after adjustment.">
 </div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-peeking-alpha-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;3: Peeking inflates the false-positive rate.
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-cuped-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3: How CUPED removes pre-experiment variance.
 </figcaption>
 </figure>
 </div>
-</div>
-</div>
-<div class="callout callout-style-default callout-warning callout-titled">
+<p>In the figure, Customer A spent $100 before the campaign and $110 during it. Given that history you’d expect about $102, so the lift above expectation is just $8—not the full $110. Stripping out each customer’s predictable spend tightens the spread of outcomes without changing the average treatment effect, so the effect becomes easier to detect.</p>
+<p>The same idea helps in store-level or market-level experiments. Suppose a retailer wants to test an in-store promotion. Randomizing hundreds of stores into treatment and control may be operationally unrealistic, and every store is different—some are larger, some have different customer bases, some are hit by local events. CUPED can use each store’s pre-experiment sales to remove part of that predictable store-to-store variation. It doesn’t create more stores or fix a weak design, but when pre-period sales strongly predict sales during the test, it can make a smaller store test more precise.</p>
+<p>Formally, let <span class="math inline">\(Y\)</span> be the outcome and <span class="math inline">\(X\)</span> a pre-experiment covariate (e.g., purchases in the prior 30 days). The adjusted outcome is:</p>
+<p><span class="math display">\[Y_{\text{CUPED}} = Y - \theta \cdot (X - \bar{X})\]</span></p>
+<p>where <span class="math inline">\(\theta = \text{Cov}(Y, X) / \text{Var}(X)\)</span>. The variance of the adjusted outcome reduces to <span class="math inline">\(\text{Var}(Y_{\text{CUPED}}) = \text{Var}(Y)(1 - \rho^2)\)</span>, where <span class="math inline">\(\rho\)</span> is the Pearson correlation between <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span>. If <span class="math inline">\(\rho = 0.7\)</span>, CUPED removes about half the variance—as much precision as doubling the sample would buy. Netflix and Microsoft report 20–50% reductions in required sample sizes using this technique. The most common covariate is the same metric measured in the pre-experiment period, which usually gives the strongest correlation.</p>
+</section>
+<section id="when-a-test-is-inconclusive" class="level2">
+<h2 class="anchored" data-anchor-id="when-a-test-is-inconclusive">When a Test Is Inconclusive</h2>
+<p>Return to the checkout test. The right question isn’t “was the p-value below 0.05?” It’s “was the test precise enough to rule out an effect we’d care about?”</p>
+<p>Look at the confidence interval. The observed lift was +0.24 points, but the 95% interval runs from −0.36 to +0.84 points—wide enough to include both a small loss and a sizable win. That test is inconclusive: it hasn’t shown the redesign works, but it certainly hasn’t shown it doesn’t. Only when the interval is narrow and excludes any lift worth shipping can you reasonably set a treatment aside.</p>
+<p>A non-significant result, in other words, is not automatically a failed treatment. It may simply mean the test was too small, too noisy, or run during an unusual period.</p>
+<p>But what if you can’t randomize at all? Maybe the treatment is already live, or there are ethical reasons you can’t run an experiment. That’s when you turn to quasi-experimental methods.</p>
+<div class="callout callout-style-default callout-note callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-Warning
+<span class="screen-reader-only">Note</span>Run this notebook
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>Multiple Testing</p>
-<p>When you test 20 metrics simultaneously, one of them will be “significant” at the 5% level by chance alone. Pre-register your primary metric and analyze it at nominal alpha. Treat secondary and exploratory metrics with appropriate skepticism; apply Bonferroni or Benjamini-Hochberg corrections to control false discoveries.</p>
+<p><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/sec3-causal/ab_test_figures.ipynb"><code>ab_test_figures.ipynb</code></a> — <a href="https://colab.research.google.com/github/takechanman1228/marketing-science-in-python/blob/main/notebooks/sec3-causal/ab_test_figures.ipynb">Open in Colab</a> · <a href="https://nbviewer.org/github/takechanman1228/marketing-science-in-python/blob/main/notebooks/sec3-causal/ab_test_figures.ipynb">nbviewer</a></p>
+<p>Committed with outputs; Colab is best-effort. Full list on the <a href="../appendix/notebooks.html">Notebooks &amp; Code</a> page.</p>
 </div>
 </div>
-</section>
-<section id="how-to-interpret-null-results" class="level2">
-<h2 class="anchored" data-anchor-id="how-to-interpret-null-results">How to Interpret Null Results</h2>
-<p>A non-significant result doesn’t mean the treatment had no effect. It just means the test didn’t find an effect at your chosen significance level. Before you say “no effect,” check:</p>
-<ul>
-<li>Was the test adequately powered for the MDE you’re interested in?</li>
-<li>Is the confidence interval narrow enough to rule out meaningful effects?</li>
-<li>Could the test period have been atypical (holidays, outages, competing campaigns)?</li>
-</ul>
-<p>Absence of evidence is not evidence of absence. If the 95% confidence interval for the treatment effect is [-1%, +2%], you cannot claim “no effect.” You can only say the data are consistent with effects ranging from a 1 percentage-point decrease to a 2 percentage-point increase.</p>
-<p>But what if you can’t randomize? Maybe the treatment is already live, or there are ethical reasons you can’t run an experiment. That’s when you turn to quasi-experimental methods.</p>
 
 
 <div id="refs" class="references csl-bib-body hanging-indent" role="list" style="display: none">
