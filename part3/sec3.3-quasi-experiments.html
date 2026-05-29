@@ -23,6 +23,41 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 /* CSS for citations */
 div.csl-bib-body { }
 div.csl-entry {
@@ -504,6 +539,7 @@ div.csl-indent {
   <li><a href="#difference-in-differences-did" id="toc-difference-in-differences-did" class="nav-link" data-scroll-target="#difference-in-differences-did">Difference-in-Differences (DiD)</a>
   <ul class="collapse">
   <li><a href="#the-parallel-trends-assumption" id="toc-the-parallel-trends-assumption" class="nav-link" data-scroll-target="#the-parallel-trends-assumption">The Parallel Trends Assumption</a></li>
+  <li><a href="#estimating-did-with-a-regression" id="toc-estimating-did-with-a-regression" class="nav-link" data-scroll-target="#estimating-did-with-a-regression">Estimating DiD with a Regression</a></li>
   </ul></li>
   <li><a href="#other-quasi-experimental-methods" id="toc-other-quasi-experimental-methods" class="nav-link" data-scroll-target="#other-quasi-experimental-methods">Other Quasi-Experimental Methods</a>
   <ul class="collapse">
@@ -587,6 +623,17 @@ Figure&nbsp;1: Decision tree for choosing a causal design
 </tbody>
 </table>
 <p>The treatment stores grew by $6, but control stores also grew by $3, due to seasonality, inflation, or other trends that affect everyone. The DiD estimate is $6 - $3 = $3: the incremental effect of the loyalty program. This is Difference-in-Differences: it compares the change in outcomes over time between a treated group and an untreated group. The “double differencing” removes both time-invariant differences between groups and common time trends.</p>
+<p>In code, the estimate is just those two differences:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>did <span class="op">=</span> pd.DataFrame({</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"group"</span>:  [<span class="st">"Treatment stores"</span>, <span class="st">"Control stores"</span>],</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"before"</span>: [<span class="dv">42</span>, <span class="dv">40</span>],</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"after"</span>:  [<span class="dv">48</span>, <span class="dv">43</span>],</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>did[<span class="st">"change"</span>] <span class="op">=</span> did[<span class="st">"after"</span>] <span class="op">-</span> did[<span class="st">"before"</span>]              <span class="co"># +6 and +3</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>did_estimate <span class="op">=</span> did.loc[<span class="dv">0</span>, <span class="st">"change"</span>] <span class="op">-</span> did.loc[<span class="dv">1</span>, <span class="st">"change"</span>]</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"DiD estimate: $</span><span class="sc">{</span>did_estimate<span class="sc">:.0f}</span><span class="ss">"</span>)               <span class="co"># DiD estimate: $3</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>You might be thinking, “That seems almost too simple.” And in a way, it is. The elegance of DiD is that it cancels out factors you can’t measure, as long as one critical assumption holds.</p>
 <section id="the-parallel-trends-assumption" class="level3">
 <h3 class="anchored" data-anchor-id="the-parallel-trends-assumption">The Parallel Trends Assumption</h3>
@@ -608,6 +655,19 @@ Figure&nbsp;2: Difference-in-Differences: pre-trends and divergence.
 <li>If trends diverge before treatment, DiD is suspect. Consider matching, weighting, or a different method.</li>
 </ul>
 <p>When to use DiD in marketing: Promotion rollouts across stores, policy changes that affect some markets but not others, new feature launches in one app version, or any setting where you have pre/post data for treated and untreated groups.</p>
+</section>
+<section id="estimating-did-with-a-regression" class="level3">
+<h3 class="anchored" data-anchor-id="estimating-did-with-a-regression">Estimating DiD with a Regression</h3>
+<p>The by-hand version gives a point estimate but no sense of its uncertainty, and it doesn’t extend past two groups and two periods. In practice you fit the equivalent regression, which adds a standard error and scales to a full panel of stores and periods. With an indicator for the treated group, an indicator for the post period, and their interaction, the interaction coefficient <em>is</em> the DiD estimate:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> statsmodels.formula.api <span class="im">as</span> smf</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co"># df: one row per store-period — store_id, period, treated (0/1), post (0/1), basket_size</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> smf.ols(<span class="st">"basket_size ~ treated + post + treated:post"</span>, data<span class="op">=</span>df).fit(</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    cov_type<span class="op">=</span><span class="st">"cluster"</span>, cov_kwds<span class="op">=</span>{<span class="st">"groups"</span>: df[<span class="st">"store_id"</span>]}</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>coef, se <span class="op">=</span> model.params[<span class="st">"treated:post"</span>], model.bse[<span class="st">"treated:post"</span>]</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"DiD estimate: </span><span class="sc">{</span>coef<span class="sc">:.2f}</span><span class="ss"> (SE </span><span class="sc">{</span>se<span class="sc">:.2f}</span><span class="ss">)"</span>)   <span class="co"># DiD estimate: 3.10 (SE 0.07)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Clustering the standard error by store accounts for the repeated observations of each store. This same regression is where you run the formal pre-trend test from above: swap <code>post</code> for one indicator per period and check that the pre-treatment interaction terms sit near zero. The companion notebook works through the full panel, the pre-trend check, and RDD and Synthetic Control end to end.</p>
 </section>
 </section>
 <section id="other-quasi-experimental-methods" class="level2">
@@ -644,6 +704,20 @@ Figure&nbsp;4: Synthetic Control: actual vs.&nbsp;synthetic counterfactual.
 </div>
 <p>Synthetic Control works best when you have a single (or few) treated units with a long pre-treatment time series. The pre-treatment fit must be tight. If the synthetic control can’t reproduce the treated unit’s pre-treatment trajectory, the estimate is unreliable.</p>
 <p>These methods tell us the average effect of a treatment. But what if different customers respond differently? A coupon might boost purchases by 5% on average, but that average blends customers for whom the lift was 20% with customers who saw zero effect. The next chapter tackles that question.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Run this notebook
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.3_quasi_experiments.ipynb"><code>sec3.3_quasi_experiments.ipynb</code></a> — <a href="https://colab.research.google.com/github/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.3_quasi_experiments.ipynb">Open in Colab</a> · <a href="https://nbviewer.org/github/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.3_quasi_experiments.ipynb">nbviewer</a></p>
+<p>Worked DiD (table, regression, and pre-trend check), RDD, and Synthetic Control estimation on synthetic data with <code>statsmodels</code> and <code>scipy</code>. Committed with outputs; Colab is best-effort. Full list on the <a href="../appendix/notebooks.html">Notebooks &amp; Code</a> page.</p>
+</div>
+</div>
 
 
 <div id="refs" class="references csl-bib-body hanging-indent" role="list" style="display: none">
