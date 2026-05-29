@@ -563,7 +563,7 @@ div.csl-indent {
 <p>The quickest way to a usable segmentation skips clustering algorithms entirely. Start by ranking customers by revenue decile, then layer on RFM if you need more nuance.</p>
 <section id="decile-analysis" class="level3">
 <h3 class="anchored" data-anchor-id="decile-analysis">Decile Analysis</h3>
-<p>Decile analysis divides customers into ten equal groups by revenue. The pattern usually follows the Pareto principle: a small share of customers drives most of the revenue. D1 gets retention and VIP treatment. D2 to D5 get growth campaigns—this is where the biggest upside is. D8 to D10 get only low-cost automated nurture. You can set this up in under an hour and give your team a clear action plan.</p>
+<p>Decile analysis divides customers into ten equal groups by revenue. The pattern usually follows the Pareto principle: a small share of customers drives most of the revenue. D1 gets retention and VIP treatment. D2 to D5 get growth campaigns; this is where the biggest upside is. D8 to D10 get only low-cost automated nurture. You can set this up in under an hour and give your team a clear action plan.</p>
 <div id="fig-decile-distribution" class="fig-md quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-decile-distribution-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -618,7 +618,7 @@ Table&nbsp;1: RFM variables and their interpretation.
 </div>
 </figure>
 </div>
-<p>Independent sorting splits each variable into quintiles separately, creating a three-digit score (R=5, F=4, M=3) and up to 125 groups. Sequential sorting nests the splits: first by Recency, then Frequency within each Recency group, then Monetary — so Recency gets the most weight.</p>
+<p>Independent sorting splits each variable into quintiles separately, creating a three-digit score (R=5, F=4, M=3) and up to 125 groups. Sequential sorting nests the splits: first by Recency, then Frequency within each Recency group, then Monetary, so Recency gets the most weight.</p>
 <p>Decile and RFM are quick to set up and easy to use. But they only create value tiers, not full customer profiles. Two customers with similar RFM scores can behave very differently: one might buy full-price items across many categories, while another buys only discounted items in a single category. To see those differences, you need to move from value tiers to richer behavioral variables.</p>
 </section>
 </section>
@@ -640,12 +640,12 @@ Figure&nbsp;2: Elbow and silhouette plots for choosing K.
 </section>
 <section id="sec-embedding" class="level2">
 <h2 class="anchored" data-anchor-id="sec-embedding">Embedding-Based Segmentation</h2>
-<p>To capture what customers buy, treat each customer’s purchase history as text. Concatenate their purchased product descriptions into a single string—the customer document—and use an embedding model to turn that string into a dense vector. In this embedding space, birthday candles and party plates end up close together, while antique teapot sits far away. Cluster on these vectors and the segments split by purchase meaning, not just purchase volume.</p>
+<p>To capture what customers buy, treat each customer’s purchase history as text. Concatenate their purchased product descriptions into a single string (the customer document) and use an embedding model to turn that string into a dense vector. In this embedding space, birthday candles and party plates end up close together, while antique teapot sits far away. Cluster on these vectors and the segments split by purchase meaning, not just purchase volume.</p>
 <section id="constructing-the-customer-document" class="level3">
 <h3 class="anchored" data-anchor-id="constructing-the-customer-document">Constructing the Customer Document</h3>
 <p>Three practical decisions shape the quality of the segments more than anything else.</p>
 <p>Which products go in. Top-N purchased items (by frequency or revenue) usually outperform the full purchase history. The full list adds noise from one-off buys; the top items capture the customer’s actual pattern.</p>
-<p>Whether to weight by revenue. Including a high-value item once versus a low-value item once can misrepresent what the customer cares about. Revenue-weighting — repeating product mentions in proportion to spend — sharpens the segments for customers with mixed baskets. Cap the weights or use log-spend weighting when price differences across products are large; otherwise a single luxury purchase can dominate the document.</p>
+<p>Whether to weight by revenue. Including a high-value item once versus a low-value item once can misrepresent what the customer cares about. Revenue-weighting (repeating product mentions in proportion to spend) sharpens the segments for customers with mixed baskets. Cap the weights or use log-spend weighting when price differences across products are large; otherwise a single luxury purchase can dominate the document.</p>
 <p>Filtering generic products. Items like “Gift Card,” “Postage,” or generic SKUs are noise: they appear across all segments and dilute the keywords. Filter them out by StockCode patterns or maintain a small exclusion list. This single step often makes the difference between segments that mean something and segments that mean nothing.</p>
 <p>A lightweight sentence-embedding model is enough for most retail catalogs. The quality of your segments depends much more on how you design and validate the customer document than on which embedding model you pick.</p>
 </section>
@@ -666,11 +666,11 @@ Figure&nbsp;3: Top distinctive keywords per segment.
 </section>
 <section id="when-one-theme-dominates" class="level3">
 <h3 class="anchored" data-anchor-id="when-one-theme-dominates">When One Theme Dominates</h3>
-<p>Real catalogs often have one broad theme covering most customers and a tail of sharp niches at the edges. HDBSCAN surfaces both — but after outlier reduction the broad theme inflates into a single mega-topic that is too large to act on as one segment. The fix is surgical: run K-Means on <strong>just the mega-topic’s embeddings</strong> and split it into activation-sized sub-segments, while keeping the small niche topics as discovery findings. This applies the “HDBSCAN for discovery, K-Means for operations” pattern inside the dominant cluster, not on the full base. The companion notebook does this automatically when any topic exceeds 50% of the base.</p>
+<p>Real catalogs often have one broad theme covering most customers and a tail of sharp niches at the edges. HDBSCAN surfaces both, but after outlier reduction the broad theme inflates into a single mega-topic that is too large to act on as one segment. The fix is surgical: run K-Means on <strong>just the mega-topic’s embeddings</strong> and split it into activation-sized sub-segments, while keeping the small niche topics as discovery findings. This applies the “HDBSCAN for discovery, K-Means for operations” pattern inside the dominant cluster, not on the full base. The companion notebook does this automatically when any topic exceeds 50% of the base.</p>
 </section>
 <section id="the-llm-naming-trap" class="level3">
 <h3 class="anchored" data-anchor-id="the-llm-naming-trap">The LLM-Naming Trap</h3>
-<p>LLM-assisted naming can make segments feel more credible than they really are. Feed any cluster—even a random one—into an LLM and ask for a name and persona, and you will get a polished, convincing description. The narrative sounds plausible whether the cluster is meaningful or not.</p>
+<p>LLM-assisted naming can make segments feel more credible than they really are. Feed any cluster, even a random one, into an LLM and ask for a name and persona, and you will get a polished, convincing description. The narrative sounds plausible whether the cluster is meaningful or not.</p>
 <p>Two safeguards:</p>
 <ul>
 <li>Validate the keyword evidence before reading the LLM’s narrative. If you cannot see a clear theme in the top keywords yourself, the LLM’s name is fiction.</li>

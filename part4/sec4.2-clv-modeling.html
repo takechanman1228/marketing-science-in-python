@@ -637,7 +637,7 @@ Figure&nbsp;2: Profitability once repeat purchases are included.
 </figcaption>
 </figure>
 </div>
-<p>This is the gap CLV modeling closes. Without it, every customer gets the same CPA ceiling — which means overpaying for low-value customers and underpaying for high-value ones. With it, the ceiling scales to the predicted value, so the same budget acquires more of the right customers.</p>
+<p>This is the gap CLV modeling closes. Without it, every customer gets the same CPA ceiling, which means overpaying for low-value customers and underpaying for high-value ones. With it, the ceiling scales to the predicted value, so the same budget acquires more of the right customers.</p>
 <div id="fig-cpa-adjustment" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Without CLV, a fixed CPA over-invests in low-value customers; with CLV, CPA scales to each customer's lifetime value.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-cpa-adjustment-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -670,7 +670,7 @@ Note
 <p><span class="math display">\[
 \text{CLV} = \text{Average Order Value} \times \text{Purchase Frequency} \times \text{Customer Lifespan}
 \]</span></p>
-<p>For a fashion brand where customers spend $100 per order, shop 4 times a year, and stay loyal for 3 years: <span class="math inline">\(\text{CLV} = 100 \times 4 \times 3 = \$1{,}200\)</span>. Simple, intuitive, and useful for rough business sizing — but too coarse for customer-level decisions. It collapses on three points.</p>
+<p>For a fashion brand where customers spend $100 per order, shop 4 times a year, and stay loyal for 3 years: <span class="math inline">\(\text{CLV} = 100 \times 4 \times 3 = \$1{,}200\)</span>. Simple, intuitive, and useful for rough business sizing, but too coarse for customer-level decisions. It collapses on three points.</p>
 <div id="fig-limitations" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="The three limitations of the traditional CLV formula: customer heterogeneity, differences in first-purchase timing, and the &quot;dead or alive&quot; ambiguity.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-limitations-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -681,7 +681,7 @@ Figure&nbsp;4: Three limitations of the traditional CLV formula.
 </figcaption>
 </figure>
 </div>
-<p>Limitation 1 — Not all customers are the same. Averaging across the whole base misrepresents both ends of the distribution:</p>
+<p>Limitation 1: Not all customers are the same. Averaging across the whole base misrepresents both ends of the distribution:</p>
 <div id="tbl-heterogeneity" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-heterogeneity-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -722,7 +722,7 @@ Table&nbsp;1: The average CLV of $1,090 misrepresents both groups.
 </figure>
 </div>
 <p>The $1,090 average exists in the data and describes no one. You need CLV at the individual level.</p>
-<p>Limitation 2 — Different first-purchase timing. A customer who started a year ago has a full year of observable data; one who started three months ago has much less. Raw frequency counts conflate “low engagement” with “new arrival” unless you adjust for tenure.</p>
+<p>Limitation 2: Different first-purchase timing. A customer who started a year ago has a full year of observable data; one who started three months ago has much less. Raw frequency counts conflate “low engagement” with “new arrival” unless you adjust for tenure.</p>
 <div id="fig-tenure" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Customers who start purchasing at different times have different observable windows, making raw frequency counts misleading.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-tenure-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -733,7 +733,7 @@ Figure&nbsp;5: Tenure bias in observable customer windows.
 </figcaption>
 </figure>
 </div>
-<p>Limitation 3 — Dead or alive? In subscriptions, churn is observable: the customer cancels. In retail and e-commerce, it is not. Whether a customer counts as “alive” depends on their own pattern. Someone who buys monthly going silent for three months is a red flag; someone who buys every six months skipping three is normal.</p>
+<p>Limitation 3: Dead or alive? In subscriptions, churn is observable: the customer cancels. In retail and e-commerce, it is not. Whether a customer counts as “alive” depends on their own pattern. Someone who buys monthly going silent for three months is a red flag; someone who buys every six months skipping three is normal.</p>
 <div id="fig-dead-or-alive" class="fig-md quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-dead-or-alive-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -744,7 +744,7 @@ Figure&nbsp;6: Dead-or-alive ambiguity in purchase patterns.
 </figcaption>
 </figure>
 </div>
-<p>All three problems have the same root: a single average cannot represent a heterogeneous customer base. The fix is to model CLV at the individual level — which is exactly what BTYD does.</p>
+<p>All three problems have the same root: a single average cannot represent a heterogeneous customer base. The fix is to model CLV at the individual level, which is exactly what BTYD does.</p>
 </section>
 <section id="sec-btyd" class="level2">
 <h2 class="anchored" data-anchor-id="sec-btyd">BTYD: The BG/NBD + Gamma-Gamma Framework</h2>
@@ -836,7 +836,7 @@ Note
 </div>
 <div class="callout-body-container callout-body">
 <p>When BTYD is not the right tool</p>
-<p>BTYD is built for non-contractual settings (retail, e-commerce) where churn is unobservable. For contractual settings like SaaS or subscriptions, where the customer explicitly cancels, survival analysis (Kaplan-Meier, Cox Proportional Hazards) is the better fit. If you already have rich behavioral features and a production ML pipeline, an ML regression (e.g., LightGBM) on a fixed-horizon target will likely outperform BTYD — and a practical hybrid is to feed BTYD outputs (P(alive), expected purchases) into the ML model as features. The companion scripts <a href="../notebooks/part4-customer-analytics/lightgbm-companion/01_data_features.py"><code>01_data_features.py</code></a> and <a href="../notebooks/part4-customer-analytics/lightgbm-companion/02_modeling.py"><code>02_modeling.py</code></a> (under <a href="../notebooks/part4-customer-analytics/lightgbm-companion/"><code>notebooks/part4-customer-analytics/lightgbm-companion/</code></a>) show an end-to-end LightGBM implementation.</p>
+<p>BTYD is built for non-contractual settings (retail, e-commerce) where churn is unobservable. For contractual settings like SaaS or subscriptions, where the customer explicitly cancels, survival analysis (Kaplan-Meier, Cox Proportional Hazards) is the better fit. If you already have rich behavioral features and a production ML pipeline, an ML regression (e.g., LightGBM) on a fixed-horizon target will likely outperform BTYD, and a practical hybrid is to feed BTYD outputs (P(alive), expected purchases) into the ML model as features. The companion scripts <a href="../notebooks/part4-customer-analytics/lightgbm-companion/01_data_features.py"><code>01_data_features.py</code></a> and <a href="../notebooks/part4-customer-analytics/lightgbm-companion/02_modeling.py"><code>02_modeling.py</code></a> (under <a href="../notebooks/part4-customer-analytics/lightgbm-companion/"><code>notebooks/part4-customer-analytics/lightgbm-companion/</code></a>) show an end-to-end LightGBM implementation.</p>
 </div>
 </div>
 </section>
@@ -857,7 +857,7 @@ Figure&nbsp;10: Required input data for CLV modeling.
 </div>
 <section id="data-and-rfm-t-summary" class="level3">
 <h3 class="anchored" data-anchor-id="data-and-rfm-t-summary">Data and RFM-T Summary</h3>
-<p>We use the <a href="https://www.kaggle.com/datasets/frtgnn/dunnhumby-the-complete-journey">Dunnhumby “The Complete Journey”</a> grocery-retail dataset — the same dataset used in the traditional segmentation notebook (<code>sec4.1_traditional_segmentation.py</code>). This lets you carry the same roughly 2,500 households from the traditional segmentation pipeline into CLV; after standard cleaning (removing negative-value transactions and zero-quantity rows) and RFM-T construction, the companion notebook models 2,497 customers.</p>
+<p>We use the <a href="https://www.kaggle.com/datasets/frtgnn/dunnhumby-the-complete-journey">Dunnhumby “The Complete Journey”</a> grocery-retail dataset, the same dataset used in the traditional segmentation notebook (<code>sec4.1_traditional_segmentation.py</code>). This lets you carry the same roughly 2,500 households from the traditional segmentation pipeline into CLV; after standard cleaning (removing negative-value transactions and zero-quantity rows) and RFM-T construction, the companion notebook models 2,497 customers.</p>
 <div id="tbl-rfmt" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-rfmt-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -897,7 +897,7 @@ Table&nbsp;2: RFM-T metrics used in the BTYD model.
 </div>
 </figure>
 </div>
-<div id="a03287d8" class="cell" data-execution_count="1">
+<div id="61795508" class="cell" data-execution_count="1">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
@@ -925,7 +925,7 @@ Table&nbsp;2: RFM-T metrics used in the BTYD model.
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>Full end-to-end implementation — model fitting, CLV estimation, and demographic-segment analysis using the Dunnhumby dataset.</p>
+<p>Full end-to-end implementation: model fitting, CLV estimation, and demographic-segment analysis using the Dunnhumby dataset.</p>
 <p><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.2_clv_pymc_marketing.ipynb"><code>sec4.2_clv_pymc_marketing.ipynb</code></a> — <a href="https://colab.research.google.com/github/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.2_clv_pymc_marketing.ipynb">Open in Colab</a> · <a href="https://nbviewer.org/github/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.2_clv_pymc_marketing.ipynb">nbviewer</a></p>
 <p>Committed with outputs; Colab is best-effort. Full list on the <a href="../appendix/notebooks.html">Notebooks &amp; Code</a> page.</p>
 </div>
@@ -933,7 +933,7 @@ Table&nbsp;2: RFM-T metrics used in the BTYD model.
 </section>
 <section id="fitting-and-estimating-clv" class="level3">
 <h3 class="anchored" data-anchor-id="fitting-and-estimating-clv">Fitting and Estimating CLV</h3>
-<div id="1c82c007" class="cell" data-execution_count="2">
+<div id="3f96441b" class="cell" data-execution_count="2">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># --- BG/NBD: purchase frequency + P(alive) ---</span></span>
@@ -962,7 +962,7 @@ Table&nbsp;2: RFM-T metrics used in the BTYD model.
 </section>
 <section id="probability-alive-matrix" class="level3">
 <h3 class="anchored" data-anchor-id="probability-alive-matrix">Probability Alive Matrix</h3>
-<p>A quick way to see what the BG/NBD model has learned is the Probability Alive matrix. Recency on one axis, frequency on the other, color showing P(alive). Four corners tell four stories: new customers (low both), loyal repeaters (low recency, high frequency), at-risk (high recency, high frequency — they used to buy a lot, now they have gone quiet), and one-time passersby (high recency, low frequency).</p>
+<p>A quick way to see what the BG/NBD model has learned is the Probability Alive matrix. Recency on one axis, frequency on the other, color showing P(alive). Four corners tell four stories: new customers (low both), loyal repeaters (low recency, high frequency), at-risk (high recency, high frequency: they used to buy a lot, now they have gone quiet), and one-time passersby (high recency, low frequency).</p>
 <div id="fig-prob-alive-matrix" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Probability-alive matrix over purchase frequency (x) and recency (y); color shows P(alive) for each customer position.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-prob-alive-matrix-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -998,12 +998,12 @@ Important
 <section id="combining-segments-and-clv" class="level3">
 <h3 class="anchored" data-anchor-id="combining-segments-and-clv">Combining Segments and CLV</h3>
 <p>Join the <code>segment_id</code> from the segmentation chapter (Chapter 4.1) with each customer’s CLV estimate. This gives you the operating table the part has been building toward: what kind of customer this is, what they are worth, and what the business should do for them.</p>
-<p>Demographics can still help describe or reach a segment, but the main decision layer is behavioral segment × predicted value. The companion notebook joins CLV estimates with the Dunnhumby <code>hh_demographic.csv</code> so you can profile each segment along age, income, and household composition — useful for picking creative and channel, less so for setting budget.</p>
+<p>Demographics can still help describe or reach a segment, but the main decision layer is behavioral segment × predicted value. The companion notebook joins CLV estimates with the Dunnhumby <code>hh_demographic.csv</code> so you can profile each segment along age, income, and household composition: useful for picking creative and channel, less so for setting budget.</p>
 </section>
 </section>
 <section id="sec-using-clv" class="level2">
 <h2 class="anchored" data-anchor-id="sec-using-clv">Putting CLV to Work</h2>
-<p>Once you have a <code>clv_estimate</code> per customer, three applications come almost for free. These patterns work for any CLV score — downstream systems only need a customer ID and a number.</p>
+<p>Once you have a <code>clv_estimate</code> per customer, three applications come almost for free. These patterns work for any CLV score: downstream systems only need a customer ID and a number.</p>
 <ol type="1">
 <li>CPA ceilings for ad bidding</li>
 </ol>
@@ -1031,7 +1031,7 @@ Tip
 </div>
 <div class="callout-body-container callout-body">
 <p>Monitoring</p>
-<p>Compare predicted to actual revenue per cohort at 3, 6, and 12 months. If the ratio drifts more than ±20%, retrain. Also check CLV predictions for bias against protected groups — models trained on under-served segments will perpetuate that bias by predicting lower CLV and setting lower acquisition bids.</p>
+<p>Compare predicted to actual revenue per cohort at 3, 6, and 12 months. If the ratio drifts more than ±20%, retrain. Also check CLV predictions for bias against protected groups: models trained on under-served segments will perpetuate that bias by predicting lower CLV and setting lower acquisition bids.</p>
 </div>
 </div>
 </section>

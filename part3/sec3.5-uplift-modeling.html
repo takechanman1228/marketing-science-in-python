@@ -692,8 +692,8 @@ Figure&nbsp;5: Gini impurity measures accuracy, not uplift.
 </section>
 <section id="training-an-uplift-model" class="level3">
 <h3 class="anchored" data-anchor-id="training-an-uplift-model">Training an Uplift Model</h3>
-<p>Several open-source libraries implement uplift trees with these splitting criteria — <code>causalml</code>’s <code>UpliftRandomForestClassifier</code> and <code>scikit-uplift</code>’s <code>SoloModel</code> / <code>ClassTransformation</code> families, among others. They share a common shape: <code>fit(X, treatment, y)</code> returns a model whose <code>predict(X)</code> produces an uplift score per customer.</p>
-<p>A meta-learner gives you the same ingredient by another route. A T-Learner CATE — the predicted incremental conversion probability from §3.4 — is itself a per-customer uplift score, and we can hand it to the same evaluation and targeting tools:</p>
+<p>Several open-source libraries implement uplift trees with these splitting criteria: <code>causalml</code>’s <code>UpliftRandomForestClassifier</code> and <code>scikit-uplift</code>’s <code>SoloModel</code> / <code>ClassTransformation</code> families, among others. They share a common shape: <code>fit(X, treatment, y)</code> returns a model whose <code>predict(X)</code> produces an uplift score per customer.</p>
+<p>A meta-learner gives you the same ingredient by another route. A T-Learner CATE (the predicted incremental conversion probability from §3.4) is itself a per-customer uplift score, and we can hand it to the same evaluation and targeting tools:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># CATE from §3.4 is already an uplift score per customer.</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> econml.metalearners <span class="im">import</span> TLearner</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> lightgbm <span class="im">import</span> LGBMRegressor</span>
@@ -702,7 +702,7 @@ Figure&nbsp;5: Gini impurity measures accuracy, not uplift.
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>t_learner.fit(Y<span class="op">=</span>y_train, T<span class="op">=</span>treatment_train, X<span class="op">=</span>X_train)</span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>uplift_score <span class="op">=</span> t_learner.effect(X_eval)   <span class="co"># one number per held-out customer</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>The full runnable example — fitting six meta-learners on the Criteo Uplift dataset, then evaluating their rankings — lives in the §3.4 companion notebook (see callout in <a href="sec3.4-meta-learners.html">Meta Learners for Treatment Effects</a>).</p>
+<p>The full runnable example (fitting six meta-learners on the Criteo Uplift dataset, then evaluating their rankings) lives in the §3.4 companion notebook (see callout in <a href="sec3.4-meta-learners.html">Meta Learners for Treatment Effects</a>).</p>
 </section>
 </section>
 <section id="evaluating-uplift-models" class="level2">
@@ -712,16 +712,16 @@ Figure&nbsp;5: Gini impurity measures accuracy, not uplift.
 <ul>
 <li>A good uplift model will concentrate most of the incremental conversions in the top deciles. If you target the top 20% of customers, you should capture most of the total uplift.</li>
 <li>A random targeting strategy follows a straight diagonal line.</li>
-<li>The area between the model curve and the random baseline is the AUUC (Area Under the Uplift Curve). <code>scikit-uplift</code> reports it normalized to <code>[0, 1]</code> — 1.0 is a perfect ranking, 0.0 is no better than random.</li>
+<li>The area between the model curve and the random baseline is the AUUC (Area Under the Uplift Curve). <code>scikit-uplift</code> reports it normalized to <code>[0, 1]</code>: 1.0 is a perfect ranking, 0.0 is no better than random.</li>
 </ul>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklift.metrics <span class="im">import</span> uplift_curve, uplift_auc_score</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co"># uplift_score is any per-customer ranking signal — a CATE from §3.4,</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co"># uplift_score is any per-customer ranking signal: a CATE from §3.4,</span></span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># the output of an uplift tree, anything you want to grade.</span></span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>auuc <span class="op">=</span> uplift_auc_score(y_true, uplift_score, treatment)</span>
 <span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>x, y <span class="op">=</span> uplift_curve(y_true, uplift_score, treatment)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>The §3.4 companion notebook (§10) runs this exact recipe on the T-Learner CATE for the Criteo Uplift dataset and plots the curve against a random-targeting diagonal — the model curve sits clearly above it, which is what tells you the ranking is doing work.</p>
-<p>The Qini curve is a similar metric, but it normalizes by the number of treated customers instead of the whole population — more robust when the treated share varies across score buckets. Both metrics help you see if your model is actually ranking customers by their true uplift.</p>
+<p>The §3.4 companion notebook (§10) runs this exact recipe on the T-Learner CATE for the Criteo Uplift dataset and plots the curve against a random-targeting diagonal. The model curve sits clearly above it, which is what tells you the ranking is doing work.</p>
+<p>The Qini curve is a similar metric, but it normalizes by the number of treated customers instead of the whole population, making it more robust when the treated share varies across score buckets. Both metrics help you see if your model is actually ranking customers by their true uplift.</p>
 </section>
 <section id="from-scores-to-targeting-decisions" class="level2">
 <h2 class="anchored" data-anchor-id="from-scores-to-targeting-decisions">From Scores to Targeting Decisions</h2>
@@ -732,14 +732,14 @@ Figure&nbsp;5: Gini impurity measures accuracy, not uplift.
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>ranked <span class="op">=</span> scored[<span class="st">'uplift'</span>].rank(method<span class="op">=</span><span class="st">'first'</span>, ascending<span class="op">=</span><span class="va">False</span>)</span>
 <span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>scored[<span class="st">'decile'</span>] <span class="op">=</span> pd.qcut(ranked, q<span class="op">=</span><span class="dv">10</span>, labels<span class="op">=</span><span class="va">False</span>)   <span class="co"># 0 = highest uplift</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>If your budget lets you target 20% of customers, just take the top two deciles. This gives you a list of customers ordered by expected incremental value.</p>
-<p>The §3.4 companion notebook (§9) extends this with a per-decile observed-uplift table and a net-value column that subtracts treatment cost — the same workflow, made operational.</p>
+<p>The §3.4 companion notebook (§9) extends this with a per-decile observed-uplift table and a net-value column that subtracts treatment cost: the same workflow, made operational.</p>
 </section>
 <section id="guardrails" class="level2">
 <h2 class="anchored" data-anchor-id="guardrails">Guardrails</h2>
 <p>Two failure modes to watch for:</p>
 <p>Margin erosion. The most common failure in coupon targeting is when the extra revenue from coupons is less than the cost of the discounts. Always include the coupon cost in your uplift calculation: net uplift = estimated treatment effect times margin minus coupon cost. Only target customers where the expected extra margin is greater than the coupon value.</p>
-<p>Customer fatigue. Even Persuadables will stop responding—or even disengage—if you contact them too often. Set frequency caps (limits on how many times you contact each customer) and watch if uplift drops for customers who have been contacted recently.</p>
-<p>That wraps up Part 3. We started with a common question: a colleague claims the coupon doubled the purchase rate, but we saw that was just selection bias. From there, we built a toolkit to answer the real question: not just whether a campaign works, but who actually benefits. We covered A/B testing, quasi-experiments, meta-learners, and uplift modeling. The real goal is not just to know if a campaign works, but to know who it works for—so you can spend your budget where it matters.</p>
+<p>Customer fatigue. Even Persuadables will stop responding, or even disengage, if you contact them too often. Set frequency caps (limits on how many times you contact each customer) and watch if uplift drops for customers who have been contacted recently.</p>
+<p>That wraps up Part 3. We started with a common question: a colleague claims the coupon doubled the purchase rate, but we saw that was just selection bias. From there, we built a toolkit to answer the real question: not just whether a campaign works, but who actually benefits. We covered A/B testing, quasi-experiments, meta-learners, and uplift modeling. The real goal is not just to know if a campaign works, but to know who it works for, so you can spend your budget where it matters.</p>
 
 
 <div id="refs" class="references csl-bib-body hanging-indent" role="list" style="display: none">

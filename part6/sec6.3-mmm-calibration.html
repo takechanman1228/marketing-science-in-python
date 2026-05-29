@@ -602,8 +602,8 @@ window.Quarto = {
 </header>
 
 
-<p>The MMM in <a href="sec6.2-mmm-fundamentals.html">Section 6.2</a> measures, simulates, and optimizes — but its estimates are fundamentally observational. The model observes that weeks with higher TikTok spend tend to have higher sales, and attributes part of that lift to TikTok. It cannot, by itself, distinguish genuine media effects from confounders: seasonal demand that coincides with campaign flights, promotions that run alongside media pushes, or competitive dynamics that move several variables at once.</p>
-<p>MMM also has a structural identification problem. Media channels are usually correlated — brands raise spend across all of them during the same peak periods. When Meta, Google, and TikTok spend all spike in Q4, the model cannot cleanly separate their individual effects. The result is wide credible intervals and unstable ROI estimates.</p>
+<p>The MMM in <a href="sec6.2-mmm-fundamentals.html">Section 6.2</a> measures, simulates, and optimizes, but its estimates are fundamentally observational. The model observes that weeks with higher TikTok spend tend to have higher sales, and attributes part of that lift to TikTok. It cannot, by itself, distinguish genuine media effects from confounders: seasonal demand that coincides with campaign flights, promotions that run alongside media pushes, or competitive dynamics that move several variables at once.</p>
+<p>MMM also has a structural identification problem. Media channels are usually correlated: brands raise spend across all of them during the same peak periods. When Meta, Google, and TikTok spend all spike in Q4, the model cannot cleanly separate their individual effects. The result is wide credible intervals and unstable ROI estimates.</p>
 <p>Controlled experiments close the gap. A <strong>geo-lift test</strong> measures the causal incremental effect of a specific channel by varying spend across test and control geos. Feeding that estimate back into the MMM as an informative prior tightens the posterior and anchors one channel’s ROI in experimental evidence.</p>
 <p>This section walks through the loop: design the experiment, estimate the lift, convert it to a prior, plug it back into the model, and run calibration as a continuous program.</p>
 <div id="fig-calibration-workflow" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Calibration workflow: run an experiment, estimate lift, convert it to a prior, and feed it back into the MMM.">
@@ -623,7 +623,7 @@ Figure&nbsp;1: The MMM calibration workflow.
 <p>A typical design involves five decisions:</p>
 <ol type="1">
 <li><strong>Target channel.</strong> Prioritize channels with the widest credible intervals in the uncalibrated model, or channels where the optimizer recommends large shifts.</li>
-<li><strong>Test and control geos.</strong> Split markets into groups with similar pre-period revenue trends. Parallel trends is the foundation of the DID estimator — if test geos were already growing faster before the experiment, the estimate will be biased.</li>
+<li><strong>Test and control geos.</strong> Split markets into groups with similar pre-period revenue trends. Parallel trends is the foundation of the DID estimator: if test geos were already growing faster before the experiment, the estimate will be biased.</li>
 <li><strong>Intervention magnitude.</strong> A 5% spend increase is unlikely to produce a detectable signal in noisy weekly geo data. 20–50% is more typical.</li>
 <li><strong>Duration.</strong> Four to eight weeks of treatment is common. Include a pre-period of similar length for the parallel trends check.</li>
 <li><strong>Geo assignment.</strong> Assign larger markets to the test group for more statistical power.</li>
@@ -653,7 +653,7 @@ Important
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>This is a <strong>marginal ROAS</strong> — the return on the incremental dollar — not the average return across all dollars spent. The distinction is critical when converting the estimate to a prior, because the MMM posterior reflects average ROAS. We unpack this in the next section before showing the integration code.</p>
+<p>This is a <strong>marginal ROAS</strong> (the return on the incremental dollar), not the average return across all dollars spent. The distinction is critical when converting the estimate to a prior, because the MMM posterior reflects average ROAS. We unpack this in the next section before showing the integration code.</p>
 </div>
 </div>
 <p>Before using the estimate for calibration, verify three things: (1) parallel trends hold in the pre-period; (2) the ROAS estimate is positive; (3) the 95% CI is narrow enough to be useful as an anchor.</p>
@@ -661,7 +661,7 @@ Important
 <section id="marginal-vs.-average-roas" class="level2">
 <h2 class="anchored" data-anchor-id="marginal-vs.-average-roas">Marginal vs.&nbsp;Average ROAS</h2>
 <p>This point deserves emphasis because it is the most common source of confusion in calibration.</p>
-<p>The geo-lift experiment measures <strong>marginal ROAS</strong> — the return on the incremental dollar of spend above the baseline level. The MMM posterior for <code>roi_m</code> reflects <strong>average ROAS</strong> — total media-driven revenue divided by total spend over the modeling period. Because of the Hill saturation curve, these are different quantities.</p>
+<p>The geo-lift experiment measures <strong>marginal ROAS</strong>: the return on the incremental dollar of spend above the baseline level. The MMM posterior for <code>roi_m</code> reflects <strong>average ROAS</strong>: total media-driven revenue divided by total spend over the modeling period. Because of the Hill saturation curve, these are different quantities.</p>
 <div id="fig-marginal-vs-average" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Marginal vs. average ROAS on a saturation curve: marginal is the tangent slope, average is the slope from the origin.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-marginal-vs-average-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -673,7 +673,7 @@ Figure&nbsp;2: Marginal vs.&nbsp;average ROAS on a saturation curve.
 </figure>
 </div>
 <p>Consider a channel on the steep part of its curve (under-invested). Marginal ROAS is high: each additional dollar generates substantial incremental revenue. But average ROAS, which includes the inframarginal dollars, is lower. Conversely, a saturated channel has low marginal ROAS but may have reasonable average ROAS because the early dollars were highly productive.</p>
-<p>This is why we cannot plug the experimental ROAS directly into the model as a tight prior. Doing so would force the average-ROAS parameter to take a value that only makes sense for the marginal dollar. The fix is to inflate the standard error of the experimental estimate before converting it to a prior — giving the posterior room to land somewhere between the marginal and average values, weighted by the data.</p>
+<p>This is why we cannot plug the experimental ROAS directly into the model as a tight prior. Doing so would force the average-ROAS parameter to take a value that only makes sense for the marginal dollar. The fix is to inflate the standard error of the experimental estimate before converting it to a prior, to give the posterior room to land somewhere between the marginal and average values, weighted by the data.</p>
 </section>
 <section id="integration-with-meridian" class="level2">
 <h2 class="anchored" data-anchor-id="integration-with-meridian">Integration with Meridian</h2>
@@ -683,7 +683,7 @@ Figure&nbsp;2: Marginal vs.&nbsp;average ROAS on a saturation curve.
 <li><strong>Calibration period (<code>roi_calibration_period</code>)</strong>: a boolean array marking specific weeks and channels as experimentally validated. During sampling, the model constrains the predicted ROI for the marked channel during the marked period to be consistent with the experimental estimate. This is a stronger, more targeted constraint.</li>
 </ul>
 <p>Both mechanisms can be used together. The informative prior shifts the starting point; the calibration period adds a tighter constraint during the experiment window.</p>
-<p><strong>Converting the DID estimate to a LogNormal prior.</strong> Note the <code>se_inflated</code> step — this is the marginal-vs-average adjustment we just discussed.</p>
+<p><strong>Converting the DID estimate to a LogNormal prior.</strong> Note the <code>se_inflated</code> step: this is the marginal-vs-average adjustment we just discussed.</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> to_lognormal_params(mean, std):</span>
@@ -730,7 +730,7 @@ Figure&nbsp;2: Marginal vs.&nbsp;average ROAS on a saturation curve.
 <span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>    max_lag<span class="op">=</span><span class="dv">12</span>,</span>
 <span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>The calibrated channel should show a tighter credible interval and a posterior mean closer to the experimental estimate. Other channels may also benefit from reduced uncertainty, since tightening one channel helps the model attribute remaining variation more precisely.</p>
-<p>The companion notebook applies this same recipe to <strong>Google Search</strong> — the channel whose uncalibrated posterior was the demo’s least well-identified — and produces the before/after comparison in <a href="#fig-prior-posterior-shift" class="quarto-xref">Figure&nbsp;<span>3</span></a>. The TikTok worked example above and the Google Search illustration below run through the same <code>to_lognormal_params</code> → <code>roi_m</code> prior → refit pipeline; only the input DID estimate differs.</p>
+<p>The companion notebook applies this same recipe to <strong>Google Search</strong> (the channel whose uncalibrated posterior was the demo’s least well-identified) and produces the before/after comparison in <a href="#fig-prior-posterior-shift" class="quarto-xref">Figure&nbsp;<span>3</span></a>. The TikTok worked example above and the Google Search illustration below run through the same <code>to_lognormal_params</code> → <code>roi_m</code> prior → refit pipeline; only the input DID estimate differs.</p>
 <div id="fig-prior-posterior-shift" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Prior vs. posterior ROI for Google Search; calibration tightens the posterior around the experimental estimate.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-prior-posterior-shift-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
