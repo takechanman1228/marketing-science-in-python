@@ -693,7 +693,7 @@ Figure&nbsp;2: Sample-size sensitivity to the MDE.
 </section>
 <section id="cuped-getting-more-precision-from-the-same-sample" class="level2">
 <h2 class="anchored" data-anchor-id="cuped-getting-more-precision-from-the-same-sample">CUPED: Getting More Precision from the Same Sample</h2>
-<p>When the required sample is out of reach, you can’t always add more users, stores, or markets. CUPED can sometimes give you more precision from the same data by using information from before the experiment.</p>
+<p>When the required sample is out of reach, you can’t always add more users, stores, or markets. CUPED—short for Controlled-experiment Using Pre-Experiment Data—can sometimes give you more precision from the same data by using information from before the experiment. Microsoft’s experimentation team introduced it in 2013 to make online experiments more sensitive without collecting more data <span class="citation" data-cites="deng2013cuped">(<a href="../appendix/references.html#ref-deng2013cuped" role="doc-biblioref">Deng et al. 2013</a>)</span>, and it has since become a standard variance-reduction tool in large-scale experimentation.</p>
 <p>The idea is simple. If a customer was already a high spender before the experiment, they will probably keep spending during it too, treatment or not. CUPED subtracts that predictable part of the outcome, so the comparison focuses on what actually changed during the test.</p>
 <div id="fig-cuped" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Three-step diagram: each customer's pre-campaign spend, their campaign spend, and the CUPED-adjusted lift above expected spend, with narrower distributions and the same average effect after adjustment.">
 <figure class="quarto-float quarto-float-fig figure">
@@ -709,7 +709,7 @@ Figure&nbsp;3: How CUPED removes pre-experiment variance.
 <p>The same idea helps in store-level or market-level experiments. Suppose a retailer wants to test an in-store promotion. Randomizing hundreds of stores into treatment and control may be operationally unrealistic, and every store is different—some are larger, some have different customer bases, some are hit by local events. CUPED can use each store’s pre-experiment sales to remove part of that predictable store-to-store variation. It doesn’t create more stores or fix a weak design, but when pre-period sales strongly predict sales during the test, it can make a smaller store test more precise.</p>
 <p>Formally, let <span class="math inline">\(Y\)</span> be the outcome and <span class="math inline">\(X\)</span> a pre-experiment covariate (e.g., purchases in the prior 30 days). The adjusted outcome is:</p>
 <p><span class="math display">\[Y_{\text{CUPED}} = Y - \theta \cdot (X - \bar{X})\]</span></p>
-<p>where <span class="math inline">\(\theta = \text{Cov}(Y, X) / \text{Var}(X)\)</span>. The variance of the adjusted outcome reduces to <span class="math inline">\(\text{Var}(Y_{\text{CUPED}}) = \text{Var}(Y)(1 - \rho^2)\)</span>, where <span class="math inline">\(\rho\)</span> is the Pearson correlation between <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span>. If <span class="math inline">\(\rho = 0.7\)</span>, CUPED removes about half the variance—as much precision as doubling the sample would buy. Netflix and Microsoft report 20–50% reductions in required sample sizes using this technique. The most common covariate is the same metric measured in the pre-experiment period, which usually gives the strongest correlation.</p>
+<p>where <span class="math inline">\(\theta = \text{Cov}(Y, X) / \text{Var}(X)\)</span>. The variance of the adjusted outcome reduces to <span class="math inline">\(\text{Var}(Y_{\text{CUPED}}) = \text{Var}(Y)(1 - \rho^2)\)</span>, where <span class="math inline">\(\rho\)</span> is the Pearson correlation between <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span>. If <span class="math inline">\(\rho = 0.7\)</span>, CUPED removes about half the variance—as much precision as doubling the sample would buy. Netflix later published case studies reporting similar variance reductions across its large-scale online experiments <span class="citation" data-cites="xie2016netflix">(<a href="../appendix/references.html#ref-xie2016netflix" role="doc-biblioref">Xie and Aurisset 2016</a>)</span>. The most common covariate is the same metric measured in the pre-experiment period, which usually gives the strongest correlation.</p>
 <p>In code, the adjustment is only a few lines. On a simulated campaign where pre-period spend correlates with in-experiment spend at about 0.75, it tightens the standard error of the lift by a third—without changing what the lift is:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -758,6 +758,9 @@ Bult, Jan Roelf, and Tom Wansbeek. 1995. <span>“Optimal Selection for Direct M
 <div id="ref-chan2017challenges" class="csl-entry" role="listitem">
 Chan, David, and Matthew Perry. 2017. <em>Challenges and Opportunities in Media Mix Modeling</em>. Google Inc. <a href="https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/45998.pdf">https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/45998.pdf</a>.
 </div>
+<div id="ref-deng2013cuped" class="csl-entry" role="listitem">
+Deng, Alex, Ya Xu, Ron Kohavi, and Toby Walker. 2013. <span>“Improving the Sensitivity of Online Controlled Experiments by Utilizing Pre-Experiment Data.”</span> <em>Proceedings of the Sixth ACM International Conference on Web Search and Data Mining (WSDM ’13)</em>, 123–32. <a href="https://doi.org/10.1145/2433396.2433413">https://doi.org/10.1145/2433396.2433413</a>.
+</div>
 <div id="ref-fader2013gammagamma" class="csl-entry" role="listitem">
 Fader, Peter S, and Bruce GS Hardie. 2013. <em>The Gamma-Gamma Model of Monetary Value</em>. Wharton School, University of Pennsylvania. <a href="https://www.brucehardie.com/notes/025/gamma_gamma.pdf">https://www.brucehardie.com/notes/025/gamma_gamma.pdf</a>.
 </div>
@@ -784,6 +787,9 @@ Vaver, Jon, and Jim Koehler. 2011. <em>Measuring Ad Effectiveness Using Geo Expe
 </div>
 <div id="ref-vizard2019pg" class="csl-entry" role="listitem">
 Vizard, Sarah. 2019. <span>“<span>P&amp;G</span> Shifts from Targeting <span>‘Generic Demographics’</span> to <span>‘Smart Audiences’</span>.”</span> <em>Marketing Week</em>, July. <a href="https://www.marketingweek.com/pg-targeting-generic-demographics-to-smart-audiences/">https://www.marketingweek.com/pg-targeting-generic-demographics-to-smart-audiences/</a>.
+</div>
+<div id="ref-xie2016netflix" class="csl-entry" role="listitem">
+Xie, Huizhi, and Juliette Aurisset. 2016. <span>“Improving the Sensitivity of Online Controlled Experiments: Case Studies at Netflix.”</span> <em>Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining (KDD ’16)</em>, 645–54. <a href="https://doi.org/10.1145/2939672.2939733">https://doi.org/10.1145/2939672.2939733</a>.
 </div>
 </div>
 </section>
