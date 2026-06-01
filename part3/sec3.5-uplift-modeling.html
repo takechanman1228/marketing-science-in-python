@@ -573,6 +573,7 @@ window.Quarto = {
   </ul></li>
   <li><a href="#evaluating-uplift-models" id="toc-evaluating-uplift-models" class="nav-link" data-scroll-target="#evaluating-uplift-models">Evaluating Uplift Models</a></li>
   <li><a href="#from-scores-to-targeting-decisions" id="toc-from-scores-to-targeting-decisions" class="nav-link" data-scroll-target="#from-scores-to-targeting-decisions">From Scores to Targeting Decisions</a></li>
+  <li><a href="#example-criteo-advertising-experiment" id="toc-example-criteo-advertising-experiment" class="nav-link" data-scroll-target="#example-criteo-advertising-experiment">Example: Criteo Advertising Experiment</a></li>
   <li><a href="#guardrails" id="toc-guardrails" class="nav-link" data-scroll-target="#guardrails">Guardrails</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/part3/sec3.5-uplift-modeling.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/takechanman1228/marketing-science-in-python/edit/main/part3/sec3.5-uplift-modeling.qmd" class="toc-action"><i class="bi empty"></i>Edit this page</a></li><li><a href="https://github.com/takechanman1228/marketing-science-in-python/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
@@ -702,7 +703,7 @@ Figure&nbsp;5: Gini impurity measures accuracy, not uplift.
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>t_learner.fit(Y<span class="op">=</span>y_train, T<span class="op">=</span>treatment_train, X<span class="op">=</span>X_train)</span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>uplift_score <span class="op">=</span> t_learner.effect(X_eval)   <span class="co"># one number per held-out customer</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>The full runnable example (fitting six meta-learners on the Criteo Uplift dataset, then evaluating their rankings) lives in the §3.4 companion notebook (see callout in <a href="sec3.4-meta-learners.html">Meta Learners for Treatment Effects</a>).</p>
+<p>We carry this T-Learner CATE forward as our uplift score. The runnable example later in this section applies it to a real advertising experiment and grades the ranking.</p>
 </section>
 </section>
 <section id="evaluating-uplift-models" class="level2">
@@ -712,7 +713,7 @@ Figure&nbsp;5: Gini impurity measures accuracy, not uplift.
 <ul>
 <li>A good uplift model will concentrate most of the incremental conversions in the top deciles. If you target the top 20% of customers, you should capture most of the total uplift.</li>
 <li>A random targeting strategy follows a straight diagonal line.</li>
-<li>The area between the model curve and the random baseline is the AUUC (Area Under the Uplift Curve). <code>scikit-uplift</code> reports it normalized to <code>[0, 1]</code>: 1.0 is a perfect ranking, 0.0 is no better than random.</li>
+<li>The area between the model curve and the random baseline is the AUUC (Area Under the Uplift Curve), reported by <code>scikit-uplift</code>. A positive AUUC beats random targeting and higher is better. On rare-outcome data the raw number is small, so compare rankings on the same data rather than against an absolute scale.</li>
 </ul>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklift.metrics <span class="im">import</span> uplift_curve, uplift_auc_score</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -720,8 +721,7 @@ Figure&nbsp;5: Gini impurity measures accuracy, not uplift.
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># the output of an uplift tree, anything you want to grade.</span></span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>auuc <span class="op">=</span> uplift_auc_score(y_true, uplift_score, treatment)</span>
 <span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>x, y <span class="op">=</span> uplift_curve(y_true, uplift_score, treatment)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>The §3.4 companion notebook (§10) runs this exact recipe on the T-Learner CATE for the Criteo Uplift dataset and plots the curve against a random-targeting diagonal. The model curve sits clearly above it, which is what tells you the ranking is doing work.</p>
-<p>The Qini curve is a similar metric, but it normalizes by the number of treated customers instead of the whole population, making it more robust when the treated share varies across score buckets. Both metrics help you see if your model is actually ranking customers by their true uplift.</p>
+<p>The Qini curve is a similar metric, but it normalizes by the number of treated customers instead of the whole population, making it more robust when the treated share varies across score buckets. Both metrics help you see if your model is actually ranking customers by their true uplift. We put both into practice on the Criteo experiment below.</p>
 </section>
 <section id="from-scores-to-targeting-decisions" class="level2">
 <h2 class="anchored" data-anchor-id="from-scores-to-targeting-decisions">From Scores to Targeting Decisions</h2>
@@ -731,8 +731,57 @@ Figure&nbsp;5: Gini impurity measures accuracy, not uplift.
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>scored <span class="op">=</span> pd.DataFrame({<span class="st">'customer_id'</span>: customer_id, <span class="st">'uplift'</span>: uplift_score})</span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>ranked <span class="op">=</span> scored[<span class="st">'uplift'</span>].rank(method<span class="op">=</span><span class="st">'first'</span>, ascending<span class="op">=</span><span class="va">False</span>)</span>
 <span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>scored[<span class="st">'decile'</span>] <span class="op">=</span> pd.qcut(ranked, q<span class="op">=</span><span class="dv">10</span>, labels<span class="op">=</span><span class="va">False</span>)   <span class="co"># 0 = highest uplift</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>If your budget lets you target 20% of customers, just take the top two deciles. This gives you a list of customers ordered by expected incremental value.</p>
-<p>The §3.4 companion notebook (§9) extends this with a per-decile observed-uplift table and a net-value column that subtracts treatment cost: the same workflow, made operational.</p>
+<p>If your budget lets you target 20% of customers, just take the top two deciles. This gives you a list of customers ordered by expected incremental value. The example below fills in this table on real experimental data and adds a net-value column that subtracts treatment cost.</p>
+</section>
+<section id="example-criteo-advertising-experiment" class="level2">
+<h2 class="anchored" data-anchor-id="example-criteo-advertising-experiment">Example: Criteo Advertising Experiment</h2>
+<p>We put the whole workflow together on the <a href="https://ailab.criteo.com/criteo-uplift-prediction-dataset">Criteo Uplift dataset</a>, a large advertising randomized controlled trial. Because it is an RCT, the difference in means gives an unbiased experimental benchmark for the average effect. More usefully, the randomized holdout lets us grade an uplift ranking: we can check whether the incremental responses really do concentrate near the top. We rank on the experiment’s site-visit outcome, which is frequent enough (about 5%) to grade a ranking stably, and score every held-out customer with a T-Learner CATE.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Run this notebook
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.5_uplift_modeling.ipynb"><code>sec3.5_uplift_modeling.ipynb</code></a> — <a href="https://colab.research.google.com/github/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.5_uplift_modeling.ipynb">Open in Colab</a> · <a href="https://nbviewer.org/github/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.5_uplift_modeling.ipynb">nbviewer</a></p>
+<p>Committed with outputs; Colab is best-effort. Full list on the <a href="../appendix/notebooks.html">Notebooks &amp; Code</a> page.</p>
+</div>
+</div>
+<p>The uplift curve climbs steeply over the top of the ranking and stays above the random-targeting diagonal where it matters: most of the incremental visits are captured in the first deciles. The Qini curve tells the same story with a treatment-normalized scale. One caution: an uplift model is not guaranteed to out-rank a simpler response model on every dataset, so always grade the ranking on an experiment like this before trusting it.</p>
+<div id="fig-uplift-curve-criteo" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="An uplift curve that rises steeply above the random-targeting diagonal over the top of the ranking, then flattens.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-uplift-curve-criteo-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part3/sec3.5/uplift_curve_criteo.png" class="fig-md img-fluid figure-img" alt="An uplift curve that rises steeply above the random-targeting diagonal over the top of the ranking, then flattens.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-uplift-curve-criteo-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;6: Uplift curve on the Criteo experiment.
+</figcaption>
+</figure>
+</div>
+<div id="fig-qini-curve-criteo" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="A Qini curve for the uplift model sitting above the random-targeting diagonal.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-qini-curve-criteo-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part3/sec3.5/qini_curve_criteo.png" class="fig-md img-fluid figure-img" alt="A Qini curve for the uplift model sitting above the random-targeting diagonal.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-qini-curve-criteo-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;7: Qini curve on the Criteo experiment.
+</figcaption>
+</figure>
+</div>
+<p>Splitting customers into deciles by uplift score makes this operational. The top decile shows several times the average observed uplift, and applying the net-value rule (expected incremental value minus treatment cost) selects only the top few deciles. Everything below them costs more to contact than the incremental visits are worth, and the very bottom deciles are where any sleeping dogs hide.</p>
+<div id="fig-net-value-decile" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="A bar chart of expected net value per customer by uplift decile, with only the top deciles positive.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-net-value-decile-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part3/sec3.5/targeting_net_value_by_decile.png" class="fig-lg img-fluid figure-img" alt="A bar chart of expected net value per customer by uplift decile, with only the top deciles positive.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-net-value-decile-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;8: Net value by uplift decile.
+</figcaption>
+</figure>
+</div>
 </section>
 <section id="guardrails" class="level2">
 <h2 class="anchored" data-anchor-id="guardrails">Guardrails</h2>
