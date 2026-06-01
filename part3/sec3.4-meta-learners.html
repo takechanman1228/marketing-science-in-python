@@ -565,7 +565,7 @@ window.Quarto = {
    
   <ul>
   <li><a href="#treatment-effects-ate-cate-ite" id="toc-treatment-effects-ate-cate-ite" class="nav-link active" data-scroll-target="#treatment-effects-ate-cate-ite">Treatment Effects: ATE, CATE, ITE</a></li>
-  <li><a href="#the-missing-data-problem" id="toc-the-missing-data-problem" class="nav-link" data-scroll-target="#the-missing-data-problem">The Missing Data Problem</a></li>
+  <li><a href="#why-we-need-meta-learners" id="toc-why-we-need-meta-learners" class="nav-link" data-scroll-target="#why-we-need-meta-learners">Why We Need Meta Learners</a></li>
   <li><a href="#s-learner-start-with-a-single-model" id="toc-s-learner-start-with-a-single-model" class="nav-link" data-scroll-target="#s-learner-start-with-a-single-model">S-Learner: Start with a Single Model</a></li>
   <li><a href="#t-learner-two-separate-models" id="toc-t-learner-two-separate-models" class="nav-link" data-scroll-target="#t-learner-two-separate-models">T-Learner: Two Separate Models</a></li>
   <li><a href="#advanced-meta-learners" id="toc-advanced-meta-learners" class="nav-link" data-scroll-target="#advanced-meta-learners">Advanced Meta-Learners</a></li>
@@ -623,16 +623,40 @@ Figure&nbsp;1: The treatment effect as a difference in potential outcomes.
 </ul>
 <p>Why does this matter? Because not all customers behave the same way. A price-sensitive customer might jump at a discount, while a brand-loyal customer would have bought at full price anyway. If you know who is who, you can target discounts where they actually drive extra sales, instead of giving away margin to customers who would have purchased regardless.</p>
 </section>
-<section id="the-missing-data-problem" class="level2">
-<h2 class="anchored" data-anchor-id="the-missing-data-problem">The Missing Data Problem</h2>
+<section id="why-we-need-meta-learners" class="level2">
+<h2 class="anchored" data-anchor-id="why-we-need-meta-learners">Why We Need Meta Learners</h2>
 <p>Consider this question: did a coupon increase sales? To answer it, we look at data from various customers, including their attributes (age, gender, location), the treatment (coupon or no coupon), and the outcome (purchase or not).</p>
 <p>The column <span class="math inline">\(Y(1)\)</span> represents the outcome when the coupon is used, while <span class="math inline">\(Y(0)\)</span> represents the outcome without the coupon. If we had both columns for the same individual, calculating the treatment effect would be as simple as subtracting one from the other. But the challenge is that we can only observe one outcome for each individual.</p>
+<div id="fig-missing-counterfactual" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="A customer table where only one of the two potential-outcome columns, Y(1) or Y(0), is filled in for each person, so the individual treatment effect is unknown.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-missing-counterfactual-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part3/sec3.4/missing_counterfactual.png" class="fig-lg img-fluid figure-img" alt="A customer table where only one of the two potential-outcome columns, Y(1) or Y(0), is filled in for each person, so the individual treatment effect is unknown.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-missing-counterfactual-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2: The missing counterfactual: only one outcome is observed per customer.
+</figcaption>
+</figure>
+</div>
 <p>To solve this, we use meta-learners. These are machine learning frameworks that predict what would have happened if a customer had received the other treatment. By filling in these missing counterfactuals, we can estimate the treatment effect for each person.</p>
 </section>
 <section id="s-learner-start-with-a-single-model" class="level2">
 <h2 class="anchored" data-anchor-id="s-learner-start-with-a-single-model">S-Learner: Start with a Single Model</h2>
-<p>The “S” in S-learner stands for “Single,” as it relies on a single machine learning model. Train one model on all data with the treatment indicator as an additional feature: <span class="math inline">\(\hat{Y} = f(X, Z)\)</span>. Then estimate CATE by predicting with treatment set to 1 versus 0:</p>
-<p><span class="math display">\[\hat{\tau}(x) = \hat{f}(x, 1) - \hat{f}(x, 0)\]</span></p>
+<p>The “S” in S-learner stands for “Single,” because it relies on a single machine learning model. We train it on all the data, with the treatment indicator included as just another feature. To estimate the effect for a customer with characteristics <span class="math inline">\(x\)</span>, we ask that one model for two predictions:</p>
+<p><span class="math display">\[\hat{Y}(1 \mid X=x) = \text{predicted outcome if treated}\]</span></p>
+<p><span class="math display">\[\hat{Y}(0 \mid X=x) = \text{predicted outcome if not treated}\]</span></p>
+<p>The estimated treatment effect is the difference between them:</p>
+<p><span class="math display">\[\hat{\tau}(x) = \hat{Y}(1 \mid X=x) - \hat{Y}(0 \mid X=x)\]</span></p>
+<p>In code, the S-learner gets these two predictions from the same model: once with the treatment set to 1, and once with it set to 0.</p>
+<div id="fig-s-learner" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="A single model trained on all data is queried twice to fill the Y(1) and Y(0) columns, then their difference gives each customer's treatment effect.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-s-learner-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part3/sec3.4/s_learner.png" class="fig-lg img-fluid figure-img" alt="A single model trained on all data is queried twice to fill the Y(1) and Y(0) columns, then their difference gives each customer's treatment effect.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-s-learner-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3: S-learner: one model predicts both potential outcomes.
+</figcaption>
+</figure>
+</div>
 <p>Pseudo-code:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Train a single model with treatment as a feature</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>X <span class="op">=</span> df[[<span class="st">'age'</span>, <span class="st">'gender'</span>, <span class="st">'location'</span>, <span class="st">'treatment'</span>]]</span>
@@ -652,8 +676,18 @@ Figure&nbsp;1: The treatment effect as a difference in potential outcomes.
 </section>
 <section id="t-learner-two-separate-models" class="level2">
 <h2 class="anchored" data-anchor-id="t-learner-two-separate-models">T-Learner: Two Separate Models</h2>
-<p>The “T” in T-learner stands for “Two.” Instead of one model, train separate models for the treated and control groups:</p>
-<p><span class="math display">\[\hat{\tau}(x) = \hat{f}_1(x) - \hat{f}_0(x)\]</span></p>
+<p>The “T” in T-learner stands for “Two.” Instead of one model, we train two separate models: one on the treated group and one on the control group. We get <span class="math inline">\(\hat{Y}(1 \mid X=x)\)</span> from the treated model and <span class="math inline">\(\hat{Y}(0 \mid X=x)\)</span> from the control model, then take the difference:</p>
+<p><span class="math display">\[\hat{\tau}(x) = \hat{Y}(1 \mid X=x) - \hat{Y}(0 \mid X=x)\]</span></p>
+<div id="fig-t-learner" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="A treated model predicts the Y(1) column and a separate control model predicts the Y(0) column; subtracting gives each customer's treatment effect.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-t-learner-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part3/sec3.4/t_learner.png" class="fig-lg img-fluid figure-img" alt="A treated model predicts the Y(1) column and a separate control model predicts the Y(0) column; subtracting gives each customer's treatment effect.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-t-learner-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4: T-learner: separate models fill each potential-outcome column.
+</figcaption>
+</figure>
+</div>
 <p>Pseudo-code:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Split data into treated and control</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>df_treated <span class="op">=</span> df[df[<span class="st">'treatment'</span>] <span class="op">==</span> <span class="dv">1</span>]</span>
@@ -689,7 +723,7 @@ Figure&nbsp;1: The treatment effect as a difference in potential outcomes.
 <img src="../images/part3/sec3.4/method_comparison.png" class="fig-lg img-fluid figure-img">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-method-comparison-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;2: Meta-learner methods, from simple to complex.
+Figure&nbsp;5: Meta-learner methods, from simple to complex.
 </figcaption>
 </figure>
 </div>
@@ -721,7 +755,7 @@ Figure&nbsp;2: Meta-learner methods, from simple to complex.
 <img src="../images/part3/sec3.4/ate_comparison_criteo.png" class="fig-lg img-fluid figure-img">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ate-comparison-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;3: Five meta-learners recover the ATE on RCT data.
+Figure&nbsp;6: Five meta-learners recover the ATE on RCT data.
 </figcaption>
 </figure>
 </div>
@@ -735,7 +769,7 @@ Figure&nbsp;3: Five meta-learners recover the ATE on RCT data.
 <img src="../images/part3/sec3.4/cate_distributions_criteo.png" class="fig-lg img-fluid figure-img" alt="CATE distributions across six meta-learners on a shared x-axis, making differences in distribution shape directly comparable.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-cate-distributions-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;4: CATE distributions across six meta-learners.
+Figure&nbsp;7: CATE distributions across six meta-learners.
 </figcaption>
 </figure>
 </div>
