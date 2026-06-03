@@ -565,15 +565,10 @@ window.Quarto = {
    
   <ul>
   <li><a href="#the-four-customer-types" id="toc-the-four-customer-types" class="nav-link active" data-scroll-target="#the-four-customer-types">The Four Customer Types</a></li>
-  <li><a href="#from-decision-trees-to-uplift-trees" id="toc-from-decision-trees-to-uplift-trees" class="nav-link" data-scroll-target="#from-decision-trees-to-uplift-trees">From Decision Trees to Uplift Trees</a>
-  <ul class="collapse">
-  <li><a href="#how-traditional-trees-split" id="toc-how-traditional-trees-split" class="nav-link" data-scroll-target="#how-traditional-trees-split">How Traditional Trees Split</a></li>
-  <li><a href="#how-uplift-trees-split" id="toc-how-uplift-trees-split" class="nav-link" data-scroll-target="#how-uplift-trees-split">How Uplift Trees Split</a></li>
-  <li><a href="#training-an-uplift-model" id="toc-training-an-uplift-model" class="nav-link" data-scroll-target="#training-an-uplift-model">Training an Uplift Model</a></li>
-  </ul></li>
-  <li><a href="#evaluating-uplift-models" id="toc-evaluating-uplift-models" class="nav-link" data-scroll-target="#evaluating-uplift-models">Evaluating Uplift Models</a></li>
-  <li><a href="#from-scores-to-targeting-decisions" id="toc-from-scores-to-targeting-decisions" class="nav-link" data-scroll-target="#from-scores-to-targeting-decisions">From Scores to Targeting Decisions</a></li>
-  <li><a href="#example-criteo-advertising-experiment" id="toc-example-criteo-advertising-experiment" class="nav-link" data-scroll-target="#example-criteo-advertising-experiment">Example: Criteo Advertising Experiment</a></li>
+  <li><a href="#response-models-vs.-uplift-models" id="toc-response-models-vs.-uplift-models" class="nav-link" data-scroll-target="#response-models-vs.-uplift-models">Response Models vs.&nbsp;Uplift Models</a></li>
+  <li><a href="#grading-targeting-policies" id="toc-grading-targeting-policies" class="nav-link" data-scroll-target="#grading-targeting-policies">Grading Targeting Policies</a></li>
+  <li><a href="#a-controlled-demo-when-uplift-wins" id="toc-a-controlled-demo-when-uplift-wins" class="nav-link" data-scroll-target="#a-controlled-demo-when-uplift-wins">A Controlled Demo: When Uplift Wins</a></li>
+  <li><a href="#the-criteo-reality-check" id="toc-the-criteo-reality-check" class="nav-link" data-scroll-target="#the-criteo-reality-check">The Criteo Reality Check</a></li>
   <li><a href="#guardrails" id="toc-guardrails" class="nav-link" data-scroll-target="#guardrails">Guardrails</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/part3/sec3.5-uplift-modeling.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/takechanman1228/marketing-science-in-python/edit/main/part3/sec3.5-uplift-modeling.qmd" class="toc-action"><i class="bi empty"></i>Edit this page</a></li><li><a href="https://github.com/takechanman1228/marketing-science-in-python/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
@@ -601,13 +596,13 @@ window.Quarto = {
 </header>
 
 
-<p>Who should you actually target to maximize sales? Most marketing teams use a response model: predict who is most likely to buy, then send coupons to those customers. This seems logical, but it often wastes money.</p>
-<p>Here’s the problem: many customers who are likely to buy will do so whether or not you send them a coupon. Giving them a discount just gives away margin without increasing sales. At the same time, there are customers with a moderate chance of buying who might convert if you nudge them. These are the people where the coupon actually makes a difference.</p>
+<p>Who should you actually target to maximize sales? Most marketing teams rank customers with a response model: predict who is most likely to act (buy, visit, convert), then aim the budget at the top of that list. That is a reasonable instinct, but it answers only half the question. The other half is whether your action changed anything.</p>
+<p>Many customers near the top of a response list would have acted anyway. Spending on them adds cost without adding outcomes. The customers who matter are the ones whose behavior changes because of the treatment, and they are not always the ones most likely to act. So there are two different scores you could rank by:</p>
 <ul>
 <li>A response model predicts: <span class="math inline">\(P(\text{purchase})\)</span></li>
-<li>An uplift model predicts: <span class="math inline">\(P(\text{purchase} | \text{treated}) - P(\text{purchase} | \text{not treated})\)</span></li>
+<li>An uplift model predicts: <span class="math inline">\(P(\text{purchase} \mid \text{treated}) - P(\text{purchase} \mid \text{not treated})\)</span></li>
 </ul>
-<p>A response model ranks customers by how likely they are to buy. An uplift model ranks them by how much the treatment actually changes their behavior. These rankings can be very different. For example, a customer with an 80% chance of buying might have zero uplift (a Sure Thing), while someone with a 30% chance might have a 15% uplift (a Persuadable).</p>
+<p>A response model ranks customers by how likely they are to act. An uplift model ranks them by how much the treatment changes their behavior. These can be very different people: a customer with an 80% chance of buying might have zero uplift (a Sure Thing), while someone at 30% might have 15% uplift (a Persuadable). Which score actually makes you more money is an empirical question. This chapter answers it by testing both on real experimental data, not by assuming uplift wins.</p>
 <div id="fig-uplift-targeting" class="fig-md quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-uplift-targeting-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -620,7 +615,7 @@ Figure&nbsp;1: Uplift modeling prioritizes by treatment effect.
 </div>
 <section id="the-four-customer-types" class="level2">
 <h2 class="anchored" data-anchor-id="the-four-customer-types">The Four Customer Types</h2>
-<p>Now, let’s take a closer look at the customers to be targeted. We can segment customers into four types based on how they respond to treatment:</p>
+<p>Now, let’s take a closer look at the customers to be targeted. We can segment them into four types based on how they respond to treatment:</p>
 <div id="fig-four-segments" class="fig-md quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-four-segments-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -632,163 +627,144 @@ Figure&nbsp;2: The four uplift customer segments.
 </figure>
 </div>
 <ul>
-<li>Persuadables: Will buy only if they receive the treatment. These are the ideal targets: the coupons change their behavior. Your entire marketing ROI comes from this group.</li>
-<li>Sure Things: Will buy no matter what. Sending them a coupon costs you the discount but generates no incremental revenue.</li>
-<li>Lost Causes: Won’t buy regardless of whether they receive the coupon. Targeting them wastes both the coupon cost and any impression cost.</li>
-<li>Sleeping Dogs: Will not buy if they receive the coupon, but would buy without it. These customers are actively harmed by the intervention. The coupon may trigger annoyance, unsubscription, or brand damage.</li>
+<li>Persuadables: Will act only if they receive the treatment. These are the ideal targets: the treatment changes their behavior. Your entire marketing ROI comes from this group.</li>
+<li>Sure Things: Will act no matter what. Treating them costs you the spend but generates no incremental revenue.</li>
+<li>Lost Causes: Won’t act regardless of treatment. Targeting them wastes the cost with nothing to show for it.</li>
+<li>Sleeping Dogs: Would act without the treatment, but not with it. These customers are harmed by the intervention. Contact may trigger annoyance, unsubscription, or brand damage.</li>
 </ul>
-<p>“Don’t wake the Sleeping Dogs” is not just a metaphor. In real campaigns, some customer segments actually show negative uplift from coupons. Uplift modeling helps you find these segments so you can avoid targeting them.</p>
+<p>“Don’t wake the Sleeping Dogs” is not just a metaphor. In real campaigns, some segments show negative uplift. Uplift modeling helps you find them so you can avoid targeting them.</p>
+<p>These four types also explain the gap between the two scores. A response model, chasing likelihood to act, fills its list with Sure Things. An uplift model, chasing treatment effect, fills its list with Persuadables. Later in this chapter we watch each model do exactly that.</p>
 </section>
-<section id="from-decision-trees-to-uplift-trees" class="level2">
-<h2 class="anchored" data-anchor-id="from-decision-trees-to-uplift-trees">From Decision Trees to Uplift Trees</h2>
-<p>This four-type framework gives you a clear target. The next question is: how do you actually build a model that separates Persuadables from Sure Things? Earlier, we looked at meta-learners that wrap standard ML models. Uplift trees take a different route. They are decision trees specifically designed to find where the treatment effect varies the most.</p>
-<p>A traditional decision tree asks: “Will the customer purchase?” An uplift tree asks: “Who should we give coupons to?”</p>
-<div id="fig-uplift-tree-comparison" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Decision tree vs. uplift tree: one separates buyers from non-buyers, the other finds where the treatment effect is largest.">
+<section id="response-models-vs.-uplift-models" class="level2">
+<h2 class="anchored" data-anchor-id="response-models-vs.-uplift-models">Response Models vs.&nbsp;Uplift Models</h2>
+<p>To act on the four types, you need a score for every customer. Two candidates compete throughout this chapter.</p>
+<ul>
+<li>Response score. Train a classifier to predict the outcome from customer features, then rank by the predicted probability. This is the standard, cheap baseline. It targets customers who are likely to act, whether or not your treatment caused it.</li>
+<li>Uplift score. Rank by the treatment effect itself. The CATE estimate from §3.4 is exactly this. In the worked examples that follow, the action is a site visit after seeing an ad, so the uplift score is <span class="math inline">\(\hat\tau(x) = \hat{P}(\text{visit} \mid \text{treated}, x) - \hat{P}(\text{visit} \mid \text{not treated}, x)\)</span>. Any meta-learner from §3.4 produces one. We use an S-Learner as the headline; a T-Learner is the natural sibling, and the examples keep whichever ranks better on held-out data.</li>
+</ul>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># A CATE estimate from §3.4 is already a per-customer uplift score.</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> econml.metalearners <span class="im">import</span> SLearner, TLearner</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> lightgbm <span class="im">import</span> LGBMRegressor, LGBMClassifier</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Response score: rank by predicted visit probability.</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>response <span class="op">=</span> LGBMClassifier().fit(X_train, y_train)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>response_score <span class="op">=</span> response.predict_proba(X_eval)[:, <span class="dv">1</span>]</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Uplift score: S-Learner CATE (predicted incremental probability).</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>uplift <span class="op">=</span> SLearner(overall_model<span class="op">=</span>LGBMRegressor())</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>uplift.fit(Y<span class="op">=</span>y_train, T<span class="op">=</span>treatment_train, X<span class="op">=</span>X_train)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>uplift_score <span class="op">=</span> uplift.effect(X_eval)   <span class="co"># one number per held-out customer</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Meta-learners are not the only route to an uplift score. Some libraries (<code>causalml</code>, <code>scikit-uplift</code>) fit trees that split directly on the treatment-versus-control difference rather than on outcome purity, modeling uplift in one step. That is a valid alternative; the evaluation in the rest of this chapter grades any uplift score the same way, so we stay with the meta-learner route from §3.4.</p>
+<div id="fig-uplift-tree-comparison" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="A standard decision tree separates buyers from non-buyers, while an uplift tree splits to find where the treatment effect is largest.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-uplift-tree-comparison-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part3/sec3.5/uplift_tree_comparison.png" class="fig-md img-fluid figure-img" alt="Decision tree vs. uplift tree: one separates buyers from non-buyers, the other finds where the treatment effect is largest.">
+<img src="../images/part3/sec3.5/uplift_tree_comparison.png" class="fig-md img-fluid figure-img" alt="A standard decision tree separates buyers from non-buyers, while an uplift tree splits to find where the treatment effect is largest.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-uplift-tree-comparison-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Figure&nbsp;3: Decision tree vs.&nbsp;uplift tree.
 </figcaption>
 </figure>
 </div>
-<section id="how-traditional-trees-split" class="level3">
-<h3 class="anchored" data-anchor-id="how-traditional-trees-split">How Traditional Trees Split</h3>
-<p>Consider two possible trees. The tree on the left splits by “Age,” while the tree on the right splits by “Location.” Which tree provides a better split?</p>
-<div id="fig-decision-tree-split" class="fig-md quarto-float quarto-figure quarto-figure-center anchored">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-decision-tree-split-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part3/sec3.5/decision_tree_split.png" class="fig-md img-fluid figure-img">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-decision-tree-split-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;4: A traditional decision tree.
-</figcaption>
-</figure>
-</div>
-<p>The tree on the right does a better job because it separates purchasers from non-purchasers more clearly. We measure this using Gini Impurity, which tells us how mixed each node is:</p>
-<p><span class="math display">\[\text{Gini} = 1 - (p_1^2 + p_0^2)\]</span></p>
-<p>where <span class="math inline">\(p_1\)</span> is the probability of purchase and <span class="math inline">\(p_0\)</span> is the probability of no purchase.</p>
-<div id="fig-gini-impurity" class="fig-sm quarto-float quarto-figure quarto-figure-center anchored">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-gini-impurity-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part3/sec3.5/gini_impurity.png" class="fig-sm img-fluid figure-img">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-gini-impurity-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;5: Gini impurity measures accuracy, not uplift.
-</figcaption>
-</figure>
-</div>
-<p>But here’s the key point: Gini measures how well you can predict purchases, not uplift. A tree that predicts who will buy is not the same as a tree that finds where the treatment actually changes behavior.</p>
 </section>
-<section id="how-uplift-trees-split" class="level3">
-<h3 class="anchored" data-anchor-id="how-uplift-trees-split">How Uplift Trees Split</h3>
-<p>An uplift tree splits to maximize the difference in treatment effect between child nodes. Instead of Gini impurity, it uses a divergence metric that measures how differently treated and control groups behave within each node:</p>
+<section id="grading-targeting-policies" class="level2">
+<h2 class="anchored" data-anchor-id="grading-targeting-policies">Grading Targeting Policies</h2>
+<p>With two scores in hand, how do you decide which to trust? Not by classification accuracy. A model can predict visits beautifully and still be a poor targeting tool, because targeting is a decision about <em>incremental</em> outcomes. The honest test is to treat each score as a policy, “treat the top-k%, skip the rest,” and measure its value on a randomized holdout, where the experiment stands in for the counterfactual.</p>
+<p>A few diagnostics, all computed on held-out experimental data:</p>
 <ul>
-<li>KL Divergence: measures how the treatment group’s outcome distribution diverges from the control group’s.</li>
-<li>Euclidean Distance: simpler metric based on the squared difference between treatment and control response rates.</li>
-<li>Chi-Squared: tests whether the difference between treatment and control is statistically significant within each node.</li>
+<li>Observed uplift by decile. Rank the holdout by score, cut into ten equal groups, and compute the treated-minus-control visit rate inside each. Because treatment is randomized within every decile, this is an unbiased read of the real uplift the score is sorting on. A useful ranking puts the largest observed uplift in the top deciles.</li>
+<li>Uplift and Qini curves. Trace cumulative incremental visits as you walk down the ranking, best customer first. A ranking that beats random bends above the diagonal. The summary areas (AUUC, and the Qini coefficient) are relative: positive means better than random, and they compare models only on the same holdout, not on an absolute zero-to-one scale.</li>
+<li>Policy value by depth. For “treat the top-k%,” estimate the holdout visit rate the policy would produce (an inverse-propensity estimate that reweights the randomized holdout). This is the number a decision-maker actually cares about: how many incremental visits at each budget.</li>
+<li>Net value after cost. Attach economics, then subtract. We use an illustrative index, each incremental visit worth 1.0 and each targeted user costing 0.01, so break-even is a one-point uplift. Crucially, the incremental visits come from the observed holdout estimate, not the model’s predicted uplift, so the economics are grounded in the experiment rather than the model’s own optimism.</li>
 </ul>
-<p>In practice, KL Divergence is the most commonly used and the default in most uplift tree implementations. Euclidean Distance is simpler and computationally faster but less sensitive to small differences. For most marketing applications, the default (KL Divergence) works well.</p>
 </section>
-<section id="training-an-uplift-model" class="level3">
-<h3 class="anchored" data-anchor-id="training-an-uplift-model">Training an Uplift Model</h3>
-<p>Several open-source libraries implement uplift trees with these splitting criteria: <code>causalml</code>’s <code>UpliftRandomForestClassifier</code> and <code>scikit-uplift</code>’s <code>SoloModel</code> / <code>ClassTransformation</code> families, among others. They share a common shape: <code>fit(X, treatment, y)</code> returns a model whose <code>predict(X)</code> produces an uplift score per customer.</p>
-<p>A meta-learner gives you the same ingredient by another route. A T-Learner CATE (the predicted incremental conversion probability from §3.4) is itself a per-customer uplift score, and we can hand it to the same evaluation and targeting tools:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># CATE from §3.4 is already an uplift score per customer.</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> econml.metalearners <span class="im">import</span> TLearner</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> lightgbm <span class="im">import</span> LGBMRegressor</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>t_learner <span class="op">=</span> TLearner(models<span class="op">=</span>[LGBMRegressor(), LGBMRegressor()])</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>t_learner.fit(Y<span class="op">=</span>y_train, T<span class="op">=</span>treatment_train, X<span class="op">=</span>X_train)</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>uplift_score <span class="op">=</span> t_learner.effect(X_eval)   <span class="co"># one number per held-out customer</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>We carry this T-Learner CATE forward as our uplift score. The runnable example later in this section applies it to a real advertising experiment and grades the ranking.</p>
-</section>
-</section>
-<section id="evaluating-uplift-models" class="level2">
-<h2 class="anchored" data-anchor-id="evaluating-uplift-models">Evaluating Uplift Models</h2>
-<p>Standard classification metrics like AUC or F1 measure how well you predict outcomes, not how well you target. For uplift modeling, you need metrics that are designed for targeting quality.</p>
-<p>The uplift curve (or gain curve) plots cumulative incremental conversions against the fraction of the population targeted. Customers are ranked by their predicted uplift score, and we compute the total uplift gained as we move down the ranking:</p>
-<ul>
-<li>A good uplift model will concentrate most of the incremental conversions in the top deciles. If you target the top 20% of customers, you should capture most of the total uplift.</li>
-<li>A random targeting strategy follows a straight diagonal line.</li>
-<li>The area between the model curve and the random baseline is the AUUC (Area Under the Uplift Curve), reported by <code>scikit-uplift</code>. A positive AUUC beats random targeting and higher is better. On rare-outcome data the raw number is small, so compare rankings on the same data rather than against an absolute scale.</li>
-</ul>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklift.metrics <span class="im">import</span> uplift_curve, uplift_auc_score</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co"># uplift_score is any per-customer ranking signal: a CATE from §3.4,</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># the output of an uplift tree, anything you want to grade.</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>auuc <span class="op">=</span> uplift_auc_score(y_true, uplift_score, treatment)</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>x, y <span class="op">=</span> uplift_curve(y_true, uplift_score, treatment)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>The Qini curve is a similar metric, but it normalizes by the number of treated customers instead of the whole population, making it more robust when the treated share varies across score buckets. Both metrics help you see if your model is actually ranking customers by their true uplift. We put both into practice on the Criteo experiment below.</p>
-</section>
-<section id="from-scores-to-targeting-decisions" class="level2">
-<h2 class="anchored" data-anchor-id="from-scores-to-targeting-decisions">From Scores to Targeting Decisions</h2>
-<p>An uplift model gives you a score for every customer. The simplest way to use it is to rank all customers by their uplift score, split them into deciles, and then target the top N deciles that fit your budget.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>scored <span class="op">=</span> pd.DataFrame({<span class="st">'customer_id'</span>: customer_id, <span class="st">'uplift'</span>: uplift_score})</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>ranked <span class="op">=</span> scored[<span class="st">'uplift'</span>].rank(method<span class="op">=</span><span class="st">'first'</span>, ascending<span class="op">=</span><span class="va">False</span>)</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>scored[<span class="st">'decile'</span>] <span class="op">=</span> pd.qcut(ranked, q<span class="op">=</span><span class="dv">10</span>, labels<span class="op">=</span><span class="va">False</span>)   <span class="co"># 0 = highest uplift</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>If your budget lets you target 20% of customers, just take the top two deciles. This gives you a list of customers ordered by expected incremental value. The example below fills in this table on real experimental data and adds a net-value column that subtracts treatment cost.</p>
-</section>
-<section id="example-criteo-advertising-experiment" class="level2">
-<h2 class="anchored" data-anchor-id="example-criteo-advertising-experiment">Example: Criteo Advertising Experiment</h2>
-<p>We put the whole workflow together on the <a href="https://ailab.criteo.com/criteo-uplift-prediction-dataset">Criteo Uplift dataset</a>, a large advertising randomized controlled trial. Because it is an RCT, the difference in means gives an unbiased experimental benchmark for the average effect. More usefully, the randomized holdout lets us grade an uplift ranking: we can check whether the incremental responses really do concentrate near the top. We rank on the experiment’s site-visit outcome, which is frequent enough (about 5%) to grade a ranking stably, and score every held-out customer with a T-Learner CATE.</p>
-<div class="callout callout-style-default callout-note callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Note</span>Run this notebook
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.5_uplift_modeling.ipynb"><code>sec3.5_uplift_modeling.ipynb</code></a> — <a href="https://colab.research.google.com/github/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.5_uplift_modeling.ipynb">Open in Colab</a> · <a href="https://nbviewer.org/github/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.5_uplift_modeling.ipynb">nbviewer</a></p>
-<p>Committed with outputs; Colab is best-effort. Full list on the <a href="../appendix/notebooks.html">Notebooks &amp; Code</a> page.</p>
-</div>
-</div>
-<p>The uplift curve climbs steeply over the top of the ranking and stays above the random-targeting diagonal where it matters: most of the incremental visits are captured in the first deciles. The Qini curve tells the same story with a treatment-normalized scale. One caution: an uplift model is not guaranteed to out-rank a simpler response model on every dataset, so always grade the ranking on an experiment like this before trusting it.</p>
-<div id="fig-uplift-curve-criteo" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="An uplift curve that rises steeply above the random-targeting diagonal over the top of the ranking, then flattens.">
+<section id="a-controlled-demo-when-uplift-wins" class="level2">
+<h2 class="anchored" data-anchor-id="a-controlled-demo-when-uplift-wins">A Controlled Demo: When Uplift Wins</h2>
+<p>Before the real data, a controlled demonstration makes the intuition concrete. We build a semi-synthetic dataset where we know the true treatment effect for every customer, and we deliberately make two things independent: a customer’s baseline tendency to visit, and how much the ad moves them. Because the two are unlinked, “who is likely to visit” and “whose visit we can cause” are genuinely different people, which is the gap an uplift model exists to exploit. About a third of the customers are even slight sleeping dogs, with a small negative effect.</p>
+<p>Fit both scores and look at who each one targets. The response model’s top 10% is packed with sure things, customers with high baseline visit probability. The uplift model’s top 10% is packed with persuadables, customers with high true effect. Same budget, different people.</p>
+<div id="fig-demo-who" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Uplift targeting selects customers with high true treatment effect, while response targeting selects customers with high baseline visit probability.">
 <figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-uplift-curve-criteo-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part3/sec3.5/uplift_curve_criteo.png" class="fig-md img-fluid figure-img" alt="An uplift curve that rises steeply above the random-targeting diagonal over the top of the ranking, then flattens.">
+<div aria-describedby="fig-demo-who-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part3/sec3.5/demo_who_gets_targeted.png" class="fig-lg img-fluid figure-img" alt="Uplift targeting selects customers with high true treatment effect, while response targeting selects customers with high baseline visit probability.">
 </div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-uplift-curve-criteo-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;6: Uplift curve on the Criteo experiment.
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-demo-who-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4: Who each score targets in the controlled demo.
 </figcaption>
 </figure>
 </div>
-<div id="fig-qini-curve-criteo" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="A Qini curve for the uplift model sitting above the random-targeting diagonal.">
+<p>Graded as policies on the holdout, the uplift model dominates. At the top 10% it lifts the incremental visit rate by 2.64 points, versus 0.27 for the response model and essentially zero for random. The uplift score tracks the true effect closely (a correlation of 0.93, against the response score’s 0.16). This is uplift modeling working exactly as advertised, because we built real, misaligned effects into the data. The honest question is whether real campaigns look like this.</p>
+<div id="fig-demo-policy" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Uplift targeting captures far more incremental visits than response or random across every targeting depth in the controlled demo.">
 <figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-qini-curve-criteo-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part3/sec3.5/qini_curve_criteo.png" class="fig-md img-fluid figure-img" alt="A Qini curve for the uplift model sitting above the random-targeting diagonal.">
+<div aria-describedby="fig-demo-policy-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part3/sec3.5/demo_policy_value_by_depth.png" class="fig-md img-fluid figure-img" alt="Uplift targeting captures far more incremental visits than response or random across every targeting depth in the controlled demo.">
 </div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-qini-curve-criteo-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;7: Qini curve on the Criteo experiment.
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-demo-policy-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5: Incremental value by targeting depth, controlled demo.
 </figcaption>
 </figure>
 </div>
-<p>Splitting customers into deciles by uplift score makes this operational. The top decile shows several times the average observed uplift, and applying the net-value rule (expected incremental value minus treatment cost) selects only the top few deciles. Everything below them costs more to contact than the incremental visits are worth, and the very bottom deciles are where any sleeping dogs hide.</p>
-<div id="fig-net-value-decile" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="A bar chart of expected net value per customer by uplift decile, with only the top deciles positive.">
+</section>
+<section id="the-criteo-reality-check" class="level2">
+<h2 class="anchored" data-anchor-id="the-criteo-reality-check">The Criteo Reality Check</h2>
+<p>Now the same workflow on a large advertising experiment. The <a href="https://ailab.criteo.com/criteo-uplift-prediction-dataset">Criteo Uplift dataset</a> is a randomized controlled trial: millions of users randomized to see an ad or not, with twelve anonymized features and a binary site-visit outcome. We use the standard 10% subset (about 1.4 million rows), train on 200,000 and grade on a 100,000-row holdout. Two deliberate choices: we treat on the randomized assignment flag, not on whether the ad was actually shown (that happens after randomization and would bias the effect), and we rank on <code>visit</code> (about 4.7%) rather than the much rarer <code>conversion</code> (about 0.3%), which is too thin to grade a ranking stably. Because the features are anonymized, this example teaches the mechanics of uplift evaluation, not which real customer segments to chase.</p>
+<!-- TODO(sec3.5): the result figures below are restored, but the runnable-notebook link
+     stays deferred while this section is parked as experimental. The candidate notebook is
+     experiments/sec3.5-uplift/response-vs-uplift-criteo/response_vs_uplift.py and has not yet
+     been promoted into the public notebooks/ tree. Restore this callout (and point it at the
+     notebooks/ path) once the section is un-parked.
+::: {.callout-note}
+## Run this notebook
+
+[`response_vs_uplift.ipynb`](https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/response_vs_uplift.ipynb) — [Open in Colab](https://colab.research.google.com/github/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/response_vs_uplift.ipynb) · [nbviewer](https://nbviewer.org/github/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/response_vs_uplift.ipynb)
+
+Committed with outputs; Colab is best-effort. Full list on the [Notebooks & Code](../appendix/notebooks.qmd) page.
+:::
+-->
+<p>First, the experiment itself. Treated users visited at 4.85%, control at 3.82%, an average effect of about 1.03 points. A quick balance check confirms the randomization: a classifier trying to predict treatment from features scores 0.508, barely above a coin flip. The uplift model’s job is not to re-estimate that 1.03-point average, the experiment already gives it, but to concentrate it, putting the customers who carry most of the effect at the top of the ranking.</p>
+<p>The ranking does concentrate, at least at the very top. The top decile by uplift score shows about 5 points of observed uplift, roughly five times the average effect. But it decays fast and the tail is noisy: the middle deciles hover near zero, and the very bottom decile swings positive again rather than negative. That bottom-decile surprise is a warning about extreme per-customer scores, which tend to track baseline visit propensity as much as true uplift.</p>
+<div id="fig-uplift-decile" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Observed uplift is about five times the average in the top decile, falls to near zero through the middle deciles, and ticks back up in the bottom decile.">
 <figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-net-value-decile-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part3/sec3.5/targeting_net_value_by_decile.png" class="fig-lg img-fluid figure-img" alt="A bar chart of expected net value per customer by uplift decile, with only the top deciles positive.">
+<div aria-describedby="fig-uplift-decile-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part3/sec3.5/uplift_by_decile.png" class="fig-lg img-fluid figure-img" alt="Observed uplift is about five times the average in the top decile, falls to near zero through the middle deciles, and ticks back up in the bottom decile.">
 </div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-net-value-decile-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;8: Net value by uplift decile.
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-uplift-decile-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;6: Observed uplift by decile on the Criteo holdout.
 </figcaption>
 </figure>
 </div>
+<p>The decisive comparison is against the response baseline, and here the result is humbling. Graded as targeting policies on the same holdout, the response model matches or beats the uplift model at every operational depth. At the top 10% the response policy adds 0.78 points of incremental visits versus uplift’s 0.72; at the top 20%, 0.92 versus 0.87; by the top 30% they are tied. The uplift score edges ahead only in the top 5%. The ranking curves agree: the response model posts a higher AUUC and Qini than the uplift model, with both well above random.</p>
+<div id="fig-response-vs-uplift" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="At the top 10, 20, and 30 percent, the response model delivers slightly more incremental visits than the uplift model, and both far exceed random.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-response-vs-uplift-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part3/sec3.5/response_vs_uplift_targeting.png" class="fig-lg img-fluid figure-img" alt="At the top 10, 20, and 30 percent, the response model delivers slightly more incremental visits than the uplift model, and both far exceed random.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-response-vs-uplift-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;7: Response vs.&nbsp;uplift incremental policy value.
+</figcaption>
+</figure>
+</div>
+<p>The economics tell the same story. Net value (incremental visits at the illustrative index, minus targeting cost) peaks for the response policy at the top 15% and for the uplift policy at the top 25%, and the response peak is higher. A response model is a strong, cheap baseline on this data, and the uplift model has not earned its added complexity here.</p>
+<div id="fig-net-value" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Net value peaks at a shallow targeting depth for the response model and at a deeper one for the uplift model, with the response peak slightly higher.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-net-value-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part3/sec3.5/targeting_net_value.png" class="fig-md img-fluid figure-img" alt="Net value peaks at a shallow targeting depth for the response model and at a deeper one for the uplift model, with the response peak slightly higher.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-net-value-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;8: Net value by targeting depth, response vs.&nbsp;uplift.
+</figcaption>
+</figure>
+</div>
+<p>Why does uplift lose here when it won in the demo? Because on Criteo the treatment-effect signal is weak and largely aligned with baseline visit propensity: the people most likely to visit also carry most of the incremental effect, so sorting by likelihood and sorting by uplift produce nearly the same list, and the simpler model sorts it more cleanly. This is not a failure of the method but the point of the exercise. Uplift modeling is a targeting-policy framework, not a magic ranking. It earns its complexity only when baseline response and treatment effect genuinely diverge, as in the demo, and the only way to know which case you are in is to grade both on a randomized holdout, exactly as we did here.</p>
 </section>
 <section id="guardrails" class="level2">
 <h2 class="anchored" data-anchor-id="guardrails">Guardrails</h2>
-<p>Two failure modes to watch for:</p>
-<p>Margin erosion. The most common failure in coupon targeting is when the extra revenue from coupons is less than the cost of the discounts. Always include the coupon cost in your uplift calculation: net uplift = estimated treatment effect times margin minus coupon cost. Only target customers where the expected extra margin is greater than the coupon value.</p>
-<p>Customer fatigue. Even Persuadables will stop responding, or even disengage, if you contact them too often. Set frequency caps (limits on how many times you contact each customer) and watch if uplift drops for customers who have been contacted recently.</p>
-<p>That wraps up Part 3. We started with a common question: a colleague claims the coupon doubled the purchase rate, but we saw that was just selection bias. From there, we built a toolkit to answer the real question: not just whether a campaign works, but who actually benefits. We covered A/B testing, quasi-experiments, meta-learners, and uplift modeling. The real goal is not just to know if a campaign works, but to know who it works for, so you can spend your budget where it matters.</p>
+<p>A few guardrails carry over to any targeting program:</p>
+<ul>
+<li>Validate on a fresh experiment. A ranking learned on past data decays as behavior shifts. Before trusting any policy at scale, confirm its incremental value on a new randomized holdout, the same evaluation used throughout this chapter.</li>
+<li>Net the cost before deciding. Target the depth where incremental value clears cost, not wherever predicted scores are merely positive. The net-value curve, not the raw score, sets the budget.</li>
+<li>Mind the sleeping dogs. Some customers have negative uplift, and contact suppresses them. They hide in the bottom deciles, where the net-value rule already steers you away.</li>
+<li>Don’t confuse a good predictor with a good policy. High classification accuracy does not imply high policy value, or the reverse. Grade the decision you will actually make.</li>
+</ul>
+<p>That wraps up Part 3. We started with a colleague’s claim that a coupon doubled the purchase rate, and saw it was just selection bias. From there we built a toolkit to answer the real question: not whether a campaign works on average, but who it works on, and whether acting on that is worth it. We covered A/B testing, quasi-experiments, meta-learners, and uplift modeling. The closing lesson is the one this chapter earned the hard way: a targeting model is only as good as its measured incremental value on a holdout, so grade the policy before you trust it, and spend where the experiment, not the model’s optimism, says it pays.</p>
 
 
 <div id="refs" class="references csl-bib-body hanging-indent" role="list" style="display: none">
