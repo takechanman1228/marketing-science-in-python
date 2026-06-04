@@ -500,11 +500,11 @@ div.csl-indent {
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#sec-golden-rule" id="toc-sec-golden-rule" class="nav-link active" data-scroll-target="#sec-golden-rule">Build Segments from Behavior, Profile Them with Demographics</a></li>
+  <li><a href="#sec-behavioral-vs-profile" id="toc-sec-behavioral-vs-profile" class="nav-link active" data-scroll-target="#sec-behavioral-vs-profile">Behavioral Variables and Profile Variables</a></li>
   <li><a href="#sec-value-tiers" id="toc-sec-value-tiers" class="nav-link" data-scroll-target="#sec-value-tiers">Start Simple: Deciles and RFM</a>
   <ul class="collapse">
   <li><a href="#decile-analysis" id="toc-decile-analysis" class="nav-link" data-scroll-target="#decile-analysis">Decile Analysis</a></li>
-  <li><a href="#rfm-adding-behavioral-nuance" id="toc-rfm-adding-behavioral-nuance" class="nav-link" data-scroll-target="#rfm-adding-behavioral-nuance">RFM: Adding Behavioral Nuance</a></li>
+  <li><a href="#rfm-analysis" id="toc-rfm-analysis" class="nav-link" data-scroll-target="#rfm-analysis">RFM Analysis</a></li>
   </ul></li>
   <li><a href="#sec-kmeans" id="toc-sec-kmeans" class="nav-link" data-scroll-target="#sec-kmeans">Behavioral Clustering with K-Means</a></li>
   <li><a href="#sec-embedding" id="toc-sec-embedding" class="nav-link" data-scroll-target="#sec-embedding">Embedding-Based Segmentation</a>
@@ -543,27 +543,25 @@ div.csl-indent {
 </header>
 
 
-<p>A useful segmentation project should deliver an operating artifact, not just a slide deck. The real output is a <code>segment_id</code> that integrates with your CRM and ad platforms, along with a one-page brief for each segment: who they are, why they matter, and what your team should do differently.</p>
-<p>This chapter builds that artifact in three steps:</p>
+<p>A segmentation project should produce something your team can actually use, not just a presentation. The real deliverable is a <code>segment_id</code> that connects directly to your CRM and ad platforms, plus a concise brief for each segment: who they are, why they matter, and what actions your team should take.</p>
+<p>This chapter walks through how to build that kind of artifact in three steps:</p>
 <ol type="1">
-<li>Rank customers by current value. Decile analysis and RFM give you a fast operating layer.</li>
-<li>Group customers by behavior. Behavioral clustering uncovers patterns that simple value tiers miss.</li>
-<li>Add purchase meaning. Embedding-based segmentation reveals what customers actually buy, not just how much.</li>
+<li>First, rank customers by current value. Decile analysis and RFM (Recency, Frequency, Monetary) provide a quick way to segment on value.</li>
+<li>Next, group customers by behavior. Behavioral clustering surfaces patterns that value tiers alone cannot capture.</li>
+<li>Finally, add purchase meaning. Embedding-based segmentation shows what customers actually buy, not just how much they spend.</li>
 </ol>
-<section id="sec-golden-rule" class="level2">
-<h2 class="anchored" data-anchor-id="sec-golden-rule">Build Segments from Behavior, Profile Them with Demographics</h2>
-<p>Before building segments, separate two types of variables.</p>
-<p>Behavioral variables describe what customers do: how often they buy, how recently they bought, how much they spend, which categories they buy, how broadly they shop, how often they return products, and how dependent they are on discounts.</p>
-<p>Profile variables describe who they are or where you can reach them: age, income, household composition, geography, loyalty tier, and channel preference.</p>
-<p>Use behavioral variables to create the segments. Use profile variables afterward to describe, target, and communicate with those segments.</p>
-<p>This rule holds throughout the chapter. RFM uses behavioral signals to build value tiers. K-Means adds richer behavioral features to uncover broader patterns. Embedding-based segmentation brings in purchase text to capture what customers actually buy. Demographics still matter, but their main role comes after the segments are built: to explain, reach, and activate them.</p>
+<section id="sec-behavioral-vs-profile" class="level2">
+<h2 class="anchored" data-anchor-id="sec-behavioral-vs-profile">Behavioral Variables and Profile Variables</h2>
+<p>When building customer segments, the variables fall into two broad types. Behavioral variables describe what customers do: recency, frequency, spend, categories purchased, product breadth, returns, and discount dependence. Profile variables describe who they are or where you can reach them: age, income, household composition, geography, loyalty tier, and channel preference.</p>
+<p>For marketing segmentation, behavioral variables are the stronger foundation. What someone viewed, bought, or what similar customers chose is usually a better predictor of their next action than demographics. Relying on demographics alone, like “this product for a man in his 30s” or “this offer for a high earner,” is a much weaker signal than the customer’s actual purchase history.</p>
+<p>Profile variables still have a role. Use them after building segments to understand who is in each group, where to reach them, and how to tailor communication.</p>
 </section>
 <section id="sec-value-tiers" class="level2">
 <h2 class="anchored" data-anchor-id="sec-value-tiers">Start Simple: Deciles and RFM</h2>
-<p>The quickest way to a usable segmentation skips clustering algorithms entirely. Start by ranking customers by revenue decile, then layer on RFM if you need more nuance.</p>
+<p>The simplest approach is rule-based: you define the cutoffs instead of relying on an algorithm. Decile analysis and RFM are the most common examples.</p>
 <section id="decile-analysis" class="level3">
 <h3 class="anchored" data-anchor-id="decile-analysis">Decile Analysis</h3>
-<p>Decile analysis divides customers into ten equal groups by revenue. The pattern usually follows the Pareto principle: a small share of customers drives most of the revenue. D1 gets retention and VIP treatment. D2 to D5 get growth campaigns; this is where the biggest upside is. D8 to D10 get only low-cost automated nurture. You can set this up in under an hour and give your team a clear action plan.</p>
+<p>Decile analysis splits customers into ten equal groups by revenue. The pattern often follows the Pareto principle: a small group drives most of the revenue. The top 10% get retention and VIP treatment. The next 40% are the main target for growth campaigns. The bottom 30% get only low-cost automated nurture. You can set this up quickly and give your team a clear action plan.</p>
 <div id="fig-decile-distribution" class="fig-md quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-decile-distribution-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -575,9 +573,9 @@ Figure&nbsp;1: A typical customer-value decile distribution.
 </figure>
 </div>
 </section>
-<section id="rfm-adding-behavioral-nuance" class="level3">
-<h3 class="anchored" data-anchor-id="rfm-adding-behavioral-nuance">RFM: Adding Behavioral Nuance</h3>
-<p>RFM (Recency, Frequency, Monetary) gives a more nuanced view. It is the most widely used segmentation framework in direct marketing because marketing teams already think in these terms: lapsed high-spenders, new frequent buyers, and so on.</p>
+<section id="rfm-analysis" class="level3">
+<h3 class="anchored" data-anchor-id="rfm-analysis">RFM Analysis</h3>
+<p>RFM gives a more nuanced view. It is the most widely used segmentation framework in direct marketing because teams already think in these terms: lapsed high-spenders, new frequent buyers, and similar patterns.</p>
 <div id="tbl-rfm-variables" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-rfm-variables-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -624,7 +622,7 @@ Table&nbsp;1: RFM variables and their interpretation.
 </section>
 <section id="sec-kmeans" class="level2">
 <h2 class="anchored" data-anchor-id="sec-kmeans">Behavioral Clustering with K-Means</h2>
-<p>K-Means lets you cluster on multiple behavioral variables without manual cutoffs. The practical setup is straightforward: scale features with StandardScaler so dollar amounts do not overwhelm the others, and start with 6 to 10 behavioral variables. Using fewer often just recreates RFM with extra steps.</p>
+<p>K-Means is a classic clustering algorithm that still works well for marketing segmentation. Normalize features with StandardScaler so spend does not dominate, and start with 6 to 10 behavioral variables. Beyond RFM, useful additions include average order value, basket size, and return rate.</p>
 <p>Choosing K is part statistics, part judgment. The elbow method and silhouette score help narrow the range. For most businesses, 4 to 8 segments is the practical sweet spot. If your marketing team cannot describe a different action for each segment, you probably have too many.</p>
 <div id="fig-elbow-silhouette" class="fig-md quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
@@ -708,7 +706,6 @@ Note
 <li><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_traditional_segmentation.ipynb"><code>sec4.1_traditional_segmentation.ipynb</code></a> — <a href="https://colab.research.google.com/github/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_traditional_segmentation.ipynb">Open in Colab</a> · <a href="https://nbviewer.org/github/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_traditional_segmentation.ipynb">nbviewer</a></li>
 <li><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_semantic_segmentation.ipynb"><code>sec4.1_semantic_segmentation.ipynb</code></a> — <a href="https://colab.research.google.com/github/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_semantic_segmentation.ipynb">Open in Colab</a> · <a href="https://nbviewer.org/github/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_semantic_segmentation.ipynb">nbviewer</a>. Its optional LLM-labeling step needs both the <code>litellm</code> package (<code>pip install litellm</code>) and your own <code>OPENAI_API_KEY</code> or <code>ANTHROPIC_API_KEY</code> set as an environment variable; without either, the LLM cell skips automatically and the rest of the pipeline still runs.</li>
 </ul>
-<p>Committed with outputs; Colab is best-effort. Full list on the <a href="../appendix/notebooks.html">Notebooks &amp; Code</a> page.</p>
 </div>
 </div>
 </section>
@@ -791,9 +788,9 @@ corrected figure is available; the Method Cheat Sheet above carries the takeaway
 <section id="key-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="key-takeaways">Key Takeaways</h2>
 <ul>
-<li>Build segments from behavior, profile with demographics. Put behavioral variables into the algorithm; use profile variables afterward to describe, target, and reach the segments.</li>
-<li>Each method answers a different question. RFM ranks customers by current value. K-Means uncovers behavioral patterns beyond value tiers. Embedding-based segmentation reveals what customers actually buy. Choose the method that matches your decision.</li>
-<li>Validate first for actionability, then stability and size. If your marketing team would treat two segments the same way, merge them.</li>
+<li>Build segments from behavior, then profile with demographics. Feed behavioral variables into the algorithm; use profile variables afterward to describe, target, and reach each segment.</li>
+<li>Each method answers a different question. RFM ranks customers by current value. K-Means uncovers behavioral patterns beyond value tiers. Embedding-based segmentation shows what customers actually buy. Choose the method that matches your business decision.</li>
+<li>Validate first for actionability, then for stability and size. If your marketing team would treat two segments the same way, merge them.</li>
 </ul>
 
 
