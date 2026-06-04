@@ -604,7 +604,7 @@ window.Quarto = {
 <p>Media Mix Modeling (MMM) is a statistical approach that uses aggregated time-series data (typically weekly sales and media spend by channel) to estimate how much each marketing channel contributes to business outcomes. Unlike user-level attribution, MMM works with aggregate data and does not require individual tracking, which makes it resilient to cookie loss, App Tracking Transparency, and walled-garden restrictions.</p>
 <p>MMM serves three purposes:</p>
 <ol type="1">
-<li><strong>Measure</strong>: quantify each channel’s contribution and return on investment (ROI).</li>
+<li><strong>Measure</strong>: quantify each channel’s contribution and return on ad spend (ROAS).</li>
 <li><strong>Simulate</strong>: answer “what if” questions, such as what happens to sales if we cut TV spend by 30%?</li>
 <li><strong>Optimize</strong>: allocate a fixed budget across channels to maximize the expected outcome.</li>
 </ol>
@@ -637,7 +637,7 @@ Figure&nbsp;2: Simple linear MMM: sales ~ media spend + controls.
 </figcaption>
 </figure>
 </div>
-<p>This simple regression is not enough for two reasons. First, media effects are not immediate: a TV ad this week can still influence purchases in the following weeks (carryover). Second, media effects are not linear: the hundredth GRP in a week adds less than the first (diminishing returns).</p>
+<p>This simple regression is not enough for two reasons. First, media effects are not immediate: a TV ad this week can still influence purchases in the following weeks (carryover). Second, media effects are not linear: the hundredth GRP (gross rating point, a standard measure of TV audience delivery) in a week adds less than the first (diminishing returns).</p>
 <p>A more realistic model applies adstock (carryover) and saturation (diminishing returns) transforms before the linear combination:</p>
 <p><span class="math display">\[
 y_t = \beta_0 + \sum_{c=1}^{C} \beta_c \cdot \text{Saturation}\bigl(\text{Adstock}(x_{c,t})\bigr) + \sum_{k} \gamma_k \cdot z_{k,t} + \varepsilon_t
@@ -670,7 +670,7 @@ Figure&nbsp;4: Saturation (left) and adstock (right) transforms.
 </figcaption>
 </figure>
 </div>
-<p>The practical takeaway is clear: if Channel A is already saturated and Channel B is still on the steep part of its curve, shifting budget from A to B can increase total return, even if Channel A’s average ROI looks higher.</p>
+<p>The practical takeaway is clear: if Channel A is already saturated and Channel B is still on the steep part of its curve, shifting budget from A to B can increase total return, even if Channel A’s average ROAS looks higher.</p>
 </section>
 <section id="adstock-carryover-effects" class="level2">
 <h2 class="anchored" data-anchor-id="adstock-carryover-effects">Adstock (Carryover Effects)</h2>
@@ -721,8 +721,8 @@ Figure&nbsp;6: Example MMM dataset: date, sales, spend by channel, controls.
 <h2 class="anchored" data-anchor-id="the-bayesian-angle">The Bayesian Angle</h2>
 <p>Before walking through an implementation, one design choice deserves attention: modern MMM is predominantly Bayesian. The reason is practical, not philosophical.</p>
 <ol type="1">
-<li><strong>Priors encode domain knowledge.</strong> If your team knows from past experiments that TV ROI is roughly 2.0, you can encode that as a prior. The model updates this belief with the data. Without priors, the model might produce implausible estimates simply because of multicollinearity.</li>
-<li><strong>Credible intervals, not point estimates.</strong> Instead of “TV ROI = 2.3,” you get “TV ROI: median 2.3, 90% CI [1.1, 3.8].” A wide interval means you should be cautious about large budget shifts based on that estimate.</li>
+<li><strong>Priors encode domain knowledge.</strong> If your team knows from past experiments that TV ROAS is roughly 2.0, you can encode that as a prior. The model updates this belief with the data. Without priors, the model might produce implausible estimates simply because of multicollinearity.</li>
+<li><strong>Credible intervals, not point estimates.</strong> Instead of “TV ROAS = 2.3,” you get “TV ROAS: median 2.3, 90% CI [1.1, 3.8].” A wide interval means you should be cautious about large budget shifts based on that estimate.</li>
 <li><strong>Natural integration with experiments.</strong> When you run a geo-lift experiment and estimate a channel’s incremental effect, you can feed that directly into the MMM as an informative prior. This tightens the posterior and improves identifiability, a workflow we develop in detail in <a href="sec6.3-mmm-calibration.html">Section 6.3</a>.</li>
 </ol>
 <p>That’s why tools like Meridian and PyMC-Marketing use Bayesian inference under the hood.</p>
@@ -757,7 +757,7 @@ Figure&nbsp;6: Example MMM dataset: date, sales, spend by channel, controls.
 <p><a href="https://github.com/google/meridian">Meridian</a> is Google’s actively maintained MMM library, the successor to the now-deprecated LightweightMMM. Other strong alternatives include Meta’s <a href="https://github.com/facebookexperimental/Robyn">Robyn</a> and <a href="https://github.com/pymc-labs/pymc-marketing">PyMC-Marketing</a>. The core concepts (adstock, saturation, Bayesian estimation, and budget optimization) are the same across all of these tools. We use Meridian here because it offers a mature API with built-in diagnostics and optimization.</p>
 </div>
 </div>
-<p><strong>Data loading and preparation.</strong> The demo dataset contains 157 weeks of sales data with 5 media channels (TV/CTV, OOH, Google Search, Meta, TikTok) and holiday/seasonality controls. Meridian uses a <code>DataFrameInputDataBuilder</code> to construct its input data from a pandas DataFrame. Scaling is handled internally; no manual normalization is needed. The important detail is that Meridian applies saturation to <code>media_cols</code> (exposure volume such as impressions or clicks), while <code>media_spend_cols</code> are used as the cost basis for ROI.</p>
+<p><strong>Data loading and preparation.</strong> The demo dataset contains 157 weeks of sales data with 5 media channels (TV/CTV, OOH, Google Search, Meta, TikTok) and holiday/seasonality controls. Meridian uses a <code>DataFrameInputDataBuilder</code> to construct its input data from a pandas DataFrame. Scaling is handled internally; no manual normalization is needed. The important detail is that Meridian applies saturation to <code>media_cols</code> (exposure volume such as impressions or clicks), while <code>media_spend_cols</code> are used as the cost basis for ROAS.</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>channels <span class="op">=</span> [<span class="st">"TV/CTV"</span>, <span class="st">"OOH"</span>, <span class="st">"Google Search"</span>, <span class="st">"Meta"</span>, <span class="st">"TikTok"</span>]</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>media_cols <span class="op">=</span> [</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"tv_ctv_impressions"</span>, <span class="st">"ooh_impressions"</span>, <span class="st">"google_clicks"</span>,</span>
@@ -829,14 +829,14 @@ Figure&nbsp;9: Out-of-sample fit: predicted vs.&nbsp;actual sales.
 </figcaption>
 </figure>
 </div>
-<p><strong>Media insights.</strong> The model gives ROI estimates with credible intervals for each channel. Wide intervals mean there is real uncertainty: this is a feature, not a bug. Point estimates alone can be misleading; credible intervals show how much confidence you should have in the results.</p>
-<div id="fig-roi-estimates" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="ROI estimates with 90% credible intervals for each media channel. Wide intervals indicate high uncertainty in the estimate.">
+<p><strong>Media insights.</strong> The model gives ROAS estimates with credible intervals for each channel. Wide intervals mean there is real uncertainty: this is a feature, not a bug. Point estimates alone can be misleading; credible intervals show how much confidence you should have in the results.</p>
+<div id="fig-roi-estimates" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="ROAS estimates with 90% credible intervals for each media channel. Wide intervals indicate high uncertainty in the estimate.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-roi-estimates-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part6/sec6.2/roi_estimates.png" class="fig-lg img-fluid figure-img" alt="ROI estimates with 90% credible intervals for each media channel. Wide intervals indicate high uncertainty in the estimate.">
+<img src="../images/part6/sec6.2/roi_estimates.png" class="fig-lg img-fluid figure-img" alt="ROAS estimates with 90% credible intervals for each media channel. Wide intervals indicate high uncertainty in the estimate.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-roi-estimates-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;10: ROI estimates with 90% credible intervals by channel.
+Figure&nbsp;10: ROAS estimates with 90% credible intervals by channel.
 </figcaption>
 </figure>
 </div>
@@ -856,7 +856,7 @@ Figure&nbsp;11: Channel contributions and baseline over time.
 <p>The model’s three purposes (measure, simulate, optimize) converge here. Once the response curves are fitted, the optimizer searches for the allocation that maximizes predicted KPI under a fixed budget constraint:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>budget_optimizer <span class="op">=</span> optimizer.BudgetOptimizer(mmm)</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>optimization_results <span class="op">=</span> budget_optimizer.optimize()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>The intuition is straightforward. If one channel is already saturated and another is still on the steep part of its response curve, shifting dollars from the saturated channel to the unsaturated one increases total predicted sales, even if the saturated channel’s average ROI is higher.</p>
+<p>The intuition is straightforward. If one channel is already saturated and another is still on the steep part of its response curve, shifting dollars from the saturated channel to the unsaturated one increases total predicted sales, even if the saturated channel’s average ROAS is higher.</p>
 <div id="fig-budget-optimization" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Pre- vs. post-optimization budget by channel (top) and predicted sales (bottom); spend shifts to unsaturated channels.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-budget-optimization-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -875,7 +875,7 @@ Figure&nbsp;12: Pre- vs.&nbsp;post-optimization budget and sales.
 <ul>
 <li>MMM estimates channel contribution using aggregate data. It does not need user-level tracking, so it is resilient to cookie deprecation, App Tracking Transparency, and walled-garden limits.</li>
 <li>Hill saturation and geometric adstock are the two main transforms. Each channel gets its own set of parameters.</li>
-<li><strong>Optimize based on marginal ROI, not average ROI.</strong> A channel with high average ROI might already be deep into its saturation curve. Shifting dollars to a channel that is still on the steep part of its curve can increase total return, even if its average ROI is lower.</li>
+<li><strong>Optimize based on marginal ROAS, not average ROAS.</strong> A channel with high average ROAS might already be deep into its saturation curve. Shifting dollars to a channel that is still on the steep part of its curve can increase total return, even if its average ROAS is lower.</li>
 <li>Data requirements are specific: weekly data, at least 2–3 years of history, and real spend variation for each channel.</li>
 <li>Bayesian estimation is now the default. Priors let you encode domain knowledge, and the posterior gives credible intervals instead of just point estimates.</li>
 </ul>
