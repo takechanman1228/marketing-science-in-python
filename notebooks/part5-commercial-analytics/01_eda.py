@@ -37,12 +37,12 @@ import os
 pd.set_option("display.float_format", "{:.2f}".format)
 plt.rcParams.update({"figure.dpi": 110, "axes.grid": True, "grid.alpha": 0.3})
 
-from msbook.paths import chapter_processed, chapter_images, chapter_artifacts
+from msbook.paths import chapter_generated, chapter_images, chapter_artifacts
 
 CONFIG = {
-    "data_dir": "../Retail_open_data_set/Dunnhumby_kaggle/archive",
+    "data_dir": "../../data/raw/Dunnhumby_kaggle",
     "output_path": str(
-        chapter_processed(part="5", chapter="sec5.3-demand-forecast")
+        chapter_generated(part="5", chapter="sec5.3-demand-forecast")
         / "dunnhumby_grocery_weekly.parquet"
     ),
     "img_dir": str(chapter_images(part="5", chapter="sec5.3")),
@@ -64,7 +64,7 @@ CONFIG = {
     "reference_date": pd.Timestamp("2012-01-02"),  # a Monday
 }
 
-# chapter_images / chapter_processed already mkdir'd the dirs.
+# chapter_images / chapter_generated already mkdir'd the dirs.
 # Scratch tables (eda summary) land in artifacts/ — gitignored.
 _SCRATCH_TABLES = chapter_artifacts(part="5", chapter="sec5.3-demand-forecast") / "tables"
 _SCRATCH_TABLES.mkdir(parents=True, exist_ok=True)
