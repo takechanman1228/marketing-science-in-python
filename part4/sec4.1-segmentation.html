@@ -23,6 +23,41 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 /* CSS for citations */
 div.csl-bib-body { }
 div.csl-entry {
@@ -507,8 +542,9 @@ div.csl-indent {
   <li><a href="#rfm-analysis" id="toc-rfm-analysis" class="nav-link" data-scroll-target="#rfm-analysis">RFM Analysis</a></li>
   </ul></li>
   <li><a href="#sec-kmeans" id="toc-sec-kmeans" class="nav-link" data-scroll-target="#sec-kmeans">Behavioral Clustering with K-Means</a></li>
-  <li><a href="#sec-embedding" id="toc-sec-embedding" class="nav-link" data-scroll-target="#sec-embedding">Embedding-Based Segmentation</a>
+  <li><a href="#sec-embedding" id="toc-sec-embedding" class="nav-link" data-scroll-target="#sec-embedding">Embedding-Based Segmentation with BERTopic</a>
   <ul class="collapse">
+  <li><a href="#why-bertopic" id="toc-why-bertopic" class="nav-link" data-scroll-target="#why-bertopic">Why BERTopic?</a></li>
   <li><a href="#constructing-the-customer-document" id="toc-constructing-the-customer-document" class="nav-link" data-scroll-target="#constructing-the-customer-document">Constructing the Customer Document</a></li>
   <li><a href="#reading-the-output" id="toc-reading-the-output" class="nav-link" data-scroll-target="#reading-the-output">Reading the Output</a></li>
   <li><a href="#when-one-theme-dominates" id="toc-when-one-theme-dominates" class="nav-link" data-scroll-target="#when-one-theme-dominates">When One Theme Dominates</a></li>
@@ -623,40 +659,94 @@ Table&nbsp;1: RFM variables and their interpretation.
 <section id="sec-kmeans" class="level2">
 <h2 class="anchored" data-anchor-id="sec-kmeans">Behavioral Clustering with K-Means</h2>
 <p>K-Means is a classic clustering algorithm that still works well for marketing segmentation. Normalize features with StandardScaler so spend does not dominate, and start with 6 to 10 behavioral variables. Beyond RFM, useful additions include average order value, basket size, and return rate.</p>
-<p>Choosing K is part statistics, part judgment. The elbow method and silhouette score help narrow the range. For most businesses, 4 to 8 segments is the practical sweet spot. If your marketing team cannot describe a different action for each segment, you probably have too many.</p>
-<div id="fig-elbow-silhouette" class="fig-md quarto-float quarto-figure quarto-figure-center anchored">
+<p>Log-transform the skewed variables before scaling. Spend, frequency, recency, and basket size are usually heavily right-skewed: a handful of customers buy far more than everyone else. StandardScaler only centers and rescales, so those long tails survive. Fed raw, K-Means spends its first splits separating big spenders from small ones and mostly rediscovers value tiers, and any extra cluster it finds is a tiny outlier pocket too small to act on. Applying <code>log1p</code> to the skewed features (a simple rule: transform anything with skew above ~1) compresses the tails, so the clusters reflect behavioral <em>shape</em> rather than spend magnitude — and balanced, actionable segments emerge. On the companion dataset this is the difference between K-Means collapsing to three value tiers and splitting the base into five balanced, comparably-sized behavioral groups.</p>
+<p>Choosing K is part statistics, part judgment. The elbow method helps narrow the range, but it rarely pins the number. On customer data its sharpest bend often sits at K=3, which usually just recovers value tiers (heavy, average, lapsed) that decile and RFM already capture. To segment on behavior rather than value, push into the practical range (often 4 to 8 segments) and let actionability decide: keep the K whose segments your marketing team would actually treat differently. If they cannot describe a different action for each segment, you have too many.</p>
+<div id="fig-elbow" class="fig-md quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-elbow-silhouette-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part4/sec4.1/elbow_silhouette.png" class="fig-md img-fluid figure-img">
+<div aria-describedby="fig-elbow-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.1/elbow.png" class="fig-md img-fluid figure-img">
 </div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-elbow-silhouette-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;2: Elbow and silhouette plots for choosing K.
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-elbow-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2: Elbow plot for choosing K.
 </figcaption>
 </figure>
 </div>
 <p>Numeric clustering still flattens product meaning. With inputs like frequency, spend, recency, category breadth, and discount dependency, two customers can look similar even if the products they buy are very different. To capture that meaning, bring product text directly into the segmentation.</p>
 </section>
 <section id="sec-embedding" class="level2">
-<h2 class="anchored" data-anchor-id="sec-embedding">Embedding-Based Segmentation</h2>
-<p>To capture what customers buy, treat each customer’s purchase history as text. Concatenate their purchased product descriptions into a single string (the customer document) and use an embedding model to turn that string into a dense vector. In this embedding space, birthday candles and party plates end up close together, while antique teapot sits far away. Cluster on these vectors and the segments split by purchase meaning, not just purchase volume.</p>
+<h2 class="anchored" data-anchor-id="sec-embedding">Embedding-Based Segmentation with BERTopic</h2>
+<p>To capture what customers actually buy, treat each customer’s purchase history as text: concatenate their purchased product descriptions into a single string (the customer document), then use an embedding model to turn that string into a dense vector. In this embedding space, birthday candles and party plates sit close together while an antique teapot sits far away, so clustering the vectors splits customers by purchase meaning, not just purchase volume.</p>
+<p>The examples use the UCI Online Retail II dataset, about a million transactions from a UK gift retailer, whose free-text product descriptions are exactly what an embedding model reads. We run the whole pipeline with BERTopic.</p>
+<div id="fig-umap-clusters" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="UMAP projection of customer-document embeddings, each point a customer, colored by the segment BERTopic discovered.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-umap-clusters-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.1/umap_clusters.png" class="fig-md img-fluid figure-img" alt="UMAP projection of customer-document embeddings, each point a customer, colored by the segment BERTopic discovered.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-umap-clusters-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3: Customer documents in embedding space.
+</figcaption>
+</figure>
+</div>
+<section id="why-bertopic" class="level3">
+<h3 class="anchored" data-anchor-id="why-bertopic">Why BERTopic?</h3>
+<p>Done by hand, this pipeline means chaining four libraries: SentenceTransformers to embed the documents, UMAP to reduce dimensions, HDBSCAN to cluster, and custom code to read the result. BERTopic wraps all four behind one API and adds the parts that make the output usable: c-TF-IDF to pull each segment’s distinctive keywords, <code>reduce_outliers()</code> for the customers HDBSCAN leaves unassigned, <code>transform()</code> to score new customers without refitting, and an optional LLM step for naming. The rest of this section follows that pipeline.</p>
+</section>
 <section id="constructing-the-customer-document" class="level3">
 <h3 class="anchored" data-anchor-id="constructing-the-customer-document">Constructing the Customer Document</h3>
+<p>For example, a customer’s document might look like this:</p>
+<p><code>red retrospot cake stand, party bunting, paper cups, birthday candles, cake cases</code></p>
+<p>A numeric model may only see this customer as frequent or high-spend. The embedding model sees the product meaning: party supplies and celebration-related purchases.</p>
+<p>Building one is a group-and-concatenate over the transaction log:</p>
+<div id="c86b3fcd" class="cell" data-execution_count="1">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Keep each customer's top-N products by revenue, then join the descriptions</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>prod_rev <span class="op">=</span> (</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    df.groupby([<span class="st">"CustomerID"</span>, <span class="st">"Description"</span>])[<span class="st">"Revenue"</span>].<span class="bu">sum</span>()</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    .reset_index()</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    .sort_values([<span class="st">"CustomerID"</span>, <span class="st">"Revenue"</span>], ascending<span class="op">=</span>[<span class="va">True</span>, <span class="va">False</span>])</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>top_products <span class="op">=</span> prod_rev.groupby(<span class="st">"CustomerID"</span>).head(TOP_N)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>customer_docs <span class="op">=</span> (</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    top_products.groupby(<span class="st">"CustomerID"</span>)[<span class="st">"Description"</span>]</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    .<span class="bu">apply</span>(<span class="kw">lambda</span> d: <span class="st">", "</span>.join(d))</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    .reset_index(name<span class="op">=</span><span class="st">"doc"</span>)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
 <p>Three practical decisions shape the quality of the segments more than anything else.</p>
 <p>Which products go in. Top-N purchased items (by frequency or revenue) usually outperform the full purchase history. The full list adds noise from one-off buys; the top items capture the customer’s actual pattern.</p>
 <p>Whether to weight by revenue. Including a high-value item once versus a low-value item once can misrepresent what the customer cares about. Revenue-weighting (repeating product mentions in proportion to spend) sharpens the segments for customers with mixed baskets. Cap the weights or use log-spend weighting when price differences across products are large; otherwise a single luxury purchase can dominate the document.</p>
 <p>Filtering generic products. Items like “Gift Card,” “Postage,” or generic SKUs are noise: they appear across all segments and dilute the keywords. Filter them out by StockCode patterns or maintain a small exclusion list. This single step often makes the difference between segments that mean something and segments that mean nothing.</p>
-<p>A lightweight sentence-embedding model is enough for most retail catalogs. The quality of your segments depends much more on how you design and validate the customer document than on which embedding model you pick.</p>
+<p>A lightweight sentence-embedding model is enough for most retail catalogs. The quality of your segments depends much more on how you design and validate the customer document than on which embedding model you pick. The notebook uses a local SentenceTransformers model for reproducibility, but the same workflow can also use API-based embedding models such as OpenAI embeddings.</p>
 </section>
 <section id="reading-the-output" class="level3">
 <h3 class="anchored" data-anchor-id="reading-the-output">Reading the Output</h3>
-<p>The payoff is a keyword fingerprint for each segment:</p>
+<p>The fit behind that map is a single call. A local embedding model turns each document into a vector, and BERTopic handles the clustering and keyword extraction:</p>
+<div id="4411f55f" class="cell" data-execution_count="2">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> bertopic <span class="im">import</span> BERTopic</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sentence_transformers <span class="im">import</span> SentenceTransformer</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>embedding_model <span class="op">=</span> SentenceTransformer(<span class="st">"all-MiniLM-L6-v2"</span>)   <span class="co"># local, lightweight</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>embeddings <span class="op">=</span> embedding_model.encode(customer_docs[<span class="st">"doc"</span>].tolist())</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>topic_model <span class="op">=</span> BERTopic(embedding_model<span class="op">=</span>embedding_model)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>topics, probs <span class="op">=</span> topic_model.fit_transform(</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    customer_docs[<span class="st">"doc"</span>].tolist(), embeddings<span class="op">=</span>embeddings</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p>The companion notebook configures the UMAP, HDBSCAN, and c-TF-IDF sub-models explicitly; this is the same pipeline with defaults. The payoff is a keyword fingerprint for each segment:</p>
 <div id="fig-bertopic-barchart" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Top distinctive keywords per segment from product-description embeddings, which numeric RFM clustering cannot reveal.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-bertopic-barchart-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="../images/part4/sec4.1/bertopic_barchart.png" class="fig-md img-fluid figure-img" alt="Top distinctive keywords per segment from product-description embeddings, which numeric RFM clustering cannot reveal.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-bertopic-barchart-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;3: Top distinctive keywords per segment.
+Figure&nbsp;4: Top distinctive keywords per segment.
 </figcaption>
 </figure>
 </div>
@@ -680,31 +770,14 @@ Figure&nbsp;3: Top distinctive keywords per segment.
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-Note
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Companion notebooks</p>
-<p>The full working code is split across two notebooks, each on the dataset that suits its method:</p>
-<ul>
-<li><a href="../notebooks/part4-customer-analytics/sec4.1_traditional_segmentation.py"><code>sec4.1_traditional_segmentation.py</code></a> — decile, RFM, and K-Means on the Dunnhumby “The Complete Journey” dataset. This is the same dataset the CLV chapter uses, so segment membership carries through.</li>
-<li><a href="../notebooks/part4-customer-analytics/sec4.1_semantic_segmentation.py"><code>sec4.1_semantic_segmentation.py</code></a> — the embedding-based pipeline (customer-document construction with revenue weighting, generic-product filtering by StockCode, embedding, clustering, keyword extraction, and LLM-assisted naming) on the UCI Online Retail II dataset, which has the rich product descriptions this method needs.</li>
-</ul>
-</div>
-</div>
-<div class="callout callout-style-default callout-note callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
 <span class="screen-reader-only">Note</span>Run these notebooks
 </div>
 </div>
 <div class="callout-body-container callout-body">
+<p>The full working code is split across two notebooks, each on the dataset that suits its method.</p>
 <ul>
-<li><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_traditional_segmentation.ipynb"><code>sec4.1_traditional_segmentation.ipynb</code></a> — <a href="https://colab.research.google.com/github/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_traditional_segmentation.ipynb">Open in Colab</a> · <a href="https://nbviewer.org/github/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_traditional_segmentation.ipynb">nbviewer</a></li>
-<li><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_semantic_segmentation.ipynb"><code>sec4.1_semantic_segmentation.ipynb</code></a> — <a href="https://colab.research.google.com/github/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_semantic_segmentation.ipynb">Open in Colab</a> · <a href="https://nbviewer.org/github/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_semantic_segmentation.ipynb">nbviewer</a>. Its optional LLM-labeling step needs both the <code>litellm</code> package (<code>pip install litellm</code>) and your own <code>OPENAI_API_KEY</code> or <code>ANTHROPIC_API_KEY</code> set as an environment variable; without either, the LLM cell skips automatically and the rest of the pipeline still runs.</li>
+<li><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_traditional_segmentation.ipynb"><code>sec4.1_traditional_segmentation.ipynb</code></a> — <a href="https://colab.research.google.com/github/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_traditional_segmentation.ipynb">Open in Colab</a> · <a href="https://nbviewer.org/github/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_traditional_segmentation.ipynb">nbviewer</a>. Decile, RFM, and K-Means on the Dunnhumby “The Complete Journey” dataset, the same dataset the CLV chapter uses, so segment membership carries through.</li>
+<li><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_semantic_segmentation.ipynb"><code>sec4.1_semantic_segmentation.ipynb</code></a> — <a href="https://colab.research.google.com/github/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_semantic_segmentation.ipynb">Open in Colab</a> · <a href="https://nbviewer.org/github/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_semantic_segmentation.ipynb">nbviewer</a>. The embedding pipeline (customer-document construction, generic-product filtering, embedding, BERTopic clustering, keyword extraction, and LLM-assisted naming) on the UCI Online Retail II dataset, which has the rich product descriptions this method needs. Its optional LLM-naming step needs the <code>litellm</code> package and an <code>OPENAI_API_KEY</code> or <code>ANTHROPIC_API_KEY</code>; without either, that cell skips and the rest still runs.</li>
 </ul>
 </div>
 </div>
@@ -721,11 +794,11 @@ Note
 <img src="../images/part4/sec4.1/bertopic_segment_heatmap.png" class="fig-md img-fluid figure-img" alt="Segment profile heatmap: rows are segments, columns base variables, color shows deviation from the population mean.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-segment-heatmap-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;4: A segment profile heatmap.
+Figure&nbsp;5: A segment profile heatmap.
 </figcaption>
 </figure>
 </div>
-<p>Size. For broad campaign planning, each segment should usually cover at least 10 to 15 percent of the base. Niche but high-value segments can be exceptions. The practical range is 4 to 8 segments total.</p>
+<p>Size. Each segment should be big enough to act on, but the right minimum depends on the business and the campaign — there is no universal floor. As a rough guide, avoid segments so small you cannot run a meaningful campaign against them; for broad targeting that often means somewhere around 10 percent of the base, while a genuinely high-value niche can be a deliberate exception. In practice a handful of segments, often 4 to 8, is enough.</p>
 <p>Segments are built from behavioral differences, but the campaigns assigned to those segments still need to be tested. Refer back to <a href="../part3/sec3.2-ab-testing.html">A/B Test Design</a> before declaring victory.</p>
 </section>
 <section id="sec-method-cheat-sheet" class="level2">
