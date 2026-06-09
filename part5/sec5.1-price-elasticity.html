@@ -101,9 +101,9 @@ div.csl-indent {
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-7f0fd692a0f1f319cb631db8b9de24f6.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../site_libs/bootstrap/bootstrap-dark-bbd0ed6a99b6ad49326352f64f59f7ff.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../site_libs/bootstrap/bootstrap-7f0fd692a0f1f319cb631db8b9de24f6.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-a488b2dd3ad89cad7223384457a5ed4f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-b6700dac069853c8655a6c346ad35f5e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-a488b2dd3ad89cad7223384457a5ed4f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
@@ -656,10 +656,7 @@ Q = b_0 \times P^{b_1}
 \]</span></p>
 <p>where <span class="math inline">\(Q\)</span> is quantity, <span class="math inline">\(P\)</span> is price, <span class="math inline">\(b_0\)</span> is a scale parameter, and <span class="math inline">\(b_1\)</span> is the elasticity. For normal goods, <span class="math inline">\(b_1\)</span> is negative. Taking logs gives a linear relationship, <span class="math inline">\(\log Q = \log b_0 + b_1 \log P\)</span>, so <span class="math inline">\(b_1\)</span> is the slope in log-log space. The model assumes elasticity is constant across the price range. That is a strong assumption, but it is a reasonable starting point for many consumer goods.</p>
 <p>Fit the curve in the original, non-log, space with <code>scipy.optimize.curve_fit</code> to avoid the retransformation bias that comes from fitting in log-space and converting back.</p>
-<div id="a233008d" class="cell" data-execution_count="1">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> scipy.optimize <span class="im">import</span> curve_fit</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> power_model(price, b0, b1):</span>
@@ -681,13 +678,8 @@ Q = b_0 \times P^{b_1}
 <span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>b0, b1 <span class="op">=</span> popt</span>
 <span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Scale (b0): </span><span class="sc">{</span>b0<span class="sc">:.1f}</span><span class="ss">"</span>)</span>
 <span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Elasticity (b1): </span><span class="sc">{</span>b1<span class="sc">:.2f}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-</div>
 <p>The companion notebook also runs a two-pass estimation: fit once on all data, flag observations where actual divided by predicted units falls outside a sensible band, such as 0.3 to 3.0, and refit without them.</p>
-<div id="04934e26" class="cell" data-execution_count="2">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Pass 1: fit on all data</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Pass 1: fit on all data</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>popt_1, _ <span class="op">=</span> curve_fit(power_model, prices, units, p0<span class="op">=</span>p0, maxfev<span class="op">=</span><span class="dv">10000</span>)</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Identify outliers</span></span>
@@ -699,8 +691,6 @@ Q = b_0 \times P^{b_1}
 <span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>popt_2, pcov_2 <span class="op">=</span> curve_fit(</span>
 <span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    power_model, prices[mask], units[mask], p0<span class="op">=</span>popt_1, maxfev<span class="op">=</span><span class="dv">10000</span></span>
 <span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-</div>
 <p>Promotional spikes are the usual culprit. Include them blindly, and the model treats promotional volume as normal price response, biasing elasticity away from its true value.</p>
 <div id="fig-elasticity-deep-dive" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Price–quantity scatter with fitted power curve and 95% band for a top Fluid Milk product; the steep slope shows elastic demand.">
 <figure class="quarto-float quarto-float-fig figure">
@@ -809,10 +799,7 @@ Figure&nbsp;3: Revenue vs.&nbsp;contribution-margin curves.
 </figure>
 </div>
 <p>The optimization itself is a one-dimensional search. <code>scipy.optimize.minimize_scalar</code> over the negative margin function does the job in a few lines, and the companion notebook walks through it.</p>
-<div id="734caa1c" class="cell" data-execution_count="3">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> scipy.optimize <span class="im">import</span> minimize_scalar</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> scipy.optimize <span class="im">import</span> minimize_scalar</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> neg_margin(price, b0, b1, variable_cost):</span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Negative contribution margin (for minimization)."""</span></span>
@@ -830,8 +817,6 @@ Figure&nbsp;3: Revenue vs.&nbsp;contribution-margin curves.
 <span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>optimal_margin <span class="op">=</span> <span class="op">-</span>result.fun</span>
 <span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Optimal price: $</span><span class="sc">{</span>optimal_price<span class="sc">:.2f}</span><span class="ss">"</span>)</span>
 <span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Max weekly margin: $</span><span class="sc">{</span>optimal_margin<span class="sc">:,.0f}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-</div>
 <p>The full pipeline covers data loading, quality checks, two-pass estimation, and the sensitivity table.</p>
 <div class="callout callout-style-default callout-note callout-titled">
 <div class="callout-header d-flex align-content-center">
