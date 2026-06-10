@@ -424,17 +424,7 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part1/sec1.2-data-landscape.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">1.2 The Data Landscape of Marketing</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../part1/sec1.3-three-characteristics.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">1.3 Three Characteristics of Marketing Data</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../part1/sec1.4-key-terms.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">1.4 Key Terms</span></a>
+  <a href="../part1/sec1.2-data-landscape.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">1.2 Understanding Marketing Data</span></a>
   </div>
 </li>
       </ul>
@@ -574,6 +564,12 @@ window.Quarto = {
 </li>
       </ul>
   </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../closing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Closing Thoughts</span></a>
+  </div>
+</li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../appendix/further-reading.html" class="sidebar-item-text sidebar-link">
@@ -733,7 +729,7 @@ Bottom level: 35 series | Total nodes: 43</code></pre>
 <p>The statistical baselines in Step 1 are univariate: they use only past sales to predict the future. (Statistical models <em>can</em> accept exogenous regressors, e.g.&nbsp;ARIMAX, but the baselines here intentionally do not, to keep the FVA comparison clean.) Gradient Boosted Trees, like LightGBM, treat forecasting as a tabular regression problem and naturally accommodate additional features: price, promotions, calendar effects, and cross-series patterns like learning that a price cut at Store A should behave similarly to one at Store B.</p>
 <p>In the Dunnhumby grocery data, three regressors are available as known future inputs: <code>effective_price</code> (average price per unit), <code>display_pct</code> (fraction of products on in-store display), and <code>mailer_pct</code> (fraction featured in mailer/flyer). These are planned inputs (promo calendars are set 4–8 weeks ahead and price changes are scheduled), so using them is not leakage. (The general rule: any feature you use must be available at the time you produce the forecast. If it won’t be, you have leakage, and your backtest will look great while production fails.)</p>
 <p>The LightGBM model uses lags (1, 4, 12, 52 weeks), rolling statistics (4-week mean and standard deviation), calendar features (month, week-of-year), and the three causal regressors. The regressors are what make this step worth adding to the pipeline: they let the model learn the demand–price and demand–promotion relationships directly, rather than treating promo-driven spikes as unexplained noise.</p>
-<p>Feature importance confirms what the model learned. In the Dunnhumby data, all three causal regressors appear in the top features by gain: <code>effective_price</code> (3rd), <code>display_pct</code> (5th), and <code>mailer_pct</code> (8th). Price and in-store display vary materially from week to week, giving the model strong signal; mailer features fluctuate less and rank lower. The takeaway is simple: always check whether your regressors actually vary in the training data before assuming they will help.</p>
+<p>Feature importance confirms what the model learned. In the Dunnhumby data, all three causal regressors appear in the top features by gain: <code>effective_price</code> (3rd), <code>mailer_pct</code> (4th), and <code>display_pct</code> (8th). Price and mailer activity carry the strongest promotional signal here, while in-store display varies less across these series and ranks lower. The takeaway is simple: always check whether your regressors actually vary in the training data before assuming they will help.</p>
 <div id="fig-feature-importance" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-feature-importance-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -818,15 +814,15 @@ Figure&nbsp;2: Hierarchical forecast reconciliation.
 </tr>
 <tr class="even">
 <td>LightGBM</td>
-<td>0.77</td>
-<td>368</td>
-<td>+14.1%</td>
+<td>0.78</td>
+<td>367</td>
+<td>+14.3%</td>
 </tr>
 <tr class="odd">
 <td>LightGBM (q=0.68)</td>
-<td>0.76</td>
-<td>313</td>
-<td>+27.0%</td>
+<td>0.77</td>
+<td>316</td>
+<td>+26.2%</td>
 </tr>
 </tbody>
 </table>
@@ -841,8 +837,8 @@ Figure&nbsp;3: Forecast vs.&nbsp;actual for four representative series.
 </figure>
 </div>
 <p>Note that raw statistical forecasts can go negative (visible in the top-left panel); in production, the guardrails described in “From Forecast to Action” clip forecasts to zero.</p>
-<p>The key finding is what I call the <strong>Accuracy Trap</strong>: LightGBM (mean) matches the best statistical models on MASE (0.77, tied with AutoARIMA / AutoTheta / CrostonOptimized / IMAPA), yet its cost-weighted loss (368) is significantly <em>worse</em> than AutoTheta (313). Adding ML complexity improves point accuracy slightly, but the symmetric objective misses the asymmetric cost structure. This is exactly why cost-weighted evaluation matters. This ranking depends on the assumed cost ratio (<span class="math inline">\(c_u\)</span>/<span class="math inline">\(c_o\)</span>); a different ratio will shift the optimal method.</p>
-<p>The fix is quantile regression. Recall that the business-optimal target is the 68th percentile (τ* = 0.68). LightGBM can target this directly by setting <code>objective='quantile'</code> with <code>alpha=0.68</code>. The result: the quantile model forecasts 19% higher on average than the mean model, and its cost-weighted loss drops from 368 to 313, matching the best statistical model while maintaining the interpretability of ML feature importance.</p>
+<p>The key finding is what I call the <strong>Accuracy Trap</strong>: LightGBM (mean) all but matches the best statistical models on MASE (0.78, versus 0.77 for AutoARIMA / AutoTheta / CrostonOptimized / IMAPA), yet its cost-weighted loss (367) is 18% worse than AutoTheta (313). Two things hold the mean model back. A symmetric objective aims at the center of the distribution, while the 65/30 cost ratio asks for the 0.68 quantile; and the log-transform round trip biases its forecasts low to begin with, the worst direction when underforecasting is the expensive mistake. The statistical models forecast in original units and escape the second problem, which is why AutoTheta lands at 313 despite also being symmetric. Switching the same LightGBM to a quantile objective fixes both at once (next section). This is exactly why cost-weighted evaluation matters; the ranking depends on the assumed cost ratio (<span class="math inline">\(c_u\)</span>/<span class="math inline">\(c_o\)</span>), and a different ratio will shift the optimal method.</p>
+<p>The fix is quantile regression. Recall that the business-optimal target is the 68th percentile (τ* = 0.68). LightGBM can target this directly by setting <code>objective='quantile'</code> with <code>alpha=0.68</code>. The result: the quantile model forecasts about 18% higher on average than the mean model, and its cost-weighted loss drops from 367 to 316, nearly matching the best statistical model (AutoTheta at 313) while maintaining the interpretability of ML feature importance.</p>
 <div id="fig-quantile" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-quantile-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
