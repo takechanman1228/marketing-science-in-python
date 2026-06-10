@@ -580,9 +580,10 @@ window.Quarto = {
   <li><a href="#step-2-substitution-check-will-the-demand-stay" id="toc-step-2-substitution-check-will-the-demand-stay" class="nav-link" data-scroll-target="#step-2-substitution-check-will-the-demand-stay">Step 2: Substitution check, “Will the demand stay?”</a></li>
   <li><a href="#the-output-a-scored-candidate-list" id="toc-the-output-a-scored-candidate-list" class="nav-link" data-scroll-target="#the-output-a-scored-candidate-list">The output: a scored candidate list</a></li>
   </ul></li>
+  <li><a href="#validate-before-scaling" id="toc-validate-before-scaling" class="nav-link" data-scroll-target="#validate-before-scaling">Validate before scaling</a></li>
   <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways">Key Takeaways</a></li>
   </ul>
-<div class="quarto-code-links"><h2>Code Links</h2><ul><li><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part5-commercial-analytics/sec5.2_assortment_optimization.ipynb"><i class="bi bi-github"></i>View notebook</a></li></ul></div></nav>
+<div class="quarto-code-links"><h2>Code Links</h2><ul><li><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part5-commercial-analytics/sec5.2_assortment_optimization.ipynb"><i class="bi bi-github"></i>sec5.2_assortment_optimization.ipynb</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -608,14 +609,15 @@ window.Quarto = {
 
 
 <p>Shelf space in physical retail is always at a premium. An underperforming product does more than just take up room: it ties up inventory, complicates the supply chain, and makes the shelf harder for customers to shop. The real challenge is figuring out which products to keep, which to cut, and how to validate those decisions before scaling them across the business. Here, I’ll walk through a practical workflow for making those calls and testing them in a way that reduces risk.</p>
-<p>The companion script <code>notebooks/part5-commercial-analytics/sec5.2_assortment_optimization.py</code> implements every code example in this chapter using the Dunnhumby Complete Journey grocery transaction dataset.</p>
-<div class="callout callout-style-default callout-warning callout-titled">
+<p><strong>Companion notebook:</strong> <code>sec5.2_assortment_optimization.ipynb</code> reproduces the revenue ABC screen, substitution check, and action assignment on the Dunnhumby Complete Journey grocery dataset.<br>
+<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part5-commercial-analytics/sec5.2_assortment_optimization.ipynb">View on GitHub</a> · <a href="https://colab.research.google.com/github/takechanman1228/marketing-science-in-python/blob/main/notebooks/part5-commercial-analytics/sec5.2_assortment_optimization.ipynb">Open in Colab</a></p>
+<div class="callout callout-style-default callout-note callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Warning</span>Why revenue, not margin?
+<span class="screen-reader-only">Note</span>Why revenue, not margin?
 </div>
 </div>
 <div class="callout-body-container callout-body">
@@ -778,21 +780,12 @@ Figure&nbsp;1: Cumulative revenue share by SKU.
 </table>
 <p>The first two rows come directly from the substitution check. A candidate with a clear in-category substitute is the safest to test for removal. If there is no substitute, demand may leave the store. In that case, keep the product for now and look for ways to lower its cost, such as smaller packs or better supplier terms, or test carefully before removing.</p>
 <p>The third row is a guardrail for halo effects. A low-priced SKU that often appears with higher-value items may help attract those baskets, so removing it could reduce sales elsewhere. Investigate these cases before cutting, rather than relying on revenue alone. In dense grocery data, almost every SKU co-occurs with something, so use this flag only for the clearest cases. Also, not every low-revenue SKU should be in the candidate pool. Some products earn their shelf space by driving store trips, anchoring price image, or signaling category credibility, roles that revenue and Lift do not capture.</p>
-<div class="callout callout-style-default callout-important callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Important</span>Validate before scaling
-</div>
-</div>
-<div class="callout-body-container callout-body">
+</section>
+</section>
+<section id="validate-before-scaling" class="level2">
+<h2 class="anchored" data-anchor-id="validate-before-scaling">Validate before scaling</h2>
 <p>The scored list is a set of hypotheses, not a removal list. Before rolling out a deletion, run a small matched-store test: remove the SKU in treatment stores, keep comparable control stores unchanged, and monitor sub-category revenue, revenue per basket, and basket count.</p>
 <p>Do not evaluate the removed SKU’s own sales; they will be zero by construction. The question is whether demand stays in the category and in the basket. If the result is inconclusive, do not scale the removal.</p>
-</div>
-</div>
-</section>
 </section>
 <section id="key-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="key-takeaways">Key Takeaways</h2>
