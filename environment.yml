@@ -1,0 +1,77 @@
+name: marketing-science
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.12
+  - scipy>=1.14
+  - lightgbm>=4.5
+  - implicit>=0.7
+
+  # Jupyter / Quarto
+  - pip
+  - pip:
+      # --- Core ---
+      - jupyter>=1.0
+      - ipykernel>=7.0
+      - jupytext>=1.16
+      - nbdime>=4.0
+      - matplotlib>=3.8
+      - numpy>=2.0
+      - pandas>=2.0
+      - scikit-learn>=1.6,<1.8
+      - seaborn>=0.13
+
+      # --- Part 3: Causal Inference ---
+      - causalml>=0.16
+      - scikit-uplift>=0.5.1
+      - econml>=0.15.1,<0.17
+      - dowhy>=0.11
+      - "networkx<3.4"  # dowhy 0.12 requires d_separated (removed in 3.4+)
+      - shap>=0.46
+
+      # --- Part 4: Customer Analytics ---
+      # Segmentation
+      - bertopic>=0.16
+      - sentence-transformers>=3.0
+      - umap-learn>=0.5
+      - hdbscan>=0.8.38
+      # LLM-assisted topic naming for sec4.1 semantic_segmentation
+      - "litellm>=1.50,<2"
+      - anthropic>=0.40
+      # CLV
+      - pymc-marketing>=0.18
+      - pymc-extras>=0.4
+      - arviz>=0.13
+      - xarray>=2024.0
+      - openpyxl>=3.1
+
+      # --- Part 5: Commercial Analytics ---
+      - statsmodels>=0.14
+      - mlxtend>=0.23
+      - kagglehub>=0.3
+      - pyarrow>=14.0
+      # Demand Forecasting
+      - statsforecast>=2.0
+      - mlforecast>=0.13
+      - hierarchicalforecast>=0.4
+      - utilsforecast>=0.2
+
+      # --- Part 6: Marketing Mix Modeling ---
+      # tensorflow / tensorflow_probability are transitive deps of
+      # google-meridian, but pinning them explicitly avoids the import
+      # failures we hit when meridian's pip resolution leaves them out.
+      # NOTE: TF 2.20 has a Meridian.__init__ stall on macOS-arm; pin TF<2.20
+      # until upstream Meridian + TF cohabit cleanly. See
+      # doc/claude_code/notebook-audit-status-2026-05-20.md for context.
+      - "tensorflow>=2.19,<2.20"
+      - "tensorflow_probability>=0.25,<0.26"
+      # protobuf 6/7.x triggers MessageFactory.GetPrototype AttributeErrors
+      # during TF/TFP import that pollute published notebook outputs.
+      # Pin to the protobuf 4/5 line until TFP 0.26 ships with proto7 support.
+      - "protobuf>=4.21.6,<6"
+      - "google-meridian[schema]"
+
+      # --- Dev / QA ---
+      - pytest>=8.0
+      - black>=24.0
