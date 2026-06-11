@@ -19,3 +19,17 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+# ── Test suite (author-internal QA; see doc/claude_code/notebook-test-strategy-2026-06-10.md)
+# Default `pytest` from the repo root runs everything under notebooks/.
+# Layered selection happens via markers + the Makefile targets, e.g.:
+#   pytest -m "not data and not artifact and not heavy and not exec and not net"
+[tool.pytest.ini_options]
+testpaths = ["notebooks"]
+markers = [
+    "data: needs raw datasets under data/raw/ (auto-skips when absent)",
+    "artifact: needs locally generated notebook outputs (artifacts/, output/figures)",
+    "heavy: long-running (>60s): model fitting, MCMC, full refits",
+    "exec: full notebook execution (jupytext --execute)",
+    "net: needs network access",
+]

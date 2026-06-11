@@ -5,6 +5,12 @@ MMM synthetic data generation with identifiability QC.
 - Applies a segment-mix style post-process to introduce OFF weeks,
   larger share variation, and lower channel correlations.
 - Recomputes exposures and sales to keep spend/ROI consistency.
+
+Requires ``pysimmmulator==0.5.1`` — the committed canonical dataset under
+``data/generated/part6/sec6.2-mmm/`` was generated with it, and 0.6.x
+changed the ``AdstockParameters`` config API (the ``true_lambda_decay``
+keyword below is rejected). Upgrading means porting this config AND
+deliberately regenerating the dataset + re-running the sec6.2 chapter.
 """
 
 from __future__ import annotations
