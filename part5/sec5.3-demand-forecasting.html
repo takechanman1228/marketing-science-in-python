@@ -549,7 +549,7 @@ window.Quarto = {
       <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part6/sec6.1-measurement-stack.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.1 Mapping the Measurement Stack</span></a>
+  <a href="../part6/sec6.1-media-measurement-problem.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.1 The Media Measurement Problem</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -734,7 +734,7 @@ Bottom level: 35 series | Total nodes: 43</code></pre>
 <h3 class="anchored" data-anchor-id="sec-ml-lgbm">Step 2: ML (LightGBM + Causal Regressors)</h3>
 <p>The statistical baselines in Step 1 are univariate: they use only past sales to predict the future. (Statistical models <em>can</em> accept exogenous regressors, e.g.&nbsp;ARIMAX, but the baselines here intentionally do not, to keep the FVA comparison clean.) Gradient Boosted Trees, like LightGBM, treat forecasting as a tabular regression problem and naturally accommodate additional features: price, promotions, calendar effects, and cross-series patterns like learning that a price cut at Store A should behave similarly to one at Store B.</p>
 <p>In the Dunnhumby grocery data, three regressors are available as known future inputs: <code>effective_price</code> (average price per unit), <code>display_pct</code> (fraction of products on in-store display), and <code>mailer_pct</code> (fraction featured in mailer/flyer). These are planned inputs (promo calendars are set 4–8 weeks ahead and price changes are scheduled), so using them is not leakage. (The general rule: any feature you use must be available at the time you produce the forecast. If it won’t be, you have leakage, and your backtest will look great while production fails.)</p>
-<p>The LightGBM model uses lags (1, 4, 12, 52 weeks), rolling statistics (4-week mean and standard deviation), calendar features (month, week-of-year), and the three causal regressors. The regressors are what make this step worth adding to the pipeline: they let the model learn the demand–price and demand–promotion relationships directly, rather than treating promo-driven spikes as unexplained noise.</p>
+<p>The LightGBM model uses lags (1, 4, 12, 52 weeks), rolling statistics (4-week mean and standard deviation), calendar features (month, week-of-year), and the three causal regressors. The target is log1p-transformed for training and converted back with expm1 after prediction, a standard way to stabilize skewed sales counts. The regressors are what make this step worth adding to the pipeline: they let the model learn the demand–price and demand–promotion relationships directly, rather than treating promo-driven spikes as unexplained noise.</p>
 <p>Feature importance confirms what the model learned. In the Dunnhumby data, all three causal regressors appear in the top features by gain: <code>effective_price</code> (3rd), <code>mailer_pct</code> (4th), and <code>display_pct</code> (8th). Price and mailer activity carry the strongest promotional signal here, while in-store display varies less across these series and ranks lower. The takeaway is simple: always check whether your regressors actually vary in the training data before assuming they will help.</p>
 <div id="fig-feature-importance" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
