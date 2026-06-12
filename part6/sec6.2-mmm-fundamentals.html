@@ -613,7 +613,7 @@ window.Quarto = {
   <li><a href="#budget-allocation" id="toc-budget-allocation" class="nav-link" data-scroll-target="#budget-allocation">Budget Allocation</a></li>
   <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways">Key Takeaways</a></li>
   </ul>
-<div class="quarto-code-links"><h2>Code Links</h2><ul><li><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part6-media-optimization/sec6.2_mmm_end_to_end_demo.ipynb"><i class="bi bi-github"></i>sec6.2_mmm_end_to_end_demo.ipynb</a></li></ul></div></nav>
+<div class="quarto-code-links"><h2>Code Links</h2><ul><li><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part6-media-optimization/sec6.2_6.3_mmm_meridian.ipynb"><i class="bi bi-github"></i>sec6.2_6.3_mmm_meridian.ipynb</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -834,14 +834,14 @@ Figure&nbsp;9: Example MMM dataset: date, sales, spend by channel, controls.
 </tr>
 </tbody>
 </table>
-<p>The core concepts (adstock, saturation, Bayesian estimation, and budget optimization) are the same across all three. This chapter uses Meridian because it is Python-based and easy to get started with: even without much customization, it produces a polished one-page summary report of the model results that you can share with stakeholders.</p>
+<p>The core concepts (adstock, saturation, Bayesian estimation, and budget optimization) are the same across all three. This chapter uses Meridian because it is Python-based and easy to get started with: even without much customization, it produces polished two-page HTML reports of the model results and the budget optimization that you can share with stakeholders. The walkthrough below links to both.</p>
 </div>
 </div>
 </section>
 <section id="a-walkthrough-with-meridian" class="level2">
 <h2 class="anchored" data-anchor-id="a-walkthrough-with-meridian">A Walkthrough with Meridian</h2>
-<p><strong>Companion notebook:</strong> <code>sec6.2_mmm_end_to_end_demo.ipynb</code> demonstrates a complete MMM workflow with Google’s Meridian library.<br>
-<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part6-media-optimization/sec6.2_mmm_end_to_end_demo.ipynb">View on GitHub</a></p>
+<p><strong>Companion notebook:</strong> <code>sec6.2_6.3_mmm_meridian.ipynb</code> demonstrates a complete MMM workflow with Google’s Meridian library.<br>
+<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part6-media-optimization/sec6.2_6.3_mmm_meridian.ipynb">View on GitHub</a></p>
 <p><strong>Data loading and preparation.</strong> The demo dataset contains 157 weeks of sales data with 5 media channels (TV/CTV, OOH, Google Search, Meta, TikTok) and holiday/seasonality controls. Meridian uses a <code>DataFrameInputDataBuilder</code> to construct its input data from a pandas DataFrame. Scaling is handled internally; no manual normalization is needed. The important detail is that Meridian applies saturation to <code>media_cols</code> (exposure volume such as impressions or clicks), while <code>media_spend_cols</code> are used as the cost basis for ROAS.</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>channels <span class="op">=</span> [<span class="st">"TV/CTV"</span>, <span class="st">"OOH"</span>, <span class="st">"Google Search"</span>, <span class="st">"Meta"</span>, <span class="st">"TikTok"</span>]</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>media_cols <span class="op">=</span> [</span>
@@ -935,6 +935,7 @@ Figure&nbsp;14: Channel contributions and baseline over time.
 </figcaption>
 </figure>
 </div>
+<p>You do not have to build these charts one by one. A single call, <code>summarizer.Summarizer(mmm).output_model_results_summary(...)</code>, writes a stakeholder-ready two-page HTML report covering model fit, channel contributions, ROAS with credible intervals, and response curves. See the one the companion notebook produced: <a href="https://marketing-science-in-python.com/notebooks/part6-media-optimization/summary_output.html">summary_output.html</a>.</p>
 </section>
 <section id="budget-allocation" class="level2">
 <h2 class="anchored" data-anchor-id="budget-allocation">Budget Allocation</h2>
@@ -952,6 +953,7 @@ Figure&nbsp;15: Pre- vs.&nbsp;post-optimization budget and sales.
 </figcaption>
 </figure>
 </div>
+<p>The optimizer ships the same reporting convenience: <code>optimization_results.output_optimization_summary(...)</code> writes a two-page HTML report of the recommended reallocation (<a href="https://marketing-science-in-python.com/notebooks/part6-media-optimization/optimization_output.html">optimization_output.html</a>).</p>
 <p>In the demo, the optimizer reallocates spend across the five modeled channels (TV/CTV, OOH, Google Search, Meta, and TikTok), moving budget away from channels with flatter marginal response curves toward channels with more remaining headroom. The total budget stays the same; only the mix changes. Gains of 5–10% in media-driven (incremental) sales from reallocation alone are common when teams first implement MMM; this demo shows about +7%, which works out to roughly +1% of total sales.</p>
 <p>Use the optimizer’s output as a starting point for planning, not as a final media plan. The model does not account for real-world constraints like contracts, minimum spend levels, or operational lead times. Those need to be layered on separately. Since the response curves are built from observational data, the next step is to validate them with experimental evidence. <a href="sec6.3-mmm-calibration.html">Section 6.3</a> covers that process.</p>
 </section>
