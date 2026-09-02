@@ -2,21 +2,24 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.38">
+<meta name="generator" content="quarto-1.10.18">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="A practitioner’s guide to causal inference, Marketing Mix Modeling, pricing, forecasting, customer analytics, and media measurement with runnable Python notebooks.">
+<meta name="description" content="Customer segmentation that ships: deciles and RFM, K-Means behavioral clustering, BERTopic embeddings, and how to tell whether a segmentation is good.">
 
-<title>4.1 Customer Segmentation – Marketing Science in Python</title>
+<title>Customer Segmentation in Python – Marketing Science in Python</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
 */
-code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
-div.columns{display: flex; gap: min(4vw, 1.5em);}
-div.column{flex: auto; overflow-x: auto;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
 div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
 ul.task-list{list-style: none;}
 ul.task-list li input[type="checkbox"] {
@@ -59,26 +62,7 @@ div.sourceCode
 @media screen {
 pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
-/* CSS for citations */
-div.csl-bib-body { }
-div.csl-entry {
-  clear: both;
-}
-.hanging-indent div.csl-entry {
-  margin-left:2em;
-  text-indent:-2em;
-}
-div.csl-left-margin {
-  min-width:2em;
-  float:left;
-}
-div.csl-right-inline {
-  margin-left:2em;
-  padding-left:1em;
-}
-div.csl-indent {
-  margin-left: 2em;
-}</style>
+</style>
 
 
 <script src="../site_libs/quarto-nav/quarto-nav.js"></script>
@@ -97,14 +81,14 @@ div.csl-indent {
 <script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-7f0fd692a0f1f319cb631db8b9de24f6.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../site_libs/bootstrap/bootstrap-dark-bbd0ed6a99b6ad49326352f64f59f7ff.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../site_libs/bootstrap/bootstrap-7f0fd692a0f1f319cb631db8b9de24f6.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-3925b0358f127ec93ce16d1653ff4e4f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-70cf7cdb16ba3fd29963dee6648d0861.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-3925b0358f127ec93ce16d1653ff4e4f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
@@ -144,16 +128,17 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 
 
 <link rel="stylesheet" href="../custom.css">
-<meta property="og:title" content="Marketing Science in Python">
-<meta property="og:description" content="A practitioner’s guide to causal inference, Marketing Mix Modeling, pricing, forecasting, customer analytics, and media measurement with runnable Python notebooks.">
-<meta property="og:image" content="https://marketing-science-in-python.com/part4/images/common/book_cover.png">
+<meta property="og:title" content="Customer Segmentation in Python">
+<meta property="og:description" content="Customer segmentation that ships: deciles and RFM, K-Means behavioral clustering, BERTopic embeddings, and how to tell whether a segmentation is good.">
+<meta property="og:image" content="https://marketing-science-in-python.com/images/common/book_cover.png">
 <meta property="og:site_name" content="Marketing Science in Python">
 <meta property="og:image:alt" content="Marketing Science in Python book cover">
-<meta name="twitter:title" content="Marketing Science in Python">
-<meta name="twitter:description" content="A practitioner’s guide to causal inference, Marketing Mix Modeling, pricing, forecasting, customer analytics, and media measurement with runnable Python notebooks.">
-<meta name="twitter:image" content="https://marketing-science-in-python.com/part4/images/common/book_cover.png">
+<meta name="twitter:title" content="Customer Segmentation in Python">
+<meta name="twitter:description" content="Customer segmentation that ships: deciles and RFM, K-Means behavioral clustering, BERTopic embeddings, and how to tell whether a segmentation is good.">
+<meta name="twitter:image" content="https://marketing-science-in-python.com/images/common/book_cover.png">
 <meta name="twitter:image:alt" content="Marketing Science in Python book cover">
 <meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://marketing-science-in-python.com/part4/sec4.1-segmentation.html">
 </head>
 
 <body class="nav-sidebar floating quarto-light"><script id="quarto-html-before-body" type="application/javascript">
@@ -452,12 +437,17 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part3/sec3.4-meta-learners.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.4 Meta Learners for Treatment Effects</span></a>
+  <a href="../part3/sec3.4-causal-impact.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.4 Causal Impact with Time Series</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part3/sec3.5-uplift-modeling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.5 Uplift Modeling for Targeting</span></a>
+  <a href="../part3/sec3.5-meta-learners.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.5 Meta Learners for Treatment Effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.6-uplift-modeling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.6 Uplift Modeling for Targeting</span></a>
   </div>
 </li>
       </ul>
@@ -504,7 +494,7 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part5/sec5.3-demand-forecasting.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.3 Demand Forecasting</span></a>
+  <a href="../part5/sec5.3-sales-forecasting.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.3 Sales Forecasting and Scenario Planning</span></a>
   </div>
 </li>
       </ul>
@@ -530,22 +520,21 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part6/sec6.3-mmm-calibration.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.3 Calibrating MMM with Experiments</span></a>
+  <a href="../part6/sec6.3-incrementality-experiments.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.3 Incrementality Experiments</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part6/sec6.4-when-tools-disagree.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.4 When Attribution, MMM, and Experiments Disagree</span></a>
+  <a href="../part6/sec6.4-mmm-calibration.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.4 Calibrating MMM with Experiments</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.5-when-tools-disagree.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.5 Making Decisions When Measurement Tools Disagree</span></a>
   </div>
 </li>
       </ul>
   </li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../closing.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Closing Thoughts</span></a>
-  </div>
-</li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../appendix/further-reading.html" class="sidebar-item-text sidebar-link">
@@ -556,6 +545,12 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
   <div class="sidebar-item-container"> 
   <a href="../appendix/notebooks.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Notebooks &amp; Code</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../marketing-analytics-in-python.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Marketing Analytics in Python</span></a>
   </div>
 </li>
     </ul>
@@ -630,11 +625,11 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 <p>The simplest approach is rule-based: you define the cutoffs instead of relying on an algorithm. Decile analysis and RFM are the most common examples.</p>
 <section id="decile-analysis" class="level3">
 <h3 class="anchored" data-anchor-id="decile-analysis">Decile Analysis</h3>
-<p>Decile analysis splits customers into ten equal groups by revenue. The pattern often follows the Pareto principle: a small group drives most of the revenue. The top 10% get retention and VIP treatment. The next 40% are the main target for growth campaigns. The bottom 30% get only low-cost automated nurture. You can set this up quickly and give your team a clear action plan.</p>
-<div id="fig-decile-distribution" class="fig-md quarto-float quarto-figure quarto-figure-center anchored">
+<p>Decile analysis splits customers into ten equal groups by revenue. The pattern often follows the Pareto principle: a small group drives most of the revenue. The top decile gets retention and VIP treatment. The next three deciles are the main target for growth campaigns. The middle three get low-cost automated nurture, and the bottom three are excluded from expensive offers. You can set this up quickly and give your team a clear action plan.</p>
+<div id="fig-decile-distribution" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Customer value is concentrated in the highest deciles, with the top 20 percent contributing more than half of revenue.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-decile-distribution-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part4/sec4.1/decile_distribution.png" class="fig-md img-fluid figure-img">
+<img src="../images/part4/sec4.1/decile_distribution.png" class="fig-md img-fluid figure-img" alt="Customer value is concentrated in the highest deciles, with the top 20 percent contributing more than half of revenue.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-decile-distribution-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Figure&nbsp;1: A typical customer-value decile distribution.
@@ -681,24 +676,90 @@ Table&nbsp;1: RFM variables and their interpretation.
 </figure>
 </div>
 <p>Independent sorting splits each variable into quintiles separately, creating a three-digit score (R=5, F=4, M=3) and up to 125 groups. Sequential sorting nests the splits: first by Recency, then Frequency within each Recency group, then Monetary, so Recency gets the most weight.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>RFM scoring in one call
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>PyMC-Marketing, the library used for CLV modeling in <a href="sec4.2-clv-modeling.html">Section 4.2</a>, ships a quartile-based <code>rfm_segments()</code> utility that scores R, F, and M and assigns named segments straight from a transaction table. It is less flexible than K-Means but works well in practice and stays fast on very large customer bases.</p>
+</div>
+</div>
 <p>Decile and RFM are quick to set up and easy to use. But they only create value tiers, not full customer profiles. Two customers with similar RFM scores can behave very differently: one might buy full-price items across many categories, while another buys only discounted items in a single category. To see those differences, you need to move from value tiers to richer behavioral variables.</p>
 </section>
 </section>
 <section id="sec-kmeans" class="level2">
 <h2 class="anchored" data-anchor-id="sec-kmeans">Behavioral Clustering with K-Means</h2>
 <p>K-Means is a classic clustering algorithm that still works well for marketing segmentation. Normalize features with StandardScaler so spend does not dominate, and start with 6 to 10 behavioral variables. Beyond RFM, useful additions include average order value, basket size, and return rate.</p>
-<p>Log-transform the skewed variables before scaling. Spend, frequency, recency, and basket size are usually heavily right-skewed: a handful of customers buy far more than everyone else. StandardScaler only centers and rescales, so those long tails survive. Fed raw, K-Means spends its first splits separating big spenders from small ones and mostly rediscovers value tiers, and any extra cluster it finds is a tiny outlier pocket too small to act on. Applying <code>log1p</code> to the skewed features (a simple rule: transform anything with skew above ~1) compresses the tails, so the clusters reflect behavioral <em>shape</em> rather than spend magnitude — and balanced, actionable segments emerge. On the companion dataset this is the difference between K-Means collapsing to three value tiers and splitting the base into five balanced, comparably-sized behavioral groups.</p>
+<p>Log-transform the skewed variables before scaling. Spend, frequency, recency, and basket size are usually heavily right-skewed: a handful of customers buy far more than everyone else. StandardScaler only centers and rescales, so those long tails survive. Fed raw, K-Means spends its first splits separating big spenders from small ones and mostly rediscovers value tiers, and any extra cluster it finds is a tiny outlier pocket too small to act on. Applying <code>log1p</code> to the skewed features (a simple rule: transform anything with skew above ~1) compresses the tails, so the clusters reflect behavioral <em>shape</em> rather than spend magnitude, and balanced, actionable segments emerge. On the companion dataset this is the difference between K-Means collapsing to three value tiers and splitting the base into five balanced, comparably-sized behavioral groups.</p>
 <p>Choosing K is part statistics, part judgment. The elbow method helps narrow the range, but it rarely pins the number. On customer data its sharpest bend often sits at K=3, which usually just recovers value tiers (heavy, average, lapsed) that decile and RFM already capture. To segment on behavior rather than value, push into the practical range (often 4 to 8 segments) and let actionability decide: keep the K whose segments your marketing team would actually treat differently. If they cannot describe a different action for each segment, you have too many.</p>
-<div id="fig-elbow" class="fig-md quarto-float quarto-figure quarto-figure-center anchored">
+<div id="fig-elbow" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Within-cluster variation falls quickly through about five clusters, then improves more gradually as additional clusters are added.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-elbow-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part4/sec4.1/elbow.png" class="fig-md img-fluid figure-img">
+<img src="../images/part4/sec4.1/elbow.png" class="fig-md img-fluid figure-img" alt="Within-cluster variation falls quickly through about five clusters, then improves more gradually as additional clusters are added.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-elbow-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Figure&nbsp;2: Elbow plot for choosing K.
 </figcaption>
 </figure>
 </div>
+<p>On the companion dataset, K=5 is where the segments stop being value tiers and start being briefs. <a href="#tbl-kmeans-segments" class="quarto-xref">Table&nbsp;<span>2</span></a> is that fit. The shares and the profile means come from the notebook (spend, trips, and departments are two-year totals averaged within the segment); the names and the last two actions are the analyst’s reading of its profile heatmap, which is the step the notebook leaves to you.</p>
+<div id="tbl-kmeans-segments" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-kmeans-segments-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;2: The K=5 segments on the grocery data, from the companion notebook.
+</figcaption>
+<div aria-describedby="tbl-kmeans-segments-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Segment</th>
+<th style="text-align: right;">Share</th>
+<th style="text-align: left;">Profile</th>
+<th style="text-align: left;">Action</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Heavy loyalists</td>
+<td style="text-align: right;">25%</td>
+<td style="text-align: left;">$7,300 spend, 209 trips, 17 departments</td>
+<td style="text-align: left;">VIP retention</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Frequent small-basket</td>
+<td style="text-align: right;">23%</td>
+<td style="text-align: left;">$3,228 spend, 157 trips, $24 orders</td>
+<td style="text-align: left;">Grow the basket</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Occasional big-basket</td>
+<td style="text-align: right;">22%</td>
+<td style="text-align: left;">$1,938 spend, 56 trips, $38 orders</td>
+<td style="text-align: left;">Low-cost nurture</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Discount-leaning</td>
+<td style="text-align: right;">19%</td>
+<td style="text-align: left;">$1,087 spend, 19% discount share, narrow range</td>
+<td style="text-align: left;">Offers only with margin guardrails</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Lapsed</td>
+<td style="text-align: right;">11%</td>
+<td style="text-align: left;">$334 spend, last purchase 17 weeks ago</td>
+<td style="text-align: left;">One cheap reactivation, then stop</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<p>The names are shorthand; the brief is the row. This is the table to hand to the marketing team for the actionability check below: if two rows would get the same campaign, merge them.</p>
 <p>Numeric clustering still flattens product meaning. With inputs like frequency, spend, recency, category breadth, and discount dependency, two customers can look similar even if the products they buy are very different. To capture that meaning, bring product text directly into the segmentation.</p>
 </section>
 <section id="sec-embedding" class="level2">
@@ -785,7 +846,7 @@ Figure&nbsp;4: Top distinctive keywords per segment.
 <p><strong>Companion notebooks:</strong> the full working code is split across two notebooks, each on the dataset that suits its method.</p>
 <ul>
 <li><code>sec4.1_traditional_segmentation.ipynb</code>: decile, RFM, and K-Means on the Dunnhumby “The Complete Journey” dataset, the same dataset the CLV chapter uses, so segment membership carries through. <a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_traditional_segmentation.ipynb">View on GitHub</a></li>
-<li><code>sec4.1_semantic_segmentation.ipynb</code>: the embedding pipeline (customer-document construction, generic-product filtering, embedding, BERTopic clustering, keyword extraction, and LLM-assisted naming) on the UCI Online Retail II dataset, which has the rich product descriptions this method needs. Its optional LLM-naming step needs the <code>litellm</code> package and an <code>OPENAI_API_KEY</code> or <code>ANTHROPIC_API_KEY</code>; without either, that cell skips and the rest still runs. <a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_semantic_segmentation.ipynb">View on GitHub</a></li>
+<li><code>sec4.1_semantic_segmentation.ipynb</code>: the embedding pipeline (customer-document construction, generic-product filtering, embedding, BERTopic clustering, keyword extraction, and LLM-assisted naming) on the UCI Online Retail II dataset, which has the rich product descriptions this method needs. Its optional LLM-naming step is currently configured for Anthropic and needs the <code>litellm</code> package and an <code>ANTHROPIC_API_KEY</code>; without it, that cell skips and the rest still runs. <a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_semantic_segmentation.ipynb">View on GitHub</a></li>
 </ul>
 </section>
 </section>
@@ -793,7 +854,8 @@ Figure&nbsp;4: Top distinctive keywords per segment.
 <h2 class="anchored" data-anchor-id="sec-segment-validation">Is Your Segmentation Any Good?</h2>
 <p>Three checks, in priority order.</p>
 <p>Actionability is what matters most. Show the segment profiles to your marketing team. For each pair of segments, ask: “Would you use a different message, channel, offer, or frequency?” If the answer is “I’d do the same thing for both,” the segmentation is not actionable, no matter how clean the math looks. The usual culprit is a segment that is average on everything; merge it with a neighbor or revisit your variable selection.</p>
-<p>Stability. Re-run clustering on two non-overlapping time periods and check that customers mostly land in the same segments. The Adjusted Rand Index (ARI) puts a number on this; if too many customers swap segments between periods, you cannot rely on them for campaigns. The companion notebook shows the ARI computation alongside a migration-matrix view.</p>
+<p>Stability. Re-run clustering on two non-overlapping time periods and check that customers mostly land in the same segments. The Adjusted Rand Index (ARI) puts a number on this; if too many customers swap segments between periods, you cannot rely on them for campaigns. The companion notebooks show both checks: the ARI computation in the semantic notebook and a migration-matrix view in the traditional one.</p>
+<p>On the grocery data the migration matrix ranks customers by revenue quintile in each year rather than re-clustering them: 70% of the top quintile and 61% of the bottom stay put from one year to the next, while the middle three hold only about 40%. The middle of the base is where segment assignments are least reliable, so that is where a campaign built on them needs the most slack.</p>
 <div id="fig-segment-heatmap" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Segment profile heatmap: rows are segments, columns base variables, color shows deviation from the population mean.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-segment-heatmap-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -804,7 +866,7 @@ Figure&nbsp;5: A segment profile heatmap.
 </figcaption>
 </figure>
 </div>
-<p>Size. Each segment should be big enough to act on, but the right minimum depends on the business and the campaign — there is no universal floor. As a rough guide, avoid segments so small you cannot run a meaningful campaign against them; for broad targeting that often means somewhere around 10 percent of the base, while a genuinely high-value niche can be a deliberate exception. In practice a handful of segments, often 4 to 8, is enough.</p>
+<p>Size. Each segment should be big enough to act on, but the right minimum depends on the business and the campaign: there is no universal floor. As a rough guide, avoid segments so small you cannot run a meaningful campaign against them; for broad targeting that often means somewhere around 10 percent of the base, while a genuinely high-value niche can be a deliberate exception. In practice a handful of segments, often 4 to 8, is enough.</p>
 <p>Segments are built from behavioral differences, but the campaigns assigned to those segments still need to be tested. Refer back to <a href="../part3/sec3.2-ab-testing.html">A/B Test Design</a> before declaring victory.</p>
 </section>
 <section id="sec-method-cheat-sheet" class="level2">
@@ -812,7 +874,7 @@ Figure&nbsp;5: A segment profile heatmap.
 <div id="tbl-method-cheat-sheet" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-method-cheat-sheet-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Table&nbsp;2: Choose the method by the question it answers, not by its sophistication.
+Table&nbsp;3: Choose the method by the question it answers, not by its sophistication.
 </figcaption>
 <div aria-describedby="tbl-method-cheat-sheet-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <table class="caption-top table">
@@ -848,15 +910,6 @@ Table&nbsp;2: Choose the method by the question it answers, not by its sophistic
 </div>
 </figure>
 </div>
-<!-- TODO: Regenerate the segmentation-methods roadmap figure before re-enabling.
-The previous image (ch17_segmentation_roadmap.png) presents Demographics as the
-first/simplest *segmentation method* in a linear progression, which contradicts
-this chapter's rule that demographics is a profiling/activation layer applied
-*after* behavior-based segments are built. It also includes methods (Needs-Based,
-Causal/Uplift) that belong to Part 3, not this chapter. Commented out until a
-corrected figure is available; the Method Cheat Sheet above carries the takeaway.
-![A roadmap of segmentation methods.](../images/part4/sec4.1/segmentation_roadmap.png){#fig-segmentation-roadmap .fig-md}
--->
 </section>
 <section id="key-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="key-takeaways">Key Takeaways</h2>
@@ -867,32 +920,6 @@ corrected figure is available; the Method Cheat Sheet above carries the takeaway
 </ul>
 
 
-<div id="refs" class="references csl-bib-body hanging-indent" role="list" style="display: none">
-<div id="ref-chan2017challenges" class="csl-entry" role="listitem">
-Chan, David, and Matthew Perry. 2017. <em>Challenges and Opportunities in Media Mix Modeling</em>. Google Inc. <a href="https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/45998.pdf">https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/45998.pdf</a>.
-</div>
-<div id="ref-fader2013gammagamma" class="csl-entry" role="listitem">
-Fader, Peter S, and Bruce GS Hardie. 2013. <em>The Gamma-Gamma Model of Monetary Value</em>. Wharton School, University of Pennsylvania. <a href="https://www.brucehardie.com/notes/025/gamma_gamma.pdf">https://www.brucehardie.com/notes/025/gamma_gamma.pdf</a>.
-</div>
-<div id="ref-fader2005counting" class="csl-entry" role="listitem">
-Fader, Peter S, Bruce GS Hardie, and Ka Lok Lee. 2005. <span>“Counting Your Customers the Easy Way: An Alternative to the Pareto/NBD Model.”</span> <em>Marketing Science</em> 24 (2): 275–84.
-</div>
-<div id="ref-jin2017bayesian" class="csl-entry" role="listitem">
-Jin, Yuxue, Yueqing Wang, Yunting Sun, David Chan, and Jim Koehler. 2017. <em>Bayesian Methods for Media Mix Modeling with Carryover and Shape Effects</em>.
-</div>
-<div id="ref-knaflic2015storytelling" class="csl-entry" role="listitem">
-Knaflic, Cole Nussbaumer. 2015. <em>Storytelling with Data: A Data Visualization Guide for Business Professionals</em>. Wiley.
-</div>
-<div id="ref-provost2013data" class="csl-entry" role="listitem">
-Provost, Foster, and Tom Fawcett. 2013. <em>Data Science for Business</em>. O’Reilly Media.
-</div>
-<div id="ref-vaver2011measuring" class="csl-entry" role="listitem">
-Vaver, Jon, and Jim Koehler. 2011. <em>Measuring Ad Effectiveness Using Geo Experiments</em>. Google Inc. <a href="https://research.google/pubs/pub38355/">https://research.google/pubs/pub38355/</a>.
-</div>
-<div id="ref-vizard2019pg" class="csl-entry" role="listitem">
-Vizard, Sarah. 2019. <span>“<span>P&amp;G</span> Shifts from Targeting <span>‘Generic Demographics’</span> to <span>‘Smart Audiences’</span>.”</span> <em>Marketing Week</em>, July. <a href="https://www.marketingweek.com/pg-targeting-generic-demographics-to-smart-audiences/">https://www.marketingweek.com/pg-targeting-generic-demographics-to-smart-audiences/</a>.
-</div>
-</div>
 </section>
 
 </main> <!-- /main -->
@@ -982,7 +1009,7 @@ Vizard, Sarah. 2019. <span>“<span>P&amp;G</span> Shifts from Targeting <span>�
     }
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
       var mailtoRegex = new RegExp(/^mailto:/);
-        var filterRegex = new RegExp("https:\/\/marketing-science-in-python\.com");
+        var filterRegex = new RegExp("https:\/\/marketing-science-in-python\.com\/");
       var isInternal = (href) => {
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }

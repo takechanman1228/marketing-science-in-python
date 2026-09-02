@@ -2,21 +2,24 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.38">
+<meta name="generator" content="quarto-1.10.18">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="A practitioner’s guide to causal inference, Marketing Mix Modeling, pricing, forecasting, customer analytics, and media measurement with runnable Python notebooks.">
+<meta name="description" content="Regression discontinuity, difference in differences, and synthetic control: choosing a quasi experimental design when an A/B test is not possible.">
 
-<title>3.3 Quasi Experiments – Marketing Science in Python</title>
+<title>Quasi Experiments in Python – Marketing Science in Python</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
 */
-code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
-div.columns{display: flex; gap: min(4vw, 1.5em);}
-div.column{flex: auto; overflow-x: auto;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
 div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
 ul.task-list{list-style: none;}
 ul.task-list li input[type="checkbox"] {
@@ -59,26 +62,7 @@ div.sourceCode
 @media screen {
 pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
-/* CSS for citations */
-div.csl-bib-body { }
-div.csl-entry {
-  clear: both;
-}
-.hanging-indent div.csl-entry {
-  margin-left:2em;
-  text-indent:-2em;
-}
-div.csl-left-margin {
-  min-width:2em;
-  float:left;
-}
-div.csl-right-inline {
-  margin-left:2em;
-  padding-left:1em;
-}
-div.csl-indent {
-  margin-left: 2em;
-}</style>
+</style>
 
 
 <script src="../site_libs/quarto-nav/quarto-nav.js"></script>
@@ -88,7 +72,7 @@ div.csl-indent {
 <script src="../site_libs/quarto-search/fuse.min.js"></script>
 <script src="../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../">
-<link href="../part3/sec3.4-meta-learners.html" rel="next">
+<link href="../part3/sec3.4-causal-impact.html" rel="next">
 <link href="../part3/sec3.2-ab-testing.html" rel="prev">
 <link href="../assets/favicon.png" rel="icon" type="image/png">
 <script src="../site_libs/quarto-html/quarto.js" type="module"></script>
@@ -97,14 +81,14 @@ div.csl-indent {
 <script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-7f0fd692a0f1f319cb631db8b9de24f6.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../site_libs/bootstrap/bootstrap-dark-bbd0ed6a99b6ad49326352f64f59f7ff.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../site_libs/bootstrap/bootstrap-7f0fd692a0f1f319cb631db8b9de24f6.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-3925b0358f127ec93ce16d1653ff4e4f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-70cf7cdb16ba3fd29963dee6648d0861.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-3925b0358f127ec93ce16d1653ff4e4f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
@@ -144,16 +128,17 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 
 
 <link rel="stylesheet" href="../custom.css">
-<meta property="og:title" content="Marketing Science in Python">
-<meta property="og:description" content="A practitioner’s guide to causal inference, Marketing Mix Modeling, pricing, forecasting, customer analytics, and media measurement with runnable Python notebooks.">
-<meta property="og:image" content="https://marketing-science-in-python.com/part3/images/common/book_cover.png">
+<meta property="og:title" content="Quasi Experiments in Python">
+<meta property="og:description" content="Regression discontinuity, difference in differences, and synthetic control: choosing a quasi experimental design when an A/B test is not possible.">
+<meta property="og:image" content="https://marketing-science-in-python.com/images/common/book_cover.png">
 <meta property="og:site_name" content="Marketing Science in Python">
 <meta property="og:image:alt" content="Marketing Science in Python book cover">
-<meta name="twitter:title" content="Marketing Science in Python">
-<meta name="twitter:description" content="A practitioner’s guide to causal inference, Marketing Mix Modeling, pricing, forecasting, customer analytics, and media measurement with runnable Python notebooks.">
-<meta name="twitter:image" content="https://marketing-science-in-python.com/part3/images/common/book_cover.png">
+<meta name="twitter:title" content="Quasi Experiments in Python">
+<meta name="twitter:description" content="Regression discontinuity, difference in differences, and synthetic control: choosing a quasi experimental design when an A/B test is not possible.">
+<meta name="twitter:image" content="https://marketing-science-in-python.com/images/common/book_cover.png">
 <meta name="twitter:image:alt" content="Marketing Science in Python book cover">
 <meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://marketing-science-in-python.com/part3/sec3.3-quasi-experiments.html">
 </head>
 
 <body class="nav-sidebar floating quarto-light"><script id="quarto-html-before-body" type="application/javascript">
@@ -452,12 +437,17 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part3/sec3.4-meta-learners.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.4 Meta Learners for Treatment Effects</span></a>
+  <a href="../part3/sec3.4-causal-impact.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.4 Causal Impact with Time Series</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part3/sec3.5-uplift-modeling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.5 Uplift Modeling for Targeting</span></a>
+  <a href="../part3/sec3.5-meta-learners.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.5 Meta Learners for Treatment Effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.6-uplift-modeling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.6 Uplift Modeling for Targeting</span></a>
   </div>
 </li>
       </ul>
@@ -504,7 +494,7 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part5/sec5.3-demand-forecasting.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.3 Demand Forecasting</span></a>
+  <a href="../part5/sec5.3-sales-forecasting.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.3 Sales Forecasting and Scenario Planning</span></a>
   </div>
 </li>
       </ul>
@@ -530,22 +520,21 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part6/sec6.3-mmm-calibration.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.3 Calibrating MMM with Experiments</span></a>
+  <a href="../part6/sec6.3-incrementality-experiments.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.3 Incrementality Experiments</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part6/sec6.4-when-tools-disagree.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.4 When Attribution, MMM, and Experiments Disagree</span></a>
+  <a href="../part6/sec6.4-mmm-calibration.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.4 Calibrating MMM with Experiments</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.5-when-tools-disagree.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.5 Making Decisions When Measurement Tools Disagree</span></a>
   </div>
 </li>
       </ul>
   </li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../closing.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Closing Thoughts</span></a>
-  </div>
-</li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../appendix/further-reading.html" class="sidebar-item-text sidebar-link">
@@ -558,6 +547,12 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
  <span class="menu-text">Notebooks &amp; Code</span></a>
   </div>
 </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../marketing-analytics-in-python.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Marketing Analytics in Python</span></a>
+  </div>
+</li>
     </ul>
     </div>
 </nav>
@@ -568,14 +563,22 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#choosing-the-right-method" id="toc-choosing-the-right-method" class="nav-link active" data-scroll-target="#choosing-the-right-method">Choosing the Right Method</a></li>
+  <li><a href="#which-design-fits-your-situation" id="toc-which-design-fits-your-situation" class="nav-link active" data-scroll-target="#which-design-fits-your-situation">Which Design Fits Your Situation?</a></li>
+  <li><a href="#regression-discontinuity-rdd" id="toc-regression-discontinuity-rdd" class="nav-link" data-scroll-target="#regression-discontinuity-rdd">Regression Discontinuity (RDD)</a>
+  <ul class="collapse">
+  <li><a href="#when-rdd-doesnt-work" id="toc-when-rdd-doesnt-work" class="nav-link" data-scroll-target="#when-rdd-doesnt-work">When RDD doesn’t work</a></li>
+  </ul></li>
   <li><a href="#difference-in-differences-did" id="toc-difference-in-differences-did" class="nav-link" data-scroll-target="#difference-in-differences-did">Difference-in-Differences (DiD)</a>
   <ul class="collapse">
   <li><a href="#the-parallel-trends-assumption" id="toc-the-parallel-trends-assumption" class="nav-link" data-scroll-target="#the-parallel-trends-assumption">The Parallel Trends Assumption</a></li>
+  <li><a href="#when-did-doesnt-work" id="toc-when-did-doesnt-work" class="nav-link" data-scroll-target="#when-did-doesnt-work">When DiD doesn’t work</a></li>
   <li><a href="#estimating-did-with-a-regression" id="toc-estimating-did-with-a-regression" class="nav-link" data-scroll-target="#estimating-did-with-a-regression">Estimating DiD with a Regression</a></li>
   </ul></li>
-  <li><a href="#regression-discontinuity-rdd" id="toc-regression-discontinuity-rdd" class="nav-link" data-scroll-target="#regression-discontinuity-rdd">Regression Discontinuity (RDD)</a></li>
-  <li><a href="#synthetic-control" id="toc-synthetic-control" class="nav-link" data-scroll-target="#synthetic-control">Synthetic Control</a></li>
+  <li><a href="#synthetic-control" id="toc-synthetic-control" class="nav-link" data-scroll-target="#synthetic-control">Synthetic Control</a>
+  <ul class="collapse">
+  <li><a href="#when-synthetic-control-doesnt-work" id="toc-when-synthetic-control-doesnt-work" class="nav-link" data-scroll-target="#when-synthetic-control-doesnt-work">When Synthetic Control doesn’t work</a></li>
+  </ul></li>
+  <li><a href="#when-there-is-no-control-group" id="toc-when-there-is-no-control-group" class="nav-link" data-scroll-target="#when-there-is-no-control-group">When There Is No Control Group</a></li>
   <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways">Key Takeaways</a></li>
   </ul>
 <div class="quarto-code-links"><h2>Code Links</h2><ul><li><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.3_quasi_experiments.ipynb"><i class="bi bi-github"></i>sec3.3_quasi_experiments.ipynb</a></li></ul></div></nav>
@@ -603,29 +606,106 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 </header>
 
 
-<p>Most marketing decisions don’t arrive as clean A/B tests. A new in-store display is piloted in a sample of stores before the rest of the chain. A coupon is sent to customers whose past spending crossed a threshold. An out-of-home campaign runs in one metro market while comparable markets get none.</p>
-<p>When randomization is off the table, the real question is not which model is most sophisticated. It is what comparisons your business context actually allows: who received the treatment, when did it happen, and for what reason. The rest is about picking a quasi-experimental design that fits that structure.</p>
-<section id="choosing-the-right-method" class="level2">
-<h2 class="anchored" data-anchor-id="choosing-the-right-method">Choosing the Right Method</h2>
-<p>The right method depends on how treatment was assigned and what comparisons you can actually construct. Every design comes with assumptions, so the goal is to choose the one whose assumptions you can defend in your business context. The decision tree below can help you map out the options.</p>
-<div id="fig-method-decision-tree" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Decision tree: random assignment leads to an A/B test; a cutoff rule leads to RDD; before/after data for treated and untreated groups leads to DiD; one treated unit with a long pre-period leads to Synthetic Control; otherwise other methods.">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-method-decision-tree-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part3/sec3.3/method_decision_tree.png" class="fig-md img-fluid figure-img" alt="Decision tree: random assignment leads to an A/B test; a cutoff rule leads to RDD; before/after data for treated and untreated groups leads to DiD; one treated unit with a long pre-period leads to Synthetic Control; otherwise other methods.">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-method-decision-tree-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;1: Decision tree for choosing a causal design
+<p>A/B testing is the gold standard for measuring cause and effect. Randomize who gets the treatment, and the control group tells you what would have happened without it. But you can’t always run one. As <a href="../part3/sec3.1-thinking-causally.html#limitations-of-ab-testing">Section 3.1</a> covered, there are plenty of reasons an A/B test isn’t an option.</p>
+<p>When you can’t randomize, you use a quasi-experiment. A quasi-experiment estimates cause and effect without random assignment. It works with whatever comparison the business process left behind: a cutoff, a rollout that skipped some units, a launch date. That last part is the catch. A non-random rollout isn’t automatically a usable quasi-experiment. It has to leave a comparison whose assumptions you can defend, and each design in this chapter comes with the assumption you’ll have to defend.</p>
+<p>This chapter covers three designs: Regression Discontinuity (RDD), Difference-in-Differences (DiD), and Synthetic Control. Each one needs untreated units to compare against: a control group of stores that didn’t get the display, or a pool of stores to blend into one. The fourth design, CausalImpact, is for when there are no untreated units at all. It gets <a href="sec3.4-causal-impact.html">the next chapter</a>.</p>
+<section id="which-design-fits-your-situation" class="level2">
+<h2 class="anchored" data-anchor-id="which-design-fits-your-situation">Which Design Fits Your Situation?</h2>
+<p>Four designs is a lot to choose from, and the names don’t tell you which one you need. So let’s put them all on one concrete problem. A retailer has 100 stores. It rolled out a new in-store display and wants to know what the display did to category sales.</p>
+<p>The first question is always the same: was the display assigned at random? If it was, the untreated stores are your control group and you’re back in <a href="sec3.2-ab-testing.html">Section 3.2</a>. If it wasn’t, the way it was assigned picks the design.</p>
+<div id="tbl-hundred-stores" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-hundred-stores-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;1: The same 100 stores, five ways of assigning the display.
 </figcaption>
-</figure>
-</div>
-</section>
-<section id="difference-in-differences-did" class="level2">
-<h2 class="anchored" data-anchor-id="difference-in-differences-did">Difference-in-Differences (DiD)</h2>
-<p>Here’s a concrete scenario. A retailer pilots a new in-store display for a product category in 50 stores, while 50 comparable stores keep the standard shelf layout. You measure category sales per store before and after the display rollout in both groups.</p>
+<div aria-describedby="tbl-hundred-stores-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <table class="caption-top table">
 <thead>
 <tr class="header">
-<th></th>
+<th style="text-align: left;">Who got the display</th>
+<th style="text-align: left;">Design</th>
+<th style="text-align: left;">The comparison</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">50 stores, chosen at random</td>
+<td style="text-align: left;">A/B test</td>
+<td style="text-align: left;">The other 50</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Every store above $1M in annual sales</td>
+<td style="text-align: left;">RDD</td>
+<td style="text-align: left;">Stores just under $1M against those just over, and only those</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">50 stores, chosen by the sales team</td>
+<td style="text-align: left;">DiD</td>
+<td style="text-align: left;">The other 50, before versus after</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">The New York store only</td>
+<td style="text-align: left;">Synthetic Control</td>
+<td style="text-align: left;">A weighted blend of the other 99, matched on past sales</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">All 100, on the same day</td>
+<td style="text-align: left;">CausalImpact (<a href="sec3.4-causal-impact.html">next chapter</a>)</td>
+<td style="text-align: left;">A forecast from the chain’s own history and market series the display couldn’t touch</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<p>Every row has the same 100 stores. What changed is how the display was assigned, and that decides both the design and the data you need: the running variable for RDD, a before-and-after panel for DiD, a long pre-period and a pool of untreated stores for Synthetic Control. Fifty stores chosen at random and fifty chosen by the sales team can produce the same spreadsheet, and only the first is an experiment. That’s the rule for the whole chapter. The assignment picks the design. The data then decides whether the design is credible.</p>
+<p>That table is one retailer’s five options. <a href="#fig-method-decision-tree" class="quarto-xref">Figure&nbsp;<span>1</span></a> turns it into a router for any rollout: two yes-or-no questions, then a choice that depends on how much untreated data you have left.</p>
+<div id="fig-method-decision-tree" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Two gates, random assignment then a cutoff rule, and then a three-rung ladder from a control group to a donor pool to a forecast.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-method-decision-tree-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part3/sec3.3/method_decision_tree.png" class="fig-lg img-fluid figure-img" alt="Two gates, random assignment then a cutoff rule, and then a three-rung ladder from a control group to a donor pool to a forecast.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-method-decision-tree-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: Choosing a credible comparison
+</figcaption>
+</figure>
+</div>
+<p>The four designs aren’t four unrelated tricks, either. One of them, RDD, uses a cutoff and nothing else. The other three form a ladder. DiD borrows the trend of the control stores. Synthetic Control blends control stores into a better comparison when no single one will do. CausalImpact forecasts the comparison when there are no control stores at all. Each rung leans harder on a model. This chapter covers RDD and the first two rungs.</p>
+</section>
+<section id="regression-discontinuity-rdd" class="level2">
+<h2 class="anchored" data-anchor-id="regression-discontinuity-rdd">Regression Discontinuity (RDD)</h2>
+<p><strong>Core idea:</strong> right around the cutoff, the assignment is as good as random.</p>
+<p>Start with the second row of <a href="#tbl-hundred-stores" class="quarto-xref">Table&nbsp;<span>1</span></a>. Instead of picking the stores, the sales team wrote a rule: every store above $1M in annual sales gets the new display. The pilot stores are now the biggest stores by construction. Comparing them to the rest would just measure what it’s like to be big.</p>
+<p>But look at the stores near the line. A store doing $1.02M and a store doing $0.98M are about the same size, serve similar shoppers, and run similar promotions. Which side of $1M they landed on is close to a coin flip. RDD treats it as one. It compares outcomes just above the cutoff to outcomes just below it, and if category sales jump at $1M, the jump is the effect of the display. The same logic works for customers: if customers with at least $500 of past spend get a coupon, compare the $502 customers to the $498 ones.</p>
+<section id="when-rdd-doesnt-work" class="level3">
+<h3 class="anchored" data-anchor-id="when-rdd-doesnt-work">When RDD doesn’t work</h3>
+<p>RDD needs a lot of units near the cutoff, because it uses only those. With 100 stores, maybe ten sit within a few percent of $1M, and that’s too thin to fit a line on each side and see a jump above the noise. With 20,000 customers near $500, it isn’t. That’s why RDD is mostly a customer-level tool in marketing: coupons or points based on past spend, lead-score cutoffs for sales outreach. <a href="#fig-rdd-discontinuity" class="quarto-xref">Figure&nbsp;<span>2</span></a> shows that version.</p>
+<div id="fig-rdd-discontinuity" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Scatter of later purchases versus pre-campaign spend with fitted lines on each side of the $500 cutoff; the outcome jumps at the threshold.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-rdd-discontinuity-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part3/sec3.3/rdd_discontinuity.png" class="fig-md img-fluid figure-img" alt="Scatter of later purchases versus pre-campaign spend with fitted lines on each side of the $500 cutoff; the outcome jumps at the threshold.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-rdd-discontinuity-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2: Regression Discontinuity Design: a jump at the threshold.
+</figcaption>
+</figure>
+</div>
+<p>Two more limits. The effect is local: the jump at $500 says what the coupon did for customers who spend about $500, not for customers who spend $5,000. And the units can’t be able to move themselves across the line. If a rewards program promotes customers to the next tier at $1,000 and customers know it, some will make one extra purchase in December to get over. If a store manager gets a bonus for hitting $1M, stores at $0.97M in November find a way to finish at $1.01M. Either way, the units just above the cutoff are the ones who tried harder, and RDD reads that as the effect of the treatment. A histogram of the running variable with a pile just above the cutoff is the tell. On a threshold like that, RDD can’t be used.</p>
+</section>
+</section>
+<section id="difference-in-differences-did" class="level2">
+<h2 class="anchored" data-anchor-id="difference-in-differences-did">Difference-in-Differences (DiD)</h2>
+<p><strong>Core idea:</strong> compare changes, not levels. The control group’s change over time stands in for what the treated group would have done.</p>
+<p>Now the third row of <a href="#tbl-hundred-stores" class="quarto-xref">Table&nbsp;<span>1</span></a>: the sales team picked 50 stores for the new display, and 50 comparable stores kept the standard shelf layout. You have category sales per store, before and after the rollout, for both groups.</p>
+<p>The pilot stores went from $42k to $48k. So the display is worth $6k per store?</p>
+<p>Probably not. The comparison stores went from $40k to $43k with no display at all. Something lifted the whole category by about $3k: seasonality, traffic, a competitor’s stockout. A before-and-after comparison on the pilot stores alone books that market growth as display effect.</p>
+<p>So compare the two groups after the rollout instead. $48k against $43k is $5k. Is that the effect?</p>
+<p>Also no. The pilot stores were already $2k ahead before anything happened, at $42k against $40k. The sales team didn’t pick at random, and a treated-versus-control comparison in the post period books that head start as display effect.</p>
+<p>Each naive comparison fails on a different confound. Before-versus-after catches the shared time trend. Treated-versus-control catches the pre-existing gap between the groups. Take the difference of the two differences, and both cancel:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Store group</th>
 <th>Before</th>
 <th>After</th>
 <th>Change</th>
@@ -652,7 +732,7 @@ Figure&nbsp;1: Decision tree for choosing a causal design
 </tr>
 </tbody>
 </table>
-<p>The pilot stores grew by $6k, but the comparison stores also grew by $3k. That could be seasonality, traffic, or a general lift in the category. The DiD estimate is $6k minus $3k, or $3k: the incremental effect of the new display. That is the core idea behind Difference-in-Differences: compare the change over time in the treated group to the change in the untreated group, so you can strip out trends that affect everyone. The double differencing cancels out both fixed differences between groups and any shared time trends.</p>
+<p>Pilot stores grew by $6k, comparison stores by $3k, and the difference is $3k. You get the same answer the other way around: a $5k gap after minus a $2k gap before. That’s Difference-in-Differences. The shared trend cancels out. So does any fixed difference between the groups. What’s left is the part of the pilot stores’ change that the comparison stores can’t explain.</p>
 <p>In code, the estimate is just those two differences:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -664,60 +744,48 @@ Figure&nbsp;1: Decision tree for choosing a causal design
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>did[<span class="st">"change"</span>] <span class="op">=</span> did[<span class="st">"after"</span>] <span class="op">-</span> did[<span class="st">"before"</span>]              <span class="co"># +6 and +3</span></span>
 <span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>did_estimate <span class="op">=</span> did.loc[<span class="dv">0</span>, <span class="st">"change"</span>] <span class="op">-</span> did.loc[<span class="dv">1</span>, <span class="st">"change"</span>]</span>
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"DiD estimate: $</span><span class="sc">{</span>did_estimate<span class="sc">}</span><span class="ss">k"</span>)                  <span class="co"># DiD estimate: $3k</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>The main strength of DiD is that it cancels out factors you cannot directly measure, but that only works if a key assumption holds.</p>
+<p>DiD fits most “some units changed, others didn’t” situations in marketing: store display pilots, shelf resets, regional promotion rollouts, pricing changes in selected markets, an app feature launched on one platform first.</p>
 <section id="the-parallel-trends-assumption" class="level3">
 <h3 class="anchored" data-anchor-id="the-parallel-trends-assumption">The Parallel Trends Assumption</h3>
-<p>DiD relies on one critical assumption: if there had been no treatment, both groups would have followed the same <em>trend</em>. The focus is on trend, not starting point. The groups do not need to start at the same sales level (pilot stores can be higher than comparison stores, as in the example). What matters is that their trends were parallel before the intervention, so the control group’s change after the fact is a reasonable stand-in for what the treated group would have done without the treatment.</p>
-<p>You can never fully verify this after the fact, since you do not observe the treated group’s counterfactual. But you can look at the pre-treatment period for a reality check.</p>
+<p>DiD rests on parallel trends (also called common trends): without the treatment, both groups would have followed the same <em>trend</em>. Trend, not level. The groups can start at different sales levels, as the pilot stores do. What matters is that the comparison group’s change after the rollout is a fair stand-in for what the pilot stores would have done on their own.</p>
+<p>You can never fully verify that, because you don’t observe the pilot stores without the display. But you can check the period before the rollout.</p>
 <div id="fig-did-parallel-trends" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Difference-in-Differences: parallel pre-trends, then post-intervention divergence; the gap is the causal effect.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-did-parallel-trends-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="../images/part3/sec3.3/did_parallel_trends.png" class="fig-md img-fluid figure-img" alt="Difference-in-Differences: parallel pre-trends, then post-intervention divergence; the gap is the causal effect.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-did-parallel-trends-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;2: Difference-in-Differences: pre-trends and divergence.
+Figure&nbsp;3: Difference-in-Differences: pre-trends and divergence.
 </figcaption>
 </figure>
 </div>
-<p>The practical check is straightforward: plot the outcome over time for both groups and focus on the period before the intervention. If the two lines were already converging, diverging, or bending in different ways before the intervention, DiD is tough to justify. In that case, you may need to consider matching, weighting, or a different design.</p>
-<p>If you have enough pre-treatment periods, you can back up the visual check with an event-study or a pre-trend regression. Still, this is just a credibility check, not proof of the parallel trends assumption.</p>
-<p>Use DiD in marketing when you have store display pilots, shelf resets, regional promotion rollouts, pricing or policy changes in selected markets, app feature launches on one platform, or any situation where some units changed and others stayed the same.</p>
+<p>Plot both groups over time and look at the part before the display. If the two lines move together, DiD is credible. A clean pre-trend is a credibility check, not a proof, but it’s the check everyone will ask for.</p>
+</section>
+<section id="when-did-doesnt-work" class="level3">
+<h3 class="anchored" data-anchor-id="when-did-doesnt-work">When DiD doesn’t work</h3>
+<p>DiD fails when the sales team picked on momentum. If they chose stores that were already growing faster, the two groups don’t share a trend, and the DiD estimate takes credit for growth that was coming anyway. You’ll see it in the pre-period plot: the lines were already diverging before the display. When that happens, don’t force DiD. Match the groups more carefully, weight the comparison stores, or move to Synthetic Control.</p>
 </section>
 <section id="estimating-did-with-a-regression" class="level3">
 <h3 class="anchored" data-anchor-id="estimating-did-with-a-regression">Estimating DiD with a Regression</h3>
-<p>The manual calculation gives you a point estimate, but no sense of uncertainty, and it does not scale beyond two groups and two periods. In practice, you fit the equivalent regression, which gives you a standard error and works for a full panel of stores and periods. You use an indicator for the treated group, an indicator for the post period, and their interaction. The interaction term <em>is</em> the DiD estimate.</p>
+<p>The two-by-two table is the idea. It isn’t what you’d report, for two reasons. It gives no standard error, so you can’t say whether +$3k is distinguishable from zero. And real data isn’t two periods; it’s 24 months of sales for 100 stores. The regression version handles both. One row per store per month, a fixed effect for each store, a fixed effect for each month, and one interaction term for treated stores in the post period. The store effects absorb every fixed difference between stores. The month effects absorb every trend and shock that hit all stores that month. The interaction term <em>is</em> the DiD estimate.</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> statsmodels.formula.api <span class="im">as</span> smf</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co"># df: one row per store-period (store_id, period, treated, post, category_sales)</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> smf.ols(<span class="st">"category_sales ~ treated + post + treated:post"</span>, data<span class="op">=</span>df).fit(</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    cov_type<span class="op">=</span><span class="st">"cluster"</span>, cov_kwds<span class="op">=</span>{<span class="st">"groups"</span>: df[<span class="st">"store_id"</span>]}</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>coef, se <span class="op">=</span> model.params[<span class="st">"treated:post"</span>], model.bse[<span class="st">"treated:post"</span>]</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"DiD estimate: </span><span class="sc">{</span>coef<span class="sc">:.2f}</span><span class="ss"> (SE </span><span class="sc">{</span>se<span class="sc">:.2f}</span><span class="ss">)"</span>)   <span class="co"># DiD estimate: 3.10 (SE 0.07)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Clustering the standard error by store handles the repeated measurements for each store. You can also use this regression to check pre-trends: swap the post indicator for one indicator per period (an event-study setup) and confirm that the pre-treatment terms are close to zero. The companion notebook walks through the full panel, the pre-trend check, and examples of RDD and Synthetic Control.</p>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co"># df: one row per store-month (store_id, period, treated, post, category_sales)</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> smf.ols(</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"category_sales ~ C(store_id) + C(period) + treated:post"</span>,</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    data<span class="op">=</span>df,</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>).fit(cov_type<span class="op">=</span><span class="st">"cluster"</span>, cov_kwds<span class="op">=</span>{<span class="st">"groups"</span>: df[<span class="st">"store_id"</span>]})</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>coef, se <span class="op">=</span> model.params[<span class="st">"treated:post"</span>], model.bse[<span class="st">"treated:post"</span>]</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"DiD estimate: </span><span class="sc">{</span>coef<span class="sc">:.2f}</span><span class="ss"> (SE </span><span class="sc">{</span>se<span class="sc">:.2f}</span><span class="ss">)"</span>)   <span class="co"># DiD estimate: 3.02 (SE 0.04)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Clustering the standard error by store handles the repeated measurements for each store. The same regression checks pre-trends: replace <code>treated:post</code> with one <code>treated</code> × month term per month and confirm the pre-rollout terms are close to zero. The companion notebook walks through the full panel and that check.</p>
 </section>
-</section>
-<section id="regression-discontinuity-rdd" class="level2">
-<h2 class="anchored" data-anchor-id="regression-discontinuity-rdd">Regression Discontinuity (RDD)</h2>
-<p>RDD is useful when a business rule assigns treatment at a clear cutoff. Suppose customers with at least $500 in pre-campaign annual spend receive a coupon, while customers below $500 do not. Customers just above and just below the cutoff are likely to be similar; the main difference between them is that one group received the coupon.</p>
-<p>In that setting, RDD compares outcomes near the cutoff. If customers who spent $502 later purchase more than those who spent $498, the jump at $500 estimates the local effect of receiving the coupon.</p>
-<div id="fig-rdd-discontinuity" class="fig-md quarto-float quarto-figure quarto-figure-center anchored">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-rdd-discontinuity-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part3/sec3.3/rdd_discontinuity.png" class="fig-md img-fluid figure-img">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-rdd-discontinuity-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;3: Regression Discontinuity Design: a jump at the threshold.
-</figcaption>
-</figure>
-</div>
-<p>The key point is that RDD estimates the effect only for customers near the cutoff, not for everyone. It also depends on one condition: customers should not be able to precisely move themselves across the threshold to get the treatment.</p>
-<p>Good marketing examples include coupons or points based on historical spend, lead-score cutoffs for sales outreach, and store-volume thresholds for trade support. Avoid cases where customers can easily move themselves across the cutoff, like a visible cart threshold.</p>
 </section>
 <section id="synthetic-control" class="level2">
 <h2 class="anchored" data-anchor-id="synthetic-control">Synthetic Control</h2>
-<p>Synthetic Control is helpful when one market, region, or store gets treated and there is no clear control group. Instead of picking a single comparison market, you build a weighted blend of untreated markets that closely matches the treated market before the intervention. That blend becomes your counterfactual.</p>
-<p>For example, suppose a brand runs an out-of-home campaign in New York while other comparable metro markets get none. To estimate the effect on sales, you build a “synthetic New York” from a weighted mix of untreated markets that together match New York’s pre-campaign sales trend. Once the campaign starts, the gap between actual New York and its synthetic counterpart is the estimated effect.</p>
+<p><strong>Core idea:</strong> when no single control unit matches, build one by mixing several.</p>
+<p>DiD worked because 50 control stores gave you a convincing trend to borrow. Now take the fourth row of <a href="#tbl-hundred-stores" class="quarto-xref">Table&nbsp;<span>1</span></a>: only the New York store got the display. Which of the other 99 stores is the right comparison? They differ in size, category mix, and local competition, and no single store is a convincing stand-in for New York.</p>
+<p>Synthetic Control doesn’t pick one. It treats the other 99 stores as a <strong>donor pool</strong> and builds a “synthetic New York” as a weighted mix of them, choosing the weights so that the blend tracks New York’s sales as closely as possible before the display went in. In the companion notebook the blend comes out as 36% of the Boston store, 28% of Philadelphia, 22% of Chicago, and a few percent spread over four other stores. Once the display is in, the gap between actual New York and its synthetic twin is the estimated effect.</p>
 <div id="fig-synthetic-control" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Synthetic Control: actual vs. synthetic counterfactual: lines overlap before the intervention, and the post gap is the effect.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-synthetic-control-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -728,48 +796,35 @@ Figure&nbsp;4: Synthetic Control: actual vs.&nbsp;synthetic counterfactual.
 </figcaption>
 </figure>
 </div>
-<p>The main credibility check is how well the synthetic version matches New York’s sales trend before the campaign. If it cannot reproduce the pre-period trend, you should not trust the post-campaign gap. The hard part is not the optimization: it is finding donor markets that were similar enough before treatment and were not indirectly affected by the campaign.</p>
-<p>Use Synthetic Control in marketing when a single market or region gets a localized media campaign, price change, product launch, or store-format change, and you have enough history to build a credible stand-in from untreated markets. These geo-level designs come back in <a href="../part6/sec6.3-mmm-calibration.html">Section 6.3</a>, where geo-lift tests, analyzed with the same DiD logic, become the calibration anchor for media mix models.</p>
-<p>These methods estimate the average effect of a treatment. But in practice, different customers can respond very differently. A coupon might lift purchases by 5% on average, but that average could mix customers who saw a 20% lift with others who saw no effect at all. The next chapter digs into that question.</p>
-<p><strong>Companion notebook:</strong> <code>sec3.3_quasi_experiments.ipynb</code> works through DiD (table, regression, and pre-trend check), RDD, and Synthetic Control on synthetic data with <code>statsmodels</code> and <code>scipy</code>.<br>
+<p>It’s the natural design whenever one unit gets the treatment and many similar units don’t: one store remodeled, one metro with an out-of-home campaign, one SKU with a price change and its sibling SKUs as donors. These geo-level designs come back in <a href="../part6/sec6.3-incrementality-experiments.html">Section 6.3</a> as a robustness check for geo experiments and in <a href="../part6/sec6.4-mmm-calibration.html">Section 6.4</a> as the calibration anchor for media mix models.</p>
+<section id="when-synthetic-control-doesnt-work" class="level3">
+<h3 class="anchored" data-anchor-id="when-synthetic-control-doesnt-work">When Synthetic Control doesn’t work</h3>
+<p>The credibility check is the pre-period fit. If no blend of the 99 stores can reproduce New York’s history before the display, don’t trust the gap after it. The donors also have to be untouched: a display in New York doesn’t move sales in Chicago, but a New York TV campaign might reach New Jersey, and a donor that caught the treatment drags the synthetic twin toward the treated path. And it can’t do one customer. A single customer’s weekly spend is mostly zeros and noise, and no blend of other customers will track it. Customer-level questions need many customers, which is DiD or RDD territory.</p>
+</section>
+</section>
+<section id="when-there-is-no-control-group" class="level2">
+<h2 class="anchored" data-anchor-id="when-there-is-no-control-group">When There Is No Control Group</h2>
+<p>DiD borrowed a trend from control stores. Synthetic Control blended control stores when no single one would do. RDD compared stores just below a line to stores just above it. All three borrow the comparison from units the action didn’t reach, and none of them can help when it reached everyone:</p>
+<ul>
+<li>The new display went into all 100 stores on the same day.</li>
+<li>The campaign ran in every region, not in a few.</li>
+<li>The coupon went to every customer.</li>
+</ul>
+<p>There’s no untreated store, region, or customer to compare against. So the comparison has to be forecast: from what the series was doing before the action, and from what other series the action couldn’t touch did after it. That’s the last rung of the ladder, CausalImpact, and it’s <a href="sec3.4-causal-impact.html">the next chapter</a>.</p>
+<p><strong>Companion notebook:</strong> <code>sec3.3_quasi_experiments.ipynb</code> works through RDD, DiD (table, regression, and pre-trend check), and Synthetic Control on synthetic data with <code>statsmodels</code> and <code>scipy</code>.<br>
 <a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.3_quasi_experiments.ipynb">View on GitHub</a></p>
 </section>
 <section id="key-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="key-takeaways">Key Takeaways</h2>
 <ul>
-<li>The method is chosen by the assignment structure, not by sophistication: who received the treatment, when, and why. Pick the design whose comparison your business context actually allows.</li>
-<li>DiD compares changes, not levels, so the groups may start at different baselines. It rests on parallel trends: check the pre-period, and treat a clean pre-trend as a credibility check, not proof.</li>
-<li>RDD estimates a local effect for units near the cutoff, and only when units cannot precisely sort themselves across it. Do not read the jump at the threshold as an effect for everyone.</li>
-<li>Synthetic Control stands or falls on the pre-period fit. If the weighted donor blend cannot reproduce the treated market’s history, do not trust the post-campaign gap.</li>
+<li>Start from how the treatment was assigned, not from the estimator. Random assignment gives you an A/B test. Anything else gives you a quasi-experiment, and the assignment picks which one.</li>
+<li>RDD estimates a local effect for units near the cutoff, and only when there are many of them and none can move themselves across the line. Don’t read the jump at the threshold as an effect for everyone.</li>
+<li>DiD exists because both naive comparisons fail. Before-versus-after books the market trend; treated-versus-control books the pre-existing gap. The difference of the differences cancels both, but only if the parallel trends assumption holds. Check the pre-period, and treat a clean pre-trend as a credibility check, not proof.</li>
+<li>Synthetic Control stands or falls on the pre-period fit. If the weighted donor blend can’t reproduce the treated unit’s history, don’t trust the gap that follows.</li>
+<li>DiD, Synthetic Control, and CausalImpact are a ladder: borrow the control’s trend, blend the controls, forecast the control. Each rung leans harder on a model. When the action reached every store, region, or customer, you’re on the last rung, which is the next chapter.</li>
 </ul>
 
 
-<div id="refs" class="references csl-bib-body hanging-indent" role="list" style="display: none">
-<div id="ref-chan2017challenges" class="csl-entry" role="listitem">
-Chan, David, and Matthew Perry. 2017. <em>Challenges and Opportunities in Media Mix Modeling</em>. Google Inc. <a href="https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/45998.pdf">https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/45998.pdf</a>.
-</div>
-<div id="ref-fader2013gammagamma" class="csl-entry" role="listitem">
-Fader, Peter S, and Bruce GS Hardie. 2013. <em>The Gamma-Gamma Model of Monetary Value</em>. Wharton School, University of Pennsylvania. <a href="https://www.brucehardie.com/notes/025/gamma_gamma.pdf">https://www.brucehardie.com/notes/025/gamma_gamma.pdf</a>.
-</div>
-<div id="ref-fader2005counting" class="csl-entry" role="listitem">
-Fader, Peter S, Bruce GS Hardie, and Ka Lok Lee. 2005. <span>“Counting Your Customers the Easy Way: An Alternative to the Pareto/NBD Model.”</span> <em>Marketing Science</em> 24 (2): 275–84.
-</div>
-<div id="ref-jin2017bayesian" class="csl-entry" role="listitem">
-Jin, Yuxue, Yueqing Wang, Yunting Sun, David Chan, and Jim Koehler. 2017. <em>Bayesian Methods for Media Mix Modeling with Carryover and Shape Effects</em>.
-</div>
-<div id="ref-knaflic2015storytelling" class="csl-entry" role="listitem">
-Knaflic, Cole Nussbaumer. 2015. <em>Storytelling with Data: A Data Visualization Guide for Business Professionals</em>. Wiley.
-</div>
-<div id="ref-provost2013data" class="csl-entry" role="listitem">
-Provost, Foster, and Tom Fawcett. 2013. <em>Data Science for Business</em>. O’Reilly Media.
-</div>
-<div id="ref-vaver2011measuring" class="csl-entry" role="listitem">
-Vaver, Jon, and Jim Koehler. 2011. <em>Measuring Ad Effectiveness Using Geo Experiments</em>. Google Inc. <a href="https://research.google/pubs/pub38355/">https://research.google/pubs/pub38355/</a>.
-</div>
-<div id="ref-vizard2019pg" class="csl-entry" role="listitem">
-Vizard, Sarah. 2019. <span>“<span>P&amp;G</span> Shifts from Targeting <span>‘Generic Demographics’</span> to <span>‘Smart Audiences’</span>.”</span> <em>Marketing Week</em>, July. <a href="https://www.marketingweek.com/pg-targeting-generic-demographics-to-smart-audiences/">https://www.marketingweek.com/pg-targeting-generic-demographics-to-smart-audiences/</a>.
-</div>
-</div>
 </section>
 
 </main> <!-- /main -->
@@ -859,7 +914,7 @@ Vizard, Sarah. 2019. <span>“<span>P&amp;G</span> Shifts from Targeting <span>�
     }
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
       var mailtoRegex = new RegExp(/^mailto:/);
-        var filterRegex = new RegExp("https:\/\/marketing-science-in-python\.com");
+        var filterRegex = new RegExp("https:\/\/marketing-science-in-python\.com\/");
       var isInternal = (href) => {
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }
@@ -1193,8 +1248,8 @@ Vizard, Sarah. 2019. <span>“<span>P&amp;G</span> Shifts from Targeting <span>�
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="../part3/sec3.4-meta-learners.html" class="pagination-link" aria-label="3.4 Meta Learners for Treatment Effects">
-        <span class="nav-page-text"><span class="chapter-title">3.4 Meta Learners for Treatment Effects</span></span> <i class="bi bi-arrow-right-short"></i>
+      <a href="../part3/sec3.4-causal-impact.html" class="pagination-link" aria-label="3.4 Causal Impact with Time Series">
+        <span class="nav-page-text"><span class="chapter-title">3.4 Causal Impact with Time Series</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>

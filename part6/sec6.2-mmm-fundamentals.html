@@ -2,21 +2,24 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.38">
+<meta name="generator" content="quarto-1.10.18">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="A practitioner’s guide to causal inference, Marketing Mix Modeling, pricing, forecasting, customer analytics, and media measurement with runnable Python notebooks.">
+<meta name="description" content="Build an MMM with Google Meridian: adstock, saturation, data requirements, the Bayesian angle, a library comparison, and budget allocation.">
 
-<title>6.2 Building and Optimizing an MMM – Marketing Science in Python</title>
+<title>Marketing Mix Modeling in Python – Marketing Science in Python</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
 */
-code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
-div.columns{display: flex; gap: min(4vw, 1.5em);}
-div.column{flex: auto; overflow-x: auto;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
 div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
 ul.task-list{list-style: none;}
 ul.task-list li input[type="checkbox"] {
@@ -59,26 +62,7 @@ div.sourceCode
 @media screen {
 pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
-/* CSS for citations */
-div.csl-bib-body { }
-div.csl-entry {
-  clear: both;
-}
-.hanging-indent div.csl-entry {
-  margin-left:2em;
-  text-indent:-2em;
-}
-div.csl-left-margin {
-  min-width:2em;
-  float:left;
-}
-div.csl-right-inline {
-  margin-left:2em;
-  padding-left:1em;
-}
-div.csl-indent {
-  margin-left: 2em;
-}</style>
+</style>
 
 
 <script src="../site_libs/quarto-nav/quarto-nav.js"></script>
@@ -88,7 +72,7 @@ div.csl-indent {
 <script src="../site_libs/quarto-search/fuse.min.js"></script>
 <script src="../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../">
-<link href="../part6/sec6.3-mmm-calibration.html" rel="next">
+<link href="../part6/sec6.3-incrementality-experiments.html" rel="next">
 <link href="../part6/sec6.1-media-measurement-problem.html" rel="prev">
 <link href="../assets/favicon.png" rel="icon" type="image/png">
 <script src="../site_libs/quarto-html/quarto.js" type="module"></script>
@@ -97,14 +81,14 @@ div.csl-indent {
 <script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-7f0fd692a0f1f319cb631db8b9de24f6.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../site_libs/bootstrap/bootstrap-dark-bbd0ed6a99b6ad49326352f64f59f7ff.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../site_libs/bootstrap/bootstrap-7f0fd692a0f1f319cb631db8b9de24f6.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-3925b0358f127ec93ce16d1653ff4e4f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-70cf7cdb16ba3fd29963dee6648d0861.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-3925b0358f127ec93ce16d1653ff4e4f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
@@ -143,7 +127,7 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 </script>
 
   <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
-  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
 
 <script type="text/javascript">
 const typesetMath = (el) => {
@@ -173,16 +157,17 @@ window.Quarto = {
 </script>
 
 <link rel="stylesheet" href="../custom.css">
-<meta property="og:title" content="Marketing Science in Python">
-<meta property="og:description" content="A practitioner’s guide to causal inference, Marketing Mix Modeling, pricing, forecasting, customer analytics, and media measurement with runnable Python notebooks.">
-<meta property="og:image" content="https://marketing-science-in-python.com/part6/images/common/book_cover.png">
+<meta property="og:title" content="Marketing Mix Modeling in Python">
+<meta property="og:description" content="Build an MMM with Google Meridian: adstock, saturation, data requirements, the Bayesian angle, a library comparison, and budget allocation.">
+<meta property="og:image" content="https://marketing-science-in-python.com/images/common/book_cover.png">
 <meta property="og:site_name" content="Marketing Science in Python">
 <meta property="og:image:alt" content="Marketing Science in Python book cover">
-<meta name="twitter:title" content="Marketing Science in Python">
-<meta name="twitter:description" content="A practitioner’s guide to causal inference, Marketing Mix Modeling, pricing, forecasting, customer analytics, and media measurement with runnable Python notebooks.">
-<meta name="twitter:image" content="https://marketing-science-in-python.com/part6/images/common/book_cover.png">
+<meta name="twitter:title" content="Marketing Mix Modeling in Python">
+<meta name="twitter:description" content="Build an MMM with Google Meridian: adstock, saturation, data requirements, the Bayesian angle, a library comparison, and budget allocation.">
+<meta name="twitter:image" content="https://marketing-science-in-python.com/images/common/book_cover.png">
 <meta name="twitter:image:alt" content="Marketing Science in Python book cover">
 <meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://marketing-science-in-python.com/part6/sec6.2-mmm-fundamentals.html">
 </head>
 
 <body class="nav-sidebar floating quarto-light"><script id="quarto-html-before-body" type="application/javascript">
@@ -481,12 +466,17 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part3/sec3.4-meta-learners.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.4 Meta Learners for Treatment Effects</span></a>
+  <a href="../part3/sec3.4-causal-impact.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.4 Causal Impact with Time Series</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part3/sec3.5-uplift-modeling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.5 Uplift Modeling for Targeting</span></a>
+  <a href="../part3/sec3.5-meta-learners.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.5 Meta Learners for Treatment Effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.6-uplift-modeling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.6 Uplift Modeling for Targeting</span></a>
   </div>
 </li>
       </ul>
@@ -533,7 +523,7 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part5/sec5.3-demand-forecasting.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.3 Demand Forecasting</span></a>
+  <a href="../part5/sec5.3-sales-forecasting.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.3 Sales Forecasting and Scenario Planning</span></a>
   </div>
 </li>
       </ul>
@@ -559,22 +549,21 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part6/sec6.3-mmm-calibration.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.3 Calibrating MMM with Experiments</span></a>
+  <a href="../part6/sec6.3-incrementality-experiments.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.3 Incrementality Experiments</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part6/sec6.4-when-tools-disagree.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.4 When Attribution, MMM, and Experiments Disagree</span></a>
+  <a href="../part6/sec6.4-mmm-calibration.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.4 Calibrating MMM with Experiments</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.5-when-tools-disagree.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.5 Making Decisions When Measurement Tools Disagree</span></a>
   </div>
 </li>
       </ul>
   </li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../closing.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Closing Thoughts</span></a>
-  </div>
-</li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../appendix/further-reading.html" class="sidebar-item-text sidebar-link">
@@ -585,6 +574,12 @@ window.Quarto = {
   <div class="sidebar-item-container"> 
   <a href="../appendix/notebooks.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Notebooks &amp; Code</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../marketing-analytics-in-python.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Marketing Analytics in Python</span></a>
   </div>
 </li>
     </ul>
@@ -601,13 +596,13 @@ window.Quarto = {
   <li><a href="#the-mmm-equation" id="toc-the-mmm-equation" class="nav-link" data-scroll-target="#the-mmm-equation">The MMM Equation</a></li>
   <li><a href="#saturation-diminishing-returns" id="toc-saturation-diminishing-returns" class="nav-link" data-scroll-target="#saturation-diminishing-returns">Saturation (Diminishing Returns)</a></li>
   <li><a href="#adstock-carryover-effects" id="toc-adstock-carryover-effects" class="nav-link" data-scroll-target="#adstock-carryover-effects">Adstock (Carryover Effects)</a></li>
-  <li><a href="#data-requirements" id="toc-data-requirements" class="nav-link" data-scroll-target="#data-requirements">Data Requirements</a></li>
+  <li><a href="#sec-mmm-data-requirements" id="toc-sec-mmm-data-requirements" class="nav-link" data-scroll-target="#sec-mmm-data-requirements">Data Requirements</a></li>
   <li><a href="#the-bayesian-angle" id="toc-the-bayesian-angle" class="nav-link" data-scroll-target="#the-bayesian-angle">The Bayesian Angle</a></li>
   <li><a href="#a-walkthrough-with-meridian" id="toc-a-walkthrough-with-meridian" class="nav-link" data-scroll-target="#a-walkthrough-with-meridian">A Walkthrough with Meridian</a></li>
   <li><a href="#budget-allocation" id="toc-budget-allocation" class="nav-link" data-scroll-target="#budget-allocation">Budget Allocation</a></li>
   <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways">Key Takeaways</a></li>
   </ul>
-<div class="quarto-code-links"><h2>Code Links</h2><ul><li><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part6-media-optimization/sec6.2_6.3_mmm_meridian.ipynb"><i class="bi bi-github"></i>sec6.2_6.3_mmm_meridian.ipynb</a></li></ul></div></nav>
+<div class="quarto-code-links"><h2>Code Links</h2><ul><li><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part6-media-optimization/sec6.2_6.4_mmm_meridian.ipynb"><i class="bi bi-github"></i>sec6.2_6.4_mmm_meridian.ipynb</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -641,10 +636,10 @@ window.Quarto = {
 <li><strong>Simulate</strong>: answer “what if” questions, such as what happens to sales if we cut TV spend by 30%?</li>
 <li><strong>Optimize</strong>: allocate a fixed budget across channels to maximize the expected outcome.</li>
 </ol>
-<div id="fig-mmm-purpose" class="fig-md quarto-float quarto-figure quarto-figure-center anchored">
+<div id="fig-mmm-purpose" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="MMM supports three decisions: measure past media efficiency, simulate future spending changes, and optimize the media budget.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-mmm-purpose-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part6/sec6.2/mmm_purpose.png" class="fig-md img-fluid figure-img">
+<img src="../images/part6/sec6.2/mmm_purpose.png" class="fig-md img-fluid figure-img" alt="MMM supports three decisions: measure past media efficiency, simulate future spending changes, and optimize the media budget.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-mmm-purpose-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Figure&nbsp;1: The three purposes of MMM: measure, simulate, optimize.
@@ -660,10 +655,10 @@ Figure&nbsp;1: The three purposes of MMM: measure, simulate, optimize.
 y_t = \beta_0 + \sum_{c=1}^{C} \beta_c \cdot x_{c,t} + \sum_{k} \gamma_k \cdot z_{k,t} + \varepsilon_t
 \]</span></p>
 <p>where <span class="math inline">\(y_t\)</span> is sales at time <span class="math inline">\(t\)</span>, <span class="math inline">\(x_{c,t}\)</span> is spend in channel <span class="math inline">\(c\)</span>, <span class="math inline">\(z_{k,t}\)</span> are control variables, and <span class="math inline">\(\varepsilon_t\)</span> is noise.</p>
-<div id="fig-mmm-simple-equation" class="fig-sm quarto-float quarto-figure quarto-figure-center anchored">
+<div id="fig-mmm-simple-equation" class="fig-sm quarto-float quarto-figure quarto-figure-center anchored" alt="A simple linear MMM represents sales as baseline sales plus weighted media inputs and weighted control variables.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-mmm-simple-equation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part6/sec6.2/simple_equation.png" class="fig-sm img-fluid figure-img">
+<img src="../images/part6/sec6.2/simple_equation.png" class="fig-sm img-fluid figure-img" alt="A simple linear MMM represents sales as baseline sales plus weighted media inputs and weighted control variables.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-mmm-simple-equation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Figure&nbsp;2: Simple linear MMM: sales ~ media spend + controls.
@@ -675,10 +670,10 @@ Figure&nbsp;2: Simple linear MMM: sales ~ media spend + controls.
 <p><span class="math display">\[
 y_t = \beta_0 + \sum_{c=1}^{C} \beta_c \cdot \text{Saturation}\bigl(\text{Adstock}(x_{c,t})\bigr) + \sum_{k} \gamma_k \cdot z_{k,t} + \varepsilon_t
 \]</span></p>
-<div id="fig-mmm-full-equation" class="fig-sm quarto-float quarto-figure quarto-figure-center anchored">
+<div id="fig-mmm-full-equation" class="fig-sm quarto-float quarto-figure quarto-figure-center anchored" alt="A full MMM applies adstock and saturation transformations to media inputs while retaining control variables and random noise.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-mmm-full-equation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part6/sec6.2/full_equation.png" class="fig-sm img-fluid figure-img">
+<img src="../images/part6/sec6.2/full_equation.png" class="fig-sm img-fluid figure-img" alt="A full MMM applies adstock and saturation transformations to media inputs while retaining control variables and random noise.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-mmm-full-equation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Figure&nbsp;3: Full MMM: adstock and saturation transforms on media inputs.
@@ -704,6 +699,7 @@ Figure&nbsp;4: The three zones of the saturation curve.
 \text{Hill}(x) = \frac{x^S}{x^S + K^S}
 \]</span></p>
 <p>where <span class="math inline">\(K\)</span> (the half-saturation point, often called EC50) is the spend level at which the channel reaches 50% of its maximum effect, and <span class="math inline">\(S\)</span> (the slope) controls how sharply the curve bends.</p>
+<p>One practical note about <span class="math inline">\(K\)</span> when you set its prior. Meridian applies adstock without normalizing it, so a channel with a six-week half-life carries an adstocked value several times its weekly median, and its half-saturation point has to live on that larger scale. A prior centered for a fast-decaying channel will exclude the truth for a slow one. The demo therefore keeps its funnel structure on adstock and gives saturation a single channel-independent prior, wide enough to cover every curve in the data, and lets the likelihood place each one.</p>
 <p>This curvature is what makes budget reallocation valuable. In <a href="#fig-saturation-reallocation" class="quarto-xref">Figure&nbsp;<span>5</span></a>, channel X sits deep in its saturation zone while channel Y still has headroom. Trimming budget on X costs $1M in sales, while adding that budget to Y gains $3M: a net gain of $2M on the same total spend. Shifting budget from saturated channels to under-invested ones can increase total return, even if the saturated channel’s average ROAS looks higher.</p>
 <div id="fig-saturation-reallocation" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Two saturation curves: decreasing budget on saturated channel X loses $1M in sales while increasing budget on less saturated channel Y gains $3M, a net change of +$2M.">
 <figure class="quarto-float quarto-float-fig figure">
@@ -743,21 +739,21 @@ Figure&nbsp;7: Adstock with a lower retention rate (digital).
 </figcaption>
 </figure>
 </div>
-<p>The retention rate is easier to reason about as a half-life, the number of periods for the effect to fall by half, <span class="math inline">\(\ln(0.5) / \ln(\lambda)\)</span>. At weekly granularity, upper-funnel channels like TV are commonly modeled with half-lives of several weeks, while lower-funnel channels like paid search decay within about a week. The companion demo centers its priors at a 6-week half-life for TV/CTV and OOH (<span class="math inline">\(\lambda \approx 0.89\)</span>), 3 weeks for Meta and TikTok (<span class="math inline">\(\lambda \approx 0.79\)</span>), and 1 week for Google Search (<span class="math inline">\(\lambda = 0.5\)</span>). Treat these as starting priors to be moved by the data, not as facts: published guidance varies, and the right values depend on your category and data granularity. A “weekly” retention rate applied to daily data implies a very different half-life.</p>
+<p>The retention rate is easier to reason about as a half-life, the number of periods for the effect to fall by half, <span class="math inline">\(\ln(0.5) / \ln(\lambda)\)</span>. At weekly granularity, upper-funnel channels like TV are commonly modeled with half-lives of several weeks, while lower-funnel channels like paid search decay within about a week. The companion demo models every channel with geometric adstock over a 12-week window, and centers the decay priors by funnel stage: 6 weeks for TV/CTV and OOH (<span class="math inline">\(\lambda \approx 0.89\)</span>), 3 weeks for Meta and TikTok (<span class="math inline">\(\lambda \approx 0.79\)</span>), and 1 week for Google Search (<span class="math inline">\(\lambda = 0.5\)</span>). Treat these as starting priors to be moved by the data, not as facts: published guidance varies, and the right values depend on your category and data granularity. A “weekly” retention rate applied to daily data implies a very different half-life.</p>
 <p>More flexible alternatives exist. The Weibull adstock allows the decay shape to be non-monotonic: the effect can peak a few days after exposure before decaying, which better captures channels like email or direct mail where there is a natural processing delay.</p>
 </section>
-<section id="data-requirements" class="level2">
-<h2 class="anchored" data-anchor-id="data-requirements">Data Requirements</h2>
+<section id="sec-mmm-data-requirements" class="level2">
+<h2 class="anchored" data-anchor-id="sec-mmm-data-requirements">Data Requirements</h2>
 <p>MMM requires three categories of input data:</p>
 <ol type="1">
 <li><strong>Target variable</strong>: weekly revenue or sales volume at the brand or product level.</li>
 <li><strong>Media spend</strong>: weekly spend per channel (TV, social, display, search, direct mail, etc.).</li>
 <li><strong>Control variables</strong>: holidays, seasonality indicators, promotions, pricing changes, competitor activity, macroeconomic factors, or any non-media driver that might explain sales variation.</li>
 </ol>
-<div id="fig-data-requirements" class="fig-md quarto-float quarto-figure quarto-figure-center anchored">
+<div id="fig-data-requirements" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="MMM requires a business outcome and channel-level media spending, with seasonality and other non-media controls added when available.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-data-requirements-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part6/sec6.2/data_requirements.png" class="fig-md img-fluid figure-img">
+<img src="../images/part6/sec6.2/data_requirements.png" class="fig-md img-fluid figure-img" alt="MMM requires a business outcome and channel-level media spending, with seasonality and other non-media controls added when available.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-data-requirements-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Figure&nbsp;8: MMM input data: target, media spend by channel, controls.
@@ -767,14 +763,16 @@ Figure&nbsp;8: MMM input data: target, media spend by channel, controls.
 <p>Recommended granularity:</p>
 <ul>
 <li><strong>Time</strong>: Weekly. Daily data is noisier; monthly data has too few observations.</li>
-<li><strong>History</strong>: At least 2–3 years of data (about 104 weeks). With less history, it becomes hard to separate media effects from seasonality.</li>
+<li><strong>History</strong>: At least 2–3 years of data (roughly 104 to 156 weeks). With less history, it becomes hard to separate media effects from seasonality.</li>
 <li><strong>Geography</strong>: National or brand-level is typical. Sub-national (geo-level) models can be more powerful, but they need more data and careful modeling.</li>
 <li><strong>Channels</strong>: Only include channels where spend actually varies. If a channel spends the same amount every week, the model cannot learn its effect.</li>
 </ul>
-<div id="fig-example-dataset" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored">
+<p>One check belongs with these and is easy to skip. Adstock and saturation smooth a channel’s contribution, so media can end up moving sales less from week to week than whatever the control variables fail to explain. When that happens the media coefficients are not identified, and no choice of prior repairs it: the estimator has nothing left to separate media from baseline with. Compare the two quantities before fitting. The companion notebook does it in Step 2b.</p>
+<p>One more reason the control variables matter: media spend and sales usually share trend and seasonality by construction, and a shared calendar alone can manufacture a strong correlation between two series that have nothing to do with each other. The seasonality and trend controls are what keep that shared structure out of the media coefficients.</p>
+<div id="fig-example-dataset" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="The weekly MMM dataset aligns sales, five media-channel spending series, seasonality, and a holiday indicator by date.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-example-dataset-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part6/sec6.2/example_dataset.png" class="fig-lg img-fluid figure-img">
+<img src="../images/part6/sec6.2/example_dataset.png" class="fig-lg img-fluid figure-img" alt="The weekly MMM dataset aligns sales, five media-channel spending series, seasonality, and a holiday indicator by date.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-example-dataset-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Figure&nbsp;9: Example MMM dataset: date, sales, spend by channel, controls.
@@ -786,9 +784,9 @@ Figure&nbsp;9: Example MMM dataset: date, sales, spend by channel, controls.
 <h2 class="anchored" data-anchor-id="the-bayesian-angle">The Bayesian Angle</h2>
 <p>Before walking through an implementation, one design choice deserves attention: modern MMM is predominantly Bayesian. The reason is practical, not philosophical.</p>
 <ol type="1">
-<li><strong>Priors encode domain knowledge.</strong> If your team knows from past experiments that TV ROAS is roughly 2.0, you can encode that as a prior. The model updates this belief with the data. Without priors, the model might produce implausible estimates simply because of multicollinearity.</li>
+<li><strong>Priors encode domain knowledge.</strong> If your team knows from past experiments that TV ROAS is roughly 2.0, you can encode that as a prior. The model updates this belief with the data. Without priors, the model might produce implausible estimates simply because of multicollinearity. The other side of that convenience is worth stating once: for a channel the data cannot identify, the number the model returns is the number you put in the prior. The demo has one, and <a href="sec6.3-incrementality-experiments.html">Section 6.3</a> goes and measures it.</li>
 <li><strong>Credible intervals, not point estimates.</strong> Instead of “TV ROAS = 2.3,” you get “TV ROAS: median 2.3, 90% CI [1.1, 3.8].” A wide interval means you should be cautious about large budget shifts based on that estimate.</li>
-<li><strong>Natural integration with experiments.</strong> When you run a geo-lift experiment and estimate a channel’s incremental effect, you can feed that directly into the MMM as an informative prior. This tightens the posterior and improves identifiability, a workflow we develop in detail in <a href="sec6.3-mmm-calibration.html">Section 6.3</a>.</li>
+<li><strong>Natural integration with experiments.</strong> When you run a geo-lift experiment and estimate a channel’s incremental effect, you can feed that evidence into the MMM as an informative prior. This tightens the posterior and improves identifiability, a workflow we develop in detail in <a href="sec6.4-mmm-calibration.html">Section 6.4</a>.</li>
 </ol>
 <p>That’s why tools like Meridian and PyMC-Marketing use Bayesian inference under the hood.</p>
 <div class="callout callout-style-default callout-tip callout-titled">
@@ -834,8 +832,8 @@ Figure&nbsp;9: Example MMM dataset: date, sales, spend by channel, controls.
 </section>
 <section id="a-walkthrough-with-meridian" class="level2">
 <h2 class="anchored" data-anchor-id="a-walkthrough-with-meridian">A Walkthrough with Meridian</h2>
-<p><strong>Companion notebook:</strong> <code>sec6.2_6.3_mmm_meridian.ipynb</code> demonstrates a complete MMM workflow with Google’s Meridian library.<br>
-<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part6-media-optimization/sec6.2_6.3_mmm_meridian.ipynb">View on GitHub</a></p>
+<p><strong>Companion notebook:</strong> <code>sec6.2_6.4_mmm_meridian.ipynb</code> demonstrates a complete MMM workflow with Google’s Meridian library.<br>
+<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part6-media-optimization/sec6.2_6.4_mmm_meridian.ipynb">View on GitHub</a></p>
 <p><strong>Data loading and preparation.</strong> The demo dataset contains 157 weeks of sales data with 5 media channels (TV/CTV, OOH, Google Search, Meta, TikTok) and holiday/seasonality controls. Meridian uses a <code>DataFrameInputDataBuilder</code> to construct its input data from a pandas DataFrame. Scaling is handled internally; no manual normalization is needed. The important detail is that Meridian applies saturation to <code>media_cols</code> (exposure volume such as impressions or clicks), while <code>media_spend_cols</code> are used as the cost basis for ROAS.</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>channels <span class="op">=</span> [<span class="st">"TV/CTV"</span>, <span class="st">"OOH"</span>, <span class="st">"Google Search"</span>, <span class="st">"Meta"</span>, <span class="st">"TikTok"</span>]</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>media_cols <span class="op">=</span> [</span>
@@ -877,31 +875,32 @@ Figure&nbsp;9: Example MMM dataset: date, sales, spend by channel, controls.
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Production runs typically use n_chains=10, n_keep=2000 (≈ 5× compute).</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p><strong>Diagnostics.</strong> Meridian’s <code>ModelReviewer</code> runs automated quality checks (convergence, baseline validation, goodness of fit, and prior-posterior shift) and reports a pass/review/fail status.</p>
-<div id="fig-model-summary" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored">
+<div id="fig-model-summary" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="The channel summary compares spend, mean return on investment, uncertainty intervals, and estimated incremental outcomes across media channels.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-model-summary-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part6/sec6.2/model_summary.png" class="fig-lg img-fluid figure-img">
+<img src="../images/part6/sec6.2/model_summary.png" class="fig-lg img-fluid figure-img" alt="The channel summary compares spend, mean return on investment, uncertainty intervals, and estimated incremental outcomes across media channels.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-model-summary-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Figure&nbsp;10: Meridian model summary by channel.
 </figcaption>
 </figure>
 </div>
-<p><strong>Model fit.</strong> With a random 25% week-level holdout, the demo recovers in-sample R² ≈ 0.95 and out-of-sample R² ≈ 0.94. A tight in/out gap is expected here: synthetic data plus a random (interpolation) holdout is close to a best case. On production data with real noise, broken-trend periods, and lumpy promotional activity, out-of-sample R² in the 0.6 to 0.7 range is typical and acceptable. Trust the direction of the media estimates, not just the headline fit.</p>
-<div id="fig-in-sample-fit" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored">
+<p><strong>Model fit.</strong> With a random 25% week-level holdout, the demo recovers in-sample R² ≈ 0.97 and out-of-sample R² ≈ 0.97. A tight in/out gap is expected here: synthetic data plus a random (interpolation) holdout is close to a best case. On production data with real noise, broken-trend periods, and lumpy promotional activity, out-of-sample R² in the 0.6 to 0.7 range is typical and acceptable. Trust the direction of the media estimates, not just the headline fit.</p>
+<p>Why a random holdout, when <a href="../part5/sec5.3-sales-forecasting.html#sec-rolling-backtest">Section 5.3</a> rejects random splits outright? Because the two are scoring different things. A forecast has to extrapolate beyond its training window, so it must be evaluated from a fixed origin forward. An MMM apportions credit for sales that have already happened, inside a period it has observed. A trailing-block holdout would ask it to extrapolate trend and seasonality past that period, pushing out-of-sample R² down for reasons that have nothing to do with media measurement. Scattering the holdout keeps the question the useful one for this model: whether the fitted structure holds on weeks the likelihood never saw. Read the number as an interpolation diagnostic, not as evidence that the model can predict next quarter.</p>
+<div id="fig-in-sample-fit" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Predicted sales closely follow the broad trend in observed sales during training, while missing some short-term peaks and dips.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-in-sample-fit-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part6/sec6.2/in_sample_fit.png" class="fig-lg img-fluid figure-img">
+<img src="../images/part6/sec6.2/in_sample_fit.png" class="fig-lg img-fluid figure-img" alt="Predicted sales closely follow the broad trend in observed sales during training, while missing some short-term peaks and dips.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-in-sample-fit-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Figure&nbsp;11: In-sample fit: predicted vs.&nbsp;actual sales.
 </figcaption>
 </figure>
 </div>
-<div id="fig-out-of-sample-fit" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored">
+<div id="fig-out-of-sample-fit" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="On held-out weeks, predicted sales track the overall observed pattern but smooth over several large week-to-week deviations.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-out-of-sample-fit-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part6/sec6.2/out_of_sample_fit.png" class="fig-lg img-fluid figure-img">
+<img src="../images/part6/sec6.2/out_of_sample_fit.png" class="fig-lg img-fluid figure-img" alt="On held-out weeks, predicted sales track the overall observed pattern but smooth over several large week-to-week deviations.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-out-of-sample-fit-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Figure&nbsp;12: Out-of-sample fit: predicted vs.&nbsp;actual sales.
@@ -919,10 +918,10 @@ Figure&nbsp;13: ROAS estimates with 90% credible intervals by channel.
 </figcaption>
 </figure>
 </div>
-<div id="fig-attribution-over-time" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored">
+<div id="fig-attribution-over-time" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Estimated sales are separated into a large baseline component and smaller time-varying contributions from five media channels.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-attribution-over-time-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part6/sec6.2/attribution_over_time.png" class="fig-lg img-fluid figure-img">
+<img src="../images/part6/sec6.2/attribution_over_time.png" class="fig-lg img-fluid figure-img" alt="Estimated sales are separated into a large baseline component and smaller time-varying contributions from five media channels.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-attribution-over-time-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Figure&nbsp;14: Channel contributions and baseline over time.
@@ -936,58 +935,68 @@ Figure&nbsp;14: Channel contributions and baseline over time.
 <p>The model’s three purposes (measure, simulate, optimize) converge here. Once the response curves are fitted, the optimizer searches for the allocation that maximizes predicted KPI under a fixed budget constraint:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>budget_optimizer <span class="op">=</span> optimizer.BudgetOptimizer(mmm)</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>optimization_results <span class="op">=</span> budget_optimizer.optimize()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>The intuition is straightforward. If one channel is already saturated and another is still on the steep part of its response curve, shifting dollars from the saturated channel to the unsaturated one increases total predicted sales, even if the saturated channel’s average ROAS is higher.</p>
-<div id="fig-budget-optimization" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Pre- vs. post-optimization budget by channel (top) and predicted sales (bottom); spend shifts to unsaturated channels.">
+<p>This is the same saturation logic from <a href="#fig-saturation-reallocation" class="quarto-xref">Figure&nbsp;<span>5</span></a>, now applied to the full media mix instead of two channels: the optimizer shifts budget toward the channels where the next dollar still does the most work.</p>
+<div id="fig-budget-optimization" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Pre- vs. post-optimization budget by channel; spend shifts toward unsaturated channels while total budget is held fixed.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-budget-optimization-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part6/sec6.2/budget_optimization.png" class="fig-lg img-fluid figure-img" alt="Pre- vs. post-optimization budget by channel (top) and predicted sales (bottom); spend shifts to unsaturated channels.">
+<img src="../images/part6/sec6.2/budget_optimization.png" class="fig-lg img-fluid figure-img" alt="Pre- vs. post-optimization budget by channel; spend shifts toward unsaturated channels while total budget is held fixed.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-budget-optimization-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;15: Pre- vs.&nbsp;post-optimization budget and sales.
+Figure&nbsp;15: Pre- vs.&nbsp;post-optimization budget by channel.
 </figcaption>
 </figure>
 </div>
 <p>The optimizer ships the same reporting convenience: <code>optimization_results.output_optimization_summary(...)</code> writes a two-page HTML report of the recommended reallocation (<a href="https://marketing-science-in-python.com/notebooks/part6-media-optimization/optimization_output.html">optimization_output.html</a>).</p>
-<p>In the demo, the optimizer reallocates spend across the five modeled channels (TV/CTV, OOH, Google Search, Meta, and TikTok), moving budget away from channels with flatter marginal response curves toward channels with more remaining headroom. The total budget stays the same; only the mix changes. Gains of 5–10% in media-driven (incremental) sales from reallocation alone are common when teams first implement MMM; this demo shows about +7%, which works out to roughly +1% of total sales.</p>
-<p>Use the optimizer’s output as a starting point for planning, not as a final media plan. The model does not account for real-world constraints like contracts, minimum spend levels, or operational lead times. Those need to be layered on separately. Since the response curves are built from observational data, the next step is to validate them with experimental evidence. <a href="sec6.3-mmm-calibration.html">Section 6.3</a> covers that process.</p>
+<p>In the demo, the optimizer reallocates spend across the five modeled channels (TV/CTV, OOH, Google Search, Meta, and TikTok), moving budget away from channels with flatter marginal response curves toward channels with more remaining headroom. The total budget stays the same; only the mix changes. Gains of 5–10% in media-driven (incremental) sales from reallocation alone are common when teams first implement MMM; this demo shows about +4%, which works out to roughly +1.4% of total sales.</p>
+<p>One more rule sits between the optimizer and the plan. The optimizer moves budget on posterior means; the plan should move on what the model actually knows. So the notebook applies a guardrail on the quantity the optimizer uses, marginal ROAS: a channel whose 90% interval is wider than 0.8 times its estimate is held at current spend, however large the recommended shift. A wide interval is the model saying it has not identified that channel, and the answer to that is evidence, not a bigger bet. This is an illustrative governance rule, not a universal statistical cutoff. In the demo it clears 74% of the recommended move and holds one channel.</p>
+<p>Use the optimizer’s output as a starting point for planning, not as a final media plan. The model does not account for real-world constraints like contracts, minimum spend levels, or operational lead times. Those need to be layered on separately. And in this demo it produces one recommendation it cannot defend:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Decision to validate</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Channel</td>
+<td>Google Search</td>
+</tr>
+<tr class="even">
+<td>Optimizer</td>
+<td>−30% (−$38.1M), pinned at the constraint floor</td>
+</tr>
+<tr class="odd">
+<td>Guardrail</td>
+<td>HOLD: marginal ROAS interval [0.31, 8.28], relative half-width 1.41</td>
+</tr>
+<tr class="even">
+<td>Pre-test prediction</td>
+<td>A 30% cut gives up $2.54 of revenue per dollar removed over 8 weeks, 90% credible interval [0.28, 7.21]</td>
+</tr>
+<tr class="odd">
+<td>Proposed test</td>
+<td>−30% Search in 8 matched geo pairs, 8 weeks</td>
+</tr>
+<tr class="even">
+<td>Decision rule</td>
+<td>Cut if the 95% CI upper bound is below 2.50 (break-even at 40% margin)</td>
+</tr>
+</tbody>
+</table>
+<p>The prediction is recorded now, before any result exists, so the experiment can grade the model as well as the channel. Since the response curves are built from observational data, the next step is to validate this one. <a href="sec6.3-incrementality-experiments.html">Section 6.3</a> designs and analyzes that experiment; <a href="sec6.4-mmm-calibration.html">Section 6.4</a> feeds the result back into the model.</p>
 </section>
 <section id="key-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="key-takeaways">Key Takeaways</h2>
 <ul>
 <li>MMM estimates channel contribution using aggregate data. It does not need user-level tracking, so it is resilient to cookie deprecation, App Tracking Transparency, and walled-garden limits.</li>
 <li>Hill saturation and geometric adstock are the two main transforms. Each channel gets its own set of parameters.</li>
-<li><strong>Optimize based on marginal ROAS, not average ROAS.</strong> A channel with high average ROAS might already be deep into its saturation curve. Shifting dollars to a channel that is still on the steep part of its curve can increase total return, even if its average ROAS is lower.</li>
+<li><strong>Optimize on marginal ROAS, not average ROAS.</strong> A high average-ROAS channel can already be saturated; the next dollar belongs wherever the curve is still steep.</li>
 <li>Data requirements are specific: weekly data, at least 2–3 years of history, and real spend variation for each channel.</li>
 <li>Bayesian estimation is now the default. Priors let you encode domain knowledge, and the posterior gives credible intervals instead of just point estimates.</li>
 </ul>
 
 
-<div id="refs" class="references csl-bib-body hanging-indent" role="list" style="display: none">
-<div id="ref-chan2017challenges" class="csl-entry" role="listitem">
-Chan, David, and Matthew Perry. 2017. <em>Challenges and Opportunities in Media Mix Modeling</em>. Google Inc. <a href="https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/45998.pdf">https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/45998.pdf</a>.
-</div>
-<div id="ref-fader2013gammagamma" class="csl-entry" role="listitem">
-Fader, Peter S, and Bruce GS Hardie. 2013. <em>The Gamma-Gamma Model of Monetary Value</em>. Wharton School, University of Pennsylvania. <a href="https://www.brucehardie.com/notes/025/gamma_gamma.pdf">https://www.brucehardie.com/notes/025/gamma_gamma.pdf</a>.
-</div>
-<div id="ref-fader2005counting" class="csl-entry" role="listitem">
-Fader, Peter S, Bruce GS Hardie, and Ka Lok Lee. 2005. <span>“Counting Your Customers the Easy Way: An Alternative to the Pareto/NBD Model.”</span> <em>Marketing Science</em> 24 (2): 275–84.
-</div>
-<div id="ref-jin2017bayesian" class="csl-entry" role="listitem">
-Jin, Yuxue, Yueqing Wang, Yunting Sun, David Chan, and Jim Koehler. 2017. <em>Bayesian Methods for Media Mix Modeling with Carryover and Shape Effects</em>.
-</div>
-<div id="ref-knaflic2015storytelling" class="csl-entry" role="listitem">
-Knaflic, Cole Nussbaumer. 2015. <em>Storytelling with Data: A Data Visualization Guide for Business Professionals</em>. Wiley.
-</div>
-<div id="ref-provost2013data" class="csl-entry" role="listitem">
-Provost, Foster, and Tom Fawcett. 2013. <em>Data Science for Business</em>. O’Reilly Media.
-</div>
-<div id="ref-vaver2011measuring" class="csl-entry" role="listitem">
-Vaver, Jon, and Jim Koehler. 2011. <em>Measuring Ad Effectiveness Using Geo Experiments</em>. Google Inc. <a href="https://research.google/pubs/pub38355/">https://research.google/pubs/pub38355/</a>.
-</div>
-<div id="ref-vizard2019pg" class="csl-entry" role="listitem">
-Vizard, Sarah. 2019. <span>“<span>P&amp;G</span> Shifts from Targeting <span>‘Generic Demographics’</span> to <span>‘Smart Audiences’</span>.”</span> <em>Marketing Week</em>, July. <a href="https://www.marketingweek.com/pg-targeting-generic-demographics-to-smart-audiences/">https://www.marketingweek.com/pg-targeting-generic-demographics-to-smart-audiences/</a>.
-</div>
-</div>
 </section>
 
 </main> <!-- /main -->
@@ -1077,7 +1086,7 @@ Vizard, Sarah. 2019. <span>“<span>P&amp;G</span> Shifts from Targeting <span>�
     }
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
       var mailtoRegex = new RegExp(/^mailto:/);
-        var filterRegex = new RegExp("https:\/\/marketing-science-in-python\.com");
+        var filterRegex = new RegExp("https:\/\/marketing-science-in-python\.com\/");
       var isInternal = (href) => {
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }
@@ -1411,8 +1420,8 @@ Vizard, Sarah. 2019. <span>“<span>P&amp;G</span> Shifts from Targeting <span>�
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="../part6/sec6.3-mmm-calibration.html" class="pagination-link" aria-label="6.3 Calibrating MMM with Experiments">
-        <span class="nav-page-text"><span class="chapter-title">6.3 Calibrating MMM with Experiments</span></span> <i class="bi bi-arrow-right-short"></i>
+      <a href="../part6/sec6.3-incrementality-experiments.html" class="pagination-link" aria-label="6.3 Incrementality Experiments">
+        <span class="nav-page-text"><span class="chapter-title">6.3 Incrementality Experiments</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>

@@ -2,21 +2,24 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.38">
+<meta name="generator" content="quarto-1.10.18">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="A practitioner’s guide to causal inference, Marketing Mix Modeling, pricing, forecasting, customer analytics, and media measurement with runnable Python notebooks.">
+<meta name="description" content="Statistical power, sample size, and setting the stopping rule before launch, plus CUPED for precision and what to do when a test is inconclusive.">
 
-<title>3.2 A/B Test Design – Marketing Science in Python</title>
+<title>A/B Test Design in Python – Marketing Science in Python</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
 */
-code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
-div.columns{display: flex; gap: min(4vw, 1.5em);}
-div.column{flex: auto; overflow-x: auto;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
 div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
 ul.task-list{list-style: none;}
 ul.task-list li input[type="checkbox"] {
@@ -97,14 +100,14 @@ div.csl-indent {
 <script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-7f0fd692a0f1f319cb631db8b9de24f6.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../site_libs/bootstrap/bootstrap-dark-bbd0ed6a99b6ad49326352f64f59f7ff.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../site_libs/bootstrap/bootstrap-7f0fd692a0f1f319cb631db8b9de24f6.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-3925b0358f127ec93ce16d1653ff4e4f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-70cf7cdb16ba3fd29963dee6648d0861.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-3925b0358f127ec93ce16d1653ff4e4f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
@@ -143,7 +146,7 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 </script>
 
   <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
-  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
 
 <script type="text/javascript">
 const typesetMath = (el) => {
@@ -173,16 +176,17 @@ window.Quarto = {
 </script>
 
 <link rel="stylesheet" href="../custom.css">
-<meta property="og:title" content="Marketing Science in Python">
-<meta property="og:description" content="A practitioner’s guide to causal inference, Marketing Mix Modeling, pricing, forecasting, customer analytics, and media measurement with runnable Python notebooks.">
-<meta property="og:image" content="https://marketing-science-in-python.com/part3/images/common/book_cover.png">
+<meta property="og:title" content="A/B Test Design in Python">
+<meta property="og:description" content="Statistical power, sample size, and setting the stopping rule before launch, plus CUPED for precision and what to do when a test is inconclusive.">
+<meta property="og:image" content="https://marketing-science-in-python.com/images/common/book_cover.png">
 <meta property="og:site_name" content="Marketing Science in Python">
 <meta property="og:image:alt" content="Marketing Science in Python book cover">
-<meta name="twitter:title" content="Marketing Science in Python">
-<meta name="twitter:description" content="A practitioner’s guide to causal inference, Marketing Mix Modeling, pricing, forecasting, customer analytics, and media measurement with runnable Python notebooks.">
-<meta name="twitter:image" content="https://marketing-science-in-python.com/part3/images/common/book_cover.png">
+<meta name="twitter:title" content="A/B Test Design in Python">
+<meta name="twitter:description" content="Statistical power, sample size, and setting the stopping rule before launch, plus CUPED for precision and what to do when a test is inconclusive.">
+<meta name="twitter:image" content="https://marketing-science-in-python.com/images/common/book_cover.png">
 <meta name="twitter:image:alt" content="Marketing Science in Python book cover">
 <meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://marketing-science-in-python.com/part3/sec3.2-ab-testing.html">
 </head>
 
 <body class="nav-sidebar floating quarto-light"><script id="quarto-html-before-body" type="application/javascript">
@@ -481,12 +485,17 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part3/sec3.4-meta-learners.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.4 Meta Learners for Treatment Effects</span></a>
+  <a href="../part3/sec3.4-causal-impact.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.4 Causal Impact with Time Series</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part3/sec3.5-uplift-modeling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.5 Uplift Modeling for Targeting</span></a>
+  <a href="../part3/sec3.5-meta-learners.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.5 Meta Learners for Treatment Effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.6-uplift-modeling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.6 Uplift Modeling for Targeting</span></a>
   </div>
 </li>
       </ul>
@@ -533,7 +542,7 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part5/sec5.3-demand-forecasting.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.3 Demand Forecasting</span></a>
+  <a href="../part5/sec5.3-sales-forecasting.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.3 Sales Forecasting and Scenario Planning</span></a>
   </div>
 </li>
       </ul>
@@ -559,22 +568,21 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part6/sec6.3-mmm-calibration.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.3 Calibrating MMM with Experiments</span></a>
+  <a href="../part6/sec6.3-incrementality-experiments.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.3 Incrementality Experiments</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part6/sec6.4-when-tools-disagree.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.4 When Attribution, MMM, and Experiments Disagree</span></a>
+  <a href="../part6/sec6.4-mmm-calibration.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.4 Calibrating MMM with Experiments</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.5-when-tools-disagree.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.5 Making Decisions When Measurement Tools Disagree</span></a>
   </div>
 </li>
       </ul>
   </li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../closing.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Closing Thoughts</span></a>
-  </div>
-</li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../appendix/further-reading.html" class="sidebar-item-text sidebar-link">
@@ -585,6 +593,12 @@ window.Quarto = {
   <div class="sidebar-item-container"> 
   <a href="../appendix/notebooks.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Notebooks &amp; Code</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../marketing-analytics-in-python.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Marketing Analytics in Python</span></a>
   </div>
 </li>
     </ul>
@@ -712,7 +726,7 @@ Figure&nbsp;2: Sample-size sensitivity to the MDE.
 </figcaption>
 </figure>
 </div>
-<p>The curve makes the main lesson visible: sample size does not grow linearly. Moving from a 1.0 percentage point lift to a 0.5 percentage point lift roughly quadruples the required sample. This is why small improvements on low-conversion metrics are expensive to measure.</p>
+<p>The curve makes the main lesson visible: sample size does not grow linearly but climbs steeply as the target lift shrinks. This is why small improvements on low-conversion metrics are expensive to measure.</p>
 </section>
 <section id="decide-before-you-launch" class="level2">
 <h2 class="anchored" data-anchor-id="decide-before-you-launch">Decide Before You Launch</h2>
@@ -767,8 +781,7 @@ Figure&nbsp;3: How CUPED removes pre-experiment variance.
 <p>Return to the checkout test. The right question isn’t “was the p-value below 0.05?” It’s “was the test precise enough to rule out an effect we’d care about?”</p>
 <p>Look at the confidence interval. The observed lift was +0.24 points, but the 95% interval runs from −0.36 to +0.84 points, wide enough to include both a small loss and a sizable win. That test is inconclusive: it hasn’t shown the redesign works, but it certainly hasn’t shown it doesn’t. Only when the interval is narrow and excludes any lift worth shipping can you reasonably set a treatment aside.</p>
 <p>A non-significant result, in other words, is not automatically a failed treatment. It may simply mean the test was too small, too noisy, or run during an unusual period.</p>
-<p>But what if you can’t randomize at all? Maybe the treatment is already live, or there are ethical reasons you can’t run an experiment. That’s when you turn to quasi-experimental methods.</p>
-<p><strong>Companion notebook:</strong> <code>sec3.2_ab_test_figures.ipynb</code> reproduces the sample-size, power, and CUPED figures from this chapter.<br>
+<p><strong>Companion notebook:</strong> <code>sec3.2_ab_test_figures.ipynb</code> reproduces the sample-size and power figures and runs the CUPED simulation from this chapter.<br>
 <a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.2_ab_test_figures.ipynb">View on GitHub</a></p>
 </section>
 <section id="key-takeaways" class="level2">
@@ -783,32 +796,8 @@ Figure&nbsp;3: How CUPED removes pre-experiment variance.
 
 
 <div id="refs" class="references csl-bib-body hanging-indent" role="list" style="display: none">
-<div id="ref-chan2017challenges" class="csl-entry" role="listitem">
-Chan, David, and Matthew Perry. 2017. <em>Challenges and Opportunities in Media Mix Modeling</em>. Google Inc. <a href="https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/45998.pdf">https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/45998.pdf</a>.
-</div>
 <div id="ref-deng2013cuped" class="csl-entry" role="listitem">
 Deng, Alex, Ya Xu, Ron Kohavi, and Toby Walker. 2013. <span>“Improving the Sensitivity of Online Controlled Experiments by Utilizing Pre-Experiment Data.”</span> <em>Proceedings of the Sixth ACM International Conference on Web Search and Data Mining (WSDM ’13)</em>, 123–32. <a href="https://doi.org/10.1145/2433396.2433413">https://doi.org/10.1145/2433396.2433413</a>.
-</div>
-<div id="ref-fader2013gammagamma" class="csl-entry" role="listitem">
-Fader, Peter S, and Bruce GS Hardie. 2013. <em>The Gamma-Gamma Model of Monetary Value</em>. Wharton School, University of Pennsylvania. <a href="https://www.brucehardie.com/notes/025/gamma_gamma.pdf">https://www.brucehardie.com/notes/025/gamma_gamma.pdf</a>.
-</div>
-<div id="ref-fader2005counting" class="csl-entry" role="listitem">
-Fader, Peter S, Bruce GS Hardie, and Ka Lok Lee. 2005. <span>“Counting Your Customers the Easy Way: An Alternative to the Pareto/NBD Model.”</span> <em>Marketing Science</em> 24 (2): 275–84.
-</div>
-<div id="ref-jin2017bayesian" class="csl-entry" role="listitem">
-Jin, Yuxue, Yueqing Wang, Yunting Sun, David Chan, and Jim Koehler. 2017. <em>Bayesian Methods for Media Mix Modeling with Carryover and Shape Effects</em>.
-</div>
-<div id="ref-knaflic2015storytelling" class="csl-entry" role="listitem">
-Knaflic, Cole Nussbaumer. 2015. <em>Storytelling with Data: A Data Visualization Guide for Business Professionals</em>. Wiley.
-</div>
-<div id="ref-provost2013data" class="csl-entry" role="listitem">
-Provost, Foster, and Tom Fawcett. 2013. <em>Data Science for Business</em>. O’Reilly Media.
-</div>
-<div id="ref-vaver2011measuring" class="csl-entry" role="listitem">
-Vaver, Jon, and Jim Koehler. 2011. <em>Measuring Ad Effectiveness Using Geo Experiments</em>. Google Inc. <a href="https://research.google/pubs/pub38355/">https://research.google/pubs/pub38355/</a>.
-</div>
-<div id="ref-vizard2019pg" class="csl-entry" role="listitem">
-Vizard, Sarah. 2019. <span>“<span>P&amp;G</span> Shifts from Targeting <span>‘Generic Demographics’</span> to <span>‘Smart Audiences’</span>.”</span> <em>Marketing Week</em>, July. <a href="https://www.marketingweek.com/pg-targeting-generic-demographics-to-smart-audiences/">https://www.marketingweek.com/pg-targeting-generic-demographics-to-smart-audiences/</a>.
 </div>
 <div id="ref-xie2016netflix" class="csl-entry" role="listitem">
 Xie, Huizhi, and Juliette Aurisset. 2016. <span>“Improving the Sensitivity of Online Controlled Experiments: Case Studies at Netflix.”</span> <em>Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining (KDD ’16)</em>, 645–54. <a href="https://doi.org/10.1145/2939672.2939733">https://doi.org/10.1145/2939672.2939733</a>.
@@ -903,7 +892,7 @@ Xie, Huizhi, and Juliette Aurisset. 2016. <span>“Improving the Sensitivity of 
     }
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
       var mailtoRegex = new RegExp(/^mailto:/);
-        var filterRegex = new RegExp("https:\/\/marketing-science-in-python\.com");
+        var filterRegex = new RegExp("https:\/\/marketing-science-in-python\.com\/");
       var isInternal = (href) => {
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }

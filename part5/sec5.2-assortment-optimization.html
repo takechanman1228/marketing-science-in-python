@@ -2,21 +2,24 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.38">
+<meta name="generator" content="quarto-1.10.18">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="A practitioner’s guide to causal inference, Marketing Mix Modeling, pricing, forecasting, customer analytics, and media measurement with runnable Python notebooks.">
+<meta name="description" content="Decide which SKUs to cut before a category review: revenue ABC analysis, substitution risk, and validating the calls before scaling them chain wide.">
 
-<title>5.2 Product Assortment Optimization – Marketing Science in Python</title>
+<title>Assortment Optimization in Python – Marketing Science in Python</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
 */
-code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
-div.columns{display: flex; gap: min(4vw, 1.5em);}
-div.column{flex: auto; overflow-x: auto;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
 div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
 ul.task-list{list-style: none;}
 ul.task-list li input[type="checkbox"] {
@@ -59,26 +62,7 @@ div.sourceCode
 @media screen {
 pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
-/* CSS for citations */
-div.csl-bib-body { }
-div.csl-entry {
-  clear: both;
-}
-.hanging-indent div.csl-entry {
-  margin-left:2em;
-  text-indent:-2em;
-}
-div.csl-left-margin {
-  min-width:2em;
-  float:left;
-}
-div.csl-right-inline {
-  margin-left:2em;
-  padding-left:1em;
-}
-div.csl-indent {
-  margin-left: 2em;
-}</style>
+</style>
 
 
 <script src="../site_libs/quarto-nav/quarto-nav.js"></script>
@@ -88,7 +72,7 @@ div.csl-indent {
 <script src="../site_libs/quarto-search/fuse.min.js"></script>
 <script src="../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../">
-<link href="../part5/sec5.3-demand-forecasting.html" rel="next">
+<link href="../part5/sec5.3-sales-forecasting.html" rel="next">
 <link href="../part5/sec5.1-price-elasticity.html" rel="prev">
 <link href="../assets/favicon.png" rel="icon" type="image/png">
 <script src="../site_libs/quarto-html/quarto.js" type="module"></script>
@@ -97,14 +81,14 @@ div.csl-indent {
 <script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-7f0fd692a0f1f319cb631db8b9de24f6.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../site_libs/bootstrap/bootstrap-dark-bbd0ed6a99b6ad49326352f64f59f7ff.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../site_libs/bootstrap/bootstrap-7f0fd692a0f1f319cb631db8b9de24f6.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-3925b0358f127ec93ce16d1653ff4e4f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-70cf7cdb16ba3fd29963dee6648d0861.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-3925b0358f127ec93ce16d1653ff4e4f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
@@ -143,7 +127,7 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 </script>
 
   <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
-  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
 
 <script type="text/javascript">
 const typesetMath = (el) => {
@@ -173,16 +157,17 @@ window.Quarto = {
 </script>
 
 <link rel="stylesheet" href="../custom.css">
-<meta property="og:title" content="Marketing Science in Python">
-<meta property="og:description" content="A practitioner’s guide to causal inference, Marketing Mix Modeling, pricing, forecasting, customer analytics, and media measurement with runnable Python notebooks.">
-<meta property="og:image" content="https://marketing-science-in-python.com/part5/images/common/book_cover.png">
+<meta property="og:title" content="Assortment Optimization in Python">
+<meta property="og:description" content="Decide which SKUs to cut before a category review: revenue ABC analysis, substitution risk, and validating the calls before scaling them chain wide.">
+<meta property="og:image" content="https://marketing-science-in-python.com/images/common/book_cover.png">
 <meta property="og:site_name" content="Marketing Science in Python">
 <meta property="og:image:alt" content="Marketing Science in Python book cover">
-<meta name="twitter:title" content="Marketing Science in Python">
-<meta name="twitter:description" content="A practitioner’s guide to causal inference, Marketing Mix Modeling, pricing, forecasting, customer analytics, and media measurement with runnable Python notebooks.">
-<meta name="twitter:image" content="https://marketing-science-in-python.com/part5/images/common/book_cover.png">
+<meta name="twitter:title" content="Assortment Optimization in Python">
+<meta name="twitter:description" content="Decide which SKUs to cut before a category review: revenue ABC analysis, substitution risk, and validating the calls before scaling them chain wide.">
+<meta name="twitter:image" content="https://marketing-science-in-python.com/images/common/book_cover.png">
 <meta name="twitter:image:alt" content="Marketing Science in Python book cover">
 <meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://marketing-science-in-python.com/part5/sec5.2-assortment-optimization.html">
 </head>
 
 <body class="nav-sidebar floating quarto-light"><script id="quarto-html-before-body" type="application/javascript">
@@ -481,12 +466,17 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part3/sec3.4-meta-learners.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.4 Meta Learners for Treatment Effects</span></a>
+  <a href="../part3/sec3.4-causal-impact.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.4 Causal Impact with Time Series</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part3/sec3.5-uplift-modeling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.5 Uplift Modeling for Targeting</span></a>
+  <a href="../part3/sec3.5-meta-learners.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.5 Meta Learners for Treatment Effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.6-uplift-modeling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.6 Uplift Modeling for Targeting</span></a>
   </div>
 </li>
       </ul>
@@ -533,7 +523,7 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part5/sec5.3-demand-forecasting.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.3 Demand Forecasting</span></a>
+  <a href="../part5/sec5.3-sales-forecasting.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.3 Sales Forecasting and Scenario Planning</span></a>
   </div>
 </li>
       </ul>
@@ -559,22 +549,21 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part6/sec6.3-mmm-calibration.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.3 Calibrating MMM with Experiments</span></a>
+  <a href="../part6/sec6.3-incrementality-experiments.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.3 Incrementality Experiments</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part6/sec6.4-when-tools-disagree.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.4 When Attribution, MMM, and Experiments Disagree</span></a>
+  <a href="../part6/sec6.4-mmm-calibration.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.4 Calibrating MMM with Experiments</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.5-when-tools-disagree.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.5 Making Decisions When Measurement Tools Disagree</span></a>
   </div>
 </li>
       </ul>
   </li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../closing.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Closing Thoughts</span></a>
-  </div>
-</li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../appendix/further-reading.html" class="sidebar-item-text sidebar-link">
@@ -587,6 +576,12 @@ window.Quarto = {
  <span class="menu-text">Notebooks &amp; Code</span></a>
   </div>
 </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../marketing-analytics-in-python.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Marketing Analytics in Python</span></a>
+  </div>
+</li>
     </ul>
     </div>
 </nav>
@@ -597,7 +592,7 @@ window.Quarto = {
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#sec-more-skus-fallacy" id="toc-sec-more-skus-fallacy" class="nav-link active" data-scroll-target="#sec-more-skus-fallacy">The “More SKUs, More Revenue” Fallacy</a></li>
+  <li><a href="#sec-more-skus-fallacy" id="toc-sec-more-skus-fallacy" class="nav-link active" data-scroll-target="#sec-more-skus-fallacy">Why Cutting Is Hard</a></li>
   <li><a href="#sec-identifying-candidates" id="toc-sec-identifying-candidates" class="nav-link" data-scroll-target="#sec-identifying-candidates">A Workflow for Assortment Optimization</a>
   <ul class="collapse">
   <li><a href="#step-1-screening-skus-by-revenue" id="toc-step-1-screening-skus-by-revenue" class="nav-link" data-scroll-target="#step-1-screening-skus-by-revenue">Step 1: Screening SKUs by Revenue</a></li>
@@ -632,7 +627,8 @@ window.Quarto = {
 </header>
 
 
-<p>Shelf space in physical retail is always at a premium. An underperforming product does more than just take up room: it ties up inventory, complicates the supply chain, and makes the shelf harder for customers to shop. The real challenge is figuring out which products to keep, which to cut, and how to validate those decisions before scaling them across the business. Here, I’ll walk through a practical workflow for making those calls and testing them in a way that reduces risk.</p>
+<p>The category review is on the calendar: the planogram team wants shelf space back, and the category manager has to name the SKUs to give up. An underperforming product does more than take up room: it ties up inventory, complicates the supply chain, and makes the shelf harder to shop. The decision is which products to cut, which to keep, and how to validate those calls before scaling them across the chain.</p>
+<p>This chapter runs that decision on two years of grocery transactions: screen the long tail by revenue, check whether the demand would stay in the store, and hand back a shortlist ranked by how safe each SKU is to test.</p>
 <p><strong>Companion notebook:</strong> <code>sec5.2_assortment_optimization.ipynb</code> reproduces the revenue ABC screen, substitution check, and action assignment on the Dunnhumby Complete Journey grocery dataset.<br>
 <a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part5-commercial-analytics/sec5.2_assortment_optimization.ipynb">View on GitHub</a></p>
 <div class="callout callout-style-default callout-note callout-titled">
@@ -645,13 +641,12 @@ window.Quarto = {
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>This chapter analyses <strong>revenue</strong> because the public Dunnhumby Complete Journey dataset does not include product cost or COGS. The same workflow runs on <strong>gross margin</strong> or <strong>contribution margin</strong> when production teams have cost data; only the business interpretation changes, from <em>revenue-risk management</em> to <em>margin optimisation</em>.</p>
+<p>This chapter analyzes <strong>revenue</strong> because the public Dunnhumby Complete Journey dataset does not include product cost or COGS. The same workflow runs on <strong>gross margin</strong> or <strong>contribution margin</strong> when production teams have cost data; only the business interpretation changes, from <em>revenue-risk management</em> to <em>margin optimization</em>.</p>
 </div>
 </div>
 <section id="sec-more-skus-fallacy" class="level2">
-<h2 class="anchored" data-anchor-id="sec-more-skus-fallacy">The “More SKUs, More Revenue” Fallacy</h2>
-<p>A typical grocery store stocks around 50,000 SKUs. Trader Joe’s, by contrast, carries only about 4,000, roughly one-tenth as many, but generates nearly twice the revenue per square foot as Whole Foods. While Trader Joe’s also relies on private label and smaller store formats, a leaner assortment is a key factor. Fewer products allow for tighter inventory, simpler supply chains, and less decision fatigue for customers. Psychologist Barry Schwartz calls this the <strong>paradox of choice</strong>: past a certain point, more options don’t help customers; they overwhelm them, delay purchases, and reduce satisfaction.</p>
-<p>Most retailers face the opposite challenge. There are good reasons to add SKUs: buyers want broad coverage and brands keep launching new variants. The problem is that the cost of adding another SKU is diffuse and often overlooked, while removing a product is a visible and sometimes unpopular move. Assortment optimization is ultimately a decision process. The main role of data here is to help teams move past organizational inertia and make more informed choices.</p>
+<h2 class="anchored" data-anchor-id="sec-more-skus-fallacy">Why Cutting Is Hard</h2>
+<p>Assortments grow for good reasons: buyers want broad coverage and brands keep launching variants. A leaner shelf can also be easier to shop, though the choice-overload literature is mixed on how large that effect is (see Further Reading). The asymmetry is organizational: the cost of one more SKU is diffuse and easy to overlook, while removing a product is a visible and sometimes unpopular move. Assortment optimization is ultimately a decision process. The role of the data is to give the team a defensible reason to act.</p>
 </section>
 <section id="sec-identifying-candidates" class="level2">
 <h2 class="anchored" data-anchor-id="sec-identifying-candidates">A Workflow for Assortment Optimization</h2>
@@ -666,34 +661,22 @@ window.Quarto = {
 <p>Before deciding what to remove, we need to narrow the SKU universe down. A grocery store may carry thousands of products, but a small fraction drives most of the revenue, while the long-tail items each bring in very little. That long tail is where removal candidates come from.</p>
 <p>Retail teams often use a Pareto-style ranking called <strong>ABC analysis</strong>. Products are sorted by their contribution, usually sales value or margin, though sometimes by units, and then split into three tiers.</p>
 <ul>
-<li><strong>A items</strong> (top ~20%): the vital few. They drive roughly 80% of the chosen metric. Protect, monitor, and optimise these.</li>
+<li><strong>A items</strong> (top ~20%): the vital few. They drive roughly 80% of the chosen metric. Protect, monitor, and optimize these.</li>
 <li><strong>B items</strong> (next ~30%): the important middle. Steady contributors that need less attention.</li>
-<li><strong>C items</strong> (bottom ~50%): the long tail. Individually small, collectively noisy. Candidates for rationalisation.</li>
+<li><strong>C items</strong> (bottom ~50%): the long tail. Individually small, collectively noisy. Candidates for rationalization.</li>
 </ul>
 <p>C-rank products are where you start building your candidate pool. Not every C-rank item should be removed, but any product you consider cutting should come from this group.</p>
-<div class="callout callout-style-default callout-note callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Note</span>Implementation sketch: <code>revenue_abc</code>
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Rank SKUs by cumulative revenue share, cut into A/B/C tiers, and take the C-rank long tail as the candidate pool.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>ranked <span class="op">=</span> df.sort_values(<span class="st">"revenue"</span>, ascending<span class="op">=</span><span class="va">False</span>)[<span class="st">"revenue"</span>]</span>
+<p>In code, rank SKUs by cumulative revenue share, cut into A/B/C tiers, and take the C-rank long tail as the candidate pool:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>ranked <span class="op">=</span> sku_summary.sort_values(<span class="st">"revenue"</span>, ascending<span class="op">=</span><span class="va">False</span>)[<span class="st">"revenue"</span>]</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Classify on the cumulative share *before* each SKU, so the SKU that crosses</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># the 80% line still counts toward A (and a single dominant SKU stays A).</span></span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>cum_before <span class="op">=</span> (ranked.cumsum() <span class="op">/</span> ranked.<span class="bu">sum</span>()).shift(fill_value<span class="op">=</span><span class="dv">0</span>)</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>df[<span class="st">"abc_revenue"</span>] <span class="op">=</span> pd.cut(cum_before, bins<span class="op">=</span>[<span class="dv">0</span>, <span class="fl">0.80</span>, <span class="fl">0.95</span>, <span class="fl">1.0</span>],</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>                           labels<span class="op">=</span>[<span class="st">"A"</span>, <span class="st">"B"</span>, <span class="st">"C"</span>], right<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>sku_summary[<span class="st">"abc_revenue"</span>] <span class="op">=</span> pd.cut(cum_before, bins<span class="op">=</span>[<span class="dv">0</span>, <span class="fl">0.80</span>, <span class="fl">0.95</span>, <span class="fl">1.0</span>],</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>                                    labels<span class="op">=</span>[<span class="st">"A"</span>, <span class="st">"B"</span>, <span class="st">"C"</span>], right<span class="op">=</span><span class="va">False</span>)</span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Candidate pool = C-rank by revenue (the long tail)</span></span>
 <span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>candidates <span class="op">=</span> sku_summary[sku_summary[<span class="st">"abc_revenue"</span>] <span class="op">==</span> <span class="st">"C"</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>The full function, covering zero/negative-sales filtering and NaN-safe binning, is in the companion script.</p>
-</div>
-</div>
+<p>The full function, covering zero/negative-sales filtering and NaN-safe binning, is in the companion notebook.</p>
 <p><a href="#fig-revenue-pareto" class="quarto-xref">Figure&nbsp;<span>1</span></a> shows the revenue Pareto curve for about 39,000 Dunnhumby grocery SKUs (after dropping 38 with no sales). Revenue is highly concentrated: fewer than 20% of SKUs generate 80% of sales, while the C-rank pool (<code>abc_revenue == "C"</code>) contains 63% of SKUs but only 5% of revenue. This long tail forms the candidate pool. It is worth examining, not defending, based on volume alone.</p>
 <div id="fig-revenue-pareto" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Revenue Pareto curve for ~39,000 SKUs: fewer than 20% of SKUs drive 80% of revenue.">
 <figure class="quarto-float quarto-float-fig figure">
@@ -714,17 +697,7 @@ Figure&nbsp;1: Cumulative revenue share by SKU.
 <p><span class="math display">\[\text{Lift}(A, B) = \frac{P(A \cap B)}{P(A) \times P(B)}\]</span></p>
 <p>Lift &gt; 1 means two products tend to be bought together (complements); Lift &lt; 1 means they rarely are, which within a sub-category suggests they substitute for each other, and Lift = 0 (never in the same basket) is the strongest signal. The same-subcategory constraint matters: across categories, low co-occurrence just means the products serve different needs (cereal vs.&nbsp;pasta), not that they substitute.</p>
 <p>This is a proxy, not proof. Low co-occurrence can also reflect different shopping occasions or customer segments.</p>
-<div class="callout callout-style-default callout-note callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Note</span>Implementation sketch: <code>build_substitution_map</code>
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>For each C-rank candidate, scan its same-subcategory peers (restricted to A/B-revenue SKUs that are large enough to absorb redirected demand) and flag the ones with low Lift. Zero co-occurrence is the strongest substitution signal.</p>
+<p>For each C-rank candidate, the check scans its same-subcategory peers (restricted to A/B-revenue SKUs that are large enough to absorb redirected demand) and flags the ones with low Lift:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>co_occur <span class="op">=</span> <span class="bu">len</span>(cand_baskets <span class="op">&amp;</span> peer_baskets)</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> co_occur <span class="op">==</span> <span class="dv">0</span>:                       <span class="co"># never bought together → strongest signal</span></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    subs.append({<span class="st">"substitute"</span>: peer_id, <span class="st">"lift"</span>: <span class="fl">0.0</span>})</span>
@@ -732,76 +705,62 @@ Figure&nbsp;1: Cumulative revenue share by SKU.
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    lift <span class="op">=</span> (co_occur <span class="op">/</span> total_baskets) <span class="op">/</span> (p_cand <span class="op">*</span> p_peer)</span>
 <span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> lift <span class="op">&lt;</span> lift_threshold:           <span class="co"># low Lift within a sub-category → likely substitute</span></span>
 <span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>        subs.append({<span class="st">"substitute"</span>: peer_id, <span class="st">"lift"</span>: <span class="bu">round</span>(lift, <span class="dv">3</span>)})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>The full function, covering sub-category grouping, the A/B-revenue substitute pool (<code>high_rank_skus</code>), and minimum-basket guards, is in the companion script.</p>
-</div>
-</div>
+<p>The full function, covering sub-category grouping, the A/B-revenue substitute pool, and minimum-basket guards, is in the companion notebook.</p>
 <p>There are two optional reinforcements. Positive cross-price elasticity, when available, supports substitution. When basket data is sparse, such as for new products or small stores, attribute similarity, like brand, price tier, or use case, can be a practical fallback.</p>
 </section>
 <section id="the-output-a-scored-candidate-list" class="level3">
 <h3 class="anchored" data-anchor-id="the-output-a-scored-candidate-list">The output: a scored candidate list</h3>
-<p>Steps 1 and 2 produce a per-candidate table like this:</p>
+<p>The long tail is too big to score whole, so the notebook scores 150 C-rank SKUs: the 100 bought most often plus the C-rank SKUs in the same sub-categories, all with at least 30 baskets over the two years. A SKU bought a dozen times cannot carry a substitution signal either way. Steps 1 and 2 then assign one of three actions. <a href="#tbl-scored-candidates" class="quarto-xref">Table&nbsp;<span>1</span></a> shows one real candidate per action (sub-category labels cleaned up for reading):</p>
+<div id="tbl-scored-candidates" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-scored-candidates-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;1: One scored candidate per action, from the companion notebook.
+</figcaption>
+<div aria-describedby="tbl-scored-candidates-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <table class="caption-top table">
 <thead>
 <tr class="header">
-<th>SKU</th>
-<th>ABC (Rev)</th>
-<th>Substitute?</th>
-<th>Action</th>
+<th style="text-align: left;">Candidate (sub-category)</th>
+<th style="text-align: right;">Revenue, 2 yrs</th>
+<th style="text-align: right;">Baskets</th>
+<th style="text-align: center;">Clear substitute?</th>
+<th style="text-align: center;">Halo?</th>
+<th style="text-align: left;">Action</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>Budget cereal</td>
-<td>C</td>
-<td>→ Store brand cereal (Lift 0.6)</td>
-<td>Test for removal</td>
+<td style="text-align: left;">Gourmet canned cat food</td>
+<td style="text-align: right;">$12</td>
+<td style="text-align: right;">32</td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: center;">No</td>
+<td style="text-align: left;">Test for removal</td>
 </tr>
 <tr class="even">
-<td>500g yogurt</td>
-<td>C</td>
-<td>→ 1kg yogurt (Lift 0.0)</td>
-<td>Test for removal</td>
+<td style="text-align: left;">Soft-drink powder pouch</td>
+<td style="text-align: right;">$10</td>
+<td style="text-align: right;">44</td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: left;">Investigate before cutting</td>
 </tr>
 <tr class="odd">
-<td>Niche imported cheese</td>
-<td>C</td>
-<td>(none)</td>
-<td>Keep or test carefully</td>
-</tr>
-<tr class="even">
-<td>Loss-leader snack</td>
-<td>C</td>
-<td>→ Store-brand snack (Lift 0.5)</td>
-<td>Investigate before cutting</td>
+<td style="text-align: left;">Birthday candles</td>
+<td style="text-align: right;">$23</td>
+<td style="text-align: right;">33</td>
+<td style="text-align: center;">No</td>
+<td style="text-align: center;">No</td>
+<td style="text-align: left;">Keep or test carefully</td>
 </tr>
 </tbody>
 </table>
-<p>A Lift of 0.0 means the two products never appeared together in a basket. This is the strongest substitution signal available in transaction data, though it is not definitive by itself. Values between 0 and the threshold (default 0.8) are weaker but still suggest substitution.</p>
-<p>This does not produce a remove list. It produces a shortlist, sorted by how safe each candidate is to test first.</p>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Candidate type</th>
-<th>Action</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>C-revenue SKU with clear substitute</td>
-<td>Test for removal</td>
-</tr>
-<tr class="even">
-<td>C-revenue SKU with no substitute</td>
-<td>Keep or test carefully</td>
-</tr>
-<tr class="odd">
-<td>C-revenue SKU tied to valuable baskets</td>
-<td>Investigate before cutting</td>
-</tr>
-</tbody>
-</table>
-<p>The first two rows come directly from the substitution check. A candidate with a clear in-category substitute is the safest to test for removal. If there is no substitute, demand may leave the store. In that case, keep the product for now and look for ways to lower its cost, such as smaller packs or better supplier terms, or test carefully before removing.</p>
-<p>The third row is a guardrail for halo effects. A low-priced SKU that often appears with higher-value items may help attract those baskets, so removing it could reduce sales elsewhere. Investigate these cases before cutting, rather than relying on revenue alone. In dense grocery data, almost every SKU co-occurs with something, so use this flag only for the clearest cases. Also, not every low-revenue SKU should be in the candidate pool. Some products earn their shelf space by driving store trips, anchoring price image, or signaling category credibility, roles that revenue and Lift do not capture.</p>
+</div>
+</figure>
+</div>
+<p>Across the 150, the actions split 105 / 28 / 17. Most of the examined tail has an in-category substitute and no special basket role, and for these zero co-occurrence (a Lift of 0.0, the strongest substitution signal in transaction data) is the common case. This is not a remove list. It is a shortlist, sorted by how safe each candidate is to test first.</p>
+<p>A candidate with a clear in-category substitute is the safest to test for removal. The 17 with no clear substitute are the opposite case: fewer than five A/B-revenue peers could absorb the demand, so it may leave the store. Keep the product for now and look for ways to lower its cost, such as smaller packs or better supplier terms, or test carefully before removing.</p>
+<p>The 28 in the middle are a guardrail for halo effects. A low-priced SKU that often appears with higher-value items may help attract those baskets, so removing it could reduce sales elsewhere. Investigate these cases before cutting, rather than relying on revenue alone. In dense grocery data, almost every SKU co-occurs with something, so use this flag only for the clearest cases. Also, not every low-revenue SKU should be in the candidate pool. Some products earn their shelf space by driving store trips, anchoring price image, or signaling category credibility, roles that revenue and Lift do not capture.</p>
 </section>
 </section>
 <section id="validate-before-scaling" class="level2">
@@ -820,32 +779,6 @@ Figure&nbsp;1: Cumulative revenue share by SKU.
 </ul>
 
 
-<div id="refs" class="references csl-bib-body hanging-indent" role="list" style="display: none">
-<div id="ref-chan2017challenges" class="csl-entry" role="listitem">
-Chan, David, and Matthew Perry. 2017. <em>Challenges and Opportunities in Media Mix Modeling</em>. Google Inc. <a href="https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/45998.pdf">https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/45998.pdf</a>.
-</div>
-<div id="ref-fader2013gammagamma" class="csl-entry" role="listitem">
-Fader, Peter S, and Bruce GS Hardie. 2013. <em>The Gamma-Gamma Model of Monetary Value</em>. Wharton School, University of Pennsylvania. <a href="https://www.brucehardie.com/notes/025/gamma_gamma.pdf">https://www.brucehardie.com/notes/025/gamma_gamma.pdf</a>.
-</div>
-<div id="ref-fader2005counting" class="csl-entry" role="listitem">
-Fader, Peter S, Bruce GS Hardie, and Ka Lok Lee. 2005. <span>“Counting Your Customers the Easy Way: An Alternative to the Pareto/NBD Model.”</span> <em>Marketing Science</em> 24 (2): 275–84.
-</div>
-<div id="ref-jin2017bayesian" class="csl-entry" role="listitem">
-Jin, Yuxue, Yueqing Wang, Yunting Sun, David Chan, and Jim Koehler. 2017. <em>Bayesian Methods for Media Mix Modeling with Carryover and Shape Effects</em>.
-</div>
-<div id="ref-knaflic2015storytelling" class="csl-entry" role="listitem">
-Knaflic, Cole Nussbaumer. 2015. <em>Storytelling with Data: A Data Visualization Guide for Business Professionals</em>. Wiley.
-</div>
-<div id="ref-provost2013data" class="csl-entry" role="listitem">
-Provost, Foster, and Tom Fawcett. 2013. <em>Data Science for Business</em>. O’Reilly Media.
-</div>
-<div id="ref-vaver2011measuring" class="csl-entry" role="listitem">
-Vaver, Jon, and Jim Koehler. 2011. <em>Measuring Ad Effectiveness Using Geo Experiments</em>. Google Inc. <a href="https://research.google/pubs/pub38355/">https://research.google/pubs/pub38355/</a>.
-</div>
-<div id="ref-vizard2019pg" class="csl-entry" role="listitem">
-Vizard, Sarah. 2019. <span>“<span>P&amp;G</span> Shifts from Targeting <span>‘Generic Demographics’</span> to <span>‘Smart Audiences’</span>.”</span> <em>Marketing Week</em>, July. <a href="https://www.marketingweek.com/pg-targeting-generic-demographics-to-smart-audiences/">https://www.marketingweek.com/pg-targeting-generic-demographics-to-smart-audiences/</a>.
-</div>
-</div>
 </section>
 
 </main> <!-- /main -->
@@ -935,7 +868,7 @@ Vizard, Sarah. 2019. <span>“<span>P&amp;G</span> Shifts from Targeting <span>�
     }
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
       var mailtoRegex = new RegExp(/^mailto:/);
-        var filterRegex = new RegExp("https:\/\/marketing-science-in-python\.com");
+        var filterRegex = new RegExp("https:\/\/marketing-science-in-python\.com\/");
       var isInternal = (href) => {
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }
@@ -1269,8 +1202,8 @@ Vizard, Sarah. 2019. <span>“<span>P&amp;G</span> Shifts from Targeting <span>�
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="../part5/sec5.3-demand-forecasting.html" class="pagination-link" aria-label="5.3 Demand Forecasting">
-        <span class="nav-page-text"><span class="chapter-title">5.3 Demand Forecasting</span></span> <i class="bi bi-arrow-right-short"></i>
+      <a href="../part5/sec5.3-sales-forecasting.html" class="pagination-link" aria-label="5.3 Sales Forecasting and Scenario Planning">
+        <span class="nav-page-text"><span class="chapter-title">5.3 Sales Forecasting and Scenario Planning</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>

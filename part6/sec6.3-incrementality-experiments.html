@@ -1,0 +1,1392 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="Design and analyze a geo incrementality experiment: choosing the experimental unit, estimating lift, and turning the result into a media decision.">
+
+<title>Incrementality Experiments in Python – Marketing Science in Python</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../part6/sec6.4-mmm-calibration.html" rel="next">
+<link href="../part6/sec6.2-mmm-fundamentals.html" rel="prev">
+<link href="../assets/favicon.png" rel="icon" type="image/png">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-3925b0358f127ec93ce16d1653ff4e4f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-70cf7cdb16ba3fd29963dee6648d0861.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-3925b0358f127ec93ce16d1653ff4e4f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script async="" src="https://www.googletagmanager.com/gtag/js?id=G-YY0LCGYER5"></script>
+
+<script type="text/javascript">
+
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
+</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../custom.css">
+<meta property="og:title" content="Incrementality Experiments in Python">
+<meta property="og:description" content="Design and analyze a geo incrementality experiment: choosing the experimental unit, estimating lift, and turning the result into a media decision.">
+<meta property="og:image" content="https://marketing-science-in-python.com/images/common/book_cover.png">
+<meta property="og:site_name" content="Marketing Science in Python">
+<meta property="og:image:alt" content="Marketing Science in Python book cover">
+<meta name="twitter:title" content="Incrementality Experiments in Python">
+<meta name="twitter:description" content="Design and analyze a geo incrementality experiment: choosing the experimental unit, estimating lift, and turning the result into a media decision.">
+<meta name="twitter:image" content="https://marketing-science-in-python.com/images/common/book_cover.png">
+<meta name="twitter:image:alt" content="Marketing Science in Python book cover">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://marketing-science-in-python.com/part6/sec6.3-incrementality-experiments.html">
+</head>
+
+<body class="nav-sidebar floating quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part6/_part6.html">Part 6. Media Investment and Optimization</a></li><li class="breadcrumb-item"><a href="../part6/sec6.3-incrementality-experiments.html"><span class="chapter-title">6.3 Incrementality Experiments</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">Marketing Science in Python</a> 
+        <div class="sidebar-tools-main tools-wide">
+    <a href="https://github.com/takechanman1228/marketing-science-in-python" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+    <div class="dropdown">
+      <a href="" title="Share" id="quarto-navigation-tool-dropdown-0" class="quarto-navigation-tool dropdown-toggle px-1" data-bs-toggle="dropdown" aria-expanded="false" role="link" aria-label="Share"><i class="bi bi-share"></i></a>
+      <ul class="dropdown-menu" aria-labelledby="quarto-navigation-tool-dropdown-0">
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://twitter.com/intent/tweet?url=|url|">
+              <i class="bi bi-twitter pe-1"></i>
+            Twitter
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://www.linkedin.com/sharing/share-offsite/?url=|url|">
+              <i class="bi bi-linkedin pe-1"></i>
+            LinkedIn
+            </a>
+          </li>
+      </ul>
+    </div>
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part1/_part1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Part 1. Introduction</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1/sec1.1-what-is-marketing-science.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">1.1 What Is Marketing Science?</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1/sec1.2-data-landscape.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">1.2 Understanding Marketing Data</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part2/_part2.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Part 2. Analysis for Better Decisions</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.1-right-question.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.1 Framing the Right Question</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.2-kpi-design.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.2 Designing KPIs for Diagnosis</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.3-storytelling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.3 Turning Data into Story</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part3/_part3.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Part 3. Causal Inference for Marketing</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.1-thinking-causally.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.1 Causal Thinking</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.2-ab-testing.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.2 A/B Test Design</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.3-quasi-experiments.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.3 Quasi Experiments</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.4-causal-impact.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.4 Causal Impact with Time Series</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.5-meta-learners.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.5 Meta Learners for Treatment Effects</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.6-uplift-modeling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.6 Uplift Modeling for Targeting</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part4/_part4.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Part 4. Customer Analytics</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part4/sec4.1-segmentation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">4.1 Customer Segmentation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part4/sec4.2-clv-modeling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">4.2 Customer Lifetime Value Modeling</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part5/_part5.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Part 5. Commercial Analytics</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.1-price-elasticity.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.1 Price Elasticity and Pricing Decisions</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.2-assortment-optimization.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.2 Product Assortment Optimization</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.3-sales-forecasting.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.3 Sales Forecasting and Scenario Planning</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part6/_part6.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Part 6. Media Investment and Optimization</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.1-media-measurement-problem.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.1 The Media Measurement Problem</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.2-mmm-fundamentals.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.2 Building and Optimizing an MMM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.3-incrementality-experiments.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">6.3 Incrementality Experiments</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.4-mmm-calibration.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.4 Calibrating MMM with Experiments</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.5-when-tools-disagree.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.5 Making Decisions When Measurement Tools Disagree</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendix/further-reading.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">References and Further Reading</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendix/notebooks.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Notebooks &amp; Code</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../marketing-analytics-in-python.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Marketing Analytics in Python</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#sec-what-is-incrementality" id="toc-sec-what-is-incrementality" class="nav-link active" data-scroll-target="#sec-what-is-incrementality">What Is Incrementality?</a></li>
+  <li><a href="#sec-experimental-unit" id="toc-sec-experimental-unit" class="nav-link" data-scroll-target="#sec-experimental-unit">Choosing the Experimental Unit</a></li>
+  <li><a href="#sec-geo-four-steps" id="toc-sec-geo-four-steps" class="nav-link" data-scroll-target="#sec-geo-four-steps">The Geo Experiment in Four Steps</a></li>
+  <li><a href="#sec-geo-historical-data" id="toc-sec-geo-historical-data" class="nav-link" data-scroll-target="#sec-geo-historical-data">Step 1: Historical Data</a></li>
+  <li><a href="#sec-geo-pretest-design" id="toc-sec-geo-pretest-design" class="nav-link" data-scroll-target="#sec-geo-pretest-design">Step 2: Pre-Test Design</a>
+  <ul class="collapse">
+  <li><a href="#market-selection-and-assignment" id="toc-market-selection-and-assignment" class="nav-link" data-scroll-target="#market-selection-and-assignment">Market selection and assignment</a></li>
+  <li><a href="#power-and-mde-by-simulation" id="toc-power-and-mde-by-simulation" class="nav-link" data-scroll-target="#power-and-mde-by-simulation">Power and MDE by simulation</a></li>
+  <li><a href="#sec-geo-decision-rule" id="toc-sec-geo-decision-rule" class="nav-link" data-scroll-target="#sec-geo-decision-rule">Decision rule and design freeze</a></li>
+  </ul></li>
+  <li><a href="#sec-geo-run" id="toc-sec-geo-run" class="nav-link" data-scroll-target="#sec-geo-run">Step 3: Run the Geo Test</a></li>
+  <li><a href="#sec-geo-measurement" id="toc-sec-geo-measurement" class="nav-link" data-scroll-target="#sec-geo-measurement">Step 4: Post-Test Measurement</a>
+  <ul class="collapse">
+  <li><a href="#does-the-result-hold-up" id="toc-does-the-result-hold-up" class="nav-link" data-scroll-target="#does-the-result-hold-up">Does the result hold up?</a></li>
+  </ul></li>
+  <li><a href="#sec-geo-lift-to-decision" id="toc-sec-geo-lift-to-decision" class="nav-link" data-scroll-target="#sec-geo-lift-to-decision">From Lift to Decision</a></li>
+  <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways">Key Takeaways</a></li>
+  </ul>
+<div class="quarto-code-links"><h2>Code Links</h2><ul><li><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part6-media-optimization/sec6.3_geo_experiment.ipynb"><i class="bi bi-github"></i>sec6.3_geo_experiment.ipynb</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part6/_part6.html">Part 6. Media Investment and Optimization</a></li><li class="breadcrumb-item"><a href="../part6/sec6.3-incrementality-experiments.html"><span class="chapter-title">6.3 Incrementality Experiments</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span id="sec-incrementality-experiments" class="quarto-section-identifier"><span class="chapter-title">6.3 Incrementality Experiments</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="sec-what-is-incrementality" class="level2">
+<h2 class="anchored" data-anchor-id="sec-what-is-incrementality">What Is Incrementality?</h2>
+<p><a href="sec6.2-mmm-fundamentals.html">Section 6.2</a> ended with a recommendation the model couldn’t back up. The optimizer wants to pull $38.1 million out of Google Search, a 30% cut, all the way to the constraint floor. The guardrail blocks it: Search’s marginal ROAS interval runs from 0.3 to 8.3, too wide to act on. The reason is in the history: Search has run always-on at a nearly constant weekly budget for three years, which is exactly the case <a href="sec6.2-mmm-fundamentals.html#sec-mmm-data-requirements">Section 6.2</a> warned about. The model has never seen Search spend move, so its estimate is mostly the prior. Cutting $38 million on an estimate like that is a bet, not a decision. So before we cut nationally, we need causal evidence precise enough to act on. How much revenue was the last 30% of Search spend actually buying?</p>
+<p>That number is an incremental effect. <strong>Incrementality</strong> is the outcome that would not have happened without the advertising. If a campaign records $120,000 in sales but $100,000 would have occurred anyway, the incremental revenue is $20,000. Attribution describes which touchpoints receive credit for observed conversions; it has nothing to say about the $100,000. The MMM’s response curve aims at the same incremental contribution across spend levels, but it estimates it from observational variation, and when media moves with promotions and seasonal demand, that variation can’t separate the two. A more elaborate model doesn’t create the missing comparison. To get it, we have to change the data: run an experiment in which we control what changes, and where.</p>
+</section>
+<section id="sec-experimental-unit" class="level2">
+<h2 class="anchored" data-anchor-id="sec-experimental-unit">Choosing the Experimental Unit</h2>
+<p>The first design choice is who or what gets randomized. There are two families. A user-based conversion lift study randomizes eligible people: the platform withholds the campaign from a holdout group and compares conversion rates. A geo experiment randomizes markets: media changes for everyone in the test markets, and the outcome is whatever the business measures there. <a href="#fig-experiment-unit-choice" class="quarto-xref">Figure&nbsp;<span>1</span></a> shows the two side by side.</p>
+<div id="fig-experiment-unit-choice" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Left panel: eligible users split into a treatment group that may see the ad and a holdout group from which it is withheld, compared on conversion rates. Right panel: matched markets split into test markets where Search spend is cut 30 percent and control markets where it is unchanged, compared as a difference in differences.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-experiment-unit-choice-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part6/sec6.3/experiment_unit_choice.png" class="fig-lg img-fluid figure-img" alt="Left panel: eligible users split into a treatment group that may see the ad and a holdout group from which it is withheld, compared on conversion rates. Right panel: matched markets split into test markets where Search spend is cut 30 percent and control markets where it is unchanged, compared as a difference in differences.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-experiment-unit-choice-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: Two ways to create a counterfactual: randomize users, or randomize markets.
+</figcaption>
+</figure>
+</div>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Design question</th>
+<th>User-based lift</th>
+<th>Geo experiment</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Randomization unit</td>
+<td>Eligible user</td>
+<td>Market or region</td>
+</tr>
+<tr class="even">
+<td>Usually operated by</td>
+<td>Ad platform</td>
+<td>Brand and analyst</td>
+</tr>
+<tr class="odd">
+<td>Primary outcome</td>
+<td>Registered conversions</td>
+<td>Aggregate business KPI</td>
+</tr>
+<tr class="even">
+<td>Main strength</td>
+<td>Individual randomization</td>
+<td>Offline and total-market lift</td>
+</tr>
+<tr class="odd">
+<td>Main constraint</td>
+<td>Identity, tracking, volume</td>
+<td>Few units, spillovers, noise</td>
+</tr>
+</tbody>
+</table>
+<p>User-based lift is usually the cleaner design when it’s available: individual randomization, large samples, and a console that does the work. Its limit is scope. It measures registered conversions, among users the platform can identify, for the campaigns it randomized. That isn’t a defect. It’s the study’s <strong>estimand</strong>, the precise quantity it measures, and a user lift study isn’t inferior for having a narrow one. But offline sales, halo into other channels, and revenue in the company’s own books all sit outside it.</p>
+<p>Our question is about total revenue in the company’s own books, and the decision is a budget cut, not a campaign setting. That points to geography. A geo experiment is platform-independent because the outcome comes from the revenue system, and it aggregates naturally to the geo-week structure the MMM uses, which is exactly what <a href="sec6.4-mmm-calibration.html">Section 6.4</a> will need. The rest of this chapter runs one.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The mechanics of user-based lift, such as intent-to-treat interpretation, holdout sizing, and platform designs like public-service-ad controls and ghost ads, are covered in <a href="../appendix/further-reading.html#incrementality-experiments">References and Further Reading</a>. This book doesn’t cover console setup; those details change faster than a book can.</p>
+</div>
+</div>
+</section>
+<section id="sec-geo-four-steps" class="level2">
+<h2 class="anchored" data-anchor-id="sec-geo-four-steps">The Geo Experiment in Four Steps</h2>
+<div id="fig-geo-experiment-flow" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Four numbered cards: historical data (revenue and spend by market and week), pre-test design (KPI, markets, spend change, duration, decision rule), run the geo test (cut spend in test markets, hold control markets steady), and post-test measurement (estimate lift against a counterfactual and decide).">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-geo-experiment-flow-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part6/sec6.3/geo_experiment_flow.png" class="fig-lg img-fluid figure-img" alt="Four numbered cards: historical data (revenue and spend by market and week), pre-test design (KPI, markets, spend change, duration, decision rule), run the geo test (cut spend in test markets, hold control markets steady), and post-test measurement (estimate lift against a counterfactual and decide).">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-geo-experiment-flow-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2: A geo experiment in four steps.
+</figcaption>
+</figure>
+</div>
+<p><a href="#fig-geo-experiment-flow" class="quarto-xref">Figure&nbsp;<span>2</span></a> is the map for the rest of this chapter. We start with historical data: revenue and Search spend by market and week. From it we design the test: pick the KPI, select and pair markets, fix the spend change and duration, check that the design can detect what matters, and write down the decision rule. Then we run the test, which is the one step where the analyst mostly waits. Finally we measure: estimate the lift against a credible counterfactual, check that the estimate holds up, and make the decision we froze in step two. Each of the next four sections is one step.</p>
+<p><strong>Companion notebook:</strong> <code>sec6.3_geo_experiment.ipynb</code> runs the full experiment on a synthetic 40-market panel whose Search economics match the <a href="sec6.2-mmm-fundamentals.html">Section 6.2</a> model, with planted ground truth, so every estimate below can be checked against the truth.<br>
+<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part6-media-optimization/sec6.3_geo_experiment.ipynb">View on GitHub</a></p>
+</section>
+<section id="sec-geo-historical-data" class="level2">
+<h2 class="anchored" data-anchor-id="sec-geo-historical-data">Step 1: Historical Data</h2>
+<p>Everything downstream is built from one table: one row per market per week, with revenue, Search spend, and any other local media that could move during the test. The panel here has 40 markets and 96 weeks of history before the test window. Two years is comfortable; one year is workable if the outcome isn’t strongly seasonal.</p>
+<p>Three things to check before design starts. Revenue has to come from the company’s own system, at the geography the media can actually be controlled at; if Search campaigns can only be set by state, the state is your market, whatever the data offers. Spend has to be the spend you will really change, not a planned figure. And the history has to be clean of things that would confuse the counterfactual. A market that gained a distribution center last year isn’t a control for anything. Markets with known problems come out here, not later.</p>
+<p><em>Output: an analysis-ready market-week panel.</em></p>
+</section>
+<section id="sec-geo-pretest-design" class="level2">
+<h2 class="anchored" data-anchor-id="sec-geo-pretest-design">Step 2: Pre-Test Design</h2>
+<p>Five decisions define the study, and all of them are made before any result exists.</p>
+<ol type="1">
+<li><strong>KPI.</strong> Revenue, from the company’s own books. That is what the CFO’s question is about and what the MMM models.</li>
+<li><strong>Markets and assignment.</strong> Screen candidate markets on pre-period behavior, form matched pairs, randomize within each pair.</li>
+<li><strong>Spend change.</strong> Cut Search by 30% in the test markets. That is the optimizer’s proposal, so the test measures the policy under consideration rather than a proxy for it.</li>
+<li><strong>Duration and power.</strong> Eight weeks, chosen by simulation on the historical panel.</li>
+<li><strong>Decision rule.</strong> Which result leads to which action, written down now.</li>
+</ol>
+<p>The notebook freezes these choices in one configuration cell:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>DESIGN <span class="op">=</span> {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"seed"</span>: <span class="dv">20260888</span>,</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"channel"</span>: <span class="st">"Google Search"</span>,</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"test_start"</span>: <span class="st">"2024-02-05"</span>,</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"test_end"</span>: <span class="st">"2024-03-25"</span>,</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"test_weeks"</span>: <span class="dv">8</span>,</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"n_pairs"</span>: <span class="dv">8</span>,</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">"spend_multiplier"</span>: <span class="fl">0.70</span>,      <span class="co"># a 30% pull-back in test markets</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">"contribution_margin"</span>: <span class="fl">0.40</span>,   <span class="co"># sets the decision hurdle below</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ...plus `direction`, which records that this test cuts spend so the</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="co"># contrast is negative, and the power-simulation grid: durations, spend</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="co"># levels, candidate lifts, and the significance level.</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Why cut rather than add? A pull-back and a heavy-up both probe the response curve near today’s spend, but on a curved response they aren’t the same estimand. This test measures the average return on the block of spend between 70% and 100% of baseline, which is exactly the policy the optimizer proposed; a 25% heavy-up would measure the block above it. The other reason is cost, and the expected cost of an experiment comes from what you already believe about the answer. On the model’s pre-test belief, at a 40% margin, the pull-back nets a cost near $7,000 and the heavy-up near $28,000: cheap either way, because the model has Search sitting close to its break-even return. The pull-back is four times cheaper, but with numbers that small, cost is not what decides this. The estimand is. If the model is badly wrong and the truth sits well above the hurdle, the pull-back costs real revenue for eight weeks in eight markets. That risk is bounded, and the decision rule below has a branch for it.</p>
+<section id="market-selection-and-assignment" class="level3">
+<h3 class="anchored" data-anchor-id="market-selection-and-assignment">Market selection and assignment</h3>
+<p>Use historical outcomes only. For each candidate market, the notebook measures correlation with the rest of the business, average revenue, and trend. It screens the 40 markets down to 16 strong candidates, sorts them by size, pairs neighbors, checks trend balance within each pair, and then flips a coin inside each pair to pick the test market. Screening reduces noise; randomization is what makes the comparison causal. Picking the test markets after looking at post-period outcomes would destroy that distinction, and so would picking them by hand because “those markets are typical.”</p>
+<p>Do not put all the large markets in treatment to cover more revenue. A lopsided split turns ordinary seasonal movement into an apparent effect. A stronger production workflow evaluates many candidate sets: remove markets that can’t supply a stable counterfactual, simulate power for each feasible assignment, then choose.</p>
+<p>Spillover is a market-selection problem; no estimator fixes it afterward. Commuters shop in one market and live in another, local television crosses borders, and a national promotion changes demand everywhere. Use non-overlapping units where the media intervention is actually controllable, and keep other local activity stable across the selected markets. If control markets receive part of the treatment, the experiment biases toward zero without announcing it in any fit statistic.</p>
+</section>
+<section id="power-and-mde-by-simulation" class="level3">
+<h3 class="anchored" data-anchor-id="power-and-mde-by-simulation">Power and MDE by simulation</h3>
+<p>Before committing to the test, ask whether this panel could detect the effect the business cares about. The notebook picks historical pseudo-launch dates, subtracts the revenue a candidate ROAS would lose on the planned cut, reruns the same clustered estimator, and counts how often the effect is detected. Repeating this across durations and cut sizes produces a simulated minimum detectable effect, or MDE.</p>
+<div id="fig-mde-by-duration" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Three curves show that longer tests and larger cuts lower the marginal ROAS detectable with 80 percent power; a 30 percent cut over eight weeks detects effects of about 0.30 and above.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-mde-by-duration-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part6/sec6.3/mde_by_duration.png" class="fig-lg img-fluid figure-img" alt="Three curves show that longer tests and larger cuts lower the marginal ROAS detectable with 80 percent power; a 30 percent cut over eight weeks detects effects of about 0.30 and above.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-mde-by-duration-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3: Simulated MDE by test duration and size of the cut.
+</figcaption>
+</figure>
+</div>
+<p>In <a href="#fig-mde-by-duration" class="quarto-xref">Figure&nbsp;<span>3</span></a>, a 30% cut over eight weeks detects marginal ROAS of about 0.30 and above. Four weeks needs 0.40; a 40% cut reaches 0.30 in four weeks; a 20% cut over eight weeks only gets to 0.40. Larger cuts have more power because the spend contrast is larger in dollars. These numbers belong to this panel. A 20-50% spend change over four to eight weeks is a common starting point, not a rule. Simulating on your own history is the rule.</p>
+</section>
+<section id="sec-geo-decision-rule" class="level3">
+<h3 class="anchored" data-anchor-id="sec-geo-decision-rule">Decision rule and design freeze</h3>
+<p>The MDE says what the test can distinguish from zero. That isn’t the question the CFO is asking. The budget question is whether Search earns enough to keep its money, and “enough” has a number: the marginal ROAS at which an extra dollar of spend breaks even. With a contribution margin of <span class="math inline">\(m\)</span>, break-even is <span class="math inline">\(1/m\)</span>. At a 40% margin, a Search dollar has to return $2.50 in revenue to pay for itself. That is the hurdle, and it’s a business input, not a statistical one.</p>
+<p>It is the hurdle for one particular decision: whether this block of spend should stay in the media budget at all. If the total budget is fixed and the question is whether the dollar should move to Meta or OOH instead, the bar is the marginal return those channels offer, and only a model that sees all five channels can estimate it. This chapter asks the first question. Does the last 30% of Search pay for itself? A block that fails that test fails every alternative use too. Where the released budget should go is the comparison in <a href="sec6.4-mmm-calibration.html">Section 6.4</a>.</p>
+<p>So the rule, written before launch: if the 95% confidence interval for marginal ROAS sits entirely above 2.50, keep the budget; if it sits entirely below, cut as the optimizer proposed; if it straddles 2.50, hold the national plan and design a follow-up test; extending this one after seeing its result would turn it into a different test. The interval clustered on markets is the primary decision statistic; the randomization test in step four and the pair-clustered interval below are pre-specified robustness checks, not second votes. Notice the distance between the two numbers. The design detects effects down to about 0.30, and the hurdle is 2.50. For the decision at hand the test has power to spare: with a standard error near 0.075, any true marginal ROAS below roughly 2.3 produces a “cut” verdict. The notebook says the same thing in the units of the decision, by simulating the verdict rather than the p-value:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: right;">True incremental ROAS</th>
+<th style="text-align: right;">P(cut)</th>
+<th style="text-align: right;">P(hold)</th>
+<th style="text-align: right;">P(keep)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0.2</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1.0</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2.5</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">3.0</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">0.83</td>
+<td style="text-align: right;">0.17</td>
+</tr>
+</tbody>
+</table>
+<p>Whether the effect can be distinguished from zero is a separate question, and we will see that it can have a different answer.</p>
+<p>Freeze everything now: the market list, the dates, the spend plan, the estimator, the calendar exclusions, the hurdle, the random seed. Don’t let a major event such as Black Friday straddle a test boundary. Design discipline is easiest while nobody knows which choice would improve the answer.</p>
+<p><em>Output: a frozen test plan.</em></p>
+</section>
+</section>
+<section id="sec-geo-run" class="level2">
+<h2 class="anchored" data-anchor-id="sec-geo-run">Step 3: Run the Geo Test</h2>
+<p>This is the step where the analyst has the least to do and the most to protect. Search spend drops 30% in the eight test markets on the launch date and stays there; control markets run business as usual. Nothing else changes locally: no market-level promotions, no other media shifted in to compensate, no “let’s also try something” in a control market. Record the spend that was actually delivered, by market and week, because the denominator in step four is the spend the experiment removed, not the spend that was planned. Don’t read the results weekly and don’t stop early; an eight-week test read at week three is a different, noisier test with a higher false-positive rate. If Search spend in a test market doesn’t fall as planned, that is noncompliance, not an exclusion: keep the market in the primary analysis as assigned, and report the delivered spend contrast next to the planned one. Drop a pair only for a reason fixed in advance, such as lost outcome data, and write it down before you look at the result.</p>
+<p><em>Output: a delivery and compliance log.</em></p>
+</section>
+<section id="sec-geo-measurement" class="level2">
+<h2 class="anchored" data-anchor-id="sec-geo-measurement">Step 4: Post-Test Measurement</h2>
+<p>Here is the first number a stakeholder will compute, whether or not you do: revenue in the test markets during the test, versus the eight weeks before it. In the notebook that comparison gives a marginal ROAS of <strong>-0.87</strong>. Search spend went down and revenue went up, so cutting Search apparently increased sales. Every ad manager has heard this argument, usually followed by “so let’s cut more.” It’s wrong here because revenue was rising into the test window in every market, control markets included; the before/after comparison credits the cut with the season. This is why we chose control markets in step two.</p>
+<p>The estimator follows the assignment mechanism, the same principle as in <a href="../part3/sec3.3-quasi-experiments.html">Section 3.3</a>. Randomization within matched pairs is the design; paired Difference-in-Differences is the estimator that matches it. The basic interaction is:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> smf.ols(<span class="st">"revenue ~ treat * post"</span>, data<span class="op">=</span>analysis).fit(</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    cov_type<span class="op">=</span><span class="st">"cluster"</span>,</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    cov_kwds<span class="op">=</span>{<span class="st">"groups"</span>: analysis[<span class="st">"geo"</span>]},</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The notebook’s version replaces the <code>treat</code> and <code>post</code> main effects with a fixed effect for each market and a separate test-period term for each pair, so one pair’s local shock isn’t read as lift. The <code>treat:post</code> coefficient is incremental revenue per treated market-week; here it’s negative, because the test markets lost revenue relative to their pairs. Dividing its total by the spend the experiment removed gives marginal ROAS. Numerator and denominator are both negative, and their ratio is the quantity we want: revenue lost per dollar not spent. A positive ROAS means the channel was generating revenue, whichever direction the test moved spend.</p>
+<p>The design-consistent estimate is <strong>0.200</strong>, with SE <strong>0.075</strong> and 95% CI <strong>[0.040, 0.361]</strong>. With 16 market clusters the interval uses the t distribution rather than 1.96. It recovers the planted truth of 0.200. Each Search dollar removed had been buying about twenty cents of revenue.</p>
+<p>That denominator deserves one more sentence. It must be the spend the experiment changed, in these markets, on these dates. Dividing by all historical Search spend, or by the national budget, turns a correct causal revenue estimate into the wrong ROAS.</p>
+<section id="does-the-result-hold-up" class="level3">
+<h3 class="anchored" data-anchor-id="does-the-result-hold-up">Does the result hold up?</h3>
+<p>One estimate from one estimator is a claim. Three checks make it a result.</p>
+<p>First, the pre-period. The event-study chart in the notebook centers each pair on the week before launch; pre-period differences fluctuate around zero rather than drifting. If they drifted, the pairs weren’t parallel, and the DiD would be measuring the drift.</p>
+<p>Second, an alternative counterfactual. A synthetic control aggregates the eight test markets and builds a weighted blend of untreated donors, with non-negative weights that sum to one and minimize pre-period error. A close pre-period fit is the admission ticket; if the synthetic series can’t reproduce the treated history, its post-period gap means nothing. Here it fits, and the synthetic-control estimate is <strong>0.186</strong>, close to DiD and to the truth. The two estimators compress the untreated information differently, so their agreement is informative. It is not a license to average methods until the preferred number appears.</p>
+<div id="fig-actual-vs-synthetic-gap" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="The treated aggregate and its weighted synthetic control track closely before launch, then the treated series falls below its counterfactual during the test.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-actual-vs-synthetic-gap-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part6/sec6.3/actual_vs_synthetic_gap.png" class="fig-lg img-fluid figure-img" alt="The treated aggregate and its weighted synthetic control track closely before launch, then the treated series falls below its counterfactual during the test.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-actual-vs-synthetic-gap-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4: Observed revenue in the test markets versus their synthetic control.
+</figcaption>
+</figure>
+</div>
+<p>Third, placebos. An in-space placebo asks what the analysis would report under assignments that never happened. With eight pairs, swapping roles inside each pair gives <span class="math inline">\(2^8 = 256\)</span> possible assignments, few enough to enumerate. Their distribution is centered at zero by construction, and 11.7% of them produce an estimate at least as extreme as the observed 0.200. In-time placebos move the same eight-week window through earlier history; their mean is 0.053, with fake effects on both sides of zero rather than a repeated lift at every date.</p>
+<div id="fig-placebo-distribution" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="A histogram of within-pair placebo ROAS estimates centered near zero, with the observed estimate in the positive tail; earlier fake launches appear as marks along the axis.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-placebo-distribution-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part6/sec6.3/placebo_distribution.png" class="fig-lg img-fluid figure-img" alt="A histogram of within-pair placebo ROAS estimates centered near zero, with the observed estimate in the positive tail; earlier fake launches appear as marks along the axis.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-placebo-distribution-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5: The real estimate against placebo assignments.
+</figcaption>
+</figure>
+</div>
+<div class="callout callout-style-default callout-note callout-titled" title="Two valid tests, two sides of 5%">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Two valid tests, two sides of 5%
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The clustered-t interval excludes zero. The exact randomization test puts 11.7% of placebo assignments beyond the observed estimate. Neither is a computation error. The t interval is a large-sample approximation applied to 16 clusters; the enumeration is the design’s own reference distribution; and a borderline result can land on opposite sides of an arbitrary cutoff. This is also what the power analysis said would happen. A design with an MDE near 0.30 reads a true 0.20 as supportive evidence about zero, not a verdict. It’s why the next section decides on the hurdle rather than on significance, and why <a href="sec6.4-mmm-calibration.html">Section 6.4</a> carries the estimate and its uncertainty into the model together.</p>
+</div>
+</div>
+<p>Because assignment was randomized, the in-space placebo distribution is design-based inference. In a non-randomized matched-market study, run the same pre-fit, event-study, synthetic-control, and placebo checks, but don’t borrow the language of randomization. The causal claim then rests on the synthetic counterfactual and on the argument that no unmeasured shock separated the chosen markets. Meta’s <a href="https://facebookincubator.github.io/GeoLift/">GeoLift</a> and Google’s <a href="https://github.com/google/CausalImpact">CausalImpact</a> are built for that setting; they are different estimators, not extra votes, and <a href="../appendix/further-reading.html#incrementality-experiments">References and Further Reading</a> covers when to reach for which.</p>
+<p><em>Output: an estimate, its checks, and the verdict.</em></p>
+</section>
+</section>
+<section id="sec-geo-lift-to-decision" class="level2">
+<h2 class="anchored" data-anchor-id="sec-geo-lift-to-decision">From Lift to Decision</h2>
+<p>Now apply the rule we froze. The hurdle was 2.50. The interval is [0.040, 0.361], and its upper bound is less than a sixth of the hurdle. The rule says cut. Each dollar removed was buying twenty cents of revenue, eight cents of contribution at a 40% margin, and there is no reading of the uncertainty under which that dollar pays for itself.</p>
+<p>One more number belongs in the handoff, because the next section turns it into a prior. Assignment was eight coin flips, one per matched pair, but the estimator clusters on the sixteen markets. Cluster on the pairs instead and the point estimate is unchanged at 0.200 while the standard error widens from 0.075 to 0.110, and the 95% interval runs [-0.060, 0.461] rather than [0.040, 0.361]. The verdict is the same either way, because 2.50 is far above both. But a prior built on the narrower of two defensible widths is a choice, not a fact, so both travel to <a href="sec6.4-mmm-calibration.html">Section 6.4</a> and the calibration is run at each.</p>
+<p>Notice what the decision did not depend on. The randomization test couldn’t reject zero at 5%. Run on “was it significant,” the meeting ends in an argument about p-values and no decision. Run on the hurdle, the same numbers give a clear answer, because the distance from 0.36 to 2.50 is large and the distance from 0.04 to zero was never the question. A test can fail to distinguish an effect from zero and still settle a budget.</p>
+<p>The test also paid for itself, on short-run contribution and before anything outside the eight-week window. It removed $421,906 of Search spend from the test markets and, on the estimate, gave up about $84,000 of revenue, roughly $34,000 of contribution. Step two priced that design on the model’s belief that a Search dollar was buying $2.54 of revenue. It was buying twenty cents, so the test cost about a tenth of what the model expected. That was the first sign that the model, and not only its interval, needed fixing.</p>
+<p>What we know is precise and narrow: the effect of <strong>this</strong> 30% cut, in <strong>these</strong> markets, over <strong>this</strong> eight-week window. It is a policy effect at one operating point on the response curve, not the channel’s eternal ROAS. Preserve that scope in the handoff. In a live test the delivered spend contrast rarely equals the plan, and the delivered figure is the one that belongs in this table; here the two coincide because the panel is synthetic.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Evidence field</th>
+<th>Frozen value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Channel</td>
+<td>Google Search</td>
+</tr>
+<tr class="even">
+<td>Design</td>
+<td>8 randomized matched pairs</td>
+</tr>
+<tr class="odd">
+<td>Dates</td>
+<td>2024-02-05 to 2024-03-25</td>
+</tr>
+<tr class="even">
+<td>Baseline spend, test markets</td>
+<td>$1,406,355</td>
+</tr>
+<tr class="odd">
+<td>Spend removed</td>
+<td>$421,906</td>
+</tr>
+<tr class="even">
+<td>Incremental ROAS, 30% block</td>
+<td>0.200</td>
+</tr>
+<tr class="odd">
+<td>Standard error (clustered on markets)</td>
+<td>0.075</td>
+</tr>
+<tr class="even">
+<td>Standard error (clustered on pairs)</td>
+<td>0.110</td>
+</tr>
+<tr class="odd">
+<td>95% CI (clustered t)</td>
+<td>[0.040, 0.361]</td>
+</tr>
+<tr class="even">
+<td>Randomization p</td>
+<td>0.117</td>
+</tr>
+<tr class="odd">
+<td>Tested markets’ share of national Search spend</td>
+<td>19.9%</td>
+</tr>
+<tr class="even">
+<td>Estimand</td>
+<td>Revenue effect of a 30% cut in selected markets over 8 weeks</td>
+</tr>
+</tbody>
+</table>
+<p>The evidence supports the 30% cut in the tested operating range. Rolling it out nationally assumes the other 32 markets behave like these eight, so it should go out under the same guardrail, with delivered spend and revenue tracked against this prediction. That is the immediate decision. But one experiment measured one point on one channel’s curve, and the model in Section 6.2 sets budgets across five. <a href="sec6.4-mmm-calibration.html">Section 6.4</a> asks how much this causal evidence should change that model, and whether it changes what the model recommends. If the model and the experiment still disagree afterward, <a href="sec6.5-when-tools-disagree.html">Section 6.5</a> is the protocol.</p>
+</section>
+<section id="key-takeaways" class="level2">
+<h2 class="anchored" data-anchor-id="key-takeaways">Key Takeaways</h2>
+<ul>
+<li><strong>Incrementality is the outcome that would not have happened without the ad.</strong> Experiments make that counterfactual defensible through assignment; a naive before/after can get the sign wrong.</li>
+<li><strong>Choose the experimental unit before the estimator.</strong> User holdouts suit platform-scoped questions; geo tests suit total revenue, offline, and cross-channel outcomes.</li>
+<li><strong>Design before results.</strong> Simulate power on your own history, and write the decision rule down. The MDE says what you can detect; the hurdle says what matters.</li>
+<li><strong>Let assignment determine analysis.</strong> Paired DiD is the primary estimator here; synthetic control and placebos challenge it rather than replace it.</li>
+<li><strong>Hand off the estimand, not just the ROAS.</strong> Preserve the channel, dates, spend contrast, uncertainty, and scope before calibration.</li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/marketing-science-in-python\.com\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../part6/sec6.2-mmm-fundamentals.html" class="pagination-link" aria-label="6.2 Building and Optimizing an MMM">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">6.2 Building and Optimizing an MMM</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../part6/sec6.4-mmm-calibration.html" class="pagination-link" aria-label="6.4 Calibrating MMM with Experiments">
+        <span class="nav-page-text"><span class="chapter-title">6.4 Calibrating MMM with Experiments</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
