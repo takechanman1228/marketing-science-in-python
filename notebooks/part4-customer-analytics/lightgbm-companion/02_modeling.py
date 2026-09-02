@@ -540,7 +540,7 @@ print("\nDone. Next: 03_evaluation.py")
 #
 # CLV = Σ P(buy) × E[spend|buy] / (1+r)^t — directly parallels BTYD.
 #
-# Artifacts saved to `output/`:
+# Artifacts saved under `artifacts/part4/sec4.2-clv/`:
 # - `tables/ml_clv_predictions.parquet` — per-customer predictions + actuals
 # - `models/model_purch_{rfm,full}.joblib`, `models/model_spend_{rfm,full}.joblib`
 # - `tables/best_hyperparams.json` — grid search results

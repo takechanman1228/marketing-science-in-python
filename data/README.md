@@ -4,7 +4,7 @@ Repo-canonical location for all datasets used by the book's notebooks.
 
 | Subdirectory | Tier | Bundled in git? | Typical contents |
 |---|---|---|---|
-| `raw/` | Raw external datasets (fetched on demand or placed manually) | ❌ gitignored | Dunnhumby, Online Retail II, Iowa Liquor, MineThatData |
+| `raw/` | Raw external datasets (fetched on demand or placed manually) | ❌ gitignored | Dunnhumby, Online Retail II, MineThatData |
 | `generated/` | Generated — derived-from-raw and synthetic | ❌ by default; canonical/expensive outputs committed | `segment_assignments.csv`, weekly parquet, MMM synthetic |
 | `profiles/` | Dataset documentation (source, license, schema) | ✅ | one `.md` per dataset |
 

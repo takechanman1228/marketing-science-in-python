@@ -11,10 +11,9 @@ inside are gitignored.
 
 | Dataset | Loader / source | Expected path (under `data/raw/`) | Notes |
 |---|---|---|---|
-| Dunnhumby — *The Complete Journey* | `msbook.data.load_dunnhumby()` (kagglehub) | `Dunnhumby_kaggle/transaction_data.csv` (+ the other CSVs) | Requires `~/.kaggle/kaggle.json`; sec4.1/4.2/5.1/5.2/5.3 |
+| Dunnhumby — *The Complete Journey* | `msbook.data.load_dunnhumby()` (kagglehub) | `Dunnhumby_kaggle/transaction_data.csv` (+ the other CSVs) | Requires `~/.kaggle/kaggle.json`; sec4.1/4.2/5.1/5.2 + the sec3.4 daily seed (`sec3.4_data_prep.py`) |
 | Online Retail II (UCI) | `msbook.data.load_online_retail_ii()` (manual) | `Online_Retail_II_UCI/online_retail_II.csv` | ~95 MB, CC0; sec4.1 BERTopic |
-| Iowa Liquor Sales | `_retail_data.load_iowa_liquor()` (manual) | `Iowa_Liquor_Sales_Data_kaggle_cc0/Iowa_Liquor_Sales.csv` | ~3.2 GB, CC0; only needed to regenerate sec5.3's committed parquet |
-| MineThatData (Hillstrom) | `msbook.data.load_minethatdata()` (auto, HTTP) | `minethatdata/hillstrom_email.csv` | fetched from minethatdata.com; sec3.4/3.5 |
+| MineThatData (Hillstrom) | `msbook.data.load_minethatdata()` (auto, HTTP) | `minethatdata/hillstrom_email.csv` | fetched from minethatdata.com; sec3.5/3.6 |
 
 The Dunnhumby CSVs live **directly** under `Dunnhumby_kaggle/` (there is no
 `archive/` sub-folder; that was just Kaggle's download artifact name).

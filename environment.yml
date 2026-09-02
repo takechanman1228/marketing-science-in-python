@@ -42,10 +42,9 @@ dependencies:
       # LLM-assisted topic naming for sec4.1 semantic_segmentation
       - "litellm>=1.50,<2"
       - anthropic>=0.40
-      # CLV
-      - pymc-marketing>=0.18
-      - pymc-extras>=0.4
-      - arviz>=0.13
+      # CLV (sec4.2) runs in environment-clv.yml instead. The book carries two
+      # heavy modeling stacks that cannot share an ArviZ: PyMC-Marketing needs
+      # ArviZ 1.x, Meridian needs 0.x. This file holds the Meridian side.
       - xarray>=2024.0
       - openpyxl>=3.1
 
@@ -54,26 +53,31 @@ dependencies:
       - mlxtend>=0.23
       - kagglehub>=0.3
       - pyarrow>=14.0
-      # Demand Forecasting
-      - statsforecast>=2.0
+      # Sales forecasting (sec5.3)
       - mlforecast>=0.13
-      - hierarchicalforecast>=0.4
       - utilsforecast>=0.2
+      - prophet>=1.1.6
+      # TimesFM is deliberately absent. It is an opt-in install for the 5.3
+      # backtest only (notebooks/part5-commercial-analytics/requirements-timesfm.txt),
+      # because installing it downloads a foundation-model checkpoint that a
+      # reader running the chapter's other six models has no use for. (torch is
+      # already here, via sentence-transformers; the checkpoint is the cost.)
 
       # --- Part 6: Marketing Mix Modeling ---
       # tensorflow / tensorflow_probability are transitive deps of
-      # google-meridian, but pinning them explicitly avoids the import
-      # failures we hit when meridian's pip resolution leaves them out.
-      # NOTE: TF 2.20 has a Meridian.__init__ stall on macOS-arm; pin TF<2.20
-      # until upstream Meridian + TF cohabit cleanly. See
-      # doc/claude_code/notebook-audit-status-2026-05-20.md for context.
+      # google-meridian, but pinning them explicitly avoids the import failures
+      # that follow when meridian's pip resolution leaves them out.
+      # NOTE: TF 2.20 stalls in Meridian.__init__ on macOS-arm; pin TF<2.20
+      # until upstream Meridian and TF cohabit cleanly.
       - "tensorflow>=2.19,<2.20"
       - "tensorflow_probability>=0.25,<0.26"
       # protobuf 6/7.x triggers MessageFactory.GetPrototype AttributeErrors
       # during TF/TFP import that pollute published notebook outputs.
       # Pin to the protobuf 4/5 line until TFP 0.26 ships with proto7 support.
       - "protobuf>=4.21.6,<6"
-      - "google-meridian[schema]"
+      # Pinned: sec6.4 states the version in prose, the calibration API is
+      # version-sensitive, and the committed notebook outputs were produced here.
+      - "google-meridian[schema]==1.6.2"
       # Static PNG export of Meridian's Altair charts so the published sec6.2
       # notebook embeds figures GitHub can render (zero-dependency Rust wheel;
       # does not disturb the tensorflow/protobuf pins above)
@@ -82,3 +86,5 @@ dependencies:
       # --- Dev / QA ---
       - pytest>=8.0
       - black>=24.0
+      # Read by the PDF index checker.
+      - pyyaml>=6.0

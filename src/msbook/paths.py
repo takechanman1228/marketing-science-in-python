@@ -6,8 +6,10 @@ from the repo root, so these helpers work from any cwd or notebook
 subdirectory (local JupyterLab, VSCode, Colab, nbconvert).
 
 Repo-root detection walks up from this file until a ``pyproject.toml`` or
-``_quarto.yml`` marker is found, so it is independent of both cwd and the
-package install location.
+``_quarto.yml`` marker is found, so it is independent of the working
+directory. It resolves to whichever checkout this file lives in, so with more
+than one clone or git worktree, put that checkout's ``src/`` on ``PYTHONPATH``
+rather than relying on wherever ``pip install -e .`` was last run.
 """
 from __future__ import annotations
 
@@ -29,8 +31,9 @@ def _find_repo_root() -> Path:
             return parent
     raise RuntimeError(
         "Could not locate repo root (no pyproject.toml or _quarto.yml "
-        f"ancestor of {here}). If you installed msbook outside the book "
-        "repo, set the working directory to the repo root before importing."
+        f"ancestor of {here}). msbook resolves paths from its own location, "
+        "so install it from a clone of the book repo with `pip install -e .` "
+        "rather than as a standalone package."
     )
 
 
@@ -47,8 +50,8 @@ def chapter_images(part: str, chapter: str) -> Path:
 
     Example
     -------
-    >>> chapter_images("5", "sec5.1-pricing")
-    .../images/part5/sec5.1-pricing
+    >>> chapter_images("5", "sec5.1")
+    .../images/part5/sec5.1
     """
     out = IMAGES_DIR / f"part{part}" / chapter
     out.mkdir(parents=True, exist_ok=True)

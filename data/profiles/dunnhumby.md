@@ -107,14 +107,11 @@ temporal_range:
   days: "1–711"
 
 chapters_used:
-  - sec4.2  # Customer Segmentation
-  - sec4.3  # CLV
-  - sec5.3  # Collaborative Filtering
-  - sec5.4  # Content-Based / Hybrid Recommendations
-  - sec5.7  # Uplift-Based Personalization
-  - sec6.2  # Price Elasticity
-  - sec6.3  # Product Assortment
-  - sec6.4  # Promotion Optimization
+  - sec3.4  # Causal Impact — daily store series used as the reality check
+  - sec4.1  # Customer Segmentation (decile, RFM, K-Means)
+  - sec4.2  # Customer Lifetime Value
+  - sec5.1  # Price Elasticity
+  - sec5.2  # Product Assortment Optimization
 ---
 
 # Dunnhumby — The Complete Journey
@@ -200,59 +197,40 @@ Within `product`, the columns form a three-level hierarchy:
 
 ## Insights for Downstream Tasks
 
-### sec4.2 — Customer Segmentation
+### sec3.4 — Causal Impact with Time Series
 
-Build RFM (Recency, Frequency, Monetary) features from `transaction_data`
-aggregated at the `household_key` level. Enrich segments with
-`hh_demographic` for households where demographics are available. Use
-`WEEK_NO` and `DAY` to compute recency relative to the observation window
-end.
+`sec3.4_data_prep.py` aggregates `transaction_data` into a daily store series
+plus candidate control series. It is the chapter's reality check: the same
+machinery that recovers a planted effect on synthetic data is run on real
+store data, where no effect was planted and the controls do not improve an
+out-of-sample forecast.
 
-### sec4.3 — Customer Lifetime Value
+### sec4.1 — Customer Segmentation
+
+Build decile and RFM features from `transaction_data` aggregated at the
+`household_key` level, then K-Means on behavioral features. `hh_demographic`
+is a profiling layer applied after the segments exist, not an input to them,
+and it covers only part of the panel. Use `WEEK_NO` and `DAY` to compute
+recency relative to the end of the observation window.
+
+### sec4.2 — Customer Lifetime Value
 
 The two-year transaction history supports BG/NBD and Gamma-Gamma CLV models.
 Split on a calibration/holdout boundary (e.g., week 52) and evaluate
-predicted spend against actual holdout transactions. Demographic features can
-serve as covariates in extended models.
+predicted spend against actual holdout transactions. The LightGBM companion
+under `notebooks/part4-customer-analytics/lightgbm-companion/` uses the same
+transactions for a fixed-horizon regression alternative.
 
-### sec5.3 — Collaborative Filtering
-
-Construct a user-item purchase matrix from `transaction_data`
-(`household_key` x `PRODUCT_ID`). Use purchase counts or binary indicators as
-implicit feedback signals. The dataset's density is low (many products per
-household), making it a realistic test for sparse collaborative filtering.
-
-### sec5.4 — Content-Based / Hybrid Recommendations
-
-Combine product features from `product` (DEPARTMENT, BRAND, COMMODITY_DESC)
-with transaction signals to build content-based or hybrid recommenders.
-The product hierarchy provides natural feature groupings at multiple
-granularity levels.
-
-### sec5.7 — Uplift-Based Personalization
-
-Use `campaign_table` as the treatment assignment indicator and
-`coupon_redempt` (or post-campaign purchase lift) as the outcome. The 30
-campaigns in `campaign_desc` with explicit start/end days allow before-after
-and treatment-control comparisons for uplift modeling.
-
-### sec6.2 — Price Elasticity
+### sec5.1 — Price Elasticity
 
 Derive unit prices from `SALES_VALUE / QUANTITY` and discount depth from
-`abs(RETAIL_DISC) / (SALES_VALUE - RETAIL_DISC)`. Combine with `causal_data`
-display/mailer indicators to control for promotional context when estimating
-price elasticity curves.
+`abs(RETAIL_DISC) / (SALES_VALUE - RETAIL_DISC)`. `causal_data` display and
+mailer indicators describe the promotional context that a price coefficient
+would otherwise absorb.
 
-### sec6.3 — Product Assortment Optimization
+### sec5.2 — Product Assortment Optimization
 
-Leverage the three-level product hierarchy (`DEPARTMENT` > `COMMODITY_DESC` >
-`SUB_COMMODITY_DESC`) to analyze category structure, identify substitution
-patterns via cross-elasticities, and evaluate assortment breadth versus depth
-trade-offs at the store level.
-
-### sec6.4 — Promotion Optimization
-
-Join `transaction_data` discount columns (`RETAIL_DISC`, `COUPON_DISC`,
-`COUPON_MATCH_DISC`) with `causal_data` (`display`, `mailer`) to measure
-incremental lift from each promotional vehicle. Model promotion ROI by
-comparing baseline sales (non-promoted weeks) against promoted periods.
+Rank SKUs by revenue into ABC classes, then use pairwise basket co-occurrence
+as a substitution proxy before proposing any delisting. The three-level
+product hierarchy (`DEPARTMENT` > `COMMODITY_DESC` > `SUB_COMMODITY_DESC`)
+defines the peer group within which substitution is plausible.

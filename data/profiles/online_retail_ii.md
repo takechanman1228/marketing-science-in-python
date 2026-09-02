@@ -44,8 +44,7 @@ columns:
 date_range: "Dec 2009 – Dec 2011"
 
 chapters_used:
-  - sec4.2  # BERTopic Segmentation (product descriptions for topic modeling)
-  - sec5.4  # Hybrid Recommendations (user-item purchase history + product text features)
+  - sec4.1  # Semantic segmentation (product descriptions for topic modeling)
 ---
 
 # Online Retail II
@@ -134,21 +133,11 @@ After cleaning, approximately 800,000 rows remain.
 
 ## Insights for Downstream Tasks
 
-### sec4.2 — BERTopic Segmentation
+### sec4.1 — Semantic Segmentation
 
 The `Description` column provides free-text product names suitable for
 topic modeling with BERTopic. After deduplication at the `StockCode`
 level, product descriptions can be embedded and clustered to discover
 latent product categories that go beyond the retailer's internal stock
-code hierarchy. These topics serve as features for customer segmentation
-when combined with purchase history.
-
-### sec5.4 — Hybrid Recommendations
-
-The cleaned dataset provides a natural user-item interaction matrix
-(`Customer ID` x `StockCode`) based on purchase events. Implicit
-feedback signals include purchase frequency and total revenue per
-customer-product pair. The `Description` text features enable
-content-based filtering that complements collaborative signals, making
-this dataset well-suited for hybrid recommendation approaches that fuse
-behavioral and textual information.
+code hierarchy. Each customer is then represented by the text of what
+they bought, and the topics become the basis for meaning-based segments.

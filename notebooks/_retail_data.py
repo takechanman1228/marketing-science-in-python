@@ -1,4 +1,4 @@
-"""Shared data loaders for the 3 retail open datasets.
+"""Shared data loaders for the two public retail datasets the book uses.
 
 Usage from any notebook under notebooks/<topic>/:
 
@@ -27,7 +27,6 @@ except ImportError:
 
 _DUNNHUMBY_DIR = str(_RAW / "Dunnhumby_kaggle")
 _ONLINE_RETAIL_PATH = str(_RAW / "Online_Retail_II_UCI" / "online_retail_II.csv")
-_IOWA_PATH = str(_RAW / "Iowa_Liquor_Sales_Data_kaggle_cc0" / "Iowa_Liquor_Sales.csv")
 
 
 # ===================================================================
@@ -42,7 +41,7 @@ def load_dunnhumby_transactions(
 
     Parameters
     ----------
-    data_dir : path to the ``archive/`` folder.
+    data_dir : directory holding the Dunnhumby CSVs.
     usecols : subset of columns to read (saves memory).
 
     Returns
@@ -138,81 +137,5 @@ def load_online_retail_ii(
         df["Customer ID"] = df["Customer ID"].astype(int).astype(str)
         df = df[(df["Quantity"] > 0) & (df["Price"] > 0)].copy()
         df["Revenue"] = df["Quantity"] * df["Price"]
-
-    return df
-
-
-# ===================================================================
-# Iowa Liquor Sales (Kaggle CC0, 1 CSV, ~3.2 GB)
-# ===================================================================
-
-def load_iowa_liquor(
-    data_path: str | None = None,
-    category_filter: str | None = None,
-    usecols: list[str] | None = None,
-    nrows: int | None = None,
-    chunksize: int = 500_000,
-) -> pd.DataFrame:
-    """Load Iowa_Liquor_Sales.csv (~37.8M rows, 3.2 GB) in chunks.
-
-    Parameters
-    ----------
-    category_filter : e.g. ``"VODKA 80 PROOF"`` — keep only matching Category Name.
-    usecols : columns to read; defaults to a useful subset.
-    nrows : if set, stop after this many rows (before filtering).
-    chunksize : rows per chunk.
-    """
-    p = data_path or _IOWA_PATH
-
-    if usecols is None:
-        usecols = [
-            "Invoice/Item Number", "Date", "Store Number", "Store Name",
-            "City", "Zip Code", "County", "Category", "Category Name",
-            "Vendor Name", "Item Number", "Item Description",
-            "Pack", "Bottle Volume (ml)",
-            "State Bottle Cost", "State Bottle Retail",
-            "Bottles Sold", "Sale (Dollars)",
-            "Volume Sold (Liters)", "Volume Sold (Gallons)",
-        ]
-
-    frames: list[pd.DataFrame] = []
-    rows_read = 0
-
-    for chunk in pd.read_csv(
-        p,
-        usecols=usecols,
-        chunksize=chunksize,
-        low_memory=False,
-    ):
-        rows_read += len(chunk)
-
-        # Parse dollar-sign columns
-        for col in ("State Bottle Cost", "State Bottle Retail", "Sale (Dollars)"):
-            if col in chunk.columns:
-                chunk[col] = (
-                    chunk[col]
-                    .astype(str)
-                    .str.replace(r"[\$,]", "", regex=True)
-                    .astype(float)
-                )
-
-        # Parse date
-        if "Date" in chunk.columns:
-            chunk["Date"] = pd.to_datetime(chunk["Date"], format="mixed")
-
-        if category_filter is not None:
-            chunk = chunk[chunk["Category Name"] == category_filter]
-
-        if len(chunk):
-            frames.append(chunk)
-
-        if nrows is not None and rows_read >= nrows:
-            break
-
-    df = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
-
-    # Drop non-positive sales
-    if "Bottles Sold" in df.columns:
-        df = df[(df["Bottles Sold"] > 0) & (df["Sale (Dollars)"] > 0)].copy()
 
     return df

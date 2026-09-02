@@ -4,13 +4,29 @@ MMM synthetic data generation with identifiability QC.
 - Generates base data via PySiMMMulator.
 - Applies a segment-mix style post-process to introduce OFF weeks,
   larger share variation, and lower channel correlations.
-- Recomputes exposures and sales to keep spend/ROI consistency.
+- Rebuilds sales through geometric adstock and Hill saturation, so the dataset
+  has the response curves that Chapters 6.2 and 6.4 discuss. Each channel's
+  curve is solved to hit a chosen true average ROI and a chosen true marginal
+  ROI; the ground-truth CSV reports both.
 
-Requires ``pysimmmulator==0.5.1`` — the committed canonical dataset under
-``data/generated/part6/sec6.2-mmm/`` was generated with it, and 0.6.x
-changed the ``AdstockParameters`` config API (the ``true_lambda_decay``
-keyword below is rejected). Upgrading means porting this config AND
-deliberately regenerating the dataset + re-running the sec6.2 chapter.
+Four settings keep the media coefficients identifiable. Saturation and carryover
+smooth the media contribution, which makes it quiet relative to the baseline's own
+movement, and a quiet signal cannot be separated from the baseline by any
+estimator. BASELINE_SCALE raises media's share of sales,
+BASELINE_RESIDUAL_KEPT limits the baseline movement no control explains,
+OBSERVATION_NOISE_R2 puts the reported fit back where a synthetic panel
+should sit, and SEARCH_SPEND_FLATNESS makes paid search the one channel the
+model cannot learn.
+
+Requires pysimmmulator==0.5.1, which is not part of the chapter environment
+because only this generator needs it:
+
+    pip install pysimmmulator==0.5.1
+
+The committed dataset under data/generated/part6/sec6.2-mmm/ was produced with
+that version. 0.6.x changed the AdstockParameters config API and rejects the
+true_lambda_decay keyword below, so upgrading means porting this config and
+then deliberately regenerating the dataset and re-running the sec6.2 notebook.
 """
 
 from __future__ import annotations
@@ -19,7 +35,155 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from scipy.optimize import brentq
 from pysimmmulator import Simulate
+
+# ---------------------------------------------------------------------------
+# Response-curve ground truth.
+#
+# The media contribution is generated with geometric adstock on EXPOSURE and a
+# Hill saturation with alpha = 1 (Meridian's `slope_m` default is
+# Deterministic(1.0), so alpha = 1 keeps the generating process inside the
+# model's family). Each channel has two free parameters, beta and the
+# half-saturation point K, and two targets: the realised average ROI and a
+# chosen marginal ROI. Beta scales both linearly, so the marginal/average ratio
+# is a function of K alone -- a 1-D root find, then beta closes the average.
+# ---------------------------------------------------------------------------
+
+#: Adstock half-life in weeks. These are the values sec6.2 already states as
+#: priors, so the prose and the data now agree.
+TRUE_HALF_LIFE_WEEKS = {
+    "TV_CTV": 6.0, "OOH": 6.0, "Google": 1.0, "Meta": 3.0, "TikTok": 3.0,
+}
+
+#: True average ROI (incremental revenue / spend over the whole period).
+TRUE_AVERAGE_ROI = {
+    "TV_CTV": 4.17, "OOH": 6.28, "Google": 0.35, "Meta": 3.75, "TikTok": 3.01,
+}
+
+#: True marginal ROI, defined as Meridian defines mROI: the return on a 1%
+#: exposure increase. OOH and Meta sit above a 40%-margin break-even ROAS of
+#: 2.50; TV/CTV, TikTok and Google sit below it. TV/CTV outranks Meta on the
+#: average and is outranked by it on the margin, which is the whole point of
+#: optimising on marginal rather than average return.
+TRUE_MARGINAL_ROI = {
+    "TV_CTV": 1.80,
+    "OOH": 3.50,
+    "Meta": 2.80,
+    "TikTok": 0.80,
+}
+
+#: Google Search is pinned on the quantity Chapter 6.3's geo experiment
+#: measures instead: the ROAS of a 30% spend cut sustained for eight weeks.
+#: Its 1% mROI then follows from the curve rather than being chosen.
+GOOGLE_PULLBACK_ROAS = 0.20
+PULLBACK_MULTIPLIER = 0.70
+PULLBACK_WEEKS = 8
+
+
+#: Carryover window. Matches the `max_lag` the sec6.2 Meridian model uses, so the
+#: generating process sits inside the model family rather than being a truncated
+#: approximation of it.
+TRUE_MAX_LAG = 12
+
+#: Fraction of the baseline that no control variable explains. See the note where
+#: it is applied: media contribution is smooth under saturation, so an unmodelled
+#: baseline swing larger than the media swing makes the channel coefficients
+#: unidentifiable.
+BASELINE_RESIDUAL_KEPT = 0.60
+
+#: Scale on the non-media baseline. Saturation and adstock smooth the media
+#: contribution, so at the simulator's default baseline media is both small and
+#: quiet and no estimator can separate it from the baseline's own movement.
+#: Shrinking the baseline raises media's share of sales (and the advertiser's
+#: ad-to-sales ratio) until the media coefficients are identified.
+BASELINE_SCALE = 0.40
+
+#: How strongly paid-search budget follows seasonal demand. Search budgets track
+#: query volume, and query volume tracks demand, so search spend is partly a
+#: consequence of the outcome it is credited with. That co-movement is the reason
+#: paid search is the hardest channel to identify in an MMM: its weekly pattern is
+#: close to a linear combination of the seasonality controls, so the likelihood has
+#: little to say about its coefficient and the posterior falls back on the prior.
+#: 0 reproduces the independent-budget behaviour of earlier versions.
+SEARCH_DEMAND_COUPLING = 0.5
+
+#: How close paid search runs to a flat always-on budget. 0 leaves the simulator's
+#: week-to-week variation; 1 holds search spend at a constant weekly dollar amount.
+#: Section 6.2 already warns that a channel whose spend never varies cannot be
+#: learned from the data; this is that warning made true for one channel, and it is
+#: why the Search posterior in the demo is the prior with barely any update.
+SEARCH_SPEND_FLATNESS = 0.9
+
+#: Target in-sample R-squared. Reported fit is restored with independent
+#: observation noise rather than by leaving structure in the baseline: white
+#: noise is orthogonal to the media basis, so it lowers R-squared without
+#: handing the media coefficients someone else's movement.
+OBSERVATION_NOISE_R2 = 0.980
+
+
+def geometric_adstock(exposure, decay: float, max_lag: int = TRUE_MAX_LAG):
+    """Return sum_{i=0..max_lag} x_{t-i} * decay**i -- Meridian's own definition."""
+    exposure = np.asarray(exposure, dtype=float)
+    out = np.zeros(len(exposure), dtype=float)
+    for lag in range(max_lag + 1):
+        if lag == 0:
+            out += exposure
+        else:
+            out[lag:] += (decay ** lag) * exposure[:-lag]
+    return out
+
+
+def hill_response(exposure: np.ndarray, decay: float, beta: float, half_sat: float) -> np.ndarray:
+    """Incremental revenue per week: beta * a / (a + K)."""
+    adstocked = geometric_adstock(exposure, decay)
+    return beta * adstocked / (adstocked + half_sat)
+
+
+def _avg_roi(exposure, spend, decay, half_sat) -> float:
+    return float(hill_response(exposure, decay, 1.0, half_sat).sum() / spend.sum())
+
+
+def _mroi_1pct(exposure, spend, decay, half_sat) -> float:
+    base = hill_response(exposure, decay, 1.0, half_sat).sum()
+    up = hill_response(exposure * 1.01, decay, 1.0, half_sat).sum()
+    return float((up - base) / (0.01 * spend.sum()))
+
+
+def _pullback_roas(exposure, spend, decay, half_sat) -> float:
+    """Revenue lost per dollar removed by a sustained cut in the last weeks."""
+    base = hill_response(exposure, decay, 1.0, half_sat)
+    cut = exposure.copy()
+    cut[-PULLBACK_WEEKS:] *= PULLBACK_MULTIPLIER
+    reduced = hill_response(cut, decay, 1.0, half_sat)
+    lost = base[-PULLBACK_WEEKS:].sum() - reduced[-PULLBACK_WEEKS:].sum()
+    removed = spend[-PULLBACK_WEEKS:].sum() * (1.0 - PULLBACK_MULTIPLIER)
+    return float(lost / removed)
+
+
+def solve_response_curve(exposure, spend, decay, target_avg, target_metric, metric_fn):
+    """Return (beta, half_sat) hitting both the average and the marginal target."""
+    exposure = np.asarray(exposure, dtype=float)
+    spend = np.asarray(spend, dtype=float)
+    target_ratio = target_metric / target_avg
+
+    def gap(half_sat: float) -> float:
+        return metric_fn(exposure, spend, decay, half_sat) / _avg_roi(
+            exposure, spend, decay, half_sat
+        ) - target_ratio
+
+    scale = float(geometric_adstock(exposure, decay).mean())
+    lo, hi = scale * 1e-8, scale * 1e8
+    if gap(lo) * gap(hi) > 0:
+        raise ValueError(
+            f"marginal/average ratio {target_ratio:.4f} is outside the reachable "
+            f"range [{target_ratio + gap(lo):.4f}, {target_ratio + gap(hi):.4f}]"
+        )
+    half_sat = brentq(gap, lo, hi, xtol=scale * 1e-12, rtol=1e-14, maxiter=500)
+    shape = hill_response(exposure, decay, 1.0, half_sat)
+    beta = target_avg * spend.sum() / shape.sum()
+    return float(beta), float(half_sat)
+
 
 
 CHANNELS = ["TV_CTV", "OOH", "Google", "Meta", "TikTok"]
@@ -162,7 +326,9 @@ def generate_dataset(
             "frequency_of_campaigns": 1,
             "start_date": "2021/1/1",
             "true_cvr": {
-                # Adjusted to a realistic ROI range (1-10)
+                # Conversion rates chosen so most channels land at a true ROI
+                # of roughly 3-6, with Google deliberately low (~0.2) to give
+                # the §6.4 calibration demo a channel worth calibrating.
                 "TV_CTV": 0.0020,
                 "OOH": 0.0015,
                 "Google": 0.15,
@@ -306,7 +472,35 @@ def generate_dataset(
     sin_term = np.sin(2 * np.pi * week_index / 52.0)
     cos_term = np.cos(2 * np.pi * week_index / 52.0)
     seasonality = 1.0 + 0.08 * sin_term + 0.04 * cos_term
-    baseline = (baseline * seasonality).clip(lower=0.0)
+    baseline = (baseline * seasonality * BASELINE_SCALE).clip(lower=0.0)
+
+    # Keep the baseline mostly explainable by the controls the notebook supplies.
+    #
+    # Media contribution is smooth once adstock and saturation are applied, so its
+    # week-to-week variation is small. If the baseline carries a large movement
+    # that no control explains, that movement is the loudest thing in the series
+    # and any estimator -- OLS with the true basis included -- loads it onto media.
+    # On this panel the unmodelled baseline swing is about twice the media swing,
+    # which inflates every channel's ROI roughly threefold. Shrinking the residual
+    # to a quarter puts the demo back in the regime where the media coefficients
+    # are identified, and matches the identifiability the linear version happened
+    # to have. Production data is noisier; sec6.2 says so.
+    _t = np.arange(len(df), dtype=float)
+    _doy = df["week_start"].dt.dayofyear.to_numpy(dtype=float)
+    _control_basis = np.column_stack([
+        np.ones(len(df)),
+        _t, _t ** 2,
+        np.sin(2 * np.pi * _doy / 365.25), np.cos(2 * np.pi * _doy / 365.25),
+        ((df["week_start"].dt.month == 11) & df["week_start"].dt.day.between(22, 28)).to_numpy(float),
+        ((df["week_start"].dt.month == 12) & df["week_start"].dt.day.between(22, 28)).to_numpy(float),
+    ])
+    _base = baseline.to_numpy(dtype=float)
+    _coef, *_ = np.linalg.lstsq(_control_basis, _base, rcond=None)
+    _explained = _control_basis @ _coef
+    baseline = pd.Series(
+        np.clip(_explained + BASELINE_RESIDUAL_KEPT * (_base - _explained), 0.0, None),
+        index=baseline.index,
+    )
 
     # Exposure per spend ratios
     ratios = {
@@ -319,6 +513,24 @@ def generate_dataset(
 
     total_spend = df[spend_cols].sum(axis=1).to_numpy()
 
+    # Break the shared trend between the media budget and the baseline. The
+    # simulator drives both from the same upward trend, which leaves
+    # corr(baseline, total spend) around 0.8: media and baseline then explain the
+    # same movement and the model cannot tell them apart. Orthogonalising total
+    # spend against the baseline's own basis (level, trend, trend^2, annual
+    # seasonality) keeps the total budget and the week-to-week lumpiness while
+    # removing the part that is collinear with the baseline.
+    _t = np.arange(len(df), dtype=float) / max(len(df) - 1, 1)
+    _basis = np.column_stack([
+        np.ones_like(_t), _t, _t ** 2,
+        np.sin(2 * np.pi * _t * len(df) / 52.0), np.cos(2 * np.pi * _t * len(df) / 52.0),
+    ])
+    _coef, *_ = np.linalg.lstsq(_basis, total_spend, rcond=None)
+    _resid = total_spend - _basis @ _coef
+    total_spend = np.clip(total_spend.mean() + _resid, total_spend.min() * 0.5, None)
+    total_spend = total_spend * (df[spend_cols].sum(axis=1).to_numpy().sum() / total_spend.sum())
+
+
     qc_metrics = None
     last_warnings: list[str] = []
 
@@ -329,6 +541,19 @@ def generate_dataset(
             n_channels=len(spend_cols),
             rng=rng,
         )
+        if SEARCH_DEMAND_COUPLING > 0.0:
+            # Search budget follows demand: more queries in season, more clicks, more
+            # spend. Tilt the search share by the baseline itself, then renormalise so
+            # the weekly total is untouched -- money moves between channels, not in.
+            _google = spend_cols.index("google_spend")
+            _demand = baseline.to_numpy(dtype=float)
+            _demand = (_demand - _demand.mean()) / _demand.std()
+            _tilt = np.exp(SEARCH_DEMAND_COUPLING * _demand)
+            weights = weights.copy()
+            weights[:, _google] *= _tilt
+            _row_totals = weights.sum(axis=1, keepdims=True)
+            weights = np.divide(weights, _row_totals, out=np.zeros_like(weights),
+                                where=_row_totals > 0)
         new_spend = weights * total_spend[:, None]
         spend_df = pd.DataFrame(new_spend, columns=spend_cols)
         qc_metrics = compute_identifiability_metrics(spend_df)
@@ -353,6 +578,32 @@ def generate_dataset(
         for w in last_warnings:
             print(f"  - {w}")
 
+    if SEARCH_SPEND_FLATNESS > 0.0:
+        # Flatten the search budget toward a constant weekly amount and give the
+        # difference to the other channels in proportion, so each week's total
+        # budget is unchanged.
+        _google = spend_cols.index("google_spend")
+        _search = new_spend[:, _google]
+        _flat = (1.0 - SEARCH_SPEND_FLATNESS) * _search + SEARCH_SPEND_FLATNESS * _search.mean()
+        _delta = _search - _flat
+        _others = np.delete(np.arange(new_spend.shape[1]), _google)
+        _other_totals = new_spend[:, _others].sum(axis=1)
+        _shares = np.divide(new_spend[:, _others], _other_totals[:, None],
+                            out=np.zeros_like(new_spend[:, _others]), where=_other_totals[:, None] > 0)
+        new_spend = new_spend.copy()
+        new_spend[:, _google] = _flat
+        new_spend[:, _others] += _shares * _delta[:, None]
+        new_spend = np.clip(new_spend, 0.0, None)
+
+    # Recompute the identifiability metrics on the spend matrix that actually
+    # ships. The flattening above changes every channel's OFF rate and share
+    # variance, so the metrics computed before it describe a matrix no consumer
+    # ever sees. Google Search is expected to fail the variation check by design;
+    # the QC print says so rather than hiding it behind a stale average.
+    qc_metrics = compute_identifiability_metrics(
+        pd.DataFrame(new_spend, columns=spend_cols)
+    )
+
     # Apply new spend
     for i, col in enumerate(spend_cols):
         df[col] = new_spend[:, i]
@@ -365,9 +616,37 @@ def generate_dataset(
         noise = rng.lognormal(mean=0.0, sigma=exposure_noise_std, size=len(df))
         df[exp_col] = df[spend_col] * ratio * noise
 
-    # Recompute sales
-    incremental_new = sum(df[col] * roi_map[col] for col in spend_cols)
-    df["sales"] = (baseline + incremental_new).clip(lower=1e-6)
+    # Recompute sales through adstock + Hill saturation, so the dataset has the
+    # response curves that Chapters 6.2 and 6.4 talk about. The previous version
+    # of this block added `spend * true_roi` directly, which made the true
+    # marginal ROI identical to the true average ROI and left the data with no
+    # carryover at all.
+    curve_params: dict[str, tuple[float, float, float]] = {}
+    incremental_new = np.zeros(len(df), dtype=float)
+    for ch, spend_col, exp_col in zip(CHANNELS, spend_cols, exposure_cols):
+        decay = 0.5 ** (1.0 / TRUE_HALF_LIFE_WEEKS[ch])
+        exposure = df[exp_col].to_numpy(dtype=float)
+        spend_series = df[spend_col].to_numpy(dtype=float)
+        if ch == "Google":
+            beta, half_sat = solve_response_curve(
+                exposure, spend_series, decay, TRUE_AVERAGE_ROI[ch],
+                GOOGLE_PULLBACK_ROAS, _pullback_roas,
+            )
+        else:
+            beta, half_sat = solve_response_curve(
+                exposure, spend_series, decay, TRUE_AVERAGE_ROI[ch],
+                TRUE_MARGINAL_ROI[ch], _mroi_1pct,
+            )
+        curve_params[ch] = (decay, beta, half_sat)
+        incremental_new = incremental_new + hill_response(exposure, decay, beta, half_sat)
+
+    clean_sales = (baseline + incremental_new).to_numpy(dtype=float)
+    noise_var = 0.0 if OBSERVATION_NOISE_R2 >= 1.0 else (
+        clean_sales.var() * (1.0 - OBSERVATION_NOISE_R2) / OBSERVATION_NOISE_R2)
+    noise = np.random.default_rng(base_seed + 4242).normal(
+        0.0, float(np.sqrt(noise_var)), size=len(clean_sales)
+    )
+    df["sales"] = np.clip(clean_sales + noise, 1e-6, None)
 
     # Synthetic controls
     day_of_year = df["week_start"].dt.dayofyear
@@ -413,10 +692,24 @@ def generate_dataset(
 
     df = df[output_cols]
 
-    # Ground truth ROI table
+    # Ground truth response-curve table. `true_roi` stays the average ROI so the
+    # existing data contract holds; the marginal columns are what Chapter 6.4
+    # calibrates against.
     roi_rows = []
-    for ch in CHANNELS:
-        roi_rows.append({"channel": CHANNEL_DISPLAY[ch], "true_roi": round(channel_roi[ch], 4)})
+    for ch, spend_col, exp_col in zip(CHANNELS, spend_cols, exposure_cols):
+        decay, beta, half_sat = curve_params[ch]
+        exposure = df[exp_col].to_numpy(dtype=float)
+        spend_series = df[spend_col].to_numpy(dtype=float)
+        revenue = hill_response(exposure, decay, beta, half_sat)
+        roi_rows.append({
+            "channel": CHANNEL_DISPLAY[ch],
+            "true_roi": round(float(revenue.sum() / spend_series.sum()), 4),
+            "true_marginal_roi": round(_mroi_1pct(exposure, spend_series, decay, half_sat) * beta, 4),
+            "true_pullback_roas_8w": round(_pullback_roas(exposure, spend_series, decay, half_sat) * beta, 4),
+            "adstock_half_life_weeks": TRUE_HALF_LIFE_WEEKS[ch],
+            "adstock_decay": round(decay, 4),
+            "hill_half_saturation": round(half_sat, 2),
+        })
     truth_df = pd.DataFrame(roi_rows)
     # ROI sanity check: require positive ROI for all channels
     if (truth_df["true_roi"] <= 0).any():
@@ -445,10 +738,18 @@ def main() -> None:
     print(f"Saved {truth_path} ({truth_df.shape[0]} rows)")
 
     overall = qc_metrics["overall"]
-    print("\n[QC Metrics]")
+    print("\n[QC Metrics on the final spend matrix]")
     print(f"OFF rate mean: {overall['off_rate_mean']:.1%}")
     print(f"Share std mean: {overall['share_std_mean']:.3f}")
     print(f"Channel corr max: {overall['channel_corr_max']:.3f}")
+    search_share_std = overall["share_stds"]["google_spend"]
+    search_off_rate = overall["off_rates"]["google_spend"]
+    print(
+        f"Google Search, by design: OFF rate {search_off_rate:.1%}, "
+        f"share std {search_share_std:.3f} — an always-on flat budget, which is "
+        f"the channel sec6.3 and sec6.4 exist to measure. The other four carry "
+        f"the variation the model learns from."
+    )
 
 
 if __name__ == "__main__":

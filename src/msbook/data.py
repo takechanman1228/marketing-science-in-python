@@ -149,7 +149,3 @@ def load_minethatdata() -> pd.DataFrame:
 
     return pd.read_csv(cache_path)
 
-
-# A loader for Iowa Liquor is left as a stub until that notebook adopts
-# msbook.data; the existing notebooks/_retail_data.py implementation still
-# works as-is.
