@@ -987,7 +987,7 @@ Table&nbsp;2: RFM-T metrics used in the BTYD model.
 <span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    discount_rate<span class="op">=</span><span class="fl">0.01</span>,</span>
 <span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    time_unit<span class="op">=</span><span class="st">"D"</span>,</span>
 <span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>The output includes not just point estimates but HDI (Highest Density Interval) bounds. In this API, <code>future_t</code> is measured in months, while <code>time_unit="D"</code> tells the model that the RFM-T inputs are measured in days. The model tells you how confident it is for each customer.</p>
+<p>The output includes not just point estimates but HDI (Highest Density Interval) bounds. In this API, <code>future_t</code> is measured in months, while <code>time_unit="D"</code> tells the model that the RFM-T inputs are measured in days. The model tells you how confident it is for each customer, though only about purchase timing: the spend posterior is summarized to its mean before discounting, so treat the bounds as a lower bound on the real uncertainty.</p>
 <p>The horizon is a decision, not a default. This dataset covers about 23 months, so a 120-month projection runs roughly five times past the observed window. The estimate does not run away, because BG/NBD builds customer dropout into the projection, but that dropout rate is itself estimated from those 23 months. The companion notebook re-discounts the same posterior at 3, 5, and 10 years. On this dataset, customer ranking barely moves across the three, so rank-based targeting is insensitive to these tested horizons; the median 10-year estimate is about 2.23 times the 3-year estimate, so anything that turns CLV into a dollar ceiling has to state the horizon it used.</p>
 </section>
 <section id="probability-alive-matrix" class="level3">
@@ -1067,10 +1067,9 @@ Figure&nbsp;11: The Probability Alive matrix.
 <section id="key-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="key-takeaways">Key Takeaways</h2>
 <ul>
-<li>CLV reframes marketing budget decisions. Instead of hitting a uniform CPA target, set acquisition and retention spend in proportion to what each customer is actually worth.</li>
-<li>The traditional formula is too coarse. It ignores customer heterogeneity, tenure differences, and the dead-or-alive ambiguity that defines non-contractual settings.</li>
-<li>BTYD (BG/NBD + Gamma-Gamma) handles all three problems with transaction data alone, and returns a credible interval for every customer. One honest caveat: those intervals mainly reflect uncertainty in the transaction process, since the spend model enters as a posterior mean, so treat them as a lower bound on your true uncertainty. For contractual settings use sBG, for churn-driver analysis use survival models, and treat feature-based ML as a comparison to run, not an automatic upgrade.</li>
-<li>Three immediate applications: CPA ceilings (use a conservative lower bound), P(alive) change alerts for CRM, and cohort revenue forecasts for Finance.</li>
+<li>CLV replaces a uniform CPA target with spend proportional to what each customer is worth. The average exists in the data and describes no one.</li>
+<li>In non-contractual settings, BG/NBD models future purchases and Gamma-Gamma models spend, from transaction data alone. Every customer gets a credible interval, so bid against a conservative lower bound rather than the mean.</li>
+<li>Convert revenue CLV to profit CLV before it sets a CPA ceiling, and state the horizon: the median ten-year estimate runs about 2.23 times the three-year one, though the ranking barely moves.</li>
 </ul>
 
 

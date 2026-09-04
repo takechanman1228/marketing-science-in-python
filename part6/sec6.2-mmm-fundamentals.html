@@ -700,7 +700,7 @@ Figure&nbsp;4: The three zones of the saturation curve.
 \]</span></p>
 <p>where <span class="math inline">\(K\)</span> (the half-saturation point, often called EC50) is the spend level at which the channel reaches 50% of its maximum effect, and <span class="math inline">\(S\)</span> (the slope) controls how sharply the curve bends.</p>
 <p>One practical note about <span class="math inline">\(K\)</span> when you set its prior. Meridian applies adstock without normalizing it, so a channel with a six-week half-life carries an adstocked value several times its weekly median, and its half-saturation point has to live on that larger scale. A prior centered for a fast-decaying channel will exclude the truth for a slow one. The demo therefore keeps its funnel structure on adstock and gives saturation a single channel-independent prior, wide enough to cover every curve in the data, and lets the likelihood place each one.</p>
-<p>This curvature is what makes budget reallocation valuable. In <a href="#fig-saturation-reallocation" class="quarto-xref">Figure&nbsp;<span>5</span></a>, channel X sits deep in its saturation zone while channel Y still has headroom. Trimming budget on X costs $1M in sales, while adding that budget to Y gains $3M: a net gain of $2M on the same total spend. Shifting budget from saturated channels to under-invested ones can increase total return, even if the saturated channel’s average ROAS looks higher.</p>
+<p>This curvature is what makes budget reallocation valuable. In <a href="#fig-saturation-reallocation" class="quarto-xref">Figure&nbsp;<span>5</span></a>, channel X sits deep in its saturation zone while channel Y still has headroom. Trimming budget on X costs $1M in sales, while adding that budget to Y gains $3M: a net gain of $2M on the same total spend. Shifting budget from saturated channels to under-invested ones can increase total return, even if the saturated channel’s average ROAS looks higher. Average ROAS divides a channel’s total incremental revenue by its total spend; marginal ROAS is the slope of the curve where the channel sits now, and that is what the next dollar earns.</p>
 <div id="fig-saturation-reallocation" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Two saturation curves: decreasing budget on saturated channel X loses $1M in sales while increasing budget on less saturated channel Y gains $3M, a net change of +$2M.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-saturation-reallocation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -989,11 +989,9 @@ Figure&nbsp;15: Pre- vs.&nbsp;post-optimization budget by channel.
 <section id="key-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="key-takeaways">Key Takeaways</h2>
 <ul>
-<li>MMM estimates channel contribution using aggregate data. It does not need user-level tracking, so it is resilient to cookie deprecation, App Tracking Transparency, and walled-garden limits.</li>
-<li>Hill saturation and geometric adstock are the two main transforms. Each channel gets its own set of parameters.</li>
-<li><strong>Optimize on marginal ROAS, not average ROAS.</strong> A high average-ROAS channel can already be saturated; the next dollar belongs wherever the curve is still steep.</li>
-<li>Data requirements are specific: weekly data, at least 2–3 years of history, and real spend variation for each channel.</li>
-<li>Bayesian estimation is now the default. Priors let you encode domain knowledge, and the posterior gives credible intervals instead of just point estimates.</li>
+<li>MMM estimates channel contribution from aggregate time series, so it survives cookie loss and walled gardens. It needs weekly data, two to three years of history, and real spend variation in every channel.</li>
+<li>Adstock and saturation turn spend into a response curve, and the curve is why you allocate on marginal return rather than average. A high average-ROAS channel can already be saturated.</li>
+<li>For a channel the data cannot identify, the model returns the prior you gave it. Hold recommendations whose intervals are too wide to defend, record the model’s prediction, and go measure it.</li>
 </ul>
 
 
