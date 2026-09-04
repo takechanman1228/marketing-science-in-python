@@ -1,0 +1,1368 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="実際に運用できる顧客セグメンテーションとして、デシルとRFM、K-Meansによる行動クラスタリング、BERTopic埋め込み、セグメンテーションの良し悪しを判断する方法を扱います。">
+
+<title>Pythonによる顧客セグメンテーション – Marketing Science in Python</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../part4/sec4.2-clv-modeling.html" rel="next">
+<link href="../part4/_part4.html" rel="prev">
+<link href="../assets/favicon.png" rel="icon" type="image/png">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-491b769ea73b1ce4946cf8743b832a60.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-ec576e9d6a0f00bdcb4dbec60768df31.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-491b769ea73b1ce4946cf8743b832a60.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "一致なし",
+    "search-matching-documents-text": "一致した文書",
+    "search-copy-link-title": "検索へのリンクをコピー",
+    "search-hide-matches-text": "追加の検索結果を非表示",
+    "search-more-match-text": "追加の検索結果",
+    "search-more-matches-text": "追加の検索結果",
+    "search-clear-button-title": "消去",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "取消",
+    "search-submit-button-title": "検索",
+    "search-label": "サーチ"
+  }
+}</script>
+<script async="" src="https://www.googletagmanager.com/gtag/js?id=G-YY0LCGYER5"></script>
+
+<script type="text/javascript">
+
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
+</script>
+
+
+<link rel="stylesheet" href="../custom.css">
+<meta property="og:title" content="Pythonによる顧客セグメンテーション">
+<meta property="og:description" content="実際に運用できる顧客セグメンテーションとして、デシルとRFM、K-Meansによる行動クラスタリング、BERTopic埋め込み、セグメンテーションの良し悪しを判断する方法を扱います。">
+<meta property="og:image" content="https://marketing-science-in-python.com/images/common/book_cover_online.png">
+<meta property="og:site_name" content="Marketing Science in Python">
+<meta property="og:image:alt" content="抽象的なデータストリームが幾何学的ネットワークへ集まる表紙">
+<meta name="twitter:title" content="Pythonによる顧客セグメンテーション">
+<meta name="twitter:description" content="実際に運用できる顧客セグメンテーションとして、デシルとRFM、K-Meansによる行動クラスタリング、BERTopic埋め込み、セグメンテーションの良し悪しを判断する方法を扱います。">
+<meta name="twitter:image" content="https://marketing-science-in-python.com/images/common/book_cover_online.png">
+<meta name="twitter:image:alt" content="抽象的なデータストリームが幾何学的ネットワークへ集まる表紙">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://marketing-science-in-python.com/ja/part4/sec4.1-segmentation.html">
+<!-- msbook-i18n-head:start -->
+<link rel="alternate" hreflang="en" href="https://marketing-science-in-python.com/part4/sec4.1-segmentation.html">
+<link rel="alternate" hreflang="ja" href="https://marketing-science-in-python.com/ja/part4/sec4.1-segmentation.html">
+<link rel="alternate" hreflang="x-default" href="https://marketing-science-in-python.com/part4/sec4.1-segmentation.html">
+<!-- msbook-i18n-head:end -->
+</head>
+
+<body class="nav-sidebar floating quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="サイドバーを切り替える" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part4/_part4.html">Part 4. 顧客分析</a></li><li class="breadcrumb-item"><a href="../part4/sec4.1-segmentation.html"><span class="chapter-title">4.1 顧客セグメンテーション</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="サイドバーを切り替える" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="サーチ" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <!-- msbook-language-switch:start -->
+<div class="msbook-language-switch" aria-label="Language"><a lang="en" hreflang="en" href="../../part4/sec4.1-segmentation.html" onclick="this.hash=window.location.hash">English</a><span aria-hidden="true"> | </span><span lang="ja" aria-current="page">日本語</span></div>
+<!-- msbook-language-switch:end -->
+<div class="sidebar-title mb-0 py-0">
+      <a href="../">Marketing Science in Python</a> 
+        <div class="sidebar-tools-main tools-wide">
+    <a href="https://github.com/takechanman1228/marketing-science-in-python" title="ソースコード" class="quarto-navigation-tool px-1" aria-label="ソースコード"><i class="bi bi-github"></i></a>
+    <div class="dropdown">
+      <a href="" title="Share" id="quarto-navigation-tool-dropdown-0" class="quarto-navigation-tool dropdown-toggle px-1" data-bs-toggle="dropdown" aria-expanded="false" role="link" aria-label="Share"><i class="bi bi-share"></i></a>
+      <ul class="dropdown-menu" aria-labelledby="quarto-navigation-tool-dropdown-0">
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://twitter.com/intent/tweet?url=|url|">
+              <i class="bi bi-twitter pe-1"></i>
+            Twitter
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://www.linkedin.com/sharing/share-offsite/?url=|url|">
+              <i class="bi bi-linkedin pe-1"></i>
+            LinkedIn
+            </a>
+          </li>
+      </ul>
+    </div>
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="ダークモードの切り替え"><i class="bi"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="サーチ"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">はじめに</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part1/_part1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Part 1. はじめに</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1/sec1.1-what-is-marketing-science.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">1.1 マーケティングサイエンスとは何か？</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1/sec1.2-data-landscape.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">1.2 マーケティングデータを理解する</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part2/_part2.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Part 2. より良い意思決定のための分析</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.1-right-question.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.1 正しい問いを設定する</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.2-kpi-design.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.2 診断のためのKPI設計</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.3-storytelling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.3 データをストーリーへ変える</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part3/_part3.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Part 3. マーケティングのための因果推論</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.1-thinking-causally.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.1 因果的に考える</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.2-ab-testing.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.2 A/Bテストの設計</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.3-quasi-experiments.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.3 準実験</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.4-causal-impact.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.4 時系列による因果インパクト</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.5-meta-learners.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.5 処置効果のためのメタラーナー</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.6-uplift-modeling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.6 ターゲティングのためのアップリフトモデリング</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part4/_part4.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Part 4. 顧客分析</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part4/sec4.1-segmentation.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">4.1 顧客セグメンテーション</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part4/sec4.2-clv-modeling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">4.2 顧客生涯価値モデリング</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part5/_part5.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Part 5. コマーシャル分析</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.1-price-elasticity.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.1 価格弾力性と価格設定の意思決定</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.2-assortment-optimization.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.2 商品品揃えの最適化</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.3-sales-forecasting.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.3 売上予測とシナリオ計画</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part6/_part6.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Part 6. メディア投資と最適化</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.1-media-measurement-problem.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.1 メディア測定の問題</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.2-mmm-fundamentals.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.2 MMMの構築と最適化</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.3-incrementality-experiments.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.3 増分効果実験</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.4-mmm-calibration.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.4 実験によるMMMの較正</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.5-when-tools-disagree.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.5 測定ツールが一致しないときの意思決定</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendix/further-reading.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">参考文献と追加資料</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendix/notebooks.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">ノートブックとコード</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../marketing-analytics-in-python.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Pythonによるマーケティング分析</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">目次</h2>
+   
+  <ul>
+  <li><a href="#sec-behavioral-vs-profile" id="toc-sec-behavioral-vs-profile" class="nav-link active" data-scroll-target="#sec-behavioral-vs-profile">行動変数とプロフィール変数</a></li>
+  <li><a href="#sec-value-tiers" id="toc-sec-value-tiers" class="nav-link" data-scroll-target="#sec-value-tiers">単純な方法から始める：デシルとRFM</a>
+  <ul class="collapse">
+  <li><a href="#decile-analysis" id="toc-decile-analysis" class="nav-link" data-scroll-target="#decile-analysis">デシル分析</a></li>
+  <li><a href="#rfm-analysis" id="toc-rfm-analysis" class="nav-link" data-scroll-target="#rfm-analysis">RFM分析</a></li>
+  </ul></li>
+  <li><a href="#sec-kmeans" id="toc-sec-kmeans" class="nav-link" data-scroll-target="#sec-kmeans">K-Meansによる行動クラスタリング</a></li>
+  <li><a href="#sec-embedding" id="toc-sec-embedding" class="nav-link" data-scroll-target="#sec-embedding">BERTopicによる埋め込みベースのセグメンテーション</a>
+  <ul class="collapse">
+  <li><a href="#why-bertopic" id="toc-why-bertopic" class="nav-link" data-scroll-target="#why-bertopic">なぜBERTopicなのか？</a></li>
+  <li><a href="#constructing-the-customer-document" id="toc-constructing-the-customer-document" class="nav-link" data-scroll-target="#constructing-the-customer-document">顧客ドキュメントを構築する</a></li>
+  <li><a href="#reading-the-output" id="toc-reading-the-output" class="nav-link" data-scroll-target="#reading-the-output">出力を読み取る</a></li>
+  <li><a href="#when-one-theme-dominates" id="toc-when-one-theme-dominates" class="nav-link" data-scroll-target="#when-one-theme-dominates">一つのテーマが支配する場合</a></li>
+  <li><a href="#the-llm-naming-trap" id="toc-the-llm-naming-trap" class="nav-link" data-scroll-target="#the-llm-naming-trap">LLMによる命名の罠</a></li>
+  </ul></li>
+  <li><a href="#sec-segment-validation" id="toc-sec-segment-validation" class="nav-link" data-scroll-target="#sec-segment-validation">セグメンテーションは優れているか？</a></li>
+  <li><a href="#sec-method-cheat-sheet" id="toc-sec-method-cheat-sheet" class="nav-link" data-scroll-target="#sec-method-cheat-sheet">手法早見表</a></li>
+  <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways">要点</a></li>
+  </ul>
+<div class="quarto-code-links"><h2>コードリンクス</h2><ul><li><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_traditional_segmentation.ipynb"><i class="bi bi-github"></i>sec4.1_traditional_segmentation.ipynb</a></li><li><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_semantic_segmentation.ipynb"><i class="bi bi-github"></i>sec4.1_semantic_segmentation.ipynb</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part4/_part4.html">Part 4. 顧客分析</a></li><li class="breadcrumb-item"><a href="../part4/sec4.1-segmentation.html"><span class="chapter-title">4.1 顧客セグメンテーション</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span id="sec-segmentation" class="quarto-section-identifier"><span class="chapter-title">4.1 顧客セグメンテーション</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="translation-notice">
+<p><strong>日本語版について</strong><br>
+このページは英語版 <em>Marketing Science in Python</em> のAI翻訳です。英語版を正本とし、差異がある場合は英語版を優先してください。コード、Notebook、画像内の文字は英語のままです。 <a href="../../part4/sec4.1-segmentation.html" class="translation-source-link">英語版を読む</a></p>
+</div>
+<p>セグメンテーションのプロジェクトでは、プレゼンテーションだけでなく、チームが実際に使えるものを作る必要があります。本当の成果物は、CRMや広告プラットフォームへ直接つながる <code>segment_id</code> と、各セグメントについて、その人たちは誰か、なぜ重要か、チームはどのような行動を取るべきかを示す簡潔な概要です。</p>
+<p>この章では、そのような成果物を3つの手順で作ります。</p>
+<ol type="1">
+<li>最初に、現在価値で顧客を順位づけします。デシル分析とRFM（Recency、Frequency、Monetary）によって、価値に基づくセグメントをすばやく作れます。</li>
+<li>次に、行動で顧客をグループ化します。行動クラスタリングは、価値階層だけでは捉えられないパターンを明らかにします。</li>
+<li>最後に、購入の意味を加えます。埋め込みベースのセグメンテーションは、顧客がいくら使うかだけでなく、実際に何を購入しているかを示します。</li>
+</ol>
+<section id="sec-behavioral-vs-profile" class="level2">
+<h2 class="anchored" data-anchor-id="sec-behavioral-vs-profile">行動変数とプロフィール変数</h2>
+<p>顧客セグメントを作る際、変数は大きく2種類に分かれます。行動変数は、最終購入からの期間、頻度、支出、購入カテゴリー、商品の幅、返品、値引きへの依存など、顧客が何をするかを表します。プロフィール変数は、年齢、所得、世帯構成、地域、ロイヤルティ階層、チャネル嗜好など、顧客が誰であるか、どこで接触できるかを表します。</p>
+<p>マーケティングのセグメンテーションでは、行動変数の方が強い基盤になります。誰かが見たもの、購入したもの、類似顧客が選んだものは、通常、人口統計より次の行動をうまく予測します。「この商品は30代男性向け」「このオファーは高所得者向け」のように人口統計だけへ頼ることは、顧客の実際の購入履歴よりはるかに弱いシグナルです。</p>
+<p>プロフィール変数にも役割があります。セグメントを作った後に、各群に誰がいるか、どこで接触できるか、コミュニケーションをどう調整するかを理解するために使います。</p>
+</section>
+<section id="sec-value-tiers" class="level2">
+<h2 class="anchored" data-anchor-id="sec-value-tiers">単純な方法から始める：デシルとRFM</h2>
+<p>最も単純なのはルールベースの方法です。アルゴリズムへ頼らず、自分で閾値を定義します。デシル分析とRFMが最も一般的な例です。</p>
+<section id="decile-analysis" class="level3">
+<h3 class="anchored" data-anchor-id="decile-analysis">デシル分析</h3>
+<p>デシル分析は、売上に基づいて顧客を同じ人数の10群へ分けます。多くの場合、パレートの法則に従い、少数の群が売上の大半を生みます。最上位デシルには維持施策とVIP対応を行います。次の3デシルは成長キャンペーンの主な対象です。中央の3デシルには低コストの自動ナーチャリングを行い、下位3デシルは高価なオファーから除外します。すばやく設定でき、チームへ明確な行動計画を渡せます。</p>
+<div id="fig-decile-distribution" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="顧客価値は上位デシルに集中し、上位20%が売上の半分以上を生む">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-decile-distribution-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.1/decile_distribution.png" class="fig-md img-fluid figure-img" alt="顧客価値は上位デシルに集中し、上位20%が売上の半分以上を生む">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-decile-distribution-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+図&nbsp;1: 典型的な顧客価値のデシル分布。
+</figcaption>
+</figure>
+</div>
+</section>
+<section id="rfm-analysis" class="level3">
+<h3 class="anchored" data-anchor-id="rfm-analysis">RFM分析</h3>
+<p>RFMは、より細かな見方を提供します。休眠した高額購入者、新しく頻繁に購入する顧客など、チームがすでに使っている考え方に合うため、ダイレクトマーケティングで最も広く使われるセグメンテーションの枠組みです。</p>
+<div id="tbl-rfm-variables" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-rfm-variables-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+表&nbsp;1: RFM変数とその解釈。
+</figcaption>
+<div aria-describedby="tbl-rfm-variables-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>変数</th>
+<th>定義</th>
+<th>良い方向</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Recency (R)</td>
+<td>顧客の最後の購入からの日数</td>
+<td>低い方が良い</td>
+</tr>
+<tr class="even">
+<td>Frequency (F)</td>
+<td>観察期間内の購入回数</td>
+<td>高い方が良い</td>
+</tr>
+<tr class="odd">
+<td>Monetary (M)</td>
+<td>観察期間内の総支出</td>
+<td>高い方が良い</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<p>独立ソートでは各変数を別々に五分位へ分け、3桁のスコア（R=5、F=4、M=3）と最大125群を作ります。逐次ソートでは分割を入れ子にします。最初にRecency、次に各Recency群内でFrequency、最後にMonetaryで分けるため、Recencyへ最も大きな重みが置かれます。</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">ヒント</span>1回の呼び出しでRFMスコアリング
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><a href="sec4.2-clv-modeling.html">Section 4.2</a>のCLVモデリングで使うPyMC-Marketingには、四分位に基づく <code>rfm_segments()</code> ユーティリティがあります。取引表からR、F、Mをスコアリングし、名前付きセグメントを直接割り当てます。K-Meansより柔軟性は低いものの、実務ではうまく機能し、非常に大きな顧客基盤でも高速です。</p>
+</div>
+</div>
+<p>デシルとRFMはすばやく設定でき、簡単に使えます。しかし、作れるのは価値階層だけであり、完全な顧客プロフィールではありません。似たRFMスコアを持つ2人の顧客も、大きく異なる行動を取る可能性があります。一人は多くのカテゴリーで定価商品を購入し、もう一人は単一カテゴリーの値引き商品だけを購入するかもしれません。こうした違いを見るには、価値階層から、より豊かな行動変数へ移る必要があります。</p>
+</section>
+</section>
+<section id="sec-kmeans" class="level2">
+<h2 class="anchored" data-anchor-id="sec-kmeans">K-Meansによる行動クラスタリング</h2>
+<p>K-Meansは古典的なクラスタリングアルゴリズムですが、今でもマーケティングのセグメンテーションにうまく機能します。支出が支配的にならないよう、StandardScalerで特徴量を正規化し、6〜10個の行動変数から始めます。RFMに加え、平均注文金額、バスケットサイズ、返品率などが有用です。</p>
+<p>スケーリング前に、歪んだ変数を対数変換します。支出、頻度、最終購入からの期間、バスケットサイズは通常、強く右に歪みます。少数の顧客が、ほかの全員よりはるかに多く購入するからです。StandardScalerは中心化と再スケーリングだけを行うため、長い裾は残ります。生のままK-Meansへ入力すると、最初の分割を高額購入者と少額購入者の切り分けに使い、ほぼ価値階層を再発見します。追加で見つけるクラスタも、施策を実施するには小さすぎる外れ値の集まりになります。歪んだ特徴量へ <code>log1p</code> を適用すると（単純なルールとして、歪度が約1を超えるものを変換）、裾が圧縮されます。その結果、クラスタは支出の大きさではなく行動の<em>形</em>を反映し、均衡した行動可能なセグメントが現れます。付属データセットでは、K-Meansが3つの価値階層へ縮退するか、顧客基盤を均衡した同程度の規模の5つの行動群へ分けるかの違いになります。</p>
+<p>Kの選択は、統計と判断の両方で行います。エルボー法は範囲を絞るのに役立ちますが、数を一つに決めることはほとんどありません。顧客データで最も鋭い折れ曲がりはK=3にあることが多く、通常はデシルとRFMですでに捉えた価値階層（高額、平均、休眠）を再現するだけです。価値ではなく行動で分けるには、実用的な範囲（多くの場合4〜8セグメント）まで進め、行動可能性で決めます。マーケティングチームが実際に異なる扱いをするセグメントを持つKを選びます。各セグメントに異なる行動を説明できなければ、セグメントが多すぎます。</p>
+<div id="fig-elbow" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="クラスタ内変動は約5クラスタまで急速に低下し、その後はクラスタを追加しても緩やかにしか改善しない">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-elbow-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.1/elbow.png" class="fig-md img-fluid figure-img" alt="クラスタ内変動は約5クラスタまで急速に低下し、その後はクラスタを追加しても緩やかにしか改善しない">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-elbow-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+図&nbsp;2: Kを選ぶためのエルボープロット。
+</figcaption>
+</figure>
+</div>
+<p>付属データセットでは、K=5でセグメントが価値階層ではなく、施策概要として使えるものになります。<a href="#tbl-kmeans-segments" class="quarto-xref">表&nbsp;<span>2</span></a> がその結果です。構成比とプロフィール平均はNotebookから得ています（支出、来店回数、部門数は、セグメント内で平均した2年間の合計です）。名前と最後の2つの行動は、プロフィールのヒートマップに対する分析者の解釈であり、Notebookが読者へ残している手順です。</p>
+<div id="tbl-kmeans-segments" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-kmeans-segments-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+表&nbsp;2: 付属Notebookの食料品データにおけるK=5のセグメント。
+</figcaption>
+<div aria-describedby="tbl-kmeans-segments-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">セグメント</th>
+<th style="text-align: right;">構成比</th>
+<th style="text-align: left;">プロフィール</th>
+<th style="text-align: left;">行動</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">高額ロイヤル層</td>
+<td style="text-align: right;">25%</td>
+<td style="text-align: left;">支出$7,300、来店209回、17部門</td>
+<td style="text-align: left;">VIP維持施策</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">頻繁な少額購入層</td>
+<td style="text-align: right;">23%</td>
+<td style="text-align: left;">支出$3,228、来店157回、注文$24</td>
+<td style="text-align: left;">バスケットを拡大</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ときどき高額購入する層</td>
+<td style="text-align: right;">22%</td>
+<td style="text-align: left;">支出$1,938、来店56回、注文$38</td>
+<td style="text-align: left;">低コストのナーチャリング</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">値引き志向層</td>
+<td style="text-align: right;">19%</td>
+<td style="text-align: left;">支出$1,087、値引き比率19%、狭い商品範囲</td>
+<td style="text-align: left;">利益のガードレールを設けたオファーのみ</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">休眠層</td>
+<td style="text-align: right;">11%</td>
+<td style="text-align: left;">支出$334、最終購入は17週間前</td>
+<td style="text-align: left;">安価な再活性化を一度行い、その後は停止</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<p>名前は略称であり、行全体が概要です。以下の行動可能性を確認するため、この表をマーケティングチームへ渡します。2つの行へ同じキャンペーンを行うなら、統合します。</p>
+<p>数値によるクラスタリングでは、商品の意味が依然として平坦化されます。頻度、支出、最終購入からの期間、カテゴリーの幅、値引き依存度などを入力すると、購入する商品が大きく異なっても、2人の顧客が似て見える場合があります。その意味を捉えるには、商品テキストをセグメンテーションへ直接取り込みます。</p>
+</section>
+<section id="sec-embedding" class="level2">
+<h2 class="anchored" data-anchor-id="sec-embedding">BERTopicによる埋め込みベースのセグメンテーション</h2>
+<p>顧客が実際に何を購入するかを捉えるため、各顧客の購入履歴をテキストとして扱います。購入した商品の説明を一つの文字列（顧客ドキュメント）へ連結し、埋め込みモデルで密なベクトルへ変換します。この埋め込み空間では、誕生日用キャンドルとパーティー用の皿は近く、アンティークのティーポットは遠くに位置します。そのため、ベクトルをクラスタリングすると、購入量だけでなく購入の意味で顧客を分けられます。</p>
+<p>例では、英国のギフト小売企業から得た約100万件の取引を含むUCI Online Retail IIデータセットを使います。自由記述の商品説明は、埋め込みモデルが読み取るものに適しています。パイプライン全体をBERTopicで実行します。</p>
+<div id="fig-umap-clusters" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="顧客ドキュメント埋め込みのUMAP射影。各点が一人の顧客で、BERTopicが発見したセグメントごとに色分けされている">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-umap-clusters-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.1/umap_clusters.png" class="fig-md img-fluid figure-img" alt="顧客ドキュメント埋め込みのUMAP射影。各点が一人の顧客で、BERTopicが発見したセグメントごとに色分けされている">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-umap-clusters-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+図&nbsp;3: 埋め込み空間内の顧客ドキュメント。
+</figcaption>
+</figure>
+</div>
+<section id="why-bertopic" class="level3">
+<h3 class="anchored" data-anchor-id="why-bertopic">なぜBERTopicなのか？</h3>
+<p>このパイプラインを手作業で構築すると、ドキュメントを埋め込むSentenceTransformers、次元を削減するUMAP、クラスタリングするHDBSCAN、結果を読み取る独自コードという4つのライブラリをつなぐ必要があります。BERTopicは4つすべてを一つのAPIで包み、出力を使えるものにする機能も追加します。各セグメントの特徴的なキーワードを抽出するc-TF-IDF、HDBSCANが未割り当てとした顧客のための <code>reduce_outliers()</code>、再学習せずに新規顧客をスコアリングする <code>transform()</code>、名前をつけるための任意のLLM手順です。この節の残りでは、そのパイプラインに沿います。</p>
+</section>
+<section id="constructing-the-customer-document" class="level3">
+<h3 class="anchored" data-anchor-id="constructing-the-customer-document">顧客ドキュメントを構築する</h3>
+<p>たとえば、顧客のドキュメントは次のようになります。</p>
+<p><code>red retrospot cake stand, party bunting, paper cups, birthday candles, cake cases</code></p>
+<p>数値モデルには、この顧客が頻繁に購入する、または支出が多いとしか見えないかもしれません。埋め込みモデルには、パーティー用品とお祝い関連の購入という商品の意味が見えます。</p>
+<p>取引ログをグループ化して連結することで作成します。</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Keep each customer's top-N products by revenue, then join the descriptions</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>prod_rev <span class="op">=</span> (</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    df.groupby([<span class="st">"CustomerID"</span>, <span class="st">"Description"</span>])[<span class="st">"Revenue"</span>].<span class="bu">sum</span>()</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    .reset_index()</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    .sort_values([<span class="st">"CustomerID"</span>, <span class="st">"Revenue"</span>], ascending<span class="op">=</span>[<span class="va">True</span>, <span class="va">False</span>])</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>top_products <span class="op">=</span> prod_rev.groupby(<span class="st">"CustomerID"</span>).head(TOP_N)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>customer_docs <span class="op">=</span> (</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    top_products.groupby(<span class="st">"CustomerID"</span>)[<span class="st">"Description"</span>]</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    .<span class="bu">apply</span>(<span class="kw">lambda</span> d: <span class="st">", "</span>.join(d))</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    .reset_index(name<span class="op">=</span><span class="st">"doc"</span>)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+<p>セグメントの品質を大きく左右する、3つの実務上の判断があります。</p>
+<p>どの商品を入れるか。頻度または売上による購入上位N商品は、通常、購入履歴全体よりうまく機能します。完全なリストには一度限りの購入によるノイズが加わりますが、上位商品は顧客の実際のパターンを捉えます。</p>
+<p>売上で重みづけするか。高額商品を1回、低額商品を1回含めるだけでは、顧客が何を重視するかを正しく表せない場合があります。売上による重みづけ（支出に比例して商品への言及を繰り返すこと）は、混合バスケットを持つ顧客のセグメントを明確にします。商品間の価格差が大きい場合は重みに上限を設けるか、対数支出による重みづけを使います。そうしなければ、一度の高級品購入がドキュメントを支配する可能性があります。</p>
+<p>一般的な商品を除外する。「ギフトカード」「送料」や一般的なSKUはノイズです。すべてのセグメントに現れ、キーワードを薄めます。StockCodeのパターンで除外するか、小さな除外リストを管理します。この一つの手順だけで、意味のあるセグメントと意味のないセグメントが分かれることがよくあります。</p>
+<p>多くの小売カタログでは、軽量な文埋め込みモデルで十分です。セグメントの品質は、どの埋め込みモデルを選ぶかより、顧客ドキュメントをどのように設計・検証するかに大きく依存します。Notebookでは再現性のためローカルのSentenceTransformersモデルを使いますが、同じワークフローでOpenAI embeddingsなどAPIベースの埋め込みモデルも利用できます。</p>
+</section>
+<section id="reading-the-output" class="level3">
+<h3 class="anchored" data-anchor-id="reading-the-output">出力を読み取る</h3>
+<p>この地図の背後にある当てはめは、1回の呼び出しだけです。ローカルの埋め込みモデルが各ドキュメントをベクトルへ変換し、BERTopicがクラスタリングとキーワード抽出を処理します。</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> bertopic <span class="im">import</span> BERTopic</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sentence_transformers <span class="im">import</span> SentenceTransformer</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>embedding_model <span class="op">=</span> SentenceTransformer(<span class="st">"all-MiniLM-L6-v2"</span>)   <span class="co"># local, lightweight</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>embeddings <span class="op">=</span> embedding_model.encode(customer_docs[<span class="st">"doc"</span>].tolist())</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>topic_model <span class="op">=</span> BERTopic(embedding_model<span class="op">=</span>embedding_model)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>topics, probs <span class="op">=</span> topic_model.fit_transform(</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    customer_docs[<span class="st">"doc"</span>].tolist(), embeddings<span class="op">=</span>embeddings</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+<p>付属NotebookではUMAP、HDBSCAN、c-TF-IDFのサブモデルを明示的に設定しますが、これはデフォルト値を使った同じパイプラインです。その結果、各セグメントのキーワードによる特徴が得られます。</p>
+<div id="fig-bertopic-barchart" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="商品説明の埋め込みから得たセグメント別の特徴的な上位キーワード。数値によるRFMクラスタリングでは明らかにできない">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-bertopic-barchart-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.1/bertopic_barchart.png" class="fig-md img-fluid figure-img" alt="商品説明の埋め込みから得たセグメント別の特徴的な上位キーワード。数値によるRFMクラスタリングでは明らかにできない">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-bertopic-barchart-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+図&nbsp;4: セグメント別の特徴的な上位キーワード。
+</figcaption>
+</figure>
+</div>
+<p>このパネルをマーケターへ渡すと、各群にどのカテゴリー、キャンペーン、クリエイティブが合うかをすぐに理解できるはずです。</p>
+</section>
+<section id="when-one-theme-dominates" class="level3">
+<h3 class="anchored" data-anchor-id="when-one-theme-dominates">一つのテーマが支配する場合</h3>
+<p>実際のカタログでは、顧客の大半を覆う一つの幅広いテーマと、周辺に明確なニッチの裾があることがよくあります。HDBSCANは両方を明らかにしますが、外れ値を減らした後、幅広いテーマが一つの巨大トピックへ膨らみ、一つのセグメントとして行動するには大きすぎる状態になります。修正は限定的に行います。<strong>巨大トピックの埋め込みだけ</strong>にK-Meansを実行し、施策を実行できる規模の下位セグメントへ分けます。一方、小さなニッチトピックは発見事項として残します。「発見にはHDBSCAN、運用にはK-Means」というパターンを、顧客基盤全体ではなく、支配的なクラスタの内部へ適用します。付属Notebookは、どれかのトピックが顧客基盤の50%を超えると、自動的にこれを行います。</p>
+</section>
+<section id="the-llm-naming-trap" class="level3">
+<h3 class="anchored" data-anchor-id="the-llm-naming-trap">LLMによる命名の罠</h3>
+<p>LLMによる命名支援は、セグメントを実際以上に信頼できるものと感じさせます。無作為なものを含め、どのクラスタでもLLMへ渡して名前とペルソナを求めれば、洗練された説得力のある説明が返ります。クラスタに意味があるかどうかにかかわらず、物語はもっともらしく聞こえます。</p>
+<p>2つの安全策があります。</p>
+<ul>
+<li>LLMの説明を読む前に、キーワードの証拠を検証します。上位キーワードから自分で明確なテーマを見つけられなければ、LLMの名前は創作です。</li>
+<li>マーケティングチームと名前をテストします。異なる名前をつけた2つのセグメントに、同じキャンペーン概要を書くのであれば、名前は情報ではなく飾りです。</li>
+</ul>
+<p><strong>付属Notebook：</strong> 完全に動作するコードを、それぞれの手法に適したデータセットを使う2つのNotebookへ分けています。</p>
+<ul>
+<li><code>sec4.1_traditional_segmentation.ipynb</code>：Dunnhumbyの「The Complete Journey」データセットで、デシル、RFM、K-Meansを実行します。CLVの章と同じデータセットなので、セグメント所属を引き継げます。<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_traditional_segmentation.ipynb">GitHubで見る</a></li>
+<li><code>sec4.1_semantic_segmentation.ipynb</code>：この手法に必要な豊富な商品説明を持つUCI Online Retail IIデータセットで、埋め込みパイプライン（顧客ドキュメントの構築、一般商品の除外、埋め込み、BERTopicクラスタリング、キーワード抽出、LLMによる命名支援）を実行します。任意のLLM命名手順は現在Anthropic向けに設定され、<code>litellm</code> パッケージと <code>ANTHROPIC_API_KEY</code> が必要です。なくても、そのセルをスキップし、残りは実行されます。<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_semantic_segmentation.ipynb">GitHubで見る</a></li>
+</ul>
+</section>
+</section>
+<section id="sec-segment-validation" class="level2">
+<h2 class="anchored" data-anchor-id="sec-segment-validation">セグメンテーションは優れているか？</h2>
+<p>優先順位に沿って3つを確認します。</p>
+<p>行動可能性が最も重要です。マーケティングチームへセグメントのプロフィールを見せます。セグメントの各組について「異なるメッセージ、チャネル、オファー、頻度を使うか？」と尋ねます。「どちらにも同じことをする」と答えるなら、数式がどれほどきれいでも、そのセグメンテーションは行動可能ではありません。通常の原因は、すべてが平均的なセグメントです。隣のセグメントと統合するか、変数選択を見直します。</p>
+<p>安定性。重複しない2つの期間でクラスタリングを再実行し、顧客の大半が同じセグメントに入ることを確認します。調整Rand指数（ARI）で数値化できます。期間間でセグメントを移る顧客が多すぎる場合、キャンペーンの基準として信頼できません。付属Notebookでは、セマンティック版でARIの計算、従来版で移行行列を示し、両方を確認します。</p>
+<p>食料品データの移行行列では、再クラスタリングする代わりに、各年の売上五分位で顧客を順位づけします。上位五分位の70%、下位五分位の61%が翌年も同じ位置に残りますが、中央3群では約40%にすぎません。顧客基盤の中央では、セグメント割り当ての信頼性が最も低いため、それを使うキャンペーンには最も余裕が必要です。</p>
+<div id="fig-segment-heatmap" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="セグメントプロフィールのヒートマップ。行はセグメント、列は基礎変数、色は母集団平均からの偏差を示す">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-segment-heatmap-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.1/bertopic_segment_heatmap.png" class="fig-md img-fluid figure-img" alt="セグメントプロフィールのヒートマップ。行はセグメント、列は基礎変数、色は母集団平均からの偏差を示す">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-segment-heatmap-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+図&nbsp;5: セグメントプロフィールのヒートマップ。
+</figcaption>
+</figure>
+</div>
+<p>規模。各セグメントは施策を実施できる十分な大きさが必要ですが、適切な最小値はビジネスとキャンペーンによって異なり、普遍的な下限はありません。大まかな目安として、意味のあるキャンペーンを実施できないほど小さいセグメントは避けます。幅広いターゲティングでは顧客基盤の約10%が目安になることが多い一方、本当に価値の高いニッチは意図的な例外にできます。実務では、多くの場合4〜8個ほどのセグメントで十分です。</p>
+<p>セグメントは行動の違いから作りますが、そのセグメントへ割り当てるキャンペーンは依然としてテストが必要です。成功と判断する前に、<a href="../part3/sec3.2-ab-testing.html">A/Bテストの設計</a>へ戻ってください。</p>
+</section>
+<section id="sec-method-cheat-sheet" class="level2">
+<h2 class="anchored" data-anchor-id="sec-method-cheat-sheet">手法早見表</h2>
+<div id="tbl-method-cheat-sheet" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-method-cheat-sheet-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+表&nbsp;3: 高度さではなく、答える問いによって手法を選ぶ。
+</figcaption>
+<div aria-describedby="tbl-method-cheat-sheet-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">問い</th>
+<th style="text-align: left;">手法</th>
+<th style="text-align: left;">入力</th>
+<th style="text-align: left;">出力</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">今、より注目すべき顧客は誰か？</td>
+<td style="text-align: left;">デシル／RFM</td>
+<td style="text-align: left;">取引ログ</td>
+<td style="text-align: left;">価値階層またはR/F/Mスコア</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">価値階層を超えて、どのような行動パターンがあるか？</td>
+<td style="text-align: left;">K-Means</td>
+<td style="text-align: left;">数値の行動特徴量</td>
+<td style="text-align: left;">行動セグメントラベル</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">顧客は実際に何を購入しているか？</td>
+<td style="text-align: left;">埋め込みベースのクラスタリング</td>
+<td style="text-align: left;">商品説明から作る顧客ドキュメント</td>
+<td style="text-align: left;">キーワード特徴を持つ、意味に基づくセグメント</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+</section>
+<section id="key-takeaways" class="level2">
+<h2 class="anchored" data-anchor-id="key-takeaways">要点</h2>
+<ul>
+<li>行動からセグメントを作り、その後で人口統計を使って各群を説明し、到達可能にする。成果物はスライドではなく、CRMと広告プラットフォームで使える<code>segment_id</code>である。</li>
+<li>最初に実行可能性、次に安定性と規模を検証する。同じキャンペーンを受ける2つのセグメントは統合する。</li>
+<li>説得力のあるセグメント名は証拠ではない。LLMはランダムなクラスタを含め、どのクラスタにも名前を付けるため、ラベルを信頼する前に上位キーワードを自分で読む。</li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "コピーしました");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "コピーしました");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/marketing-science-in-python\.com\/ja\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../part4/_part4.html" class="pagination-link" aria-label="Part 4. 顧客分析">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Part 4. 顧客分析</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../part4/sec4.2-clv-modeling.html" class="pagination-link" aria-label="4.2 顧客生涯価値モデリング">
+        <span class="nav-page-text"><span class="chapter-title">4.2 顧客生涯価値モデリング</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

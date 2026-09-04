@@ -1,0 +1,1312 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="取引データから需要曲線を推定し、限界利益に対して価格を最適化し、弾力性推定を誤らせる罠を避けます。">
+
+<title>Pythonによる価格弾力性 – Marketing Science in Python</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../part5/sec5.2-assortment-optimization.html" rel="next">
+<link href="../part5/_part5.html" rel="prev">
+<link href="../assets/favicon.png" rel="icon" type="image/png">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-491b769ea73b1ce4946cf8743b832a60.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-ec576e9d6a0f00bdcb4dbec60768df31.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-491b769ea73b1ce4946cf8743b832a60.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "一致なし",
+    "search-matching-documents-text": "一致した文書",
+    "search-copy-link-title": "検索へのリンクをコピー",
+    "search-hide-matches-text": "追加の検索結果を非表示",
+    "search-more-match-text": "追加の検索結果",
+    "search-more-matches-text": "追加の検索結果",
+    "search-clear-button-title": "消去",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "取消",
+    "search-submit-button-title": "検索",
+    "search-label": "サーチ"
+  }
+}</script>
+<script async="" src="https://www.googletagmanager.com/gtag/js?id=G-YY0LCGYER5"></script>
+
+<script type="text/javascript">
+
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
+</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../custom.css">
+<meta property="og:title" content="Pythonによる価格弾力性">
+<meta property="og:description" content="取引データから需要曲線を推定し、限界利益に対して価格を最適化し、弾力性推定を誤らせる罠を避けます。">
+<meta property="og:image" content="https://marketing-science-in-python.com/images/common/book_cover_online.png">
+<meta property="og:site_name" content="Marketing Science in Python">
+<meta property="og:image:alt" content="抽象的なデータストリームが幾何学的ネットワークへ集まる表紙">
+<meta name="twitter:title" content="Pythonによる価格弾力性">
+<meta name="twitter:description" content="取引データから需要曲線を推定し、限界利益に対して価格を最適化し、弾力性推定を誤らせる罠を避けます。">
+<meta name="twitter:image" content="https://marketing-science-in-python.com/images/common/book_cover_online.png">
+<meta name="twitter:image:alt" content="抽象的なデータストリームが幾何学的ネットワークへ集まる表紙">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://marketing-science-in-python.com/ja/part5/sec5.1-price-elasticity.html">
+<!-- msbook-i18n-head:start -->
+<link rel="alternate" hreflang="en" href="https://marketing-science-in-python.com/part5/sec5.1-price-elasticity.html">
+<link rel="alternate" hreflang="ja" href="https://marketing-science-in-python.com/ja/part5/sec5.1-price-elasticity.html">
+<link rel="alternate" hreflang="x-default" href="https://marketing-science-in-python.com/part5/sec5.1-price-elasticity.html">
+<!-- msbook-i18n-head:end -->
+</head>
+
+<body class="nav-sidebar floating quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="サイドバーを切り替える" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part5/_part5.html">Part 5. コマーシャル分析</a></li><li class="breadcrumb-item"><a href="../part5/sec5.1-price-elasticity.html"><span class="chapter-title">5.1 価格弾力性と価格設定の意思決定</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="サイドバーを切り替える" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="サーチ" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <!-- msbook-language-switch:start -->
+<div class="msbook-language-switch" aria-label="Language"><a lang="en" hreflang="en" href="../../part5/sec5.1-price-elasticity.html" onclick="this.hash=window.location.hash">English</a><span aria-hidden="true"> | </span><span lang="ja" aria-current="page">日本語</span></div>
+<!-- msbook-language-switch:end -->
+<div class="sidebar-title mb-0 py-0">
+      <a href="../">Marketing Science in Python</a> 
+        <div class="sidebar-tools-main tools-wide">
+    <a href="https://github.com/takechanman1228/marketing-science-in-python" title="ソースコード" class="quarto-navigation-tool px-1" aria-label="ソースコード"><i class="bi bi-github"></i></a>
+    <div class="dropdown">
+      <a href="" title="Share" id="quarto-navigation-tool-dropdown-0" class="quarto-navigation-tool dropdown-toggle px-1" data-bs-toggle="dropdown" aria-expanded="false" role="link" aria-label="Share"><i class="bi bi-share"></i></a>
+      <ul class="dropdown-menu" aria-labelledby="quarto-navigation-tool-dropdown-0">
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://twitter.com/intent/tweet?url=|url|">
+              <i class="bi bi-twitter pe-1"></i>
+            Twitter
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://www.linkedin.com/sharing/share-offsite/?url=|url|">
+              <i class="bi bi-linkedin pe-1"></i>
+            LinkedIn
+            </a>
+          </li>
+      </ul>
+    </div>
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="ダークモードの切り替え"><i class="bi"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="サーチ"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">はじめに</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part1/_part1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Part 1. はじめに</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1/sec1.1-what-is-marketing-science.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">1.1 マーケティングサイエンスとは何か？</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1/sec1.2-data-landscape.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">1.2 マーケティングデータを理解する</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part2/_part2.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Part 2. より良い意思決定のための分析</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.1-right-question.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.1 正しい問いを設定する</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.2-kpi-design.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.2 診断のためのKPI設計</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.3-storytelling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.3 データをストーリーへ変える</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part3/_part3.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Part 3. マーケティングのための因果推論</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.1-thinking-causally.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.1 因果的に考える</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.2-ab-testing.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.2 A/Bテストの設計</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.3-quasi-experiments.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.3 準実験</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.4-causal-impact.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.4 時系列による因果インパクト</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.5-meta-learners.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.5 処置効果のためのメタラーナー</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.6-uplift-modeling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.6 ターゲティングのためのアップリフトモデリング</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part4/_part4.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Part 4. 顧客分析</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part4/sec4.1-segmentation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">4.1 顧客セグメンテーション</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part4/sec4.2-clv-modeling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">4.2 顧客生涯価値モデリング</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part5/_part5.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Part 5. コマーシャル分析</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.1-price-elasticity.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">5.1 価格弾力性と価格設定の意思決定</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.2-assortment-optimization.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.2 商品品揃えの最適化</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.3-sales-forecasting.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.3 売上予測とシナリオ計画</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part6/_part6.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Part 6. メディア投資と最適化</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.1-media-measurement-problem.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.1 メディア測定の問題</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.2-mmm-fundamentals.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.2 MMMの構築と最適化</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.3-incrementality-experiments.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.3 増分効果実験</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.4-mmm-calibration.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.4 実験によるMMMの較正</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.5-when-tools-disagree.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.5 測定ツールが一致しないときの意思決定</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendix/further-reading.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">参考文献と追加資料</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendix/notebooks.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">ノートブックとコード</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../marketing-analytics-in-python.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Pythonによるマーケティング分析</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">目次</h2>
+   
+  <ul>
+  <li><a href="#sec-price-elasticity-definition" id="toc-sec-price-elasticity-definition" class="nav-link active" data-scroll-target="#sec-price-elasticity-definition">価格弾力性とは何か？</a></li>
+  <li><a href="#sec-elasticity-data-requirements" id="toc-sec-elasticity-data-requirements" class="nav-link" data-scroll-target="#sec-elasticity-data-requirements">価格弾力性に必要なデータ</a></li>
+  <li><a href="#sec-demand-curve-estimation" id="toc-sec-demand-curve-estimation" class="nav-link" data-scroll-target="#sec-demand-curve-estimation">需要曲線を推定する</a></li>
+  <li><a href="#sec-margin-maximizing-price" id="toc-sec-margin-maximizing-price" class="nav-link" data-scroll-target="#sec-margin-maximizing-price">限界利益を最適化する</a>
+  <ul class="collapse">
+  <li><a href="#worked-example-a-private-label-cereal" id="toc-worked-example-a-private-label-cereal" class="nav-link" data-scroll-target="#worked-example-a-private-label-cereal">例：プライベートブランドのシリアル</a></li>
+  </ul></li>
+  <li><a href="#sec-segment-elasticity" id="toc-sec-segment-elasticity" class="nav-link" data-scroll-target="#sec-segment-elasticity">弾力性は商品の役割によって異なる</a></li>
+  <li><a href="#sec-elasticity-pitfalls" id="toc-sec-elasticity-pitfalls" class="nav-link" data-scroll-target="#sec-elasticity-pitfalls">価格弾力性によくある罠</a></li>
+  <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways">要点</a></li>
+  </ul>
+<div class="quarto-code-links"><h2>コードリンクス</h2><ul><li><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part5-commercial-analytics/sec5.1_price_elasticity.ipynb"><i class="bi bi-github"></i>sec5.1_price_elasticity.ipynb</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part5/_part5.html">Part 5. コマーシャル分析</a></li><li class="breadcrumb-item"><a href="../part5/sec5.1-price-elasticity.html"><span class="chapter-title">5.1 価格弾力性と価格設定の意思決定</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span id="sec-price-elasticity" class="quarto-section-identifier"><span class="chapter-title">5.1 価格弾力性と価格設定の意思決定</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="translation-notice">
+<p><strong>日本語版について</strong><br>
+このページは英語版 <em>Marketing Science in Python</em> のAI翻訳です。英語版を正本とし、差異がある場合は英語版を優先してください。コード、Notebook、画像内の文字は英語のままです。 <a href="../../part5/sec5.1-price-elasticity.html" class="translation-source-link">英語版を読む</a></p>
+</div>
+<p>適切な価格はいくらでしょうか？</p>
+<p>営業チームは価格を下げたいと考えます。顧客に最も近く、価格を下げると販売数量が動くという明らかな効果を見ているからです。</p>
+<p>財務チームは利益を高めたいと考えます。同じトレードオフを反対側から見て、追加の数量を安く売りすぎると、売上が増えても利益が消えることを理解しているからです。</p>
+<p>マーケティングは2つの見方の間に位置しますが、平均を取るわけではありません。その役割は、顧客の反応、ブランドの位置づけ、コマーシャル目標を結びつけることです。数量や売上を追うとき、利益を守るとき、価格自体がポジショニングのシグナルになるときを判断します。</p>
+<p>どちらも部分的には正しいのです。価格は数量へ影響しますが、数量が常に主な目標とは限りません。ビジネスが求めるものは、売上、利益、来店客数、市場シェア、または単なる在庫処分や価格ポジションの維持かもしれません。本当に欠けているのは目標ではなく、価格が動いたときに数量が実際にどれだけ変わるかという理解です。</p>
+<p>価格弾力性から、その理解が得られます。ビジネス目標を決めるものではありません。数量、売上、利益、ポジショニングのいずれが目標であっても、価格設定の意思決定をその目標に照らして比較できる反応曲線を提供します。</p>
+<section id="sec-price-elasticity-definition" class="level2">
+<h2 class="anchored" data-anchor-id="sec-price-elasticity-definition">価格弾力性とは何か？</h2>
+<p>売れ筋シリアルの価格を10%上げるか検討しているとします。販売数量は5%減るでしょうか、それとも20%でしょうか。その違いによって、価格変更が販売数量、売上、利益を改善するのか、単に買い物客を遠ざけるのかが決まります。</p>
+<p>需要の価格弾力性は、価格変化に対する販売数量の感度を測定します。</p>
+<p><span class="math display">\[
+\varepsilon = \frac{\% \Delta \text{Quantity}}{\% \Delta \text{Price}}
+\]</span></p>
+<p>通常財では、弾力性は負です。価格を上げると、販売数量が減ります。簡潔にするため、通常は絶対値で説明します。</p>
+<ul>
+<li><span class="math inline">\(|\varepsilon| = 1.6\)</span>：価格を10%上げると、販売数量が約16%減ります。需要は<strong>弾力的</strong>です。数量が価格の上昇より速く減るため、値上げにはリスクがあります。</li>
+<li><span class="math inline">\(|\varepsilon| = 0.5\)</span>：価格を10%上げても、販売数量は約5%しか減りません。需要は<strong>非弾力的</strong>です。商品には価格決定力があり、値上げによって売上を伸ばせます。単位原価が安定し、分かっていれば、限界利益も改善する可能性があります。</li>
+</ul>
+<p>同じ弾力性推定値で、異なる価格設定の問いを支援できます。</p>
+<ul>
+<li><strong>価格を動かすべきか？</strong> 弾力的な需要では値上げのリスクが高くなり、非弾力的な需要では魅力が高まります。</li>
+<li><strong>どの成果を最適化すべきか？</strong> 弾力性に価格と数量を組み合わせると、販売数量と売上を比較できます。変動費を加えれば、同じ曲線で限界利益を比較できます。</li>
+</ul>
+</section>
+<section id="sec-elasticity-data-requirements" class="level2">
+<h2 class="anchored" data-anchor-id="sec-elasticity-data-requirements">価格弾力性に必要なデータ</h2>
+<p>価格弾力性を推定するには、実際の価格変動を含む売上データが必要です。代表的なソースは、POSスキャナーデータ、パネルデータ、社内のオンライン小売記録です。棚価格ではなく、実効価格（売上÷販売数量）を使います。</p>
+<p><span class="math display">\[
+\text{Price}_{\text{effective}} = \frac{\text{Revenue}}{\text{Units}}
+\]</span></p>
+<p>実効価格は、値引き、まとめ買いオファー、週途中の価格変更を、表示価格より確実に捉えます。</p>
+<p>時間の粒度と商品の粒度という、2つの設計上の選択が基盤になります。日次データにはノイズが多く、月次データは月内の価格変更を隠す可能性があるため、通常、週次が最適な時間粒度です。商品側はSKU単位から始めます。一つのSKUには、一つのパッケージサイズ、一つの基準価格、一つの需要反応があるため、価格シグナルを読み取りやすくなります。</p>
+<p>モデルを当てはめる前に、3つを確認します。</p>
+<ol type="1">
+<li><strong>分析単位。</strong> デフォルトではSKU×週を使います。SKU×週が疎すぎる場合、正当化できる集約方法が2つあります。価格変更があまり頻繁でなく、月次の変動がまだ見えるなら、SKU×月へ移ります。または、カラーバリエーション、フレーバーバリエーション、同じ買い物客上の役割を持つ同価格帯の商品など、本当に比較可能なSKUを組み合わせて、SKU群×週へ移ります。同じブランドの商品という理由だけで集約してはいけません。</li>
+<li><strong>価格変動。</strong> 複数の異なる価格点があり、一つの価格が履歴を支配せず、価格反応とノイズを切り分ける十分な期間が必要です。大まかな基準として、少なくとも3つの価格点、10%の価格幅、26週間の履歴を目指します。</li>
+<li><strong>歪んだ需要シグナル。</strong> 欠品、通常でないプロモーション、祝日、一度限りのイベントによって、価格とは無関係な理由で数量が動く場合があります。通常の価格反応として扱う前に、こうした観測へフラグをつけるか、削除します。</li>
+</ol>
+</section>
+<section id="sec-demand-curve-estimation" class="level2">
+<h2 class="anchored" data-anchor-id="sec-demand-curve-estimation">需要曲線を推定する</h2>
+<p>中心となるモデルは、弾力性一定モデル、またはべき乗則モデルです。</p>
+<p><span class="math display">\[
+Q = b_0 \times P^{b_1}
+\]</span></p>
+<p>ここで、<span class="math inline">\(Q\)</span> は数量、<span class="math inline">\(P\)</span> は価格、<span class="math inline">\(b_0\)</span> は尺度パラメータ、<span class="math inline">\(b_1\)</span> は弾力性です。通常財では <span class="math inline">\(b_1\)</span> は負になります。対数を取ると、<span class="math inline">\(\log Q = \log b_0 + b_1 \log P\)</span> という線形関係になり、<span class="math inline">\(b_1\)</span> は両対数空間における傾きです。このモデルは、価格範囲全体で弾力性が一定であると仮定します。強い仮定ですが、多くの消費財に対する妥当な出発点です。</p>
+<p>対数空間で当てはめてから元へ戻すことで生じる再変換バイアスを避けるため、<code>scipy.optimize.curve_fit</code> を使い、元の非対数空間で曲線を当てはめます。</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> scipy.optimize <span class="im">import</span> curve_fit</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> power_model(price, b0, b1):</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Q = b0 * Price^b1"""</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> b0 <span class="op">*</span> np.power(price, b1)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>p0 <span class="op">=</span> [df[<span class="st">"units"</span>].mean(), <span class="op">-</span><span class="fl">1.5</span>]</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>popt, pcov <span class="op">=</span> curve_fit(</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    power_model,</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    df[<span class="st">"price"</span>].values,</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    df[<span class="st">"units"</span>].values,</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    p0<span class="op">=</span>p0,</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    maxfev<span class="op">=</span><span class="dv">10000</span>,</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>b0, b1 <span class="op">=</span> popt</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Scale (b0): </span><span class="sc">{</span>b0<span class="sc">:.1f}</span><span class="ss">"</span>)</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Elasticity (b1): </span><span class="sc">{</span>b1<span class="sc">:.2f}</span><span class="ss">"</span>)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+<p>付属Notebookでは、2段階の推定も行います。最初に全データへ当てはめ、実績数量÷予測数量が0.3〜3.0など妥当な範囲から外れる観測へフラグをつけ、それを除いて再度当てはめます。</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Pass 1: fit on all data</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>popt_1, _ <span class="op">=</span> curve_fit(power_model, prices, units, p0<span class="op">=</span>p0, maxfev<span class="op">=</span><span class="dv">10000</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Identify outliers</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>predicted <span class="op">=</span> power_model(prices, <span class="op">*</span>popt_1)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>ratio <span class="op">=</span> units <span class="op">/</span> predicted</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>mask <span class="op">=</span> (ratio <span class="op">&gt;</span> <span class="fl">0.3</span>) <span class="op">&amp;</span> (ratio <span class="op">&lt;</span> <span class="fl">3.0</span>)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Pass 2: refit on clean data</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>popt_2, pcov_2 <span class="op">=</span> curve_fit(</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    power_model, prices[mask], units[mask], p0<span class="op">=</span>popt_1, maxfev<span class="op">=</span><span class="dv">10000</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+<p>通常の原因は、プロモーションによる急増です。無条件に含めると、モデルはプロモーション数量を通常の価格反応として扱い、弾力性を真値から偏らせます。</p>
+<div id="fig-elasticity-deep-dive" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="売れ筋の液体乳製品について、当てはめたべき乗曲線と95%帯を伴う価格と数量の散布図。急な傾きは弾力的な需要を示す">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-elasticity-deep-dive-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part5/sec5.1/elasticity_deep_dive.png" class="fig-lg img-fluid figure-img" alt="売れ筋の液体乳製品について、当てはめたべき乗曲線と95%帯を伴う価格と数量の散布図。急な傾きは弾力的な需要を示す">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-elasticity-deep-dive-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+図&nbsp;1: 当てはめたべき乗曲線を伴う価格と数量の散布図。
+</figcaption>
+</figure>
+</div>
+<p>売れ筋の液体乳製品8商品では、弾力性は、代替しにくい定番形式であるガロン容器の <span class="math inline">\(-1.2\)</span> から、より代替しやすい小容量形式の <span class="math inline">\(-3.9\)</span> まで広がります。<a href="#fig-elasticity-grid" class="quarto-xref">図&nbsp;<span>2</span></a> は、当てはめた曲線を並べて示します。</p>
+<div id="fig-elasticity-grid" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="売れ筋の液体乳製品8商品の当てはめたべき乗則需要曲線。R²の高い商品はきれいに適合し、低い商品はノイズが多い">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-elasticity-grid-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part5/sec5.1/elasticity_grid.png" class="fig-lg img-fluid figure-img" alt="売れ筋の液体乳製品8商品の当てはめたべき乗則需要曲線。R²の高い商品はきれいに適合し、低い商品はノイズが多い">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-elasticity-grid-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+図&nbsp;2: 8商品の当てはめたべき乗則需要曲線。
+</figcaption>
+</figure>
+</div>
+<p>実務では、弾力性が <span class="math inline">\(-0.5\)</span>〜<span class="math inline">\(-5\)</span> の範囲、<span class="math inline">\(R^2 &gt; 0.4\)</span> で、複数の異なる価格点があれば、価格設定の意思決定に使えます。この範囲外の推定値は、価格数が少なすぎる、一つのプロモーション値引きが適合を支配する、期間が短すぎるなど、データの問題であることがよくあります。弾力性を信頼できなければ、それに基づく価格提案も信頼できません。</p>
+</section>
+<section id="sec-margin-maximizing-price" class="level2">
+<h2 class="anchored" data-anchor-id="sec-margin-maximizing-price">限界利益を最適化する</h2>
+<p>需要曲線が得られたら、さまざまな価格設定の問いを検討できます。</p>
+<p>最初は、どの価格が売上を最大化するかです。</p>
+<p><span class="math display">\[
+\text{Revenue}(P) = P \times Q(P)
+\]</span></p>
+<p>価格と数量だけを必要とするため、これは最も直感的な出発点になることがよくあります。しかし、弾力性一定の曲線では、売上最大化は退化します。需要が弾力的な場合（この章の全商品と同様に <span class="math inline">\(|b_1| &gt; 1\)</span>）、価格が下がるほど売上は増え続けるため、売上を最大化する価格は、設定してもよいと考える最低価格にすぎません。信頼できる変動費がなければ、売上を一次的な指標にできますが、内部最適値ではなく方向性（値下げ）として扱います。</p>
+<p>しかし、売上は利益ではありません。変動費が利用できれば、より強い問いを検討できます。どの価格が限界利益を最大化するか、です。</p>
+<p><span class="math display">\[
+\text{Contribution Margin}(P) = (P - C) \times Q(P)
+\]</span></p>
+<p>ここで、<span class="math inline">\(C\)</span> は単位当たり変動費、<span class="math inline">\(Q(P) = b_0 \times P^{b_1}\)</span> です。</p>
+<p>2つの答えは異なる場合があります。価格を下げると販売数量と売上が増えても、総利益は減ることがあります。価格を上げると売上は減っても、残る販売数量から十分な利益を得られれば、利益は改善します。利益が常に唯一の目標ということではありません。価格を選ぶ前に、目標を明示する必要があるということです。</p>
+<section id="worked-example-a-private-label-cereal" class="level3">
+<h3 class="anchored" data-anchor-id="worked-example-a-private-label-cereal">例：プライベートブランドのシリアル</h3>
+<p>次のパラメータを持つプライベートブランドのシリアルを考えます。</p>
+<ol type="1">
+<li>現在価格：$3.99</li>
+<li>変動費：$2.20</li>
+<li>現在の販売数量：週1,500個</li>
+<li>推定弾力性：<span class="math inline">\(b_1 = -1.6\)</span></li>
+</ol>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>価格</th>
+<th>数量</th>
+<th>売上</th>
+<th>単位当たり利益</th>
+<th>総利益</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>$3.59（10%低い）</td>
+<td>1,776</td>
+<td>$6,376</td>
+<td>$1.39</td>
+<td>$2,469</td>
+</tr>
+<tr class="even">
+<td><strong>$3.99（現在）</strong></td>
+<td><strong>1,500</strong></td>
+<td><strong>$5,985</strong></td>
+<td><strong>$1.79</strong></td>
+<td><strong>$2,685</strong></td>
+</tr>
+<tr class="odd">
+<td>$4.39（10%高い）</td>
+<td>1,288</td>
+<td>$5,654</td>
+<td>$2.19</td>
+<td>$2,821</td>
+</tr>
+<tr class="even">
+<td>$4.79（20%高い）</td>
+<td>1,121</td>
+<td>$5,369</td>
+<td>$2.59</td>
+<td>$2,903</td>
+</tr>
+</tbody>
+</table>
+<p>表は中心となるトレードオフを示します。この範囲では、最低価格で売上が最大になり、弾力性一定の下では、さらに値下げするたびに増え続けます。利益は異なる動きを示します。<span class="math inline">\(P^* = C \cdot |b_1| / (|b_1| - 1)\)</span> に内部最適値があり、このパラメータでは約$5.87です。そのため、表の最高価格でも総利益は$2,903まで増え続けています。価格を10%上げると、売上は5.5%減りますが、利益は5.1%増えます。売上と利益は反対方向を示します。これが値引きの罠です。値引きは売上を増やしながら、総限界利益を削ります。</p>
+<p><a href="#fig-margin-curves" class="quarto-xref">図&nbsp;<span>3</span></a> は、実際のDunnhumby商品5つについて、同じ論理を可視化します。どのパネルでも、価格が下がるほど売上は増え続ける一方、限界利益は内部の価格で折り返します。そのため、2つの目標は実際に異なる意思決定を示します。弾力性の高いプライベートブランド乳製品では、値下げによる追加数量が総利益を増やすほど大きいため、利益最大化価格は一貫して現在価格より低くなります。同じ式でも方向は反対です。違いを生むのは、その内部最適値が現在価格より上か下かであり、それは弾力性と費用比率が一緒に決めます。</p>
+<div id="fig-margin-curves" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="5商品について、現在価格と利益最大化価格を示した売上曲線と限界利益曲線">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-margin-curves-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part5/sec5.1/margin_optimization_curves.png" class="fig-lg img-fluid figure-img" alt="5商品について、現在価格と利益最大化価格を示した売上曲線と限界利益曲線">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-margin-curves-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+図&nbsp;3: 売上曲線と限界利益曲線。
+</figcaption>
+</figure>
+</div>
+<p>最適化自体は1次元探索です。負の利益関数に <code>scipy.optimize.minimize_scalar</code> を使えば数行で実行でき、付属Notebookで一通り説明します。</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> scipy.optimize <span class="im">import</span> minimize_scalar</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> neg_margin(price, b0, b1, variable_cost):</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Negative contribution margin (for minimization)."""</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    quantity <span class="op">=</span> b0 <span class="op">*</span> price <span class="op">**</span> b1</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">-</span>(price <span class="op">-</span> variable_cost) <span class="op">*</span> quantity</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>result <span class="op">=</span> minimize_scalar(</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    neg_margin,</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    bounds<span class="op">=</span>(<span class="fl">2.50</span>, <span class="fl">6.00</span>),</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    method<span class="op">=</span><span class="st">"bounded"</span>,</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    args<span class="op">=</span>(b0_fitted, b1_fitted, <span class="fl">2.20</span>),</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>optimal_price <span class="op">=</span> result.x</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>optimal_margin <span class="op">=</span> <span class="op">-</span>result.fun</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Optimal price: $</span><span class="sc">{</span>optimal_price<span class="sc">:.2f}</span><span class="ss">"</span>)</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Max weekly margin: $</span><span class="sc">{</span>optimal_margin<span class="sc">:,.0f}</span><span class="ss">"</span>)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+<p>弾力性一定の仮定から、一つの注意点を引き継ぎます。利益曲線が内部最適値を持つのは、需要が弾力的な場合（<span class="math inline">\(|b_1| &gt; 1\)</span>）だけです。非弾力的な商品では、価格とともに利益が増え続けることをモデルが示すため、有界の最適化は単に上限を返します。これは設定すべき価格ではなく、適合を再確認するシグナルです。そのため、付属Notebookは「利用可能」と判定され、<span class="math inline">\(b_1 &lt; -1\)</span> となる商品だけを最適化します。</p>
+<p><strong>付属Notebook：</strong> <code>sec5.1_price_elasticity.ipynb</code> は、データ読み込み、品質確認、2段階の弾力性推定、感度表を扱います。<br>
+<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part5-commercial-analytics/sec5.1_price_elasticity.ipynb">GitHubで見る</a></p>
+</section>
+</section>
+<section id="sec-segment-elasticity" class="level2">
+<h2 class="anchored" data-anchor-id="sec-segment-elasticity">弾力性は商品の役割によって異なる</h2>
+<p>同じカテゴリーにも、買い物客にとっての役割が大きく異なる商品があります。液体乳製品では、1ガロンの白い牛乳、1回分のチョコレートミルク、1クォートのコーヒークリーマーについて、価格設定の意思決定を置き換えることはできません。同じ広い商品分類に含まれていても、買い物客は異なる場面で購入し、異なる代替品と比較します。</p>
+<p>そのため、SKU単位の推定値を集約するのは、同じ下位商品分類など、比較可能なSKU群だけにします。できるだけ多くのセグメントを作ることが目標ではありません。価格反応が異なるはずの商品を一緒に平均しないことが目標です。</p>
+<div id="fig-product-role-elasticity" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="液体乳製品内の商品役割別に、販売数量で重みづけした平均価格弾力性。非常に弾力的なものから、ほぼ非弾力的なものまで広がる">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-product-role-elasticity-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part5/sec5.1/product_role_elasticity.png" class="fig-lg img-fluid figure-img" alt="液体乳製品内の商品役割別に、販売数量で重みづけした平均価格弾力性。非常に弾力的なものから、ほぼ非弾力的なものまで広がる">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-product-role-elasticity-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+図&nbsp;4: 商品役割別の平均価格弾力性。
+</figcaption>
+</figure>
+</div>
+<p>一つの価格ルールをカテゴリー全体へ適用する前に、主な商品役割で反応が異なるかを確認します。異なるなら、平均弾力性は価格ルールではありません。カテゴリーをより慎重に分ける必要があるという警告です。</p>
+</section>
+<section id="sec-elasticity-pitfalls" class="level2">
+<h2 class="anchored" data-anchor-id="sec-elasticity-pitfalls">価格弾力性によくある罠</h2>
+<p><strong>内生性。</strong> 価格は無作為に設定されません。新学期前のような需要の高い時期に小売企業が値上げすると、高価格と高需要が価格設定とは無関係な理由で同時に起きるため、観測弾力性はゼロ方向へ偏ります。Part 3と同じセレクションバイアスの問題です。操作変数、無作為化価格実験、準実験デザインで対応します。</p>
+<p><strong>共有された時間構造。</strong> 価格と数量は、どちらも季節性、プロモーションカレンダー、トレンドを持つため、生の週次系列に対する回帰は、価格反応ではなく共有構造を捉える可能性があります。単にカレンダーを共有する2つの系列でも、需要曲線に見えるほど強く相関する場合があります。週または月の指標、プロモーションフラグ、トレンド項をモデルへ入れ、価格係数がそれらを通じてではなく、それらに対して推定されるようにします。この章の2変量適合では、そのどれも行っていません。そのため、カレンダーを組み込んだ仕様でも同じ結果になると確認できるまでは、ここでの弾力性はこのバイアスにさらされているものとして扱います。</p>
+<p><strong>参照価格効果。</strong> 顧客は以前に支払った金額を覚えています。通常、値上げによる数量の減少は、値下げで得られる新規購入者の増加より大きくなります。JCPenneyの「Fair and Square」は有名な例です。同じ平均水準で、プロモーションから常時低価格へ切り替えたところ、顧客が価格の基準を失い、売上が崩壊しました。</p>
+<p><strong>競合の反応。</strong> 値下げは、競合が価格を維持する場合に限って機能します。集中度の高いカテゴリーでは、通常、競合も価格を合わせます。全社がほぼ同じ数量を販売しながら、利益率だけが下がります。そのような場合、需要曲線よりゲーム理論が重要です。</p>
+</section>
+<section id="key-takeaways" class="level2">
+<h2 class="anchored" data-anchor-id="key-takeaways">要点</h2>
+<ul>
+<li>弾力性は反応曲線を与えるが、目的は選ばない。数量、売上、限界利益のどれを最適化するかを決める。定数弾力性の適合では、弾力的需要の場合に限って利益に内部最適値がある。</li>
+<li>意思決定で使う粒度、標準ではSKU×週で適合し、1つの価格ルールを全体に適用する前に、商品役割によって反応が異なるか確認する。</li>
+<li>推定弾力性は観測的な結果であって、商品の普遍的性質ではない。内生性、販促、欠品により、価格反応曲線が実際より信頼できるように見える場合がある。</li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "コピーしました");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "コピーしました");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/marketing-science-in-python\.com\/ja\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../part5/_part5.html" class="pagination-link" aria-label="Part 5. コマーシャル分析">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Part 5. コマーシャル分析</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../part5/sec5.2-assortment-optimization.html" class="pagination-link" aria-label="5.2 商品品揃えの最適化">
+        <span class="nav-page-text"><span class="chapter-title">5.2 商品品揃えの最適化</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

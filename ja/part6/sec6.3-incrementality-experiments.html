@@ -1,0 +1,1401 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="地域別の増分効果実験を設計・分析する：実験単位の選択、リフトの推定、結果をメディア意思決定へ変換する方法。">
+
+<title>Pythonによる増分効果実験 – Marketing Science in Python</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../part6/sec6.4-mmm-calibration.html" rel="next">
+<link href="../part6/sec6.2-mmm-fundamentals.html" rel="prev">
+<link href="../assets/favicon.png" rel="icon" type="image/png">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-491b769ea73b1ce4946cf8743b832a60.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-ec576e9d6a0f00bdcb4dbec60768df31.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-491b769ea73b1ce4946cf8743b832a60.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "一致なし",
+    "search-matching-documents-text": "一致した文書",
+    "search-copy-link-title": "検索へのリンクをコピー",
+    "search-hide-matches-text": "追加の検索結果を非表示",
+    "search-more-match-text": "追加の検索結果",
+    "search-more-matches-text": "追加の検索結果",
+    "search-clear-button-title": "消去",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "取消",
+    "search-submit-button-title": "検索",
+    "search-label": "サーチ"
+  }
+}</script>
+<script async="" src="https://www.googletagmanager.com/gtag/js?id=G-YY0LCGYER5"></script>
+
+<script type="text/javascript">
+
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
+</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../custom.css">
+<meta property="og:title" content="Pythonによる増分効果実験">
+<meta property="og:description" content="地域別の増分効果実験を設計・分析する：実験単位の選択、リフトの推定、結果をメディア意思決定へ変換する方法。">
+<meta property="og:image" content="https://marketing-science-in-python.com/images/common/book_cover_online.png">
+<meta property="og:site_name" content="Marketing Science in Python">
+<meta property="og:image:alt" content="抽象的なデータストリームが幾何学的ネットワークへ集まる表紙">
+<meta name="twitter:title" content="Pythonによる増分効果実験">
+<meta name="twitter:description" content="地域別の増分効果実験を設計・分析する：実験単位の選択、リフトの推定、結果をメディア意思決定へ変換する方法。">
+<meta name="twitter:image" content="https://marketing-science-in-python.com/images/common/book_cover_online.png">
+<meta name="twitter:image:alt" content="抽象的なデータストリームが幾何学的ネットワークへ集まる表紙">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://marketing-science-in-python.com/ja/part6/sec6.3-incrementality-experiments.html">
+<!-- msbook-i18n-head:start -->
+<link rel="alternate" hreflang="en" href="https://marketing-science-in-python.com/part6/sec6.3-incrementality-experiments.html">
+<link rel="alternate" hreflang="ja" href="https://marketing-science-in-python.com/ja/part6/sec6.3-incrementality-experiments.html">
+<link rel="alternate" hreflang="x-default" href="https://marketing-science-in-python.com/part6/sec6.3-incrementality-experiments.html">
+<!-- msbook-i18n-head:end -->
+</head>
+
+<body class="nav-sidebar floating quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="サイドバーを切り替える" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part6/_part6.html">Part 6. メディア投資と最適化</a></li><li class="breadcrumb-item"><a href="../part6/sec6.3-incrementality-experiments.html"><span class="chapter-title">6.3 増分効果実験</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="サイドバーを切り替える" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="サーチ" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <!-- msbook-language-switch:start -->
+<div class="msbook-language-switch" aria-label="Language"><a lang="en" hreflang="en" href="../../part6/sec6.3-incrementality-experiments.html" onclick="this.hash=window.location.hash">English</a><span aria-hidden="true"> | </span><span lang="ja" aria-current="page">日本語</span></div>
+<!-- msbook-language-switch:end -->
+<div class="sidebar-title mb-0 py-0">
+      <a href="../">Marketing Science in Python</a> 
+        <div class="sidebar-tools-main tools-wide">
+    <a href="https://github.com/takechanman1228/marketing-science-in-python" title="ソースコード" class="quarto-navigation-tool px-1" aria-label="ソースコード"><i class="bi bi-github"></i></a>
+    <div class="dropdown">
+      <a href="" title="Share" id="quarto-navigation-tool-dropdown-0" class="quarto-navigation-tool dropdown-toggle px-1" data-bs-toggle="dropdown" aria-expanded="false" role="link" aria-label="Share"><i class="bi bi-share"></i></a>
+      <ul class="dropdown-menu" aria-labelledby="quarto-navigation-tool-dropdown-0">
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://twitter.com/intent/tweet?url=|url|">
+              <i class="bi bi-twitter pe-1"></i>
+            Twitter
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://www.linkedin.com/sharing/share-offsite/?url=|url|">
+              <i class="bi bi-linkedin pe-1"></i>
+            LinkedIn
+            </a>
+          </li>
+      </ul>
+    </div>
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="ダークモードの切り替え"><i class="bi"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="サーチ"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">はじめに</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part1/_part1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Part 1. はじめに</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1/sec1.1-what-is-marketing-science.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">1.1 マーケティングサイエンスとは何か？</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1/sec1.2-data-landscape.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">1.2 マーケティングデータを理解する</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part2/_part2.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Part 2. より良い意思決定のための分析</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.1-right-question.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.1 正しい問いを設定する</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.2-kpi-design.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.2 診断のためのKPI設計</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.3-storytelling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.3 データをストーリーへ変える</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part3/_part3.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Part 3. マーケティングのための因果推論</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.1-thinking-causally.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.1 因果的に考える</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.2-ab-testing.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.2 A/Bテストの設計</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.3-quasi-experiments.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.3 準実験</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.4-causal-impact.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.4 時系列による因果インパクト</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.5-meta-learners.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.5 処置効果のためのメタラーナー</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.6-uplift-modeling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.6 ターゲティングのためのアップリフトモデリング</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part4/_part4.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Part 4. 顧客分析</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part4/sec4.1-segmentation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">4.1 顧客セグメンテーション</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part4/sec4.2-clv-modeling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">4.2 顧客生涯価値モデリング</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part5/_part5.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Part 5. コマーシャル分析</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.1-price-elasticity.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.1 価格弾力性と価格設定の意思決定</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.2-assortment-optimization.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.2 商品品揃えの最適化</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.3-sales-forecasting.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.3 売上予測とシナリオ計画</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part6/_part6.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Part 6. メディア投資と最適化</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.1-media-measurement-problem.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.1 メディア測定の問題</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.2-mmm-fundamentals.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.2 MMMの構築と最適化</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.3-incrementality-experiments.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">6.3 増分効果実験</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.4-mmm-calibration.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.4 実験によるMMMの較正</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.5-when-tools-disagree.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.5 測定ツールが一致しないときの意思決定</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendix/further-reading.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">参考文献と追加資料</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendix/notebooks.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">ノートブックとコード</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../marketing-analytics-in-python.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Pythonによるマーケティング分析</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">目次</h2>
+   
+  <ul>
+  <li><a href="#sec-what-is-incrementality" id="toc-sec-what-is-incrementality" class="nav-link active" data-scroll-target="#sec-what-is-incrementality">増分効果とは何か？</a></li>
+  <li><a href="#sec-experimental-unit" id="toc-sec-experimental-unit" class="nav-link" data-scroll-target="#sec-experimental-unit">実験単位を選ぶ</a></li>
+  <li><a href="#sec-geo-four-steps" id="toc-sec-geo-four-steps" class="nav-link" data-scroll-target="#sec-geo-four-steps">地域実験の4つのステップ</a></li>
+  <li><a href="#sec-geo-historical-data" id="toc-sec-geo-historical-data" class="nav-link" data-scroll-target="#sec-geo-historical-data">ステップ1：履歴データ</a></li>
+  <li><a href="#sec-geo-pretest-design" id="toc-sec-geo-pretest-design" class="nav-link" data-scroll-target="#sec-geo-pretest-design">ステップ2：テスト前設計</a>
+  <ul class="collapse">
+  <li><a href="#market-selection-and-assignment" id="toc-market-selection-and-assignment" class="nav-link" data-scroll-target="#market-selection-and-assignment">市場の選択と割り当て</a></li>
+  <li><a href="#power-and-mde-by-simulation" id="toc-power-and-mde-by-simulation" class="nav-link" data-scroll-target="#power-and-mde-by-simulation">シミュレーションによる検出力とMDE</a></li>
+  <li><a href="#sec-geo-decision-rule" id="toc-sec-geo-decision-rule" class="nav-link" data-scroll-target="#sec-geo-decision-rule">意思決定ルールと設計の固定</a></li>
+  </ul></li>
+  <li><a href="#sec-geo-run" id="toc-sec-geo-run" class="nav-link" data-scroll-target="#sec-geo-run">ステップ3：地域テストの実行</a></li>
+  <li><a href="#sec-geo-measurement" id="toc-sec-geo-measurement" class="nav-link" data-scroll-target="#sec-geo-measurement">ステップ4：テスト後の測定</a>
+  <ul class="collapse">
+  <li><a href="#does-the-result-hold-up" id="toc-does-the-result-hold-up" class="nav-link" data-scroll-target="#does-the-result-hold-up">結果は頑健か？</a></li>
+  </ul></li>
+  <li><a href="#sec-geo-lift-to-decision" id="toc-sec-geo-lift-to-decision" class="nav-link" data-scroll-target="#sec-geo-lift-to-decision">リフトから意思決定へ</a></li>
+  <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways">重要なポイント</a></li>
+  </ul>
+<div class="quarto-code-links"><h2>コードリンクス</h2><ul><li><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part6-media-optimization/sec6.3_geo_experiment.ipynb"><i class="bi bi-github"></i>sec6.3_geo_experiment.ipynb</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part6/_part6.html">Part 6. メディア投資と最適化</a></li><li class="breadcrumb-item"><a href="../part6/sec6.3-incrementality-experiments.html"><span class="chapter-title">6.3 増分効果実験</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span id="sec-incrementality-experiments" class="quarto-section-identifier"><span class="chapter-title">6.3 増分効果実験</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="translation-notice">
+<p><strong>日本語版について</strong><br>
+このページは英語版 <em>Marketing Science in Python</em> のAI翻訳です。英語版を正本とし、差異がある場合は英語版を優先してください。コード、Notebook、画像内の文字は英語のままです。 <a href="../../part6/sec6.3-incrementality-experiments.html" class="translation-source-link">英語版を読む</a></p>
+</div>
+<section id="sec-what-is-incrementality" class="level2">
+<h2 class="anchored" data-anchor-id="sec-what-is-incrementality">増分効果とは何か？</h2>
+<p><a href="sec6.2-mmm-fundamentals.html">Section 6.2</a>は、モデルが裏づけられない推奨で終わった。オプティマイザーはGoogle Searchから$38.1 million、すなわち30%を制約の下限まで削減しようとする。ガードレールはそれを止める。Searchの限界ROAS区間は0.3から8.3まであり、行動に移すには広すぎる。理由は履歴にある。Searchは3年間、ほぼ一定の週次予算で常時稼働してきた。これは<a href="sec6.2-mmm-fundamentals.html#sec-mmm-data-requirements">Section 6.2</a>で警告したケースそのものである。モデルはSearch支出が動くのを一度も見ていないため、推定値の大部分は事前分布である。そのような推定に基づく$38 millionの削減は、意思決定ではなく賭けだ。したがって全国で削減する前に、行動できるほど精密な因果的証拠が必要になる。Search支出の最後の30%は、実際にはどれだけの売上を購入していたのだろうか。</p>
+<p>その数値が増分効果である。<strong>増分効果</strong>とは、広告がなければ起きなかった成果を指す。キャンペーンが$120,000の売上を記録しても、そのうち$100,000が広告なしでも発生したなら、増分売上は$20,000である。アトリビューションは、観測されたコンバージョンの功績をどのタッチポイントに与えるかを記述するが、この$100,000については何も語らない。MMMの反応曲線も支出水準ごとの同じ増分寄与を狙うが、観測上の変動から推定する。メディアが販促や季節需要と一緒に動けば、その変動だけでは両者を分離できない。モデルを精緻にしても、欠けた比較対象は生まれない。それを得るにはデータを変えなければならない。何がどこで変わるかを制御する実験を行うのである。</p>
+</section>
+<section id="sec-experimental-unit" class="level2">
+<h2 class="anchored" data-anchor-id="sec-experimental-unit">実験単位を選ぶ</h2>
+<p>最初の設計判断は、誰または何を無作為化するかである。方法は2つの系統に分かれる。ユーザーベースのコンバージョンリフト調査では、対象となる人を無作為化する。プラットフォームがホールドアウト群へのキャンペーン配信を抑止し、コンバージョン率を比較する。地域実験では市場を無作為化する。テスト市場の全員に対してメディアを変更し、その地域で事業が測定する成果を使う。<a href="#fig-experiment-unit-choice" class="quarto-xref">図&nbsp;<span>1</span></a> は両者を並べて示している。</p>
+<div id="fig-experiment-unit-choice" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="左：対象ユーザーを広告を見る可能性がある処置群と、広告を配信しないホールドアウト群に分け、コンバージョン率を比較する。右：マッチした市場をSearch支出を30%削減するテスト市場と変更しない対照市場に分け、差の差で比較する。">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-experiment-unit-choice-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part6/sec6.3/experiment_unit_choice.png" class="fig-lg img-fluid figure-img" alt="左：対象ユーザーを広告を見る可能性がある処置群と、広告を配信しないホールドアウト群に分け、コンバージョン率を比較する。右：マッチした市場をSearch支出を30%削減するテスト市場と変更しない対照市場に分け、差の差で比較する。">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-experiment-unit-choice-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+図&nbsp;1: 反実仮想を作る2つの方法：ユーザーを無作為化するか、市場を無作為化する。
+</figcaption>
+</figure>
+</div>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>設計上の問い</th>
+<th>ユーザーベースのリフト</th>
+<th>地域実験</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>無作為化の単位</td>
+<td>対象ユーザー</td>
+<td>市場または地域</td>
+</tr>
+<tr class="even">
+<td>通常の運用主体</td>
+<td>広告プラットフォーム</td>
+<td>ブランドとアナリスト</td>
+</tr>
+<tr class="odd">
+<td>主な成果指標</td>
+<td>記録されたコンバージョン</td>
+<td>集計された事業KPI</td>
+</tr>
+<tr class="even">
+<td>主な強み</td>
+<td>個人単位の無作為化</td>
+<td>オフラインと市場全体のリフト</td>
+</tr>
+<tr class="odd">
+<td>主な制約</td>
+<td>ID、追跡、ボリューム</td>
+<td>単位数の少なさ、波及、ノイズ</td>
+</tr>
+</tbody>
+</table>
+<p>ユーザーベースのリフトが利用できる場合、通常はこちらの方が設計として明快である。個人単位の無作為化、大きなサンプル、作業を行うコンソールがある。ただし範囲には限界がある。測るのは、プラットフォームが識別できるユーザーのうち、無作為化したキャンペーンで記録されたコンバージョンである。これは欠陥ではない。調査が測る正確な量、すなわち<strong>estimand（推定対象）</strong>であり、それが狭いからといってユーザーリフト調査が劣るわけではない。しかし、オフライン売上、他チャネルへの波及、会社帳簿上の売上はすべて範囲外である。</p>
+<p>ここでの問いは会社帳簿上の総売上についてであり、意思決定はキャンペーン設定ではなく予算削減である。そのため地域を使う。地域実験は、成果を売上システムから取得するのでプラットフォームに依存しない。また、MMMが使う地域×週の構造へ自然に集計でき、これは<a href="sec6.4-mmm-calibration.html">Section 6.4</a>でまさに必要になる。本章の残りで、その実験を行う。</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+ノート
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>intent-to-treatの解釈、ホールドアウトのサイズ設計、公共広告を使う対照群やゴースト広告といったプラットフォーム設計など、ユーザーベースのリフトの仕組みは<a href="../appendix/further-reading.html#incrementality-experiments">参考文献と追加資料</a>で扱う。本書ではコンソールの設定は扱わない。そうした詳細は本より速く変化するからである。</p>
+</div>
+</div>
+</section>
+<section id="sec-geo-four-steps" class="level2">
+<h2 class="anchored" data-anchor-id="sec-geo-four-steps">地域実験の4つのステップ</h2>
+<div id="fig-geo-experiment-flow" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="4枚の番号付きカード：履歴データ（市場・週別の売上と支出）、テスト前設計（KPI、市場、支出変更、期間、意思決定ルール）、地域テストの実行（テスト市場で支出を削減し対照市場は一定に保つ）、テスト後測定（反実仮想に対するリフトを推定し意思決定する）。">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-geo-experiment-flow-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part6/sec6.3/geo_experiment_flow.png" class="fig-lg img-fluid figure-img" alt="4枚の番号付きカード：履歴データ（市場・週別の売上と支出）、テスト前設計（KPI、市場、支出変更、期間、意思決定ルール）、地域テストの実行（テスト市場で支出を削減し対照市場は一定に保つ）、テスト後測定（反実仮想に対するリフトを推定し意思決定する）。">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-geo-experiment-flow-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+図&nbsp;2: 地域実験の4つのステップ。
+</figcaption>
+</figure>
+</div>
+<p><a href="#fig-geo-experiment-flow" class="quarto-xref">図&nbsp;<span>2</span></a> は本章の残りの地図である。まず、市場・週別の売上とSearch支出という履歴データから始める。それを使ってテストを設計する。KPIを選び、市場を選択してペアを作り、支出変更と期間を固定し、設計が重要な効果を検出できるか確認し、意思決定ルールを書き下す。次にテストを実行する。ここはアナリストが主に待つ唯一のステップである。最後に測定する。信頼できる反実仮想に対するリフトを推定し、推定が頑健か確認し、ステップ2で固定した意思決定を行う。次の4つのセクションが、それぞれ1つのステップに対応する。</p>
+<p><strong>付属ノートブック：</strong> <code>sec6.3_geo_experiment.ipynb</code>は、<a href="sec6.2-mmm-fundamentals.html">Section 6.2</a>のモデルとSearchの経済性をそろえた40市場の合成パネルで実験全体を実行する。真値を埋め込んでいるため、以下のすべての推定値を真値と照合できる。<br>
+<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part6-media-optimization/sec6.3_geo_experiment.ipynb">GitHubで見る</a></p>
+</section>
+<section id="sec-geo-historical-data" class="level2">
+<h2 class="anchored" data-anchor-id="sec-geo-historical-data">ステップ1：履歴データ</h2>
+<p>以後のすべては1つの表から作られる。市場×週ごとに1行を持ち、売上、Search支出、テスト中に動きうるその他のローカルメディアを含む。ここでのパネルには40市場と、テスト期間前96週間の履歴がある。2年あれば余裕があり、成果の季節性が強くなければ1年でも実施可能である。</p>
+<p>設計を始める前に3つ確認する。売上は会社自身のシステムから、メディアを実際に制御できる地域粒度で取得しなければならない。Searchキャンペーンを州単位でしか設定できないなら、データが何を提供していても州が市場になる。支出は計画値ではなく、実際に変更する支出でなければならない。そして履歴から、反実仮想を混乱させる要素を除く必要がある。昨年物流センターができた市場は、何の対照にもならない。問題がわかっている市場は、後ではなくここで外す。</p>
+<p><em>出力：分析可能な市場×週パネル。</em></p>
+</section>
+<section id="sec-geo-pretest-design" class="level2">
+<h2 class="anchored" data-anchor-id="sec-geo-pretest-design">ステップ2：テスト前設計</h2>
+<p>5つの意思決定が調査を定義し、そのすべてを結果が存在する前に行う。</p>
+<ol type="1">
+<li><strong>KPI。</strong> 会社帳簿上の売上。CFOの問いが対象とし、MMMがモデル化するものでもある。</li>
+<li><strong>市場と割り当て。</strong> 事前期間の挙動で候補市場を選別し、マッチドペアを作り、各ペア内で無作為化する。</li>
+<li><strong>支出変更。</strong> テスト市場でSearchを30%削減する。これはオプティマイザーの提案なので、テストは代理指標ではなく検討中の方針そのものを測る。</li>
+<li><strong>期間と検出力。</strong> 履歴パネル上のシミュレーションで選んだ8週間。</li>
+<li><strong>意思決定ルール。</strong> どの結果がどの行動につながるかを、今の時点で書き下す。</li>
+</ol>
+<p>ノートブックでは、これらの選択を1つの設定セルで固定する。</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>DESIGN <span class="op">=</span> {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"seed"</span>: <span class="dv">20260888</span>,</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"channel"</span>: <span class="st">"Google Search"</span>,</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"test_start"</span>: <span class="st">"2024-02-05"</span>,</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"test_end"</span>: <span class="st">"2024-03-25"</span>,</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"test_weeks"</span>: <span class="dv">8</span>,</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"n_pairs"</span>: <span class="dv">8</span>,</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">"spend_multiplier"</span>: <span class="fl">0.70</span>,      <span class="co"># a 30% pull-back in test markets</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">"contribution_margin"</span>: <span class="fl">0.40</span>,   <span class="co"># sets the decision hurdle below</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ...plus `direction`, which records that this test cuts spend so the</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="co"># contrast is negative, and the power-simulation grid: durations, spend</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="co"># levels, candidate lifts, and the significance level.</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+<p>なぜ追加ではなく削減なのか。削減と増額はどちらも現在の支出付近の反応曲線を調べるが、曲線上では同じ推定対象ではない。このテストは、ベースラインの70%から100%までの支出ブロックに対する平均リターンを測る。これはオプティマイザーが提案した方針そのものである。25%の増額なら、その上のブロックを測ることになる。もう1つの理由はコストであり、実験の期待コストは答えについてすでに何を信じているかから決まる。モデルのテスト前の信念では、利益率40%の場合、削減の正味コストは約$7,000、増額は約$28,000である。どちらも安いのは、モデル上でSearchが損益分岐リターンの近くにいるからだ。削減は4分の1のコストだが、これほど小さな数値ならコストが決め手ではない。推定対象が決め手である。モデルが大きく間違い、真値が閾値を大幅に上回るなら、削減により8市場で8週間、実際の売上を失う。そのリスクには上限があり、以下の意思決定ルールにはその場合の分岐がある。</p>
+<section id="market-selection-and-assignment" class="level3">
+<h3 class="anchored" data-anchor-id="market-selection-and-assignment">市場の選択と割り当て</h3>
+<p>履歴上の成果だけを使う。ノートブックでは各候補市場について、事業の他地域との相関、平均売上、トレンドを測る。40市場を16の有力候補へ絞り、規模順に並べ、隣接する順位同士でペアを作り、各ペア内のトレンドの均衡を確認してから、ペアごとにコインを投げてテスト市場を選ぶ。スクリーニングはノイズを減らし、無作為化が比較を因果的にする。事後期間の成果を見てからテスト市場を選べば、この区別は崩れる。「これらの市場は典型的だから」と手作業で選んでも同じである。</p>
+<p>より多くの売上を対象にしようとして、大市場をすべて処置群に入れてはいけない。偏った分割は、通常の季節変動を見かけ上の効果に変えてしまう。より堅牢な本番ワークフローでは、多数の候補集合を評価する。安定した反実仮想を提供できない市場を除き、実行可能な割り当てごとに検出力をシミュレーションしてから選ぶ。</p>
+<p>波及は市場選択の問題であり、後からどの推定器を使っても直せない。通勤者はある市場で買い物をし別の市場に住み、ローカルTVは境界を越え、全国販促はどこでも需要を変える。メディア介入を実際に制御できる、重複しない単位を使い、選択市場間で他のローカル活動を安定させる。対照市場が処置の一部を受ければ、どの適合統計にも表れないまま、実験結果はゼロ方向へ偏る。</p>
+</section>
+<section id="power-and-mde-by-simulation" class="level3">
+<h3 class="anchored" data-anchor-id="power-and-mde-by-simulation">シミュレーションによる検出力とMDE</h3>
+<p>テストを確定する前に、このパネルで事業が重視する効果を検出できるかを問う。ノートブックは履歴上の疑似開始日を選び、予定削減によって候補ROASが失う売上を差し引き、同じクラスタ推定器を再実行し、効果を検出できた回数を数える。これを期間と削減幅を変えて繰り返すと、シミュレーションによる最小検出可能効果、すなわちMDEが得られる。</p>
+<div id="fig-mde-by-duration" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="3本の曲線は、テストが長く削減幅が大きいほど、80%の検出力で検出可能な限界ROASが低くなることを示す。8週間の30%削減では約0.30以上の効果を検出する。">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-mde-by-duration-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part6/sec6.3/mde_by_duration.png" class="fig-lg img-fluid figure-img" alt="3本の曲線は、テストが長く削減幅が大きいほど、80%の検出力で検出可能な限界ROASが低くなることを示す。8週間の30%削減では約0.30以上の効果を検出する。">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-mde-by-duration-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+図&nbsp;3: テスト期間と削減幅別のシミュレーションMDE。
+</figcaption>
+</figure>
+</div>
+<p><a href="#fig-mde-by-duration" class="quarto-xref">図&nbsp;<span>3</span></a> では、8週間の30%削減で約0.30以上の限界ROASを検出できる。4週間なら0.40が必要で、40%削減なら4週間で0.30に届くが、8週間の20%削減では0.40までしか届かない。削減幅が大きいほど、金額ベースの支出差が大きくなるので検出力が高い。これらの数値はこのパネル固有である。4〜8週間にわたる20〜50%の支出変更は一般的な出発点であって、ルールではない。自社の履歴でシミュレーションすることがルールである。</p>
+</section>
+<section id="sec-geo-decision-rule" class="level3">
+<h3 class="anchored" data-anchor-id="sec-geo-decision-rule">意思決定ルールと設計の固定</h3>
+<p>MDEは、テストが何をゼロと区別できるかを示す。しかしCFOが問うているのはそこではない。予算上の問いは、Searchが予算を維持できるだけの収益を上げているかであり、「十分」には数値がある。追加支出1ドルが損益分岐する限界ROASである。限界利益率が<span class="math inline">\(m\)</span>なら、損益分岐は<span class="math inline">\(1/m\)</span>となる。利益率40%では、Searchの1ドルは元を取るために$2.50の売上を返さなければならない。これが閾値であり、統計上ではなく事業上の入力である。</p>
+<p>これは1つの具体的な意思決定に対する閾値である。この支出ブロックをそもそもメディア予算に残すべきか、という問いだ。総予算が固定され、1ドルを代わりにMetaやOOHへ移すべきかが問いなら、基準はそれらのチャネルが提供する限界リターンとなり、5チャネルすべてを見るモデルだけが推定できる。本章で問うのは前者である。Searchの最後の30%は元を取れるのか。このテストに落ちる支出ブロックは、他の用途との比較でも落ちる。解放された予算をどこへ移すべきかは、<a href="sec6.4-mmm-calibration.html">Section 6.4</a>で比較する。</p>
+<p>そこで、開始前にルールを書く。限界ROASの95%信頼区間がすべて2.50より上なら予算を維持し、すべて下ならオプティマイザーの提案どおり削減する。2.50をまたぐなら全国計画を保留し、追試を設計する。結果を見てからこのテストを延長すれば、別のテストになってしまう。市場でクラスタ化した区間が主要な意思決定統計量であり、ステップ4の無作為化検定と以下のペアでクラスタ化した区間は、事前に指定した頑健性確認であって、追加票ではない。2つの数値の距離に注目する。設計は約0.30までの効果を検出でき、閾値は2.50である。今回の意思決定に対して、テストの検出力には余裕がある。標準誤差が約0.075なら、真の限界ROASが約2.3未満であれば「削減」の判定になる。ノートブックではp値ではなく判定をシミュレーションし、意思決定と同じ単位で同じことを示す。</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: right;">真の増分ROAS</th>
+<th style="text-align: right;">P(削減)</th>
+<th style="text-align: right;">P(保留)</th>
+<th style="text-align: right;">P(維持)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0.2</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1.0</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2.5</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">3.0</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">0.83</td>
+<td style="text-align: right;">0.17</td>
+</tr>
+</tbody>
+</table>
+<p>効果をゼロと区別できるかは別の問いであり、異なる答えになりうることを後で見る。</p>
+<p>市場リスト、日付、支出計画、推定器、除外するカレンダー期間、閾値、乱数シードを、いま固定する。Black Fridayのような大きなイベントがテスト境界をまたがないようにする。どの選択が望ましい答えを生むかを誰も知らない間が、設計規律を守る最も容易な時点である。</p>
+<p><em>出力：固定されたテスト計画。</em></p>
+</section>
+</section>
+<section id="sec-geo-run" class="level2">
+<h2 class="anchored" data-anchor-id="sec-geo-run">ステップ3：地域テストの実行</h2>
+<p>ここは、アナリストが行うことは最も少ないが、守るべきことは最も多いステップである。開始日に8つのテスト市場でSearch支出を30%減らし、そのまま維持する。対照市場は通常どおり運用する。それ以外は地域内で何も変えない。市場単位の販促を行わず、穴埋めのため他メディアを増やさず、対照市場で「これも試してみよう」としない。市場・週別に実際に配信された支出を記録する。ステップ4の分母は計画支出ではなく、実験が実際に除いた支出だからである。週次で結果を読まず、早期に停止しない。8週間のテストを3週目で読めば、偽陽性率が高い、別のよりノイズの多いテストになる。テスト市場のSearch支出が計画どおり下がらなくても、それは不遵守であって除外理由ではない。割り当てどおり主要分析に市場を残し、計画した支出差と並べて実際の支出差を報告する。成果データの消失など、事前に固定した理由がある場合にだけペアを外し、結果を見る前に記録する。</p>
+<p><em>出力：配信・遵守ログ。</em></p>
+</section>
+<section id="sec-geo-measurement" class="level2">
+<h2 class="anchored" data-anchor-id="sec-geo-measurement">ステップ4：テスト後の測定</h2>
+<p>次は、こちらが計算するかどうかにかかわらず、ステークホルダーが最初に計算する数値である。テスト中のテスト市場の売上と、その直前8週間を比較する。ノートブックでは、この比較による限界ROASは<strong>-0.87</strong>となる。Search支出が下がり売上が上がったので、Searchを削減すると売上が増えたように見える。広告マネージャーなら誰もがこの主張を聞いたことがあり、たいてい「ならもっと削ろう」と続く。ここでは間違いである。対照市場を含むすべての市場で、テスト期間に向けて売上が増えていたからだ。前後比較は、季節の功績を削減に与えてしまう。これがステップ2で対照市場を選んだ理由である。</p>
+<p>推定器は割り当て機構に従う。これは<a href="../part3/sec3.3-quasi-experiments.html">Section 3.3</a>と同じ原則である。マッチドペア内の無作為化が設計であり、ペア差の差法がそれに対応する推定器である。基本的な交互作用は次のとおりである。</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> smf.ols(<span class="st">"revenue ~ treat * post"</span>, data<span class="op">=</span>analysis).fit(</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    cov_type<span class="op">=</span><span class="st">"cluster"</span>,</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    cov_kwds<span class="op">=</span>{<span class="st">"groups"</span>: analysis[<span class="st">"geo"</span>]},</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+<p>ノートブック版では、<code>treat</code>と<code>post</code>の主効果を、各市場の固定効果とペアごとの個別テスト期間項に置き換える。これにより、あるペア固有のショックをリフトと読み違えない。<code>treat:post</code>係数は、処置市場×週あたりの増分売上である。ここではテスト市場がペアに対して売上を失ったため、負になる。その合計を実験で削減した支出で割ると、限界ROASが得られる。分子と分母はともに負であり、その比が求める量、すなわち支出しなかった1ドルあたりの売上減少額である。テストで支出をどちらに動かしたかにかかわらず、正のROASはチャネルが売上を生んでいたことを意味する。</p>
+<p>設計と整合する推定値は<strong>0.200</strong>、SEは<strong>0.075</strong>、95% CIは<strong>[0.040, 0.361]</strong>である。16の市場クラスタしかないため、区間には1.96ではなくt分布を使う。埋め込んだ真値0.200を回収できている。削減したSearchの1ドルは、約20セントの売上を購入していた。</p>
+<p>この分母について、もう一言必要である。それは、この市場、この日付で、実験が変更した支出でなければならない。Searchの全履歴支出や全国予算で割れば、正しい因果的売上推定値が誤ったROASに変わる。</p>
+<section id="does-the-result-hold-up" class="level3">
+<h3 class="anchored" data-anchor-id="does-the-result-hold-up">結果は頑健か？</h3>
+<p>1つの推定器による1つの推定値は主張にすぎない。3つの確認を経て、結果になる。</p>
+<p>第一に事前期間である。ノートブックのイベントスタディ図は、各ペアを開始前週で中心化する。事前期間の差はドリフトせず、ゼロの周りで変動している。ドリフトしていれば、ペアは平行ではなく、DiDがそのドリフトを測ってしまう。</p>
+<p>第二に代替の反実仮想である。合成コントロールは8つのテスト市場を集計し、非負かつ合計1となる重みで未処置のドナーを混合し、事前期間の誤差を最小化する。事前期間で密接に適合することが入場条件である。合成系列が処置対象の履歴を再現できなければ、事後期間の差には意味がない。ここでは適合しており、合成コントロールの推定値は<strong>0.186</strong>で、DiDと真値に近い。2つの推定器は未処置信息を異なる方法で圧縮するので、一致には情報がある。ただし、好みの数値が出るまで手法を平均してよいという意味ではない。</p>
+<div id="fig-actual-vs-synthetic-gap" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="集計した処置群と重み付き合成コントロールは開始前には密接に追随し、テスト中は処置系列が反実仮想を下回る。">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-actual-vs-synthetic-gap-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part6/sec6.3/actual_vs_synthetic_gap.png" class="fig-lg img-fluid figure-img" alt="集計した処置群と重み付き合成コントロールは開始前には密接に追随し、テスト中は処置系列が反実仮想を下回る。">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-actual-vs-synthetic-gap-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+図&nbsp;4: テスト市場の観測売上と合成コントロール。
+</figcaption>
+</figure>
+</div>
+<p>第三にプラセボである。空間内プラセボでは、実際には起きなかった割り当てなら分析が何を報告するかを問う。8ペアでは、各ペア内の役割を入れ替えると<span class="math inline">\(2^8 = 256\)</span>通りの割り当てがあり、全列挙できるほど少ない。その分布は構造上ゼロを中心とし、11.7%が観測値0.200以上に極端な推定値を生む。時間内プラセボでは、同じ8週間のウィンドウを以前の履歴上で移動させる。その平均は0.053で、すべての日付でリフトが繰り返されるのではなく、偽の効果がゼロの両側に現れる。</p>
+<div id="fig-placebo-distribution" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="ペア内プラセボROAS推定値のヒストグラムはゼロ付近を中心とし、観測推定値は正側の裾にある。以前の偽の開始日は軸上の印として示す。">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-placebo-distribution-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part6/sec6.3/placebo_distribution.png" class="fig-lg img-fluid figure-img" alt="ペア内プラセボROAS推定値のヒストグラムはゼロ付近を中心とし、観測推定値は正側の裾にある。以前の偽の開始日は軸上の印として示す。">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-placebo-distribution-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+図&nbsp;5: 実際の推定値とプラセボ割り当ての比較。
+</figcaption>
+</figure>
+</div>
+<div class="callout callout-style-default callout-note callout-titled" title="どちらも妥当な検定、5%の両側">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">ノート</span>どちらも妥当な検定、5%の両側
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>クラスタt区間はゼロを除外する。正確な無作為化検定では、プラセボ割り当ての11.7%が観測推定値より極端になる。どちらも計算誤りではない。t区間は16クラスタに適用した大標本近似であり、全列挙は設計そのものの参照分布である。境界付近の結果は、恣意的な閾値の反対側に出ることがある。検出力分析も、そうなると示していた。MDEが約0.30の設計では、真値0.20をゼロに関する補助的証拠として読み、判定とはしない。だから次節では有意性ではなく閾値で決定し、<a href="sec6.4-mmm-calibration.html">Section 6.4</a>では推定値とその不確実性を一緒にモデルへ持ち込む。</p>
+</div>
+</div>
+<p>割り当てが無作為化されたため、空間内プラセボ分布は設計に基づく推論となる。無作為化されていないマッチドマーケット調査でも、同じ事前適合、イベントスタディ、合成コントロール、プラセボ確認を行うが、無作為化の言葉を借りてはいけない。その場合、因果的主張は合成反実仮想と、測定されていないショックが選択市場を分けなかったという論拠に依存する。Metaの<a href="https://facebookincubator.github.io/GeoLift/">GeoLift</a>とGoogleの<a href="https://github.com/google/CausalImpact">CausalImpact</a>はその状況向けに作られている。これらは追加票ではなく、異なる推定器である。どちらをいつ使うかは<a href="../appendix/further-reading.html#incrementality-experiments">参考文献と追加資料</a>で扱う。</p>
+<p><em>出力：推定値、その検証、判定。</em></p>
+</section>
+</section>
+<section id="sec-geo-lift-to-decision" class="level2">
+<h2 class="anchored" data-anchor-id="sec-geo-lift-to-decision">リフトから意思決定へ</h2>
+<p>固定したルールを適用する。閾値は2.50だった。区間は[0.040, 0.361]で、その上限は閾値の6分の1未満である。ルールは削減を示す。削減した1ドルは20セントの売上、利益率40%では8セントの利益を購入していた。不確実性をどう読んでも、その1ドルが元を取る解釈はない。</p>
+<p>次節で事前分布へ変換するため、引き継ぎにはもう1つ数値が必要である。割り当てはマッチドペアごとの8回のコイン投げだったが、推定器は16市場でクラスタ化している。代わりにペアでクラスタ化すると、点推定値は0.200のままだが、標準誤差は0.075から0.110へ広がり、95%区間は[0.040, 0.361]ではなく[-0.060, 0.461]となる。2.50はどちらよりもはるかに高いため、判定はいずれでも同じである。しかし、正当化可能な2つの幅のうち狭い方から作った事前分布は選択であって事実ではない。そこで両方を<a href="sec6.4-mmm-calibration.html">Section 6.4</a>へ渡し、それぞれで較正を行う。</p>
+<p>この意思決定が何に依存しなかったかに注目する。無作為化検定は5%水準でゼロを棄却できなかった。「有意だったか」を軸に会議を進めれば、p値について議論した末に、意思決定なしで終わる。同じ数値でも、閾値を軸にすれば明確な答えが出る。0.36から2.50までの距離が大きく、0.04からゼロまでの距離は最初から問いではなかったからだ。効果をゼロと区別できないテストでも、予算を決定できる。</p>
+<p>8週間のウィンドウ外を考えなくても、短期利益だけでテストは元を取った。テスト市場からSearch支出を$421,906削減し、推定上は約$84,000の売上、約$34,000の利益を失った。ステップ2では、Searchの1ドルが$2.54の売上を購入するというモデルの信念に基づき、この設計のコストを見積もった。実際には20セントだったため、テストコストはモデル予想の約10分の1だった。これは、区間だけでなくモデル自体も修正が必要だという最初の兆候だった。</p>
+<p>わかっていることは、精密だが狭い。<strong>この</strong>市場で、<strong>この</strong>8週間に行った、<strong>この</strong>30%削減の効果である。これは反応曲線上の1つの運用点における方針効果であり、チャネルの永遠のROASではない。引き継ぎでもその範囲を保つ。本番テストで実配信の支出差が計画と一致することはまれであり、この表に入れるべきなのは実配信値である。ここではパネルが合成なので両者が一致する。</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>証拠フィールド</th>
+<th>固定値</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>チャネル</td>
+<td>Google Search</td>
+</tr>
+<tr class="even">
+<td>設計</td>
+<td>無作為化した8つのマッチドペア</td>
+</tr>
+<tr class="odd">
+<td>日付</td>
+<td>2024-02-05から2024-03-25</td>
+</tr>
+<tr class="even">
+<td>テスト市場のベースライン支出</td>
+<td>$1,406,355</td>
+</tr>
+<tr class="odd">
+<td>削減支出</td>
+<td>$421,906</td>
+</tr>
+<tr class="even">
+<td>30%ブロックの増分ROAS</td>
+<td>0.200</td>
+</tr>
+<tr class="odd">
+<td>標準誤差（市場でクラスタ化）</td>
+<td>0.075</td>
+</tr>
+<tr class="even">
+<td>標準誤差（ペアでクラスタ化）</td>
+<td>0.110</td>
+</tr>
+<tr class="odd">
+<td>95% CI（クラスタt）</td>
+<td>[0.040, 0.361]</td>
+</tr>
+<tr class="even">
+<td>無作為化p値</td>
+<td>0.117</td>
+</tr>
+<tr class="odd">
+<td>テスト市場が全国Search支出に占める割合</td>
+<td>19.9%</td>
+</tr>
+<tr class="even">
+<td>推定対象</td>
+<td>選択市場で8週間行う30%削減の売上効果</td>
+</tr>
+</tbody>
+</table>
+<p>証拠は、テストした運用範囲で30%削減を支持する。全国展開は、残り32市場がこの8市場と同じように振る舞うと仮定する。そのため同じガードレールの下で展開し、実配信支出と売上をこの予測に対して追跡すべきである。それが直近の意思決定である。しかし、1つの実験が測ったのは1チャネルの曲線上の1点であり、Section 6.2のモデルは5チャネル間で予算を設定する。<a href="sec6.4-mmm-calibration.html">Section 6.4</a>では、この因果的証拠がモデルをどれほど変えるべきか、そしてモデルの推奨が変わるかを問う。その後もモデルと実験が一致しなければ、<a href="sec6.5-when-tools-disagree.html">Section 6.5</a>のプロトコルを使う。</p>
+</section>
+<section id="key-takeaways" class="level2">
+<h2 class="anchored" data-anchor-id="key-takeaways">重要なポイント</h2>
+<ul>
+<li>増分効果とは、広告がなければ起きなかった成果である。推定器より先に単位と設計を選び、自社の履歴で検出力をシミュレーションし、意思決定ルールを固定する。</li>
+<li>有意性ではなく閾値に対して決定する。効果をゼロと区別できないテストでも、予算を決着させられる。ROASだけでなく、推定対象、その不確実性、運用点を引き継ぐ。</li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "コピーしました");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "コピーしました");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/marketing-science-in-python\.com\/ja\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../part6/sec6.2-mmm-fundamentals.html" class="pagination-link" aria-label="6.2 MMMの構築と最適化">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">6.2 MMMの構築と最適化</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../part6/sec6.4-mmm-calibration.html" class="pagination-link" aria-label="6.4 実験によるMMMの較正">
+        <span class="nav-page-text"><span class="chapter-title">6.4 実験によるMMMの較正</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

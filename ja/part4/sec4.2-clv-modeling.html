@@ -1,0 +1,1529 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="PyMC-MarketingのBG/NBD＋Gamma-Gammaの枠組みによるCLVモデリングを通じて、従来の式が不十分な理由とCLVの活用方法を説明します。">
+
+<title>Pythonによる顧客生涯価値 – Marketing Science in Python</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../part5/_part5.html" rel="next">
+<link href="../part4/sec4.1-segmentation.html" rel="prev">
+<link href="../assets/favicon.png" rel="icon" type="image/png">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-491b769ea73b1ce4946cf8743b832a60.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-ec576e9d6a0f00bdcb4dbec60768df31.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-491b769ea73b1ce4946cf8743b832a60.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "一致なし",
+    "search-matching-documents-text": "一致した文書",
+    "search-copy-link-title": "検索へのリンクをコピー",
+    "search-hide-matches-text": "追加の検索結果を非表示",
+    "search-more-match-text": "追加の検索結果",
+    "search-more-matches-text": "追加の検索結果",
+    "search-clear-button-title": "消去",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "取消",
+    "search-submit-button-title": "検索",
+    "search-label": "サーチ"
+  }
+}</script>
+<script async="" src="https://www.googletagmanager.com/gtag/js?id=G-YY0LCGYER5"></script>
+
+<script type="text/javascript">
+
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
+</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../custom.css">
+<meta property="og:title" content="Pythonによる顧客生涯価値">
+<meta property="og:description" content="PyMC-MarketingのBG/NBD＋Gamma-Gammaの枠組みによるCLVモデリングを通じて、従来の式が不十分な理由とCLVの活用方法を説明します。">
+<meta property="og:image" content="https://marketing-science-in-python.com/images/common/book_cover_online.png">
+<meta property="og:site_name" content="Marketing Science in Python">
+<meta property="og:image:alt" content="抽象的なデータストリームが幾何学的ネットワークへ集まる表紙">
+<meta name="twitter:title" content="Pythonによる顧客生涯価値">
+<meta name="twitter:description" content="PyMC-MarketingのBG/NBD＋Gamma-Gammaの枠組みによるCLVモデリングを通じて、従来の式が不十分な理由とCLVの活用方法を説明します。">
+<meta name="twitter:image" content="https://marketing-science-in-python.com/images/common/book_cover_online.png">
+<meta name="twitter:image:alt" content="抽象的なデータストリームが幾何学的ネットワークへ集まる表紙">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://marketing-science-in-python.com/ja/part4/sec4.2-clv-modeling.html">
+<!-- msbook-i18n-head:start -->
+<link rel="alternate" hreflang="en" href="https://marketing-science-in-python.com/part4/sec4.2-clv-modeling.html">
+<link rel="alternate" hreflang="ja" href="https://marketing-science-in-python.com/ja/part4/sec4.2-clv-modeling.html">
+<link rel="alternate" hreflang="x-default" href="https://marketing-science-in-python.com/part4/sec4.2-clv-modeling.html">
+<!-- msbook-i18n-head:end -->
+</head>
+
+<body class="nav-sidebar floating quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="サイドバーを切り替える" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part4/_part4.html">Part 4. 顧客分析</a></li><li class="breadcrumb-item"><a href="../part4/sec4.2-clv-modeling.html"><span class="chapter-title">4.2 顧客生涯価値モデリング</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="サイドバーを切り替える" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="サーチ" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <!-- msbook-language-switch:start -->
+<div class="msbook-language-switch" aria-label="Language"><a lang="en" hreflang="en" href="../../part4/sec4.2-clv-modeling.html" onclick="this.hash=window.location.hash">English</a><span aria-hidden="true"> | </span><span lang="ja" aria-current="page">日本語</span></div>
+<!-- msbook-language-switch:end -->
+<div class="sidebar-title mb-0 py-0">
+      <a href="../">Marketing Science in Python</a> 
+        <div class="sidebar-tools-main tools-wide">
+    <a href="https://github.com/takechanman1228/marketing-science-in-python" title="ソースコード" class="quarto-navigation-tool px-1" aria-label="ソースコード"><i class="bi bi-github"></i></a>
+    <div class="dropdown">
+      <a href="" title="Share" id="quarto-navigation-tool-dropdown-0" class="quarto-navigation-tool dropdown-toggle px-1" data-bs-toggle="dropdown" aria-expanded="false" role="link" aria-label="Share"><i class="bi bi-share"></i></a>
+      <ul class="dropdown-menu" aria-labelledby="quarto-navigation-tool-dropdown-0">
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://twitter.com/intent/tweet?url=|url|">
+              <i class="bi bi-twitter pe-1"></i>
+            Twitter
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://www.linkedin.com/sharing/share-offsite/?url=|url|">
+              <i class="bi bi-linkedin pe-1"></i>
+            LinkedIn
+            </a>
+          </li>
+      </ul>
+    </div>
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="ダークモードの切り替え"><i class="bi"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="サーチ"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">はじめに</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part1/_part1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Part 1. はじめに</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1/sec1.1-what-is-marketing-science.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">1.1 マーケティングサイエンスとは何か？</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1/sec1.2-data-landscape.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">1.2 マーケティングデータを理解する</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part2/_part2.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Part 2. より良い意思決定のための分析</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.1-right-question.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.1 正しい問いを設定する</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.2-kpi-design.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.2 診断のためのKPI設計</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.3-storytelling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.3 データをストーリーへ変える</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part3/_part3.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Part 3. マーケティングのための因果推論</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.1-thinking-causally.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.1 因果的に考える</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.2-ab-testing.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.2 A/Bテストの設計</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.3-quasi-experiments.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.3 準実験</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.4-causal-impact.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.4 時系列による因果インパクト</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.5-meta-learners.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.5 処置効果のためのメタラーナー</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.6-uplift-modeling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.6 ターゲティングのためのアップリフトモデリング</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part4/_part4.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Part 4. 顧客分析</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part4/sec4.1-segmentation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">4.1 顧客セグメンテーション</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part4/sec4.2-clv-modeling.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">4.2 顧客生涯価値モデリング</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part5/_part5.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Part 5. コマーシャル分析</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.1-price-elasticity.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.1 価格弾力性と価格設定の意思決定</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.2-assortment-optimization.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.2 商品品揃えの最適化</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.3-sales-forecasting.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.3 売上予測とシナリオ計画</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part6/_part6.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Part 6. メディア投資と最適化</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.1-media-measurement-problem.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.1 メディア測定の問題</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.2-mmm-fundamentals.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.2 MMMの構築と最適化</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.3-incrementality-experiments.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.3 増分効果実験</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.4-mmm-calibration.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.4 実験によるMMMの較正</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.5-when-tools-disagree.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.5 測定ツールが一致しないときの意思決定</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendix/further-reading.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">参考文献と追加資料</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendix/notebooks.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">ノートブックとコード</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../marketing-analytics-in-python.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Pythonによるマーケティング分析</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">目次</h2>
+   
+  <ul>
+  <li><a href="#why-clv-changes-the-decision" id="toc-why-clv-changes-the-decision" class="nav-link active" data-scroll-target="#why-clv-changes-the-decision">CLVが意思決定を変える理由</a></li>
+  <li><a href="#sec-limitations" id="toc-sec-limitations" class="nav-link" data-scroll-target="#sec-limitations">従来の式が不十分な理由</a></li>
+  <li><a href="#sec-btyd" id="toc-sec-btyd" class="nav-link" data-scroll-target="#sec-btyd">BTYD：BG/NBD＋Gamma-Gammaの枠組み</a>
+  <ul class="collapse">
+  <li><a href="#bgnbd-model" id="toc-bgnbd-model" class="nav-link" data-scroll-target="#bgnbd-model">BG/NBDモデル</a></li>
+  <li><a href="#gamma-gamma-model" id="toc-gamma-gamma-model" class="nav-link" data-scroll-target="#gamma-gamma-model">Gamma-Gammaモデル</a></li>
+  </ul></li>
+  <li><a href="#sec-implementation" id="toc-sec-implementation" class="nav-link" data-scroll-target="#sec-implementation">PyMC-Marketingによる実装</a>
+  <ul class="collapse">
+  <li><a href="#data-and-rfm-t-summary" id="toc-data-and-rfm-t-summary" class="nav-link" data-scroll-target="#data-and-rfm-t-summary">データとRFM-T要約</a></li>
+  <li><a href="#fitting-and-estimating-clv" id="toc-fitting-and-estimating-clv" class="nav-link" data-scroll-target="#fitting-and-estimating-clv">モデルの当てはめとCLV推定</a></li>
+  <li><a href="#probability-alive-matrix" id="toc-probability-alive-matrix" class="nav-link" data-scroll-target="#probability-alive-matrix">Probability Alive行列</a></li>
+  <li><a href="#revenue-clv-profit-clv" id="toc-revenue-clv-profit-clv" class="nav-link" data-scroll-target="#revenue-clv-profit-clv">売上CLV → 利益CLV</a></li>
+  <li><a href="#combining-segments-and-clv" id="toc-combining-segments-and-clv" class="nav-link" data-scroll-target="#combining-segments-and-clv">セグメントとCLVを組み合わせる</a></li>
+  </ul></li>
+  <li><a href="#sec-using-clv" id="toc-sec-using-clv" class="nav-link" data-scroll-target="#sec-using-clv">CLVを実務で使う</a></li>
+  <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways">要点</a></li>
+  </ul>
+<div class="quarto-code-links"><h2>コードリンクス</h2><ul><li><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.2_clv_pymc_marketing.ipynb"><i class="bi bi-github"></i>sec4.2_clv_pymc_marketing.ipynb</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part4/_part4.html">Part 4. 顧客分析</a></li><li class="breadcrumb-item"><a href="../part4/sec4.2-clv-modeling.html"><span class="chapter-title">4.2 顧客生涯価値モデリング</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span id="sec-clv-modeling" class="quarto-section-identifier"><span class="chapter-title">4.2 顧客生涯価値モデリング</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="translation-notice">
+<p><strong>日本語版について</strong><br>
+このページは英語版 <em>Marketing Science in Python</em> のAI翻訳です。英語版を正本とし、差異がある場合は英語版を優先してください。コード、Notebook、画像内の文字は英語のままです。 <a href="../../part4/sec4.2-clv-modeling.html" class="translation-source-link">英語版を読む</a></p>
+</div>
+<p>多くのマーケティングチームは顧客獲得単価（CPA）へ注目します。CPAは顧客獲得コスト（CAC）と同じ意味で使われることが多く、CPAが低ければキャンペーンが優れていると考えます。分析やSaaSの文脈ではLTVとも呼ばれる顧客生涯価値（CLV）は、問いを捉え直します。顧客をどれだけ安く獲得できるかではなく、各顧客が時間を通じてどれだけの価値を持つかを問い、その答えでCPAの上限を設定します。</p>
+<p>この章では、確率的BTYDモデル（PyMC-MarketingによるBG/NBD＋Gamma-Gamma）を使って個人単位のCLVを予測し、その予測を予算の意思決定へ変える方法を示します。</p>
+<section id="why-clv-changes-the-decision" class="level2">
+<h2 class="anchored" data-anchor-id="why-clv-changes-the-decision">CLVが意思決定を変える理由</h2>
+<p>広告とクーポンで顧客を獲得するファッションEコマースのブランドを考えます。ファネルの中心となる2つのセグメントが、大学生と社会人だとします。初回購入は次のとおりです。</p>
+<ul>
+<li>大学生：獲得コスト$10、購入額$100 → ROAS 10倍。</li>
+<li>社会人：獲得コスト$20、購入額$100 → ROAS 5倍。</li>
+</ul>
+<div id="fig-first-purchase" class="fig-sm quarto-float quarto-figure quarto-figure-center anchored" alt="大学生は社会人より獲得コストが低く、初回購入額は同じなので、初回注文のROASでは大学生が優位になる">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-first-purchase-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.2/first_purchase.png" class="fig-sm img-fluid figure-img" alt="大学生は社会人より獲得コストが低く、初回購入額は同じなので、初回注文のROASでは大学生が優位になる">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-first-purchase-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+図&nbsp;1: 初回購入の比較：大学生と社会人。
+</figcaption>
+</figure>
+</div>
+<p>初日のROASだけを見れば、大学生へより多くの予算を配分するのが明らかに思えます。しかし、長期的には結果が逆転します。大学生は初回取引後に離脱するため、生涯支出は$100付近にとどまります。社会人は再訪し、時間を通じてより多く支出し、平均生涯支出は$400です。「高価な」セグメントの方が、実際には割安だったのです。</p>
+<div id="fig-long-term-comparison" class="fig-sm quarto-float quarto-figure quarto-figure-center anchored" alt="リピート購入を含めると、大学生顧客は離脱する一方、社会人は広告費用に対して2倍のリターンを生む">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-long-term-comparison-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.2/long_term_comparison.png" class="fig-sm img-fluid figure-img" alt="リピート購入を含めると、大学生顧客は離脱する一方、社会人は広告費用に対して2倍のリターンを生む">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-long-term-comparison-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+図&nbsp;2: リピート購入を含めた収益性。
+</figcaption>
+</figure>
+</div>
+<p>CLVモデリングは、この隔たりを埋めます。CLVがなければ、すべての顧客へ同じCPA上限を設定し、低価値顧客には払いすぎ、高価値顧客には十分に払わないことになります。CLVを使うと、予測価値に応じて上限を変え、同じ予算で適切な顧客をより多く獲得できます。</p>
+<div id="fig-cpa-adjustment" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="CLVがなければ固定CPAによって低価値顧客へ過剰投資する。CLVがあれば、各顧客の生涯価値に応じてCPAが変わる">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-cpa-adjustment-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.2/cpa_adjustment.png" class="fig-md img-fluid figure-img" alt="CLVがなければ固定CPAによって低価値顧客へ過剰投資する。CLVがあれば、各顧客の生涯価値に応じてCPAが変わる">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-cpa-adjustment-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+図&nbsp;3: 固定CPA（左）とCLVに応じたCPA（右）。
+</figcaption>
+</figure>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">ノート</span>顧客ライフサイクル全体のCLV
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>CLVはあらゆる段階で役立ちます。獲得では高価値セグメントへより多く支出し、成長では高価値顧客へのサービスと限定オファーを優先し、維持では計算上効果が見込める顧客維持キャンペーンへ集中します。</p>
+</div>
+</div>
+<p>CLVモデルの3つの目標は、ここから直接導かれます。(1) 個人単位で将来価値を予測する、(2) CLVの高い顧客が何によって異なるかを特定する、(3) 両方をマーケティング予算の意思決定へ入力することです。</p>
+</section>
+<section id="sec-limitations" class="level2">
+<h2 class="anchored" data-anchor-id="sec-limitations">従来の式が不十分な理由</h2>
+<p>教科書的なCLVの式には、3つの要素があります。</p>
+<p><span class="math display">\[
+\text{CLV} = \text{Average Order Value} \times \text{Purchase Frequency} \times \text{Customer Lifespan}
+\]</span></p>
+<p>1注文当たり$100を支出し、年4回購入し、3年間ロイヤル顧客であり続けるファッションブランドでは、<span class="math inline">\(\text{CLV} = 100 \times 4 \times 3 = \$1{,}200\)</span> です。単純で直感的であり、ビジネス規模の概算には役立ちますが、顧客単位の意思決定には粗すぎます。3つの点で破綻します。</p>
+<div id="fig-limitations" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="従来のCLV式が持つ3つの限界：顧客の不均一性、初回購入時期の違い、『離脱したか活動中か』の曖昧さ">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-limitations-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.2/limitations.png" class="fig-md img-fluid figure-img" alt="従来のCLV式が持つ3つの限界：顧客の不均一性、初回購入時期の違い、『離脱したか活動中か』の曖昧さ">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-limitations-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+図&nbsp;4: 従来のCLV式が持つ3つの限界。
+</figcaption>
+</figure>
+</div>
+<p>限界1：すべての顧客が同じではない。顧客基盤全体で平均すると、分布の両端を誤って表します。</p>
+<div id="tbl-heterogeneity" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-heterogeneity-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+表&nbsp;1: 平均CLVの$1,090は、どちらの群も正しく表さない。
+</figcaption>
+<div aria-describedby="tbl-heterogeneity-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">顧客群</th>
+<th style="text-align: center;">顧客数</th>
+<th style="text-align: center;">平均CLV</th>
+<th style="text-align: center;">総売上</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">通常の顧客</td>
+<td style="text-align: center;">90</td>
+<td style="text-align: center;">$100</td>
+<td style="text-align: center;">$9,000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">高額購入顧客</td>
+<td style="text-align: center;">10</td>
+<td style="text-align: center;">$10,000</td>
+<td style="text-align: center;">$100,000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>合計</strong></td>
+<td style="text-align: center;"><strong>100</strong></td>
+<td style="text-align: center;"><strong>$1,090</strong></td>
+<td style="text-align: center;"><strong>$109,000</strong></td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<p>$1,090という平均はデータ内に存在しますが、誰も表していません。個人単位のCLVが必要です。</p>
+<p>限界2：初回購入時期が異なる。1年前に購入を始めた顧客には1年分の観察可能なデータがありますが、3カ月前に始めた顧客には、はるかに少ないデータしかありません。顧客期間を調整しない生の頻度は、「関与度が低い」と「新しく来た」を混同します。</p>
+<div id="fig-tenure" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="購入開始時期が異なる顧客は観察可能な期間が異なるため、生の頻度が誤解を招く">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-tenure-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.2/tenure.png" class="fig-md img-fluid figure-img" alt="購入開始時期が異なる顧客は観察可能な期間が異なるため、生の頻度が誤解を招く">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-tenure-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+図&nbsp;5: 観察可能な顧客期間における在籍期間バイアス。
+</figcaption>
+</figure>
+</div>
+<p>限界3：離脱したか活動中か？サブスクリプションでは、顧客が解約するため、チャーンを観察できます。小売やEコマースでは観察できません。顧客を「活動中」とみなすかどうかは、その顧客自身のパターンに依存します。毎月購入する人が3カ月沈黙すれば危険信号ですが、6カ月ごとに購入する人が3カ月空くのは正常です。</p>
+<div id="fig-dead-or-alive" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="顧客の最終購入から同じ期間が空いていても、一時的な非活動または永続的な離脱を意味し、直接は観察できない">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-dead-or-alive-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.2/dead_or_alive.png" class="fig-md img-fluid figure-img" alt="顧客の最終購入から同じ期間が空いていても、一時的な非活動または永続的な離脱を意味し、直接は観察できない">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-dead-or-alive-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+図&nbsp;6: 購入パターンにおける、離脱したか活動中かの曖昧さ。
+</figcaption>
+</figure>
+</div>
+<p>3つの問題の根は同じです。一つの平均では、不均一な顧客基盤を表せません。解決策は個人単位でCLVをモデル化することであり、BTYDがまさにそれを行います。</p>
+</section>
+<section id="sec-btyd" class="level2">
+<h2 class="anchored" data-anchor-id="sec-btyd">BTYD：BG/NBD＋Gamma-Gammaの枠組み</h2>
+<p>Buy-Till-You-Die（BTYD）モデリングは、2つの確率モデルを組み合わせたものです。</p>
+<ol type="1">
+<li>BG/NBDは、顧客がまだ活動している確率と将来の取引回数を予測します。</li>
+<li>Gamma-Gammaは、平均注文金額を推定します。</li>
+</ol>
+<p>2つを掛け合わせ、時間に応じて割り引くと、各推定値の信用区間を伴う個人単位のCLVが得られます。</p>
+<div id="fig-btyd-overview" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="BTYDの枠組み：BG/NBDはP(alive)と将来取引を予測し、Gamma-Gammaは注文金額を予測する。組み合わせてCLVを得る">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-btyd-overview-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.2/btyd_overview.png" class="fig-md img-fluid figure-img" alt="BTYDの枠組み：BG/NBDはP(alive)と将来取引を予測し、Gamma-Gammaは注文金額を予測する。組み合わせてCLVを得る">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-btyd-overview-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+図&nbsp;7: BTYDの枠組み：BG/NBD＋Gamma-Gamma。
+</figcaption>
+</figure>
+</div>
+<section id="bgnbd-model" class="level3">
+<h3 class="anchored" data-anchor-id="bgnbd-model">BG/NBDモデル</h3>
+<p>BG/NBDモデルは、顧客のライフサイクルに2つの潜在プロセスを仮定します。</p>
+<ul>
+<li>購入プロセス。顧客が活動中である間、購入は率 <span class="math inline">\(\lambda\)</span> のポアソン過程に従います。</li>
+<li>離脱プロセス。各購入後に、顧客が永続的に非活動となる確率 <span class="math inline">\(p\)</span> があります。</li>
+</ul>
+<div id="fig-bgnbd-assumptions" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="BG/NBDは、観察されない離脱プロセスによって顧客が非活動になるまで続く取引プロセスとして、観察された購入をモデル化する">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-bgnbd-assumptions-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.2/bgnbd_assumptions.png" class="fig-md img-fluid figure-img" alt="BG/NBDは、観察されない離脱プロセスによって顧客が非活動になるまで続く取引プロセスとして、観察された購入をモデル化する">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-bgnbd-assumptions-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+図&nbsp;8: BG/NBD：離脱を伴う購入プロセス。
+</figcaption>
+</figure>
+</div>
+<p><span class="math inline">\(\lambda\)</span> と <span class="math inline">\(p\)</span> は、どちらも顧客によって異なります。ベイズ階層構造でこれに対応します。顧客基盤全体で <span class="math inline">\(\lambda\)</span> の値はGamma分布、<span class="math inline">\(p\)</span> の値はBeta分布に従います。モデルは母集団単位のパターンを学習しながら、個別の推定値も生成します。</p>
+<p>有用な結果として、顧客が活動中である確率は時間とともに変化します。最終購入からの期間が長くなるにつれて低下し、新しい購入が入った瞬間に再び跳ね上がります。</p>
+<div id="fig-prob-alive-time" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="購入のない時間が過ぎるにつれて顧客が活動中である確率は低下し、次の購入が起きると急上昇する">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-prob-alive-time-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.2/prob_alive_time.png" class="fig-md img-fluid figure-img" alt="購入のない時間が過ぎるにつれて顧客が活動中である確率は低下し、次の購入が起きると急上昇する">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-prob-alive-time-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+図&nbsp;9: P(alive)は購入間で低下し、リセットされる。
+</figcaption>
+</figure>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">ヒント</span>参考資料（BG/NBD）
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>グラフィカルモデルと尤度関数を含む完全な導出は、<span class="citation" data-cites="fader2005counting">Fader ほか (<a href="../appendix/further-reading.html#ref-fader2005counting" role="doc-biblioref">2005年</a>)</span> を参照してください。</p>
+</div>
+</div>
+</section>
+<section id="gamma-gamma-model" class="level3">
+<h3 class="anchored" data-anchor-id="gamma-gamma-model">Gamma-Gammaモデル</h3>
+<p>Gamma-Gammaモデルは平均注文金額を推定します。顧客ごとのGamma分布（各顧客自身の支出パターン）と、顧客基盤全体にわたるもう一つのGamma分布（顧客間の変動）という、2層のベイズ階層を使います。</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">ヒント</span>参考資料（Gamma-Gamma）
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>完全な導出は、<span class="citation" data-cites="fader2013gammagamma">Fader と Hardie (<a href="../appendix/further-reading.html#ref-fader2013gammagamma" role="doc-biblioref">2013年</a>)</span> を参照してください。</p>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">ヒント</span>BTYDが適切でない場合
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>BTYDは非契約型の状況を仮定します。チャーンは観察されないため、モデルが購入間隔から推測します。SaaSやサブスクリプションのような契約型の状況では、チャーンは明示的な解約イベントであり、shifted Beta-Geometric（sBG）モデルがそのシグナルを直接使います。PyMC-Marketingでは <code>ShiftedBetaGeoModel</code> として提供されています（<a href="https://www.pymc-marketing.io/en/latest/notebooks/clv/sbg.html">sBG notebook</a>を参照）。時間依存の共変量でチャーン要因を説明するには、生存時間分析（Cox比例ハザード）を使います。最後に、豊富な行動特徴量と本番用MLパイプラインがあれば、固定期間のターゲットに対するML回帰（例：LightGBM）が精度でBTYDを上回る可能性があります。切り替える前に、必要なデータ量、再学習・デプロイの労力、特徴量パイプラインの保守、説明可能性、不確実性の出力と比較してください。実用的なハイブリッドは、BTYDの出力（P(alive)、期待購入回数）を特徴量としてMLモデルへ入力する方法です。<a href="https://github.com/takechanman1228/marketing-science-in-python/tree/main/notebooks/part4-customer-analytics/lightgbm-companion/"><code>lightgbm-companion/</code></a>配下の付属スクリプトは、LightGBMのエンドツーエンド実装を示します。</p>
+</div>
+</div>
+</section>
+</section>
+<section id="sec-implementation" class="level2">
+<h2 class="anchored" data-anchor-id="sec-implementation">PyMC-Marketingによる実装</h2>
+<p><a href="https://github.com/pymc-labs/pymc-marketing">PyMC-Marketing</a>は<a href="https://www.pymc.io/">PyMC</a>を基盤とし、現在メンテナンスモードの <code>lifetimes</code> ライブラリを置き換えます。主な特徴は、不確実性の定量化が組み込まれていることです。すべてのCLV推定値にHDI境界が付くため、顧客ごとのモデルの確信度を確認できます。</p>
+<p>CLVモデルに必要なのは、顧客ID、取引日、取引金額からなる売上取引だけです。通常は2〜3年分の履歴で十分です。</p>
+<div id="fig-required-data" class="fig-sm quarto-float quarto-figure quarto-figure-center anchored" alt="CLVモデリングは、顧客識別子、取引日、取引金額を含む取引単位の記録から始まる">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-required-data-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.2/required_data.png" class="fig-sm img-fluid figure-img" alt="CLVモデリングは、顧客識別子、取引日、取引金額を含む取引単位の記録から始まる">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-required-data-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+図&nbsp;10: CLVモデリングに必要な入力データ。
+</figcaption>
+</figure>
+</div>
+<section id="data-and-rfm-t-summary" class="level3">
+<h3 class="anchored" data-anchor-id="data-and-rfm-t-summary">データとRFM-T要約</h3>
+<p><a href="https://www.kaggle.com/datasets/frtgnn/dunnhumby-the-complete-journey">Dunnhumby「The Complete Journey」</a>の食料品小売データセットを使います。従来のセグメンテーションNotebook（<code>sec4.1_traditional_segmentation.ipynb</code>）と同じデータセットです。そのため、同じ約2,500世帯を従来のセグメンテーションパイプラインからCLVへ引き継げます。標準的なクリーニング（負の金額の取引と数量ゼロの行を削除）とRFM-Tの構築後、付属Notebookは2,500世帯すべてにBG/NBDを当てはめます。Gamma-Gamma支出モデルには、そのうち少なくとも1回のリピート購入がある2,497世帯を使います。</p>
+<div id="tbl-rfmt" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-rfmt-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+表&nbsp;2: BTYDモデルで使うRFM-T指標。
+</figcaption>
+<div aria-describedby="tbl-rfmt-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: center;">指標</th>
+<th style="text-align: left;">定義</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;">Recency</td>
+<td style="text-align: left;">顧客の初回購入から直近購入までの期間</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">Frequency</td>
+<td style="text-align: left;">リピート購入回数（総購入回数から1を引く）</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">Monetary</td>
+<td style="text-align: left;">顧客のリピート購入の平均金額（初回購入は除外）</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">Tenure</td>
+<td style="text-align: left;">顧客の初回購入から調査期間終了までの期間</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">ノート</span>ここでのRecencyはRFMのRecencyではない
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><a href="sec4.1-segmentation.html">Section 4.1</a>では、Recencyは最終購入からの日数を意味しました。PyMC-Marketingの <code>rfm_summary</code> が従うBTYDの慣例では、顧客の初回購入から直近購入までの期間を意味するため、値が<em>高い</em>ほど最近まで活動していたことになります。</p>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> datetime <span class="im">import</span> datetime, timedelta</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pymc_marketing <span class="im">import</span> clv</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Load Dunnhumby transactions and convert DAY counter to datetime</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co"># (see companion notebook for the full pipeline)</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>BASE_DATE <span class="op">=</span> datetime(<span class="dv">2012</span>, <span class="dv">1</span>, <span class="dv">1</span>)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>data[<span class="st">"date"</span>] <span class="op">=</span> data[<span class="st">"DAY"</span>].<span class="bu">apply</span>(<span class="kw">lambda</span> d: BASE_DATE <span class="op">+</span> timedelta(days<span class="op">=</span><span class="bu">int</span>(d) <span class="op">-</span> <span class="dv">1</span>))</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>data_summary <span class="op">=</span> clv.utils.rfm_summary(</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    data, <span class="st">"CustomerID"</span>, <span class="st">"date"</span>, <span class="st">"TotalSales"</span>, time_unit<span class="op">=</span><span class="st">"D"</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>data_summary.index <span class="op">=</span> data_summary[<span class="st">"customer_id"</span>]</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>付属Notebook：</strong> <code>sec4.2_clv_pymc_marketing.ipynb</code> は、DunnhumbyデータセットにBG/NBDとGamma-Gammaモデルを当てはめ、CLVを推定し、人口統計セグメントを分析します。<br>
+<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.2_clv_pymc_marketing.ipynb">GitHubで見る</a></p>
+</section>
+<section id="fitting-and-estimating-clv" class="level3">
+<h3 class="anchored" data-anchor-id="fitting-and-estimating-clv">モデルの当てはめとCLV推定</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># --- BG/NBD: purchase frequency + P(alive) ---</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>bgm <span class="op">=</span> clv.BetaGeoModel()</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>bgm.fit(data<span class="op">=</span>data_summary)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co"># --- Gamma-Gamma: average order value ---</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>nonzero <span class="op">=</span> data_summary.query(<span class="st">"frequency &gt; 0 and monetary_value &gt; 0"</span>)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>gg_data <span class="op">=</span> nonzero[[<span class="st">"customer_id"</span>, <span class="st">"frequency"</span>, <span class="st">"monetary_value"</span>]]</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>gg <span class="op">=</span> clv.GammaGammaModel()</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>gg.fit(data<span class="op">=</span>gg_data)</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co"># --- Combined CLV estimate (DCF with 1% monthly discount) ---</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>clv_estimate <span class="op">=</span> gg.expected_customer_lifetime_value(</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    transaction_model<span class="op">=</span>bgm,</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    data<span class="op">=</span>data_summary[[</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>        <span class="st">"customer_id"</span>, <span class="st">"frequency"</span>, <span class="st">"recency"</span>, <span class="st">"T"</span>, <span class="st">"monetary_value"</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    ]],</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    future_t<span class="op">=</span><span class="dv">120</span>,       <span class="co"># 120 months = 10 years</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    discount_rate<span class="op">=</span><span class="fl">0.01</span>,</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    time_unit<span class="op">=</span><span class="st">"D"</span>,</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+<p>出力には点推定値だけでなく、HDI（最高密度区間）の境界も含まれます。このAPIでは <code>future_t</code> を月単位で測定し、<code>time_unit="D"</code> によってRFM-Tの入力が日単位であることをモデルへ伝えます。各顧客についてモデルの確信度が分かりますが、対象は購入時期だけです。支出の事後分布は割引前に平均値へ要約されるため、この境界は実際の不確実性の幅に対する下限として扱います。</p>
+<p>予測期間は意思決定であり、デフォルトではありません。このデータセットは約23カ月を対象とするため、120カ月の予測は観察期間のおよそ5倍先まで進みます。BG/NBDは顧客の離脱を予測へ組み込むため推定値が際限なく増えることはありませんが、その離脱率自体も23カ月から推定されています。付属Notebookでは、同じ事後分布を3年、5年、10年で再度割り引きます。このデータセットでは3つの期間で顧客順位がほとんど変わらないため、順位に基づくターゲティングは、テストした予測期間の影響を受けません。一方、10年推定値の中央値は3年推定値の約2.23倍です。そのため、CLVを金額上限へ変える場合は、使用した予測期間を明示する必要があります。</p>
+</section>
+<section id="probability-alive-matrix" class="level3">
+<h3 class="anchored" data-anchor-id="probability-alive-matrix">Probability Alive行列</h3>
+<p>BG/NBDモデルが学習した内容をすばやく確認する方法が、Probability Alive行列です。 一方の軸がRecency、もう一方がFrequencyで、色がP(alive)を示します。ここでのRecencyは上表のBTYD定義、すなわち初回購入から直近購入までの期間であることを思い出してください。Recencyが高いほど、顧客が最近まで購入していたことを意味し、マーケティングRFMにおける用法とは反対です。4つの隅は、4つの物語を示します。ロイヤルなリピーター（高Frequency、高Recencyで、頻繁に購入し、今も活動中）、リスクのあるロイヤル顧客（高Frequency、低Recencyで、以前は多く購入していたが沈黙した）、一度限りの通過顧客（低Frequency、低Recencyで、獲得直後に1〜2回購入し、その後沈黙した）、履歴の少ない顧客（低Frequency、高Recencyで、確信するには購入回数が少ないものの、直近の購入が新しいため、モデルは活動中の可能性を高く見る。図ではこの隅を新規顧客と表記）です。</p>
+<div id="fig-prob-alive-matrix" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="購入頻度（x）とRecency（y）上のProbability Alive行列。色は各顧客位置のP(alive)を示す">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-prob-alive-matrix-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.2/prob_alive_matrix.png" class="fig-lg img-fluid figure-img" alt="購入頻度（x）とRecency（y）上のProbability Alive行列。色は各顧客位置のP(alive)を示す">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-prob-alive-matrix-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+図&nbsp;11: Probability Alive行列。
+</figcaption>
+</figure>
+</div>
+</section>
+<section id="revenue-clv-profit-clv" class="level3">
+<h3 class="anchored" data-anchor-id="revenue-clv-profit-clv">売上CLV → 利益CLV</h3>
+<p>Gamma-Gammaモデルは取引当たり売上を推定します。CLVを予算の意思決定に使えるよう、売上を利益へ変換します。</p>
+<p><span class="math display">\[
+\text{CLV}_{\text{profit}} = \text{CLV}_{\text{revenue}} \times \text{Gross Margin}
+\]</span></p>
+<p>商品カテゴリー間で利益率が大きく異なる場合、一律の率を使わず、購入履歴から顧客別の利益率を計算します。</p>
+</section>
+<section id="combining-segments-and-clv" class="level3">
+<h3 class="anchored" data-anchor-id="combining-segments-and-clv">セグメントとCLVを組み合わせる</h3>
+<p>セグメンテーションの章（Chapter 4.1）の <code>segment_id</code> と、各顧客のCLV推定値を結合します。 これにより、このPartで目指してきた運用表が得られます。どのような顧客か、どれだけの価値があるか、ビジネスとして何をすべきかを示します。</p>
+<p>人口統計はセグメントの説明や接触に役立ちますが、主な意思決定層は、行動セグメント×予測価値です。付属Notebookでは、CLV推定値とDunnhumbyの <code>hh_demographic.csv</code> を結合し、所得などの人口統計軸で各セグメントを説明できるようにします。クリエイティブやチャネルの選択には役立ちますが、予算設定にはあまり適しません。</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">ヒント</span>セグメント別の支出モデル
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>PyMC Labsが報告した本番運用のパターンがあります。支出分布がセグメント間で大きく異なる場合、セグメント別のGamma-Gammaモデルをテストし、取引モデルは母集団全体でプールしたままにします。セグメントはキャリブレーション期間だけで構築し、サンプル外でプールモデルと比較します。そうしなければ、金額から作ったセグメントと、その入力先となる支出モデルが情報を共有してしまいます。</p>
+</div>
+</div>
+</section>
+</section>
+<section id="sec-using-clv" class="level2">
+<h2 class="anchored" data-anchor-id="sec-using-clv">CLVを実務で使う</h2>
+<p>顧客ごとの <code>clv_estimate</code> が得られると、ほとんど追加の労力なしで3つの用途へ使えます。下流システムに必要なのは顧客IDと数値だけなので、どのCLVスコアでも同じパターンを利用できます。</p>
+<ol type="1">
+<li>広告入札のCPA上限</li>
+</ol>
+<p>予測利益CLVの一定割合として最大CPAを設定します。</p>
+<p><span class="math display">\[
+\text{Allowable CPA} = \text{CLV}_{\text{profit}} \times \text{Target acquisition ratio}
+\]</span></p>
+<p>セグメントの予測利益CLVが$200、目標獲得比率が33%なら、最大CPAは$66です。不確実性の下で入札する場合、予測利益CLVの平均ではなく、保守的な下限を使います。多くの広告プラットフォームは、価値に基づく入札やオーディエンスルールのための価値シグナルを取り込めますが、具体的な実装はプラットフォームによって異なります。</p>
+<ol start="2" type="1">
+<li>CRM向けチャーン警告</li>
+</ol>
+<p>30日間でP(alive)が30ポイントを超えて低下した顧客へフラグをつけます。シグナルは絶対水準ではなく、変化率です。P(alive)が1カ月で0.85から0.40へ低下した顧客は、6カ月間0.35で安定している顧客よりはるかに緊急です。前者は離れつつあり、後者は単に購入頻度が低い顧客です。</p>
+<ol start="3" type="1">
+<li>財務向けコホート予測</li>
+</ol>
+<p>財務は生涯ではなく予算サイクルで計画するため、個人CLV推定値を獲得コホート別に集約し、12、24、36カ月時点の売上を予測します。固定目標ではなく確率的な推定値であることを財務が理解できるよう、HDI境界を含めます。CFOにBG/NBDを学んでもらわなくても、「第3四半期の顧客獲得支出に対する期待リターンは？」へ答えられます。</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">ヒント</span>モニタリング
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>3、6、12カ月時点で、コホートごとに予測売上と実績売上を比較します。比率が±20%を超えてずれたら再学習します。また、CLV予測に保護対象グループに対するバイアスがないかも確認します。十分なサービスを受けてこなかったセグメントで学習したモデルは、低いCLVを予測して獲得入札を低く設定し、そのバイアスを固定化します。</p>
+</div>
+</div>
+</section>
+<section id="key-takeaways" class="level2">
+<h2 class="anchored" data-anchor-id="key-takeaways">要点</h2>
+<ul>
+<li>CLVは一律のCPA目標を、各顧客の価値に比例した支出へ置き換える。平均値はデータ内に存在するが、誰も表していない。</li>
+<li>非契約型の状況では、BG/NBDが将来の購買を、Gamma-Gammaが支出を、取引データだけからモデル化する。全顧客に信用区間が得られるため、平均ではなく保守的な下限に対して入札する。</li>
+<li>CPA上限を設定する前に売上CLVを利益CLVへ変換し、期間を明示する。10年間の推定中央値は3年間のおよそ2.23倍だが、順位はほとんど動かない。</li>
+</ul>
+
+
+<div id="refs" class="references csl-bib-body hanging-indent" role="list" style="display: none">
+<div id="ref-fader2013gammagamma" class="csl-entry" role="listitem">
+Fader, Peter S, と Bruce GS Hardie. 2013年. <em>The Gamma-Gamma Model of Monetary Value</em>. Wharton School, University of Pennsylvania. <a href="https://www.brucehardie.com/notes/025/gamma_gamma.pdf">https://www.brucehardie.com/notes/025/gamma_gamma.pdf</a>.
+</div>
+<div id="ref-fader2005counting" class="csl-entry" role="listitem">
+Fader, Peter S, Bruce GS Hardie, と Ka Lok Lee. 2005年. <span>「Counting Your Customers the Easy Way: An Alternative to the Pareto/NBD Model」</span>. <em>Marketing Science</em> 24 (2): 275–84.
+</div>
+</div>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "コピーしました");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "コピーしました");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/marketing-science-in-python\.com\/ja\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../part4/sec4.1-segmentation.html" class="pagination-link" aria-label="4.1 顧客セグメンテーション">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">4.1 顧客セグメンテーション</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../part5/_part5.html" class="pagination-link" aria-label="Part 5. コマーシャル分析">
+        <span class="nav-page-text">Part 5. コマーシャル分析</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
