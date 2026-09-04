@@ -57,12 +57,12 @@ instead of conda, install the per-part `requirements.txt` for the chapter you ar
 
 ## Notebooks by part
 
-- **Part 3 — Causal Inference:** A/B test analysis, quasi-experiments, meta-learners (CATE),
-  uplift modeling, counterfactual intervention measurement
+- **Part 3 — Causal Inference for Marketing:** A/B test analysis, quasi-experiments, causal impact with time
+  series, meta-learners (CATE), uplift modeling
 - **Part 4 — Customer Analytics:** segmentation (traditional and embedding-based), customer
   lifetime value with PyMC-Marketing (plus a LightGBM companion pipeline)
 - **Part 5 — Commercial Analytics:** price elasticity, assortment optimization, sales forecasting & scenario planning
-- **Part 6 — Media Optimization:** marketing mix modeling and geo incrementality experiments
+- **Part 6 — Media Investment and Optimization:** marketing mix modeling and geo incrementality experiments
 
 ## Data
 
