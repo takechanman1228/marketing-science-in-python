@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="fr" xml:lang="fr"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="Intégrer les résultats expérimentaux à un MMM sans surajuster un seul test : ROAS marginal et moyen, intégration dans Meridian et programme de calibration.">
+
+<title>6.4 Calibrer le MMM à l’aide d’expériences – Marketing Science in Python</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../part6/sec6.5-when-tools-disagree.html" rel="next">
+<link href="../part6/sec6.3-incrementality-experiments.html" rel="prev">
+<link href="../assets/favicon.png" rel="icon" type="image/png">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-491b769ea73b1ce4946cf8743b832a60.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-ec576e9d6a0f00bdcb4dbec60768df31.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-491b769ea73b1ce4946cf8743b832a60.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "Pas de résultats",
+    "search-matching-documents-text": "documents trouvés",
+    "search-copy-link-title": "Copier le lien vers la recherche",
+    "search-hide-matches-text": "Cacher les correspondances additionnelles",
+    "search-more-match-text": "correspondance de plus dans ce document",
+    "search-more-matches-text": "correspondances de plus dans ce document",
+    "search-clear-button-title": "Effacer",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Annuler",
+    "search-submit-button-title": "Envoyer",
+    "search-label": "Recherche"
+  }
+}</script>
+<script async="" src="https://www.googletagmanager.com/gtag/js?id=G-YY0LCGYER5"></script>
+
+<script type="text/javascript">
+
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
+</script>
+
+
+<link rel="stylesheet" href="../custom.css">
+<meta property="og:title" content="6.4 Calibrer le MMM à l’aide d’expériences – Marketing Science in Python">
+<meta property="og:description" content="Intégrer les résultats expérimentaux à un MMM sans surajuster un seul test : ROAS marginal et moyen, intégration dans Meridian et programme de calibration.">
+<meta property="og:image" content="https://marketing-science-in-python.com/images/common/book_cover_online.png">
+<meta property="og:site_name" content="Marketing Science in Python">
+<meta property="og:image:alt" content="Couverture montrant des flux de données abstraits convergeant vers un réseau géométrique">
+<meta name="twitter:title" content="6.4 Calibrer le MMM à l’aide d’expériences – Marketing Science in Python">
+<meta name="twitter:description" content="Intégrer les résultats expérimentaux à un MMM sans surajuster un seul test : ROAS marginal et moyen, intégration dans Meridian et programme de calibration.">
+<meta name="twitter:image" content="https://marketing-science-in-python.com/images/common/book_cover_online.png">
+<meta name="twitter:image:alt" content="Couverture montrant des flux de données abstraits convergeant vers un réseau géométrique">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://marketing-science-in-python.com/fr/part6/sec6.4-mmm-calibration.html">
+<!-- msbook-i18n-head:start -->
+<link rel="alternate" hreflang="en" href="https://marketing-science-in-python.com/part6/sec6.4-mmm-calibration.html">
+<link rel="alternate" hreflang="ja" href="https://marketing-science-in-python.com/ja/part6/sec6.4-mmm-calibration.html">
+<link rel="alternate" hreflang="fr" href="https://marketing-science-in-python.com/fr/part6/sec6.4-mmm-calibration.html">
+<link rel="alternate" hreflang="x-default" href="https://marketing-science-in-python.com/part6/sec6.4-mmm-calibration.html">
+<!-- msbook-i18n-head:end -->
+</head>
+
+<body class="nav-sidebar floating quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Basculer la barre latérale" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part6/_part6.html">Partie 6. Investissement média et optimisation</a></li><li class="breadcrumb-item"><a href="../part6/sec6.4-mmm-calibration.html"><span class="chapter-title">6.4 Calibrer le MMM à l’aide d’expériences</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Basculer la barre latérale" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <!-- msbook-language-switch-mobile:start -->
+<div class="msbook-language-switch-mobile" aria-label="Language"><a lang="en" hreflang="en" href="../../part6/sec6.4-mmm-calibration.html" onclick="this.hash=window.location.hash">EN</a><span aria-hidden="true"> | </span><a lang="ja" hreflang="ja" href="../../ja/part6/sec6.4-mmm-calibration.html" onclick="this.hash=window.location.hash">日本語</a><span aria-hidden="true"> | </span><span lang="fr" aria-current="page">FR</span></div>
+<!-- msbook-language-switch-mobile:end -->
+<button type="button" class="btn quarto-search-button" aria-label="Recherche" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">Marketing Science in Python</a> 
+        <div class="sidebar-tools-main tools-wide">
+    <a href="https://github.com/takechanman1228/marketing-science-in-python" title="Code source" class="quarto-navigation-tool px-1" aria-label="Code source"><i class="bi bi-github"></i></a>
+    <div class="dropdown">
+      <a href="" title="Share" id="quarto-navigation-tool-dropdown-0" class="quarto-navigation-tool dropdown-toggle px-1" data-bs-toggle="dropdown" aria-expanded="false" role="link" aria-label="Share"><i class="bi bi-share"></i></a>
+      <ul class="dropdown-menu" aria-labelledby="quarto-navigation-tool-dropdown-0">
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://twitter.com/intent/tweet?url=|url|">
+              <i class="bi bi-twitter pe-1"></i>
+            Twitter
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://www.linkedin.com/sharing/share-offsite/?url=|url|">
+              <i class="bi bi-linkedin pe-1"></i>
+            LinkedIn
+            </a>
+          </li>
+      </ul>
+    </div>
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Basculer le mode sombre"><i class="bi"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Recherche"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Préface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part1/_part1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Partie 1. Introduction</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Basculer la section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1/sec1.1-what-is-marketing-science.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">1.1 Qu’est-ce que la science du marketing ?</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1/sec1.2-data-landscape.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">1.2 Comprendre les données marketing</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part2/_part2.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Partie 2. Analyser pour mieux décider</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Basculer la section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.1-right-question.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.1 Formuler la bonne question</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.2-kpi-design.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.2 Concevoir des KPI pour le diagnostic</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.3-storytelling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.3 Transformer les données en récit</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part3/_part3.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Partie 3. L’inférence causale pour le marketing</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Basculer la section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.1-thinking-causally.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.1 Raisonner en termes de causalité</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.2-ab-testing.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.2 Concevoir un test A/B</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.3-quasi-experiments.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.3 Quasi-expériences</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.4-causal-impact.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.4 Impact causal avec les séries temporelles</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.5-meta-learners.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.5 Méta-apprenants pour les effets de traitement</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.6-uplift-modeling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.6 Modélisation de l’uplift pour le ciblage</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part4/_part4.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Partie 4. Analyse client</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Basculer la section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part4/sec4.1-segmentation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">4.1 Segmentation client</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part4/sec4.2-clv-modeling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">4.2 Modélisation de la valeur vie client</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part5/_part5.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Partie 5. Analyse commerciale</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Basculer la section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.1-price-elasticity.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.1 Élasticité-prix et décisions tarifaires</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.2-assortment-optimization.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.2 Optimisation de l’assortiment de produits</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.3-sales-forecasting.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.3 Prévision des ventes et planification par scénarios</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part6/_part6.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Partie 6. Investissement média et optimisation</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Basculer la section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.1-media-measurement-problem.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.1 Le problème de la mesure des médias</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.2-mmm-fundamentals.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.2 Construire et optimiser un MMM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.3-incrementality-experiments.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.3 Expériences d’incrémentalité</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.4-mmm-calibration.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">6.4 Calibrer le MMM à l’aide d’expériences</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.5-when-tools-disagree.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.5 Décider lorsque les outils de mesure divergent</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendix/further-reading.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Références et lectures complémentaires</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendix/notebooks.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Notebooks et code</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../marketing-analytics-in-python.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">L’analyse marketing avec Python</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+<!-- msbook-language-switch:start -->
+<div class="msbook-language-switch" aria-label="Language"><a lang="en" hreflang="en" href="../../part6/sec6.4-mmm-calibration.html" onclick="this.hash=window.location.hash">English</a><span aria-hidden="true"> | </span><a lang="ja" hreflang="ja" href="../../ja/part6/sec6.4-mmm-calibration.html" onclick="this.hash=window.location.hash">日本語</a><span aria-hidden="true"> | </span><span lang="fr" aria-current="page">Français</span></div>
+<!-- msbook-language-switch:end -->
+
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table des matières</h2>
+   
+  <ul>
+  <li><a href="#why-calibrate" id="toc-why-calibrate" class="nav-link active" data-scroll-target="#why-calibrate">Pourquoi calibrer ?</a></li>
+  <li><a href="#why-you-cannot-paste-0.20-into-the-model" id="toc-why-you-cannot-paste-0.20-into-the-model" class="nav-link" data-scroll-target="#why-you-cannot-paste-0.20-into-the-model">Pourquoi vous ne pouvez pas simplement insérer 0,20 dans le modèle</a></li>
+  <li><a href="#turning-the-experiment-into-a-prior" id="toc-turning-the-experiment-into-a-prior" class="nav-link" data-scroll-target="#turning-the-experiment-into-a-prior">Transformer l’expérience en une distribution a priori</a></li>
+  <li><a href="#sec-calibration-what-changed" id="toc-sec-calibration-what-changed" class="nav-link" data-scroll-target="#sec-calibration-what-changed">Qu’est-ce qui a changé ?</a></li>
+  <li><a href="#before-acting-on-the-calibrated-plan" id="toc-before-acting-on-the-calibrated-plan" class="nav-link" data-scroll-target="#before-acting-on-the-calibrated-plan">Avant de mettre en œuvre le plan calibré</a></li>
+  <li><a href="#calibration-as-a-learning-loop" id="toc-calibration-as-a-learning-loop" class="nav-link" data-scroll-target="#calibration-as-a-learning-loop">La calibration comme boucle d’apprentissage</a></li>
+  <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways">Points clés à retenir</a></li>
+  </ul>
+<div class="quarto-code-links"><h2>Liens de code</h2><ul><li><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part6-media-optimization/sec6.2_6.4_mmm_meridian.ipynb"><i class="bi bi-github"></i>sec6.2_6.4_mmm_meridian.ipynb</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part6/_part6.html">Partie 6. Investissement média et optimisation</a></li><li class="breadcrumb-item"><a href="../part6/sec6.4-mmm-calibration.html"><span class="chapter-title">6.4 Calibrer le MMM à l’aide d’expériences</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span id="sec-mmm-calibration" class="quarto-section-identifier"><span class="chapter-title">6.4 Calibrer le MMM à l’aide d’expériences</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="translation-notice">
+<p><strong>À propos de la version française</strong><br>
+Cette page est une traduction par IA de la version anglaise de <em>Marketing Science in Python</em>. La version anglaise fait foi et prévaut en cas de divergence. Le code, les notebooks et le texte intégré aux images restent en anglais. <a href="../../part6/sec6.4-mmm-calibration.html" class="translation-source-link">Lire la version anglaise</a></p>
+</div>
+<p>La <a href="sec6.3-incrementality-experiments.html">section 6.3</a> a mesuré ce que le modèle de la <a href="sec6.2-mmm-fundamentals.html">section 6.2</a> pouvait seulement estimer. Une réduction de 30 % des dépenses Google Search dans huit marchés tests a coûté <strong>0,200</strong> de chiffre d’affaires par dollar retiré, avec un intervalle à 95 % de <strong>[0,040, 0,361]</strong>. Le modèle avait estimé le ROAS de Search à <strong>3,53</strong>, avec un intervalle de crédibilité à 90 % allant de <strong>0,39</strong> à <strong>10,29</strong>. Juxtaposés, ces chiffres donnent l’impression que le modèle s’est trompé d’un facteur dix-huit. Était-ce le cas ?</p>
+<p>Non, et ce pour deux raisons. La première tient à l’estimand. L’expérience a mesuré le rendement des <em>derniers</em> dollars consacrés à Search, ceux qu’une réduction de 30 % supprime ; le chiffre principal du modèle correspond au rendement de <em>tous</em> ces dollars, en moyenne depuis zéro. Posez au modèle la question même de l’expérience, ce que coûte une réduction de 30 % sur huit semaines, et il répond <strong>2,54</strong>, avec un intervalle de crédibilité à 90 % de <strong>[0,28, 7,21]</strong>. Le rapport passe ainsi de dix-huit à treize, et les deux intervalles se rejoignent : celui de l’expérience monte jusqu’à 0,361, celui du modèle descend à 0,28. Cela ne comble pas l’écart.</p>
+<p>La seconde raison est que le chiffre du modèle pour Search n’a jamais vraiment constitué une preuve. Les dépenses Search ont à peine varié en trois ans d’historique ; la vraisemblance avait donc peu à dire, et la distribution a posteriori est essentiellement la distribution a priori teintée de saisonnalité : un a priori déguisé en a posteriori. D’après les propres chiffres du modèle, Search franchissait le seuil de rentabilité, avec un rendement marginal de 2,83 pour un seuil de 2,50, tout en restant le plus faible des cinq canaux, raison pour laquelle l’optimiseur le réduisait. L’expérience indique qu’il ne franchit aucune de ces deux barres. La prédiction du modèle a été consignée avant le test afin que celui-ci puisse l’évaluer. Le verdict est que le modèle était trop incertain pour guider l’action et, à la limite de son propre intervalle, erroné. L’expérience fournit les premiers éléments de preuve causale sur Search fondés sur un protocole expérimental, et son incertitude est faible au regard de la décision qu’elle doit étayer.</p>
+<p>Comme la variable de résultat de cet exemple est le chiffre d’affaires, le ROI de Meridian correspond numériquement à un ROAS en chiffre d’affaires ; le texte parle de ROAS et le code conserve les noms de Meridian. La calibration est la façon dont ces éléments entrent dans le modèle : traduire l’expérience en une distribution a priori, réestimer le modèle et examiner ce qui a changé. L’objectif n’est pas de faire concorder le modèle avec l’expérience. Il s’agit de déterminer si de meilleurs éléments de preuve causale changent la décision et, sinon, pourquoi.</p>
+<div id="fig-calibration-workflow" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Processus de calibration : mener une expérience, estimer l’effet incrémental, le traduire en une distribution a priori sur le paramètre correspondant, réestimer le MMM et comparer la recommandation avant et après.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-calibration-workflow-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part6/sec6.4/calibration_workflow.png" class="fig-lg img-fluid figure-img" alt="Processus de calibration : mener une expérience, estimer l’effet incrémental, le traduire en une distribution a priori sur le paramètre correspondant, réestimer le MMM et comparer la recommandation avant et après.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-calibration-workflow-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: Le processus de calibration du MMM.
+</figcaption>
+</figure>
+</div>
+<p><strong>Notebook d’accompagnement :</strong> <code>sec6.2_6.4_mmm_meridian.ipynb</code> est commun avec la <a href="sec6.2-mmm-fundamentals.html">section 6.2</a>. Ses étapes 14 à 18 consignent la prédiction du modèle pour le test, convertissent l’estimation expérimentale en une distribution a priori, réestiment le modèle et réoptimisent le budget.<br>
+<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part6-media-optimization/sec6.2_6.4_mmm_meridian.ipynb">Voir sur GitHub</a></p>
+<section id="why-calibrate" class="level2">
+<h2 class="anchored" data-anchor-id="why-calibrate">Pourquoi calibrer ?</h2>
+<p>Un MMM voit l’ensemble du tableau : chaque canal, tout l’historique, la forme de chaque courbe de réponse. Mais il le voit à travers des observations. Lorsque les campagnes de plusieurs canaux sont diffusées aux mêmes périodes, ou que les dépenses média augmentent avec les promotions et la demande saisonnière, la vraisemblance ne peut pas déterminer lequel a fait varier les ventes, et la distribution a posteriori du ROAS d’un canal reste large même lorsque le modèle prédit bien le chiffre d’affaires. C’est ce qui est arrivé à Search dans la section 6.2 : un bon ajustement et un intervalle trop large pour agir.</p>
+<p>Une expérience voit une seule chose, en un seul point de fonctionnement, sur une seule fenêtre, mais elle la voit de manière causale. C’est un point d’ancrage, pas un substitut. Placez cet ancrage dans le modèle, et les autres atouts du modèle, les autres canaux, la courbe, l’historique, font le reste. C’est pourquoi le dossier de preuves de la section 6.3 contenait l’estimand et l’incertitude, pas seulement le chiffre.</p>
+</section>
+<section id="why-you-cannot-paste-0.20-into-the-model" class="level2">
+<h2 class="anchored" data-anchor-id="why-you-cannot-paste-0.20-into-the-model">Pourquoi vous ne pouvez pas simplement insérer 0,20 dans le modèle</h2>
+<p>Le paramètre <code>roi_m</code> de Meridian représente le ROAS moyen : le chiffre d’affaires incrémental total d’un canal divisé par ses dépenses totales. L’expérience a mesuré le ROAS marginal : la pente de la courbe de réponse au niveau actuel des dépenses. La <a href="sec6.2-mmm-fundamentals.html">section 6.2</a> a montré pourquoi les deux diffèrent sur une courbe de saturation ; <a href="#fig-marginal-vs-average" class="quarto-xref">Figure&nbsp;<span>2</span></a> les réunit sur une même figure. Les premiers dollars sont plus productifs que les suivants ; le ROAS moyen dépasse donc le ROAS marginal partout où la courbe a commencé à s’infléchir.</p>
+<div id="fig-marginal-vs-average" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Le ROAS marginal est la pente de la tangente au niveau actuel des dépenses, tandis que le ROAS moyen est la pente de la droite reliant l’origine à ce point sur une courbe de saturation.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-marginal-vs-average-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part6/sec6.4/marginal_vs_average_roas.png" class="fig-lg img-fluid figure-img" alt="Le ROAS marginal est la pente de la tangente au niveau actuel des dépenses, tandis que le ROAS moyen est la pente de la droite reliant l’origine à ce point sur une courbe de saturation.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-marginal-vs-average-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2: ROAS marginal et ROAS moyen sur une courbe de saturation.
+</figcaption>
+</figure>
+</div>
+<p>Que se passe-t-il donc si vous fixez malgré tout à 0,20 une distribution a priori du ROAS moyen ? Le notebook le fait. Le ROAS moyen a posteriori passe docilement à <strong>0,21</strong>. Mais le modèle a toujours une courbe, et une courbe dont le rendement moyen est de 0,20 a un rendement marginal inférieur. Le ROAS marginal de Search dans le modèle calibré s’établit à <strong>0,17</strong>, contre les 0,200 mesurés par l’expérience et les 0,213 introduits dans les données. L’optimiseur s’appuie sur le ROAS marginal ; l’erreur tombe donc exactement là où se prend la décision.</p>
+<p>Ici, l’erreur est de 14 %, assez faible pour sembler anodine. C’est une propriété de ce canal, pas de l’erreur commise. L’ampleur de l’erreur correspond à l’écart entre les rendements moyen et marginal d’un canal, et la courbe de Search est peu incurvée : son rendement marginal réel représente 0,61 fois son rendement moyen réel. Ce rapport est de 0,75 pour Meta, de 0,43 pour TV/CTV et de 0,27 pour TikTok. Faites la même substitution sur TikTok et le modèle se tromperait d’un facteur proche de quatre. La leçon n’est pas que l’erreur est faible. C’est que son ampleur dépend du canal sur lequel vous la commettez.</p>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Avertissement
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>L’estimand d’une expérience doit correspondre au paramètre qu’elle calibre. Le test de la section 6.3 a mesuré le ROAS marginal. Meridian dispose d’une paramétrisation précisément adaptée à cela.</p>
+</div>
+</div>
+</section>
+<section id="turning-the-experiment-into-a-prior" class="level2">
+<h2 class="anchored" data-anchor-id="turning-the-experiment-into-a-prior">Transformer l’expérience en une distribution a priori</h2>
+<p>Meridian peut placer la distribution a priori sur le ROI marginal plutôt que sur le ROI moyen. Sa définition est locale : le rendement d’une augmentation d’un pour cent des dépenses le long de la trajectoire de dépenses observée. La réduction des dépenses a mesuré un contraste plus large, le bloc compris entre 70 % et 100 % des dépenses, de l’autre côté du même point de fonctionnement. C’est beaucoup plus proche du ROI marginal que du ROI moyen, mais ce n’est pas le même chiffre ; l’expérience sert donc d’ancrage à la distribution a priori du mROI plutôt que de l’observer exactement. Dans ces données, les deux valeurs sont presque identiques à l’arrondi près pour Search, <strong>0,213 contre 0,200</strong>, car sa courbe est peu incurvée et ses effets rémanents sont brefs ; pour TV/CTV, ce ne serait pas le cas, <strong>1,80 contre 0,83</strong>.</p>
+<p>Trois ajustements proviennent de la documentation de Google, et un quatrième est le nôtre. La <strong>durée</strong> est le seul qui déplace le centre : une fenêtre courte ne capte pas tous les effets rémanents ; l’estimation ponctuelle est donc divisée par la part des poids d’adstock du canal captée par la fenêtre. Les effets rémanents de Search sont brefs, avec une demi-vie d’une semaine ; une fenêtre de huit semaines en capte donc <strong>99,6 %</strong>, et le centre bouge à peine. La même fenêtre, sur un canal dont la demi-vie est de six semaines comme TV/CTV, en capterait 78 %, et la correction serait substantielle.</p>
+<p>Les autres ajustements élargissent la distribution sans la déplacer. L’<strong>échelle des dépenses</strong> compare le rythme moyen des dépenses quotidiennes de l’expérience à celui du canal. Les huit marchés tests fonctionnaient à environ un cinquième du rythme national, et la pénalité augmente à mesure que cette fraction diminue ; elle domine donc tous les autres ajustements ici. La <strong>récence</strong> réduit le poids des éléments anciens avec une demi-vie de 52 semaines ; ce test a eu lieu six semaines <em>après</em> la fin de la période modélisée, ses résultats ne sont donc pas anciens et la pénalité est nulle. Un résultat datant d’un an conduirait à une distribution a priori sensiblement plus large. Le quatrième ajustement est le nôtre, pas celui de Google : l’expérience a mesuré le rendement moyen de la courbe sur un bloc de 30 %, tandis que la distribution a priori décrit la pente au niveau actuel des dépenses. Le modèle a un avis sur cet écart, mais cet avis provient de l’ajustement que l’expérience vise précisément à corriger ; il élargit donc la distribution a priori au lieu de la déplacer. Le notebook calcule chaque terme et l’affiche. Ensemble, ils laissent le centre à <strong>0,201</strong> et font passer l’erreur-type de 0,075 à <strong>0,161</strong>. La quasi-totalité de cette hausse provient du terme d’échelle des dépenses : la précision de l’expérience elle-même était satisfaisante, et ce qui a élargi la distribution a priori, c’est le fait que huit marchés représentent un cinquième du canal.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>La documentation de Meridian de Google décrit un <code>CalibrationBuilder</code> qui applique des ajustements de dépenses, de récence et de durée, et construit des distributions a priori du ROI à partir d’expériences d’effet incrémental dont le contrefactuel est une dépense nulle. Nous ne l’utilisons pas mécaniquement ici : cette expérience a un contrefactuel non nul et estime un contraste local de 30 %, ce qui correspond au décalage d’estimand contre lequel sa propre documentation met en garde. Le notebook explicite plutôt les hypothèses de traduction et teste la stabilité de la décision à leur égard. Le notebook fixe la version de Meridian à 1.6.2.</p>
+</div>
+</div>
+<p>Dans cette paramétrisation, la distribution a priori de chaque canal est exprimée de la même façon ; les quatre autres canaux conservent donc une distribution a priori faiblement informative du ROI marginal : <code>LogNormal(-0.49, 0.90)</code>. Il s’agit de la distribution a priori faiblement informative du ROAS de la section 6.2, reformulée sur l’échelle marginale, puisque le rendement marginal a posteriori représente environ la moitié du rendement moyen a posteriori sur ce panel. Résistez à l’envie de l’aplatir davantage. Sur une courbe de saturation, une distribution a priori diffuse du ROI marginal laisse le ROI moyen sans borne supérieure, et les canaux non calibrés se retrouvent avec des intervalles de crédibilité si larges qu’ils en deviennent inutilisables.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> tensorflow <span class="im">as</span> tf</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> tensorflow_probability <span class="im">as</span> tfp</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> meridian <span class="im">import</span> constants</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> meridian.model <span class="im">import</span> prior_distribution, spec</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>channels <span class="op">=</span> <span class="bu">list</span>(data.media_channel.values)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>target <span class="op">=</span> channels.index(<span class="st">"Google Search"</span>)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Weak marginal-ROI prior for every channel, then the experiment on Search.</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>mroi_mu <span class="op">=</span> np.full(<span class="bu">len</span>(channels), <span class="fl">0.2</span> <span class="op">+</span> np.log(<span class="fl">0.5</span>))</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>mroi_sigma <span class="op">=</span> np.full(<span class="bu">len</span>(channels), <span class="fl">0.9</span>)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>mroi_mu[target], mroi_sigma[target] <span class="op">=</span> <span class="op">-</span><span class="fl">1.8542</span>, <span class="fl">0.7050</span>   <span class="co"># centre 0.201, SE 0.161</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>prior <span class="op">=</span> prior_distribution.PriorDistribution(</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    mroi_m<span class="op">=</span>tfp.distributions.LogNormal(</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>        loc<span class="op">=</span>tf.constant(mroi_mu, dtype<span class="op">=</span>tf.float32),</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>        scale<span class="op">=</span>tf.constant(mroi_sigma, dtype<span class="op">=</span>tf.float32),</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>        name<span class="op">=</span>constants.MROI_M,</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>model_spec <span class="op">=</span> spec.ModelSpec(prior<span class="op">=</span>prior, media_prior_type<span class="op">=</span><span class="st">"mroi"</span>, max_lag<span class="op">=</span><span class="dv">12</span>)</span></code></pre></div><button title="Copier vers le presse-papier" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Réestimez le modèle plutôt que de modifier après coup les résumés a posteriori. Le canal calibré devrait se rapprocher des résultats expérimentaux et être mieux identifié, mais il n’a pas à tomber exactement sur 0,200. La vraisemblance, la courbe et la distribution a priori contribuent toutes au résultat. Resserrer l’incertitude sur un canal redistribue aussi la contribution entre les canaux corrélés ; examinez donc chaque canal et la prédiction totale, pas seulement Search.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Astuce
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>La méthode <a href="https://www.pymc-marketing.io/en/stable/api/generated/classmethods/pymc_marketing.mmm.mmm.MMM.add_lift_test_measurements.html"><code>add_lift_test_measurements</code></a> de PyMC-Marketing suit l’autre voie : elle ajoute l’observation de l’effet incrémental sous forme d’un terme de vraisemblance lié à la courbe de réponse, en précisant explicitement la variation des dépenses. Pour un test d’augmentation ou de réduction des dépenses, cette approche convient directement. Choisissez en fonction de l’alignement des estimands et de la structure du modèle, pas de la bibliothèque.</p>
+</div>
+</div>
+<p>Un effet incrémental négatif ou proche de zéro est un résultat valide. Une distribution a priori log-normale ne peut pas exprimer des éléments de preuve centrés sur zéro ou en dessous. Utilisez une famille dont le support convient plutôt que de ramener artificiellement l’estimation à un petit nombre positif.</p>
+</section>
+<section id="sec-calibration-what-changed" class="level2">
+<h2 class="anchored" data-anchor-id="sec-calibration-what-changed">Qu’est-ce qui a changé ?</h2>
+<p>Le modèle intègre désormais l’expérience. Trois modèles ajustés rendent la comparaison honnête : le modèle de la section 6.2 comme référence, un modèle témoin qui passe aux distributions a priori du ROI marginal sans l’expérience, et le modèle calibré. Seul le dernier a vu le test géographique ; la différence entre les deux derniers tient donc aux éléments de preuve et à rien d’autre.</p>
+<p>Commençons par la seule ligne où le modèle et l’expérience mesurent la même chose : ce que coûte une réduction de 30 % de Search sur huit semaines.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Google Search</th>
+<th>Référence 6.2</th>
+<th>Avant (témoin)</th>
+<th>Après (calibré)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Coût prédit de la réduction testée</td>
+<td>2,54 [0,28, 7,21]</td>
+<td>1,57 [0,15, 5,52]</td>
+<td><strong>0,20 [0,05, 0,49]</strong></td>
+</tr>
+<tr class="even">
+<td>ROAS moyen</td>
+<td>3,53 [0,39, 10,29]</td>
+<td>2,55 [0,21, 9,25]</td>
+<td><strong>0,27 [0,06, 0,71]</strong></td>
+</tr>
+<tr class="odd">
+<td>ROAS marginal</td>
+<td>2,83 [0,31, 8,28]</td>
+<td>1,76 [0,17, 6,36]</td>
+<td><strong>0,22 [0,05, 0,54]</strong></td>
+</tr>
+<tr class="even">
+<td>Demi-largeur relative</td>
+<td>1,41</td>
+<td>1,76</td>
+<td><strong>1,13</strong></td>
+</tr>
+<tr class="odd">
+<td>Garde-fou</td>
+<td>MAINTIEN</td>
+<td>MAINTIEN</td>
+<td><strong>MAINTIEN</strong></td>
+</tr>
+<tr class="even">
+<td>Variation décidée par l’optimiseur</td>
+<td>−30,0 %</td>
+<td>−30,0 %</td>
+<td>−30,0 %</td>
+</tr>
+</tbody>
+</table>
+<p>L’expérience a mesuré 0,200. La vérité introduite dans les données est de 0,213 pour le rendement marginal, de 0,35 pour le rendement moyen et de 0,200 pour la réduction testée.</p>
+<p>L’estimation ponctuelle tombe là où elle le devrait. Le rendement marginal de Search passe de 1,76 à 0,22, à moins d’un centième de la vérité introduite dans les données, et la prédiction du modèle pour la réduction testée passe de 1,57 à 0,20, contre une mesure de 0,200. Sur le chiffre lui-même, la calibration a fonctionné.</p>
+<p>L’intervalle est le résultat le plus intéressant, car il ne se resserre pas suffisamment. La demi-largeur relative passe de 1,76 à 1,13, et le garde-fou continue de bloquer l’action.</p>
+<div id="fig-response-curve-calibrated" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="ROAS de la politique de dépenses pour Google Search selon le niveau de dépenses, pour la référence de la section 6.2, le modèle témoin et le modèle calibré ; la courbe calibrée se situe très en dessous des deux autres et passe par le point expérimental à 70 pour cent des dépenses.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-response-curve-calibrated-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part6/sec6.4/response_curve_calibrated.png" class="fig-lg img-fluid figure-img" alt="ROAS de la politique de dépenses pour Google Search selon le niveau de dépenses, pour la référence de la section 6.2, le modèle témoin et le modèle calibré ; la courbe calibrée se situe très en dessous des deux autres et passe par le point expérimental à 70 pour cent des dépenses.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-response-curve-calibrated-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3: Courbe de réponse de Google Search pour les trois modèles ajustés, avec le résultat expérimental superposé.
+</figcaption>
+</figure>
+</div>
+<p><a href="#fig-response-curve-calibrated" class="quarto-xref">Figure&nbsp;<span>3</span></a> montre ce qui a effectivement changé. Les courbes de référence et témoin indiquent un rendement compris entre 1,5 et 3 à tous les niveaux de dépenses que l’optimiseur pourrait envisager. La courbe calibrée indique environ 0,2 sur la même plage et passe par le point expérimental. L’expérience n’a pas légèrement déplacé un chiffre ; elle a repositionné la courbe.</p>
+<p>Pourquoi l’intervalle reste-t-il donc large ? Pas parce que l’expérience manquait de précision. Son erreur-type était de 0,075 pour une estimation ponctuelle de 0,200, ce qui constitue une mesure précise. La largeur provient de la traduction, et presque entièrement d’un seul terme : les huit marchés tests fonctionnaient à environ un cinquième du rythme de dépenses quotidiennes du canal, et cet écart à lui seul multiplie l’erreur-type par environ deux. Ce qui subsiste dans l’intervalle n’est pas un doute sur ce qui s’est passé dans ces marchés. C’est un doute sur le fait que le reste du pays se comporte comme eux.</p>
+<p>Cette distinction vaut davantage que ne l’aurait valu la levée du garde-fou, car elle désigne la prochaine expérience. Un test plus long n’aiderait guère ; les effets rémanents de Search sont déjà entièrement captés en huit semaines. Un test dans davantage de marchés, lui, aiderait.</p>
+<p>L’allocation, quant à elle, déçoit les attentes, et c’est précisément le constat.</p>
+<div id="fig-allocation-before-after" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Variation des dépenses décidée par l’optimiseur, par canal, pour les modèles de référence, témoin et calibré ; Google Search se situe au plancher de la contrainte, à moins 30 pour cent, dans les trois cas.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-allocation-before-after-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part6/sec6.4/allocation_before_after.png" class="fig-lg img-fluid figure-img" alt="Variation des dépenses décidée par l’optimiseur, par canal, pour les modèles de référence, témoin et calibré ; Google Search se situe au plancher de la contrainte, à moins 30 pour cent, dans les trois cas.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-allocation-before-after-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4: Allocation de l’optimiseur pour les trois modèles ajustés.
+</figcaption>
+</figure>
+</div>
+<p>Search se situe au plancher dans chaque modèle ajusté. OOH et Meta récupèrent le budget libéré dans chaque modèle ajusté. Entre le modèle témoin et le modèle calibré, seuls TV/CTV et TikTok ont bougé de quelques dixièmes de point, bien en deçà du bruit d’une discussion de planification. La calibration a changé ce que le modèle sait, pas la direction qu’il indique.</p>
+<p>La section 6.3 laissait une question à ce chapitre : non pas de savoir si les derniers 30 % de Search couvrent leur coût, ce qui n’est pas le cas, mais si ces dollars rapportent davantage ailleurs. Le modèle calibré y répond. Le rendement marginal de Search plafonne à 0,54, et l’intervalle de chaque autre canal commence au-dessus de 0,95. La règle de largeur du garde-fou indique toujours MAINTIEN, car une demi-largeur relative de 1,13 pour un rendement de 0,22 est élevée en termes de ratio même si elle est faible en dollars. Le garde-fou a été conçu pour un modèle agissant seul. Cette décision ne repose pas sur le seul modèle : le seuil de l’expérience a tranché la réduction, et la comparaison du portefeuille tranche la destination de l’argent.</p>
+<p>Cela mérite d’être dit clairement, car il est facile de présenter la calibration comme ce qui trouve la réponse. Ce n’est pas le cas. La règle de seuil de la section 6.3 avait déjà décidé de la réduction de ce trimestre : l’intervalle à 95 % de l’expérience culminait à 0,361, face à un ROAS de rentabilité de 2,50, et aucune lecture raisonnable de ce résultat ne justifie le maintien des dépenses. Ce que la calibration a apporté, c’est un modèle qui intègre ces éléments de preuve dans toutes les allocations suivantes, une estimation marginale désormais juste plutôt que huit fois trop élevée, et une définition précise de ce que doit être le prochain test.</p>
+<p>Réalisez la même calibration avec la largeur prudente de la section 6.3, l’erreur-type calculée par grappes sur les huit paires appariées plutôt que sur les seize marchés, et l’estimation marginale bouge à peine, à 0,23, tandis que la demi-largeur relative passe à 1,46. Le verdict ne change pas. L’allocation non plus. Une recommandation qui résiste aux deux largeurs défendables peut être présentée en réunion ; si elle s’était inversée de l’une à l’autre, cela aurait indiqué que les éléments de preuve n’avaient pas tranché.</p>
+<p>L’objectif de la calibration n’est pas de faire concorder le MMM avec l’expérience. Il s’agit de voir si de meilleurs éléments de preuve causale changent la décision.</p>
+</section>
+<section id="before-acting-on-the-calibrated-plan" class="level2">
+<h2 class="anchored" data-anchor-id="before-acting-on-the-calibrated-plan">Avant de mettre en œuvre le plan calibré</h2>
+<p>Quatre questions, dans l’ordre où une réunion de revue devrait les poser.</p>
+<ol type="1">
+<li><strong>Alignement des estimands.</strong> L’expérience mesure-t-elle le même résultat, le même contraste et un point de fonctionnement que la recommandation atteindra effectivement ?</li>
+<li><strong>Crédibilité de l’expérience.</strong> Avait-elle la puissance statistique nécessaire à la décision, a-t-elle été réalisée conformément au protocole, sans effets de débordement ni chocs liés au calendrier ?</li>
+<li><strong>Intégrité du modèle.</strong> Après la réestimation, l’ajustement, les courbes de réponse et les autres canaux restent-ils plausibles ?</li>
+<li><strong>Stabilité de la décision.</strong> L’action recommandée se maintient-elle pour les différentes largeurs défendables issues de la traduction ? Si elle s’inverse de l’une à l’autre, les éléments de preuve n’ont pas tranché la décision, quoi qu’indique l’estimation ponctuelle.</li>
+</ol>
+<p>La qualité des données et la validation générale du modèle relèvent de la <a href="sec6.2-mmm-fundamentals.html#sec-mmm-data-requirements">section 6.2</a> et n’ont pas à être répétées ici.</p>
+</section>
+<section id="calibration-as-a-learning-loop" class="level2">
+<h2 class="anchored" data-anchor-id="calibration-as-a-learning-loop">La calibration comme boucle d’apprentissage</h2>
+<p>Vous n’avez pas besoin d’une expérience pour chaque canal. Testez là où les dépenses sont importantes, où l’intervalle du modèle est large et où un résultat pourrait changer l’action. Consignez la prédiction du modèle avant le test, comme l’a fait la fiche de décision de la section 6.2, afin que le programme mesure sa propre calibration. Puis actualisez le modèle avant l’allocation suivante, et laissez le prochain désaccord déterminer le prochain test.</p>
+</section>
+<section id="key-takeaways" class="level2">
+<h2 class="anchored" data-anchor-id="key-takeaways">Points clés à retenir</h2>
+<ul>
+<li>Faites correspondre les estimands, puis traduisez plutôt que de transposer tel quel. Une mesure marginale doit porter sur un paramètre marginal, corrigée des effets rémanents et assortie d’une incertitude élargie pour tenir compte de l’échelle, en conservant l’incertitude de l’expérience.</li>
+<li>Réestimez tout le système, pas seulement le canal calibré. La calibration a fait passer le rendement marginal de Search d’une valeur huit fois trop élevée à une valeur presque exacte.</li>
+<li>Jugez selon que la décision change ou non. L’intervalle ne s’est jamais assez resserré pour lever le garde-fou, et l’allocation n’a jamais bougé : c’est le constat, et c’est lui qui désigne le prochain test.</li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copié");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copié");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/marketing-science-in-python\.com\/fr\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../part6/sec6.3-incrementality-experiments.html" class="pagination-link" aria-label="6.3 Expériences d’incrémentalité">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">6.3 Expériences d’incrémentalité</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../part6/sec6.5-when-tools-disagree.html" class="pagination-link" aria-label="6.5 Décider lorsque les outils de mesure divergent">
+        <span class="nav-page-text"><span class="chapter-title">6.5 Décider lorsque les outils de mesure divergent</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

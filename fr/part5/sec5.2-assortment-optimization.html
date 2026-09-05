@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="fr" xml:lang="fr"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="Décider quelles références supprimer avant une revue de catégorie : analyse ABC du chiffre d’affaires, risque de substitution et validation des décisions avant leur généralisation à l’ensemble du réseau.">
+
+<title>Optimisation de l’assortiment en Python – Marketing Science in Python</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../part5/sec5.3-sales-forecasting.html" rel="next">
+<link href="../part5/sec5.1-price-elasticity.html" rel="prev">
+<link href="../assets/favicon.png" rel="icon" type="image/png">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-491b769ea73b1ce4946cf8743b832a60.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-ec576e9d6a0f00bdcb4dbec60768df31.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-491b769ea73b1ce4946cf8743b832a60.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "Pas de résultats",
+    "search-matching-documents-text": "documents trouvés",
+    "search-copy-link-title": "Copier le lien vers la recherche",
+    "search-hide-matches-text": "Cacher les correspondances additionnelles",
+    "search-more-match-text": "correspondance de plus dans ce document",
+    "search-more-matches-text": "correspondances de plus dans ce document",
+    "search-clear-button-title": "Effacer",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Annuler",
+    "search-submit-button-title": "Envoyer",
+    "search-label": "Recherche"
+  }
+}</script>
+<script async="" src="https://www.googletagmanager.com/gtag/js?id=G-YY0LCGYER5"></script>
+
+<script type="text/javascript">
+
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
+</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../custom.css">
+<meta property="og:title" content="Optimisation de l’assortiment en Python">
+<meta property="og:description" content="Décider quelles références supprimer avant une revue de catégorie : analyse ABC du chiffre d’affaires, risque de substitution et validation des décisions avant leur généralisation à l’ensemble du réseau.">
+<meta property="og:image" content="https://marketing-science-in-python.com/images/common/book_cover_online.png">
+<meta property="og:site_name" content="Marketing Science in Python">
+<meta property="og:image:alt" content="Couverture montrant des flux de données abstraits convergeant vers un réseau géométrique">
+<meta name="twitter:title" content="Optimisation de l’assortiment en Python">
+<meta name="twitter:description" content="Décider quelles références supprimer avant une revue de catégorie : analyse ABC du chiffre d’affaires, risque de substitution et validation des décisions avant leur généralisation à l’ensemble du réseau.">
+<meta name="twitter:image" content="https://marketing-science-in-python.com/images/common/book_cover_online.png">
+<meta name="twitter:image:alt" content="Couverture montrant des flux de données abstraits convergeant vers un réseau géométrique">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://marketing-science-in-python.com/fr/part5/sec5.2-assortment-optimization.html">
+<!-- msbook-i18n-head:start -->
+<link rel="alternate" hreflang="en" href="https://marketing-science-in-python.com/part5/sec5.2-assortment-optimization.html">
+<link rel="alternate" hreflang="ja" href="https://marketing-science-in-python.com/ja/part5/sec5.2-assortment-optimization.html">
+<link rel="alternate" hreflang="fr" href="https://marketing-science-in-python.com/fr/part5/sec5.2-assortment-optimization.html">
+<link rel="alternate" hreflang="x-default" href="https://marketing-science-in-python.com/part5/sec5.2-assortment-optimization.html">
+<!-- msbook-i18n-head:end -->
+</head>
+
+<body class="nav-sidebar floating quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Basculer la barre latérale" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part5/_part5.html">Partie 5. Analyse commerciale</a></li><li class="breadcrumb-item"><a href="../part5/sec5.2-assortment-optimization.html"><span class="chapter-title">5.2 Optimisation de l’assortiment de produits</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Basculer la barre latérale" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <!-- msbook-language-switch-mobile:start -->
+<div class="msbook-language-switch-mobile" aria-label="Language"><a lang="en" hreflang="en" href="../../part5/sec5.2-assortment-optimization.html" onclick="this.hash=window.location.hash">EN</a><span aria-hidden="true"> | </span><a lang="ja" hreflang="ja" href="../../ja/part5/sec5.2-assortment-optimization.html" onclick="this.hash=window.location.hash">日本語</a><span aria-hidden="true"> | </span><span lang="fr" aria-current="page">FR</span></div>
+<!-- msbook-language-switch-mobile:end -->
+<button type="button" class="btn quarto-search-button" aria-label="Recherche" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">Marketing Science in Python</a> 
+        <div class="sidebar-tools-main tools-wide">
+    <a href="https://github.com/takechanman1228/marketing-science-in-python" title="Code source" class="quarto-navigation-tool px-1" aria-label="Code source"><i class="bi bi-github"></i></a>
+    <div class="dropdown">
+      <a href="" title="Share" id="quarto-navigation-tool-dropdown-0" class="quarto-navigation-tool dropdown-toggle px-1" data-bs-toggle="dropdown" aria-expanded="false" role="link" aria-label="Share"><i class="bi bi-share"></i></a>
+      <ul class="dropdown-menu" aria-labelledby="quarto-navigation-tool-dropdown-0">
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://twitter.com/intent/tweet?url=|url|">
+              <i class="bi bi-twitter pe-1"></i>
+            Twitter
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://www.linkedin.com/sharing/share-offsite/?url=|url|">
+              <i class="bi bi-linkedin pe-1"></i>
+            LinkedIn
+            </a>
+          </li>
+      </ul>
+    </div>
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Basculer le mode sombre"><i class="bi"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Recherche"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Préface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part1/_part1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Partie 1. Introduction</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Basculer la section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1/sec1.1-what-is-marketing-science.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">1.1 Qu’est-ce que la science du marketing ?</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1/sec1.2-data-landscape.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">1.2 Comprendre les données marketing</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part2/_part2.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Partie 2. Analyser pour mieux décider</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Basculer la section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.1-right-question.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.1 Formuler la bonne question</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.2-kpi-design.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.2 Concevoir des KPI pour le diagnostic</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.3-storytelling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.3 Transformer les données en récit</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part3/_part3.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Partie 3. L’inférence causale pour le marketing</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Basculer la section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.1-thinking-causally.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.1 Raisonner en termes de causalité</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.2-ab-testing.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.2 Concevoir un test A/B</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.3-quasi-experiments.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.3 Quasi-expériences</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.4-causal-impact.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.4 Impact causal avec les séries temporelles</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.5-meta-learners.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.5 Méta-apprenants pour les effets de traitement</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.6-uplift-modeling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.6 Modélisation de l’uplift pour le ciblage</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part4/_part4.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Partie 4. Analyse client</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Basculer la section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part4/sec4.1-segmentation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">4.1 Segmentation client</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part4/sec4.2-clv-modeling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">4.2 Modélisation de la valeur vie client</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part5/_part5.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Partie 5. Analyse commerciale</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Basculer la section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.1-price-elasticity.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.1 Élasticité-prix et décisions tarifaires</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.2-assortment-optimization.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">5.2 Optimisation de l’assortiment de produits</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.3-sales-forecasting.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.3 Prévision des ventes et planification par scénarios</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part6/_part6.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Partie 6. Investissement média et optimisation</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Basculer la section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.1-media-measurement-problem.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.1 Le problème de la mesure des médias</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.2-mmm-fundamentals.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.2 Construire et optimiser un MMM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.3-incrementality-experiments.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.3 Expériences d’incrémentalité</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.4-mmm-calibration.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.4 Calibrer le MMM à l’aide d’expériences</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.5-when-tools-disagree.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.5 Décider lorsque les outils de mesure divergent</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendix/further-reading.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Références et lectures complémentaires</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendix/notebooks.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Notebooks et code</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../marketing-analytics-in-python.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">L’analyse marketing avec Python</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+<!-- msbook-language-switch:start -->
+<div class="msbook-language-switch" aria-label="Language"><a lang="en" hreflang="en" href="../../part5/sec5.2-assortment-optimization.html" onclick="this.hash=window.location.hash">English</a><span aria-hidden="true"> | </span><a lang="ja" hreflang="ja" href="../../ja/part5/sec5.2-assortment-optimization.html" onclick="this.hash=window.location.hash">日本語</a><span aria-hidden="true"> | </span><span lang="fr" aria-current="page">Français</span></div>
+<!-- msbook-language-switch:end -->
+
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table des matières</h2>
+   
+  <ul>
+  <li><a href="#sec-more-skus-fallacy" id="toc-sec-more-skus-fallacy" class="nav-link active" data-scroll-target="#sec-more-skus-fallacy">Pourquoi il est difficile de supprimer des références</a></li>
+  <li><a href="#sec-identifying-candidates" id="toc-sec-identifying-candidates" class="nav-link" data-scroll-target="#sec-identifying-candidates">Une démarche d’optimisation de l’assortiment</a>
+  <ul class="collapse">
+  <li><a href="#step-1-screening-skus-by-revenue" id="toc-step-1-screening-skus-by-revenue" class="nav-link" data-scroll-target="#step-1-screening-skus-by-revenue">Étape 1 : sélectionner les références selon le chiffre d’affaires</a></li>
+  <li><a href="#step-2-substitution-check-will-the-demand-stay" id="toc-step-2-substitution-check-will-the-demand-stay" class="nav-link" data-scroll-target="#step-2-substitution-check-will-the-demand-stay">Étape 2 : vérifier la substitution, « La demande restera-t-elle ? »</a></li>
+  <li><a href="#the-output-a-scored-candidate-list" id="toc-the-output-a-scored-candidate-list" class="nav-link" data-scroll-target="#the-output-a-scored-candidate-list">Le résultat : une liste de candidats évalués</a></li>
+  </ul></li>
+  <li><a href="#validate-before-scaling" id="toc-validate-before-scaling" class="nav-link" data-scroll-target="#validate-before-scaling">Valider avant de généraliser</a></li>
+  <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways">Points clés à retenir</a></li>
+  </ul>
+<div class="quarto-code-links"><h2>Liens de code</h2><ul><li><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part5-commercial-analytics/sec5.2_assortment_optimization.ipynb"><i class="bi bi-github"></i>sec5.2_assortment_optimization.ipynb</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part5/_part5.html">Partie 5. Analyse commerciale</a></li><li class="breadcrumb-item"><a href="../part5/sec5.2-assortment-optimization.html"><span class="chapter-title">5.2 Optimisation de l’assortiment de produits</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span id="sec-assortment-optimization" class="quarto-section-identifier"><span class="chapter-title">5.2 Optimisation de l’assortiment de produits</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="translation-notice">
+<p><strong>À propos de la version française</strong><br>
+Cette page est une traduction par IA de la version anglaise de <em>Marketing Science in Python</em>. La version anglaise fait foi et prévaut en cas de divergence. Le code, les notebooks et le texte intégré aux images restent en anglais. <a href="../../part5/sec5.2-assortment-optimization.html" class="translation-source-link">Lire la version anglaise</a></p>
+</div>
+<p>La revue de catégorie est au calendrier : l’équipe chargée des planogrammes veut récupérer de l’espace en rayon, et le responsable de catégorie doit désigner les références à abandonner. Un produit peu performant ne se contente pas de prendre de la place : il immobilise des stocks, complique la chaîne d’approvisionnement et rend le rayon moins facile à parcourir pour les clients. Il faut décider quels produits supprimer, lesquels conserver et comment valider ces décisions avant de les généraliser à l’ensemble du réseau.</p>
+<p>Ce chapitre applique cette démarche à deux années de transactions alimentaires : sélectionner les références de la longue traîne selon leur chiffre d’affaires, vérifier si la demande resterait dans le magasin, puis fournir une liste restreinte classée selon le risque associé au test de chaque référence.</p>
+<p><strong>Notebook d’accompagnement :</strong> <code>sec5.2_assortment_optimization.ipynb</code> reproduit la sélection ABC selon le chiffre d’affaires, la vérification de la substitution et l’attribution des actions sur le jeu de données alimentaires Dunnhumby Complete Journey.<br>
+<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part5-commercial-analytics/sec5.2_assortment_optimization.ipynb">Voir sur GitHub</a></p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Pourquoi le chiffre d’affaires plutôt que la marge ?
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Ce chapitre analyse le <strong>chiffre d’affaires</strong>, car le jeu de données public Dunnhumby Complete Journey ne comprend ni le coût des produits ni le coût des marchandises vendues. La même démarche s’applique à la <strong>marge brute</strong> ou à la <strong>marge sur coûts variables</strong> lorsque les équipes qui la mettent en production disposent des données de coût ; seule l’interprétation métier change, passant de la <em>gestion du risque sur le chiffre d’affaires</em> à l’<em>optimisation de la marge</em>.</p>
+</div>
+</div>
+<section id="sec-more-skus-fallacy" class="level2">
+<h2 class="anchored" data-anchor-id="sec-more-skus-fallacy">Pourquoi il est difficile de supprimer des références</h2>
+<p>Les assortiments s’étoffent pour de bonnes raisons : les acheteurs veulent couvrir largement les besoins et les marques ne cessent de lancer des variantes. Un rayon plus épuré peut aussi faciliter les achats, même si les travaux sur la surcharge de choix ne s’accordent pas sur l’ampleur de cet effet (voir les Lectures complémentaires). L’asymétrie est organisationnelle : le coût d’une référence supplémentaire est diffus et passe facilement inaperçu, alors que le retrait d’un produit est une décision visible et parfois impopulaire. L’optimisation de l’assortiment est, en définitive, un processus de décision. Le rôle des données est de donner à l’équipe une raison défendable d’agir.</p>
+</section>
+<section id="sec-identifying-candidates" class="level2">
+<h2 class="anchored" data-anchor-id="sec-identifying-candidates">Une démarche d’optimisation de l’assortiment</h2>
+<p>La démarche répond successivement à deux questions :</p>
+<ol type="1">
+<li><strong>Sélection → ensemble de candidats.</strong> Quels produits contribuent peu au chiffre d’affaires et appartiennent à la longue traîne ?</li>
+<li><strong>Vérification de la substitution → évaluation du risque.</strong> Pour chaque candidat, si nous le supprimons, la demande reste-t-elle dans notre magasin ?</li>
+</ol>
+<p>Un candidat disposant de substituts plausibles parmi les produits plus performants présente moins de risques à tester. Sans ces substituts, testez avant d’agir. Aucune suppression n’est considérée comme sûre tant qu’un test sur des magasins appariés ne l’a pas validée.</p>
+<section id="step-1-screening-skus-by-revenue" class="level3">
+<h3 class="anchored" data-anchor-id="step-1-screening-skus-by-revenue">Étape 1 : sélectionner les références selon le chiffre d’affaires</h3>
+<p>Avant de décider quoi retirer, il faut restreindre l’ensemble des références. Un magasin alimentaire peut proposer des milliers de produits, mais une petite fraction génère l’essentiel du chiffre d’affaires, tandis que chaque article de la longue traîne rapporte très peu. C’est dans cette longue traîne que se trouvent les candidats au retrait.</p>
+<p>Les équipes de distribution utilisent souvent un classement de type Pareto appelé <strong>analyse ABC</strong>. Les produits sont triés selon leur contribution, généralement le chiffre d’affaires ou la marge, parfois les quantités vendues, puis répartis en trois classes.</p>
+<ul>
+<li><strong>Articles A</strong> (les ~20 % en tête) : le petit nombre essentiel. Ils génèrent environ 80 % de l’indicateur retenu. Protégez-les, suivez-les et optimisez-les.</li>
+<li><strong>Articles B</strong> (les ~30 % suivants) : le milieu important. Des contributeurs réguliers qui demandent moins d’attention.</li>
+<li><strong>Articles C</strong> (les ~50 % restants) : la longue traîne. Faibles individuellement, encombrants collectivement. Des candidats à la rationalisation.</li>
+</ul>
+<p>Les produits classés C constituent le point de départ de votre ensemble de candidats. Tous les articles C ne doivent pas être supprimés, mais tout produit dont vous envisagez le retrait doit provenir de ce groupe.</p>
+<p>Dans le code, classez les références selon leur part cumulée du chiffre d’affaires, répartissez-les dans les classes A/B/C et retenez la longue traîne de classe C comme ensemble de candidats :</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>ranked <span class="op">=</span> sku_summary.sort_values(<span class="st">"revenue"</span>, ascending<span class="op">=</span><span class="va">False</span>)[<span class="st">"revenue"</span>]</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Classify on the cumulative share *before* each SKU, so the SKU that crosses</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># the 80% line still counts toward A (and a single dominant SKU stays A).</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>cum_before <span class="op">=</span> (ranked.cumsum() <span class="op">/</span> ranked.<span class="bu">sum</span>()).shift(fill_value<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>sku_summary[<span class="st">"abc_revenue"</span>] <span class="op">=</span> pd.cut(cum_before, bins<span class="op">=</span>[<span class="dv">0</span>, <span class="fl">0.80</span>, <span class="fl">0.95</span>, <span class="fl">1.0</span>],</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>                                    labels<span class="op">=</span>[<span class="st">"A"</span>, <span class="st">"B"</span>, <span class="st">"C"</span>], right<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Candidate pool = C-rank by revenue (the long tail)</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>candidates <span class="op">=</span> sku_summary[sku_summary[<span class="st">"abc_revenue"</span>] <span class="op">==</span> <span class="st">"C"</span>]</span></code></pre></div><button title="Copier vers le presse-papier" class="code-copy-button"><i class="bi"></i></button></div>
+<p>La fonction complète, qui traite le filtrage des ventes nulles ou négatives et la répartition en classes en présence de NaN, se trouve dans le notebook d’accompagnement.</p>
+<p><a href="#fig-revenue-pareto" class="quarto-xref">Figure&nbsp;<span>1</span></a> présente la courbe de Pareto du chiffre d’affaires d’environ 39 000 références alimentaires Dunnhumby (après exclusion de 38 références sans ventes). Le chiffre d’affaires est très concentré : moins de 20 % des références génèrent 80 % des ventes, tandis que le groupe de classe C (<code>abc_revenue == "C"</code>) comprend 63 % des références, mais seulement 5 % du chiffre d’affaires. Cette longue traîne constitue l’ensemble de candidats. Son volume justifie à lui seul de l’examiner, pas de la défendre.</p>
+<div id="fig-revenue-pareto" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Courbe de Pareto du chiffre d’affaires pour environ 39 000 références : moins de 20 % des références génèrent 80 % du chiffre d’affaires.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-revenue-pareto-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part5/sec5.2/revenue_pareto_curve.png" class="fig-lg img-fluid figure-img" alt="Courbe de Pareto du chiffre d’affaires pour environ 39 000 références : moins de 20 % des références génèrent 80 % du chiffre d’affaires.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-revenue-pareto-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: Part cumulée du chiffre d’affaires par référence.
+</figcaption>
+</figure>
+</div>
+<p>Le classement C selon le chiffre d’affaires fait entrer un produit dans l’ensemble de candidats, mais ne suffit pas à justifier son retrait. L’étape 2 détermine quels candidats peuvent être testés avec peu de risques et lesquels exigent davantage de prudence.</p>
+</section>
+<section id="step-2-substitution-check-will-the-demand-stay" class="level3">
+<h3 class="anchored" data-anchor-id="step-2-substitution-check-will-the-demand-stay">Étape 2 : vérifier la substitution, « La demande restera-t-elle ? »</h3>
+<p>Pour chaque candidat classé C, la question est la suivante : si nous le supprimons, les clients nous achèteront-ils autre chose ou quitteront-ils le magasin ?</p>
+<p>Au sein d’une même sous-catégorie, des produits qui apparaissent rarement dans le même panier peuvent être des substituts. Les clients achètent généralement une marque de yaourt, pas trois. Nous utilisons la faible cooccurrence dans les paniers, mesurée par le lift, comme indicateur indirect de substitution :</p>
+<p><span class="math display">\[\text{Lift}(A, B) = \frac{P(A \cap B)}{P(A) \times P(B)}\]</span></p>
+<p>Un lift &gt; 1 signifie que deux produits ont tendance à être achetés ensemble (compléments) ; un lift &lt; 1 signifie qu’ils le sont rarement, ce qui, au sein d’une sous-catégorie, suggère qu’ils se substituent l’un à l’autre ; un lift = 0 (jamais dans le même panier) est le signal le plus fort. La contrainte d’appartenance à la même sous-catégorie compte : entre catégories, une faible cooccurrence signifie simplement que les produits répondent à des besoins différents (céréales et pâtes), pas qu’ils sont substituables.</p>
+<p>Il s’agit d’un indicateur indirect, pas d’une preuve. Une faible cooccurrence peut aussi refléter des occasions d’achat ou des segments de clientèle différents.</p>
+<p>Pour chaque candidat de classe C, la vérification parcourt les produits de sa sous-catégorie (en se limitant aux références de classe A/B selon le chiffre d’affaires, dont le volume est suffisant pour absorber la demande reportée) et signale ceux dont le lift est faible :</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>co_occur <span class="op">=</span> <span class="bu">len</span>(cand_baskets <span class="op">&amp;</span> peer_baskets)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> co_occur <span class="op">==</span> <span class="dv">0</span>:                       <span class="co"># never bought together → strongest signal</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    subs.append({<span class="st">"substitute"</span>: peer_id, <span class="st">"lift"</span>: <span class="fl">0.0</span>})</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="cf">else</span>:</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    lift <span class="op">=</span> (co_occur <span class="op">/</span> total_baskets) <span class="op">/</span> (p_cand <span class="op">*</span> p_peer)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> lift <span class="op">&lt;</span> lift_threshold:           <span class="co"># low Lift within a sub-category → likely substitute</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>        subs.append({<span class="st">"substitute"</span>: peer_id, <span class="st">"lift"</span>: <span class="bu">round</span>(lift, <span class="dv">3</span>)})</span></code></pre></div><button title="Copier vers le presse-papier" class="code-copy-button"><i class="bi"></i></button></div>
+<p>La fonction complète, qui traite le regroupement par sous-catégorie, l’ensemble de substituts de classe A/B selon le chiffre d’affaires et les garde-fous sur le nombre minimal de paniers, se trouve dans le notebook d’accompagnement.</p>
+<p>Deux éléments peuvent renforcer l’analyse. Une élasticité-prix croisée positive, lorsqu’elle est disponible, étaye l’hypothèse de substitution. Lorsque les données de panier sont rares, par exemple pour les nouveaux produits ou les petits magasins, la similarité des attributs, comme la marque, la gamme de prix ou l’usage, peut constituer une solution de repli pratique.</p>
+</section>
+<section id="the-output-a-scored-candidate-list" class="level3">
+<h3 class="anchored" data-anchor-id="the-output-a-scored-candidate-list">Le résultat : une liste de candidats évalués</h3>
+<p>La longue traîne est trop vaste pour être évaluée intégralement ; le notebook évalue donc 150 références de classe C : les 100 achetées le plus souvent, auxquelles s’ajoutent les références C des mêmes sous-catégories, toutes présentes dans au moins 30 paniers sur les deux années. Une référence achetée une douzaine de fois ne permet de tirer aucun signal de substitution dans un sens ou dans l’autre. Les étapes 1 et 2 attribuent ensuite l’une de trois actions. <a href="#tbl-scored-candidates" class="quarto-xref">Table&nbsp;<span>1</span></a> présente un candidat réel par action (les libellés des sous-catégories ont été simplifiés pour faciliter la lecture) :</p>
+<div id="tbl-scored-candidates" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-scored-candidates-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;1: Un candidat évalué par action, issu du notebook d’accompagnement.
+</figcaption>
+<div aria-describedby="tbl-scored-candidates-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Candidat (sous-catégorie)</th>
+<th style="text-align: right;">Chiffre d’affaires, 2 ans</th>
+<th style="text-align: right;">Paniers</th>
+<th style="text-align: center;">Substitut évident ?</th>
+<th style="text-align: center;">Halo ?</th>
+<th style="text-align: left;">Action</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Aliment gourmet en conserve pour chat</td>
+<td style="text-align: right;">$12</td>
+<td style="text-align: right;">32</td>
+<td style="text-align: center;">Oui</td>
+<td style="text-align: center;">Non</td>
+<td style="text-align: left;">Tester le retrait</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Sachet de poudre pour boisson rafraîchissante</td>
+<td style="text-align: right;">$10</td>
+<td style="text-align: right;">44</td>
+<td style="text-align: center;">Oui</td>
+<td style="text-align: center;">Oui</td>
+<td style="text-align: left;">Examiner avant de supprimer</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Bougies d’anniversaire</td>
+<td style="text-align: right;">$23</td>
+<td style="text-align: right;">33</td>
+<td style="text-align: center;">Non</td>
+<td style="text-align: center;">Non</td>
+<td style="text-align: left;">Conserver ou tester prudemment</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<p>Sur les 150 références, les actions se répartissent en 105 / 28 / 17. La plupart des références examinées dans la longue traîne disposent d’un substitut dans leur catégorie et ne jouent aucun rôle particulier dans le panier ; pour elles, l’absence de cooccurrence (un lift de 0.0, le signal de substitution le plus fort dans les données de transaction) est le cas le plus fréquent. Ce n’est pas une liste de suppressions. C’est une liste restreinte, classée selon le risque associé au test prioritaire de chaque candidat.</p>
+<p>Un candidat disposant d’un substitut évident dans sa catégorie est celui dont le retrait présente le moins de risques à tester. Les 17 sans substitut évident représentent le cas opposé : moins de cinq références de classe A/B selon le chiffre d’affaires pourraient absorber la demande, qui risque donc de quitter le magasin. Conservez le produit pour le moment et cherchez des moyens d’en réduire le coût, comme des conditionnements plus petits ou de meilleures conditions fournisseurs, ou testez prudemment avant de le retirer.</p>
+<p>Les 28 références intermédiaires constituent un garde-fou contre les effets de halo. Une référence peu chère qui apparaît souvent avec des articles de plus grande valeur peut contribuer à attirer ces paniers ; la supprimer pourrait donc réduire les ventes d’autres produits. Examinez ces cas avant de supprimer, plutôt que de vous fonder uniquement sur le chiffre d’affaires. Dans des données alimentaires denses, presque chaque référence apparaît avec une autre ; réservez donc ce signal aux cas les plus nets. Par ailleurs, toutes les références à faible chiffre d’affaires ne devraient pas figurer parmi les candidats. Certains produits méritent leur place en rayon parce qu’ils motivent les visites en magasin, ancrent l’image-prix ou donnent de la crédibilité à la catégorie, des rôles que le chiffre d’affaires et le lift ne captent pas.</p>
+</section>
+</section>
+<section id="validate-before-scaling" class="level2">
+<h2 class="anchored" data-anchor-id="validate-before-scaling">Valider avant de généraliser</h2>
+<p>La liste évaluée est un ensemble d’hypothèses, pas une liste de retraits. Avant de généraliser une suppression, menez un petit test sur des magasins appariés : retirez la référence des magasins traités, laissez inchangés des magasins témoins comparables et suivez le chiffre d’affaires de la sous-catégorie, le chiffre d’affaires par panier et le nombre de paniers.</p>
+<p>N’évaluez pas les ventes de la référence retirée elle-même ; elles seront nulles par construction. La question est de savoir si la demande reste dans la catégorie et dans le panier. Si le résultat n’est pas concluant, ne généralisez pas le retrait.</p>
+</section>
+<section id="key-takeaways" class="level2">
+<h2 class="anchored" data-anchor-id="key-takeaways">Points clés à retenir</h2>
+<ul>
+<li>L’analyse ABC du chiffre d’affaires produit des candidats, pas des décisions. Une faible cooccurrence au sein d’une même sous-catégorie est un indicateur indirect de substitution, pas une preuve, et une référence peu chère autour de laquelle se constituent des paniers de valeur peut mériter d’être conservée.</li>
+<li>Ne généralisez jamais sans test sur des magasins appariés. Mesurez le chiffre d’affaires de la sous-catégorie, le chiffre d’affaires par panier et le nombre de paniers, pas les ventes de la référence retirée elle-même. Un résultat non concluant n’est pas un feu vert.</li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copié");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copié");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/marketing-science-in-python\.com\/fr\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../part5/sec5.1-price-elasticity.html" class="pagination-link" aria-label="5.1 Élasticité-prix et décisions tarifaires">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">5.1 Élasticité-prix et décisions tarifaires</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../part5/sec5.3-sales-forecasting.html" class="pagination-link" aria-label="5.3 Prévision des ventes et planification par scénarios">
+        <span class="nav-page-text"><span class="chapter-title">5.3 Prévision des ventes et planification par scénarios</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

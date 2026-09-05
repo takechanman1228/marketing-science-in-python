@@ -1,0 +1,1600 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="fr" xml:lang="fr"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="Construire une prévision de référence, la valider par un test rétrospectif à origine glissante et en déduire la probabilité d’atteindre l’objectif selon différents scénarios marketing.">
+
+<title>Prévision des ventes en Python – Marketing Science in Python</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../part6/_part6.html" rel="next">
+<link href="../part5/sec5.2-assortment-optimization.html" rel="prev">
+<link href="../assets/favicon.png" rel="icon" type="image/png">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-491b769ea73b1ce4946cf8743b832a60.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-ec576e9d6a0f00bdcb4dbec60768df31.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-491b769ea73b1ce4946cf8743b832a60.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "Pas de résultats",
+    "search-matching-documents-text": "documents trouvés",
+    "search-copy-link-title": "Copier le lien vers la recherche",
+    "search-hide-matches-text": "Cacher les correspondances additionnelles",
+    "search-more-match-text": "correspondance de plus dans ce document",
+    "search-more-matches-text": "correspondances de plus dans ce document",
+    "search-clear-button-title": "Effacer",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Annuler",
+    "search-submit-button-title": "Envoyer",
+    "search-label": "Recherche"
+  }
+}</script>
+<script async="" src="https://www.googletagmanager.com/gtag/js?id=G-YY0LCGYER5"></script>
+
+<script type="text/javascript">
+
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
+</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../custom.css">
+<meta property="og:title" content="Prévision des ventes en Python">
+<meta property="og:description" content="Construire une prévision de référence, la valider par un test rétrospectif à origine glissante et en déduire la probabilité d’atteindre l’objectif selon différents scénarios marketing.">
+<meta property="og:image" content="https://marketing-science-in-python.com/images/common/book_cover_online.png">
+<meta property="og:site_name" content="Marketing Science in Python">
+<meta property="og:image:alt" content="Couverture montrant des flux de données abstraits convergeant vers un réseau géométrique">
+<meta name="twitter:title" content="Prévision des ventes en Python">
+<meta name="twitter:description" content="Construire une prévision de référence, la valider par un test rétrospectif à origine glissante et en déduire la probabilité d’atteindre l’objectif selon différents scénarios marketing.">
+<meta name="twitter:image" content="https://marketing-science-in-python.com/images/common/book_cover_online.png">
+<meta name="twitter:image:alt" content="Couverture montrant des flux de données abstraits convergeant vers un réseau géométrique">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://marketing-science-in-python.com/fr/part5/sec5.3-sales-forecasting.html">
+<!-- msbook-i18n-head:start -->
+<link rel="alternate" hreflang="en" href="https://marketing-science-in-python.com/part5/sec5.3-sales-forecasting.html">
+<link rel="alternate" hreflang="ja" href="https://marketing-science-in-python.com/ja/part5/sec5.3-sales-forecasting.html">
+<link rel="alternate" hreflang="fr" href="https://marketing-science-in-python.com/fr/part5/sec5.3-sales-forecasting.html">
+<link rel="alternate" hreflang="x-default" href="https://marketing-science-in-python.com/part5/sec5.3-sales-forecasting.html">
+<!-- msbook-i18n-head:end -->
+</head>
+
+<body class="nav-sidebar floating quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Basculer la barre latérale" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part5/_part5.html">Partie 5. Analyse commerciale</a></li><li class="breadcrumb-item"><a href="../part5/sec5.3-sales-forecasting.html"><span class="chapter-title">5.3 Prévision des ventes et planification par scénarios</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Basculer la barre latérale" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <!-- msbook-language-switch-mobile:start -->
+<div class="msbook-language-switch-mobile" aria-label="Language"><a lang="en" hreflang="en" href="../../part5/sec5.3-sales-forecasting.html" onclick="this.hash=window.location.hash">EN</a><span aria-hidden="true"> | </span><a lang="ja" hreflang="ja" href="../../ja/part5/sec5.3-sales-forecasting.html" onclick="this.hash=window.location.hash">日本語</a><span aria-hidden="true"> | </span><span lang="fr" aria-current="page">FR</span></div>
+<!-- msbook-language-switch-mobile:end -->
+<button type="button" class="btn quarto-search-button" aria-label="Recherche" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">Marketing Science in Python</a> 
+        <div class="sidebar-tools-main tools-wide">
+    <a href="https://github.com/takechanman1228/marketing-science-in-python" title="Code source" class="quarto-navigation-tool px-1" aria-label="Code source"><i class="bi bi-github"></i></a>
+    <div class="dropdown">
+      <a href="" title="Share" id="quarto-navigation-tool-dropdown-0" class="quarto-navigation-tool dropdown-toggle px-1" data-bs-toggle="dropdown" aria-expanded="false" role="link" aria-label="Share"><i class="bi bi-share"></i></a>
+      <ul class="dropdown-menu" aria-labelledby="quarto-navigation-tool-dropdown-0">
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://twitter.com/intent/tweet?url=|url|">
+              <i class="bi bi-twitter pe-1"></i>
+            Twitter
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://www.linkedin.com/sharing/share-offsite/?url=|url|">
+              <i class="bi bi-linkedin pe-1"></i>
+            LinkedIn
+            </a>
+          </li>
+      </ul>
+    </div>
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Basculer le mode sombre"><i class="bi"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Recherche"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Préface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part1/_part1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Partie 1. Introduction</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Basculer la section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1/sec1.1-what-is-marketing-science.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">1.1 Qu’est-ce que la science du marketing ?</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1/sec1.2-data-landscape.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">1.2 Comprendre les données marketing</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part2/_part2.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Partie 2. Analyser pour mieux décider</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Basculer la section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.1-right-question.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.1 Formuler la bonne question</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.2-kpi-design.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.2 Concevoir des KPI pour le diagnostic</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.3-storytelling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.3 Transformer les données en récit</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part3/_part3.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Partie 3. L’inférence causale pour le marketing</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Basculer la section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.1-thinking-causally.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.1 Raisonner en termes de causalité</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.2-ab-testing.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.2 Concevoir un test A/B</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.3-quasi-experiments.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.3 Quasi-expériences</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.4-causal-impact.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.4 Impact causal avec les séries temporelles</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.5-meta-learners.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.5 Méta-apprenants pour les effets de traitement</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.6-uplift-modeling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.6 Modélisation de l’uplift pour le ciblage</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part4/_part4.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Partie 4. Analyse client</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Basculer la section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part4/sec4.1-segmentation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">4.1 Segmentation client</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part4/sec4.2-clv-modeling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">4.2 Modélisation de la valeur vie client</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part5/_part5.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Partie 5. Analyse commerciale</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Basculer la section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.1-price-elasticity.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.1 Élasticité-prix et décisions tarifaires</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.2-assortment-optimization.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.2 Optimisation de l’assortiment de produits</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.3-sales-forecasting.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">5.3 Prévision des ventes et planification par scénarios</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part6/_part6.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Partie 6. Investissement média et optimisation</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Basculer la section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.1-media-measurement-problem.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.1 Le problème de la mesure des médias</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.2-mmm-fundamentals.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.2 Construire et optimiser un MMM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.3-incrementality-experiments.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.3 Expériences d’incrémentalité</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.4-mmm-calibration.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.4 Calibrer le MMM à l’aide d’expériences</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.5-when-tools-disagree.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.5 Décider lorsque les outils de mesure divergent</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendix/further-reading.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Références et lectures complémentaires</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendix/notebooks.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Notebooks et code</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../marketing-analytics-in-python.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">L’analyse marketing avec Python</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+<!-- msbook-language-switch:start -->
+<div class="msbook-language-switch" aria-label="Language"><a lang="en" hreflang="en" href="../../part5/sec5.3-sales-forecasting.html" onclick="this.hash=window.location.hash">English</a><span aria-hidden="true"> | </span><a lang="ja" hreflang="ja" href="../../ja/part5/sec5.3-sales-forecasting.html" onclick="this.hash=window.location.hash">日本語</a><span aria-hidden="true"> | </span><span lang="fr" aria-current="page">Français</span></div>
+<!-- msbook-language-switch:end -->
+
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table des matières</h2>
+   
+  <ul>
+  <li><a href="#sec-baseline-forecast" id="toc-sec-baseline-forecast" class="nav-link active" data-scroll-target="#sec-baseline-forecast">Construire la prévision de référence</a>
+  <ul class="collapse">
+  <li><a href="#which-library" id="toc-which-library" class="nav-link" data-scroll-target="#which-library">Quelle bibliothèque ?</a></li>
+  </ul></li>
+  <li><a href="#sec-rolling-backtest" id="toc-sec-rolling-backtest" class="nav-link" data-scroll-target="#sec-rolling-backtest">Valider la référence par un test rétrospectif à origine glissante</a></li>
+  <li><a href="#sec-target-probability" id="toc-sec-target-probability" class="nav-link" data-scroll-target="#sec-target-probability">La probabilité d’atteindre l’objectif</a>
+  <ul class="collapse">
+  <li><a href="#sec-interval-calibration" id="toc-sec-interval-calibration" class="nav-link" data-scroll-target="#sec-interval-calibration">Vérifier la calibration des intervalles</a></li>
+  </ul></li>
+  <li><a href="#sec-marketing-scenarios" id="toc-sec-marketing-scenarios" class="nav-link" data-scroll-target="#sec-marketing-scenarios">Les scénarios marketing exigent des incréments mesurés</a></li>
+  <li><a href="#sec-scenario-distributions" id="toc-sec-scenario-distributions" class="nav-link" data-scroll-target="#sec-scenario-distributions">Comparer les distributions des scénarios</a></li>
+  <li><a href="#sec-working-backward" id="toc-sec-working-backward" class="nav-link" data-scroll-target="#sec-working-backward">Raisonner à rebours à partir de l’objectif</a></li>
+  <li><a href="#sec-forecast-to-decision" id="toc-sec-forecast-to-decision" class="nav-link" data-scroll-target="#sec-forecast-to-decision">De la prévision à la décision</a></li>
+  <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways">Points clés à retenir</a></li>
+  </ul>
+<div class="quarto-code-links"><h2>Liens de code</h2><ul><li><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part5-commercial-analytics/sec5.3_sales_forecasting.ipynb"><i class="bi bi-github"></i>sec5.3_sales_forecasting.ipynb</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part5/_part5.html">Partie 5. Analyse commerciale</a></li><li class="breadcrumb-item"><a href="../part5/sec5.3-sales-forecasting.html"><span class="chapter-title">5.3 Prévision des ventes et planification par scénarios</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span id="sec-sales-forecasting" class="quarto-section-identifier"><span class="chapter-title">5.3 Prévision des ventes et planification par scénarios</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="translation-notice">
+<p><strong>À propos de la version française</strong><br>
+Cette page est une traduction par IA de la version anglaise de <em>Marketing Science in Python</em>. La version anglaise fait foi et prévaut en cas de divergence. Le code, les notebooks et le texte intégré aux images restent en anglais. <a href="../../part5/sec5.3-sales-forecasting.html" class="translation-source-link">Lire la version anglaise</a></p>
+</div>
+<p>Allons-nous atteindre l’objectif de ventes ?</p>
+<p>Cela ressemble à une seule question, mais une équipe de planification a besoin de trois réponses :</p>
+<ul>
+<li>À quel niveau les ventes aboutiront-elles si le plan actuel se poursuit ?</li>
+<li>Quelle est la probabilité d’atteindre l’objectif ?</li>
+<li>Quelles actions dont l’effet a été mesuré pourraient modifier cette probabilité, et de combien ?</li>
+</ul>
+<p>Nous sommes fin septembre. L’entreprise planifie ses activités sur des exercices de 52 semaines qui se terminent fin décembre, et 39 de ces semaines sont déjà écoulées. Il en reste treize, dont la période allant du Black Friday à Noël, durant laquelle cette entreprise réalise une part disproportionnée de ses ventes annuelles.</p>
+<div id="tbl-where-we-stand" class="quarto-float quarto-figure quarto-figure-center anchored" data-tbl-colwidths="[62,38]">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-where-we-stand-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;1: Situation à la fin de la semaine 39 de l’exercice 2019 (FY2019)
+</figcaption>
+<div aria-describedby="tbl-where-we-stand-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<colgroup>
+<col style="width: 62%">
+<col style="width: 38%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Objectif et situation des ventes</th>
+<th>Valeur</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Ventes à ce jour (39 semaines)</td>
+<td>$8.02M</td>
+</tr>
+<tr class="even">
+<td>Cumul annuel par rapport à l’année précédente</td>
+<td>+7.3%</td>
+</tr>
+<tr class="odd">
+<td>Semaines restantes</td>
+<td>13</td>
+</tr>
+<tr class="even">
+<td>Résultat de l’année précédente</td>
+<td>$10.30M</td>
+</tr>
+<tr class="odd">
+<td>Objectif annuel</td>
+<td>$11.12M</td>
+</tr>
+<tr class="even">
+<td>Objectif par rapport à l’année précédente</td>
+<td>+8.0%</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<p>Les ventes progressent de +7.3 %, mais l’objectif exige +8.0 %. C’est proche, mais est-ce assez proche ? Avant de répondre, trois termes doivent être définis, car tout le chapitre repose sur leur distinction. L’<strong>objectif</strong> est un seuil fixe choisi par l’entreprise. La <strong>prévision de référence</strong> porte sur les semaines restantes si le plan actuel se poursuit simplement, dans le cours normal des activités, avec les promotions récurrentes, les prix et les actions médias qui ont façonné l’historique. L’<strong>incrément</strong> est ce qu’une action marketing supplémentaire ajoute à cette référence ; il provient des méthodes causales présentées ailleurs dans ce livre, jamais de la prévision elle-même. Pour un scénario <span class="math inline">\(s\)</span>, le résultat de fin d’année est</p>
+<p><span class="math display">\[
+Y^{(s)}_{\text{year-end}} = Y_{\text{so far}} + R_{\text{baseline}} + \Delta_s
+\]</span></p>
+<p>les ventes à ce jour, plus la prévision de référence des semaines restantes, plus l’incrément causé par le scénario.</p>
+<div id="fig-three-numbers" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Ventes cumulées à ce jour, bande de prévision de référence avec sa trajectoire médiane, trajectoire de scénario en pointillés au-dessus et ligne représentant l’objectif annuel.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-three-numbers-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part5/sec5.3/three_numbers.png" class="fig-lg img-fluid figure-img" alt="Ventes cumulées à ce jour, bande de prévision de référence avec sa trajectoire médiane, trajectoire de scénario en pointillés au-dessus et ligne représentant l’objectif annuel.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-three-numbers-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: Objectif, référence et incrément sur un même graphique
+</figcaption>
+</figure>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>À propos des données
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>La série est générée par l’auteur : six exercices de 52 semaines de chiffre d’affaires hebdomadaire du commerce électronique sur le calendrier réel de 2014 à 2019, avec des pics de fêtes d’ampleur variable d’une année à l’autre et un effet de campagne dont la taille réelle est connue.</p>
+</div>
+</div>
+<p><strong>Notebook d’accompagnement :</strong> <code>sec5.3_sales_forecasting.ipynb</code> reproduit tous les chiffres et toutes les figures de ce chapitre (les deux schémas conceptuels proviennent de <code>regenerate_sec5_3_figures.py</code>).<br>
+<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part5-commercial-analytics/sec5.3_sales_forecasting.ipynb">Voir sur GitHub</a></p>
+<section id="sec-baseline-forecast" class="level2">
+<h2 class="anchored" data-anchor-id="sec-baseline-forecast">Construire la prévision de référence</h2>
+<p>Avec des ventes en hausse de 7.3 % sur un an, il est tentant d’appliquer ce taux de croissance au total de l’année précédente et d’appeler cela une prévision. Ce raccourci ne fonctionne que si la tendance se poursuit et si le dernier trimestre ressemble à celui de l’année précédente ; or, le trimestre des fêtes est précisément celui où ces deux hypothèses cessent de tenir : le pic est important et son ampleur varie d’une année à l’autre. Le trimestre ne se termine pas non plus au sommet du pic. Une fois passée la date limite d’expédition, les ventes de la semaine de Noël elle-même chutent fortement, et cette semaine correspond à la semaine 51 de l’exercice certaines années et à la semaine 52 d’autres années.</p>
+<div id="fig-where-we-stand" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Six années de ventes hebdomadaires avec un pic de fêtes chaque année, un repère à l’origine de prévision de fin septembre et les 13 dernières semaines ombrées.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-where-we-stand-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part5/sec5.3/where_we_stand.png" class="fig-lg img-fluid figure-img" alt="Six années de ventes hebdomadaires avec un pic de fêtes chaque année, un repère à l’origine de prévision de fin septembre et les 13 dernières semaines ombrées.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-where-we-stand-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2: Six exercices de ventes hebdomadaires
+</figcaption>
+</figure>
+</div>
+<p>Il nous faut donc un modèle pour les semaines restantes. Deux règles fixent le niveau minimal, que tout modèle doit dépasser.</p>
+<ul>
+<li><strong>Méthode naïve.</strong> Répéter la dernière semaine observée. Structurellement aveugle à la saison qui s’annonce.</li>
+<li><strong>Méthode naïve saisonnière.</strong> Répéter la même semaine de l’exercice précédent. La version honnête d’« appliquer le profil de l’année dernière ».</li>
+</ul>
+<p>Quatre candidats sont ensuite mis en concurrence sur exactement les mêmes décisions historiques, le premier dans deux versions.</p>
+<ul>
+<li><strong>ETS (lissage exponentiel).</strong> Niveau, tendance et saisonnalité comme composantes explicites, dans deux versions, avec et sans le terme saisonnier de 52 semaines.</li>
+<li><strong>Prophet.</strong> Une tendance changeante, une saisonnalité annuelle et des effets calendaires, ajustés comme des composantes additives distinctes. C’est l’outil que de nombreux analystes ouvrent en premier, ce qui lui vaut une place dans la comparaison, et rien de plus.</li>
+<li><strong>LightGBM</strong> sur des variables retardées, avec la semaine de l’exercice et le calendrier des fêtes et des promotions en entrée. Il intervient comme comparateur fixe, légèrement régularisé, et non comme modèle de production dont les hyperparamètres auraient été optimisés.</li>
+<li><strong>TimesFM 2.5.</strong> Un modèle de fondation préentraîné, utilisé sans apprentissage sur la série : aucun ajustement, uniquement l’historique des ventes.</li>
+</ul>
+<div id="fig-naive-vs-seasonal" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Ventes hebdomadaires jusqu’à l’origine de fin septembre, puis sept trajectoires de prévision sur 13 semaines qui divergent fortement au moment du pic des fêtes.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-naive-vs-seasonal-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part5/sec5.3/naive_vs_seasonal.png" class="fig-lg img-fluid figure-img" alt="Ventes hebdomadaires jusqu’à l’origine de fin septembre, puis sept trajectoires de prévision sur 13 semaines qui divergent fortement au moment du pic des fêtes.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-naive-vs-seasonal-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3: Ce que chaque modèle prévoit pour les mêmes 13 semaines
+</figcaption>
+</figure>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> statsmodels.tsa.exponential_smoothing.ets <span class="im">import</span> ETSModel</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> fit_ets(train, seasonal<span class="op">=</span><span class="va">None</span>):</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    model <span class="op">=</span> ETSModel(</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>        pd.Series(np.log(train)),</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>        error<span class="op">=</span><span class="st">"add"</span>, trend<span class="op">=</span><span class="st">"add"</span>, damped_trend<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>        seasonal<span class="op">=</span>seasonal, seasonal_periods<span class="op">=</span><span class="dv">52</span> <span class="cf">if</span> seasonal <span class="cf">else</span> <span class="va">None</span>,</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> model.fit(disp<span class="op">=</span><span class="va">False</span>)</span></code></pre></div><button title="Copier vers le presse-papier" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Les sept trajectoires divergent fortement au niveau du pic, et rien dans le graphique ne dit laquelle croire. Un modèle plus complexe n’apporte de valeur que s’il surpasse clairement les références naïves. En pratique, cette barre est plus haute que beaucoup ne le pensent. Le candidat qui remporte le test rétrospectif devient la référence ; la popularité ou la nouveauté ne suffisent pas à qualifier un modèle.</p>
+<p>Deux réserves avant les résultats. Prophet et LightGBM reçoivent le calendrier des fêtes et des promotions, connu à l’avance ; TimesFM reçoit uniquement l’historique des ventes, car prévoir une série seule est précisément la promesse d’un modèle de fondation. De plus, cette série est synthétique, construite sur un cycle de 52 semaines, soit la forme qu’un ETS saisonnier est conçu pour ajuster. Lisez le tableau comme une comparaison honnête sur une série, pas comme un classement des méthodes.</p>
+<section id="which-library" class="level3">
+<h3 class="anchored" data-anchor-id="which-library">Quelle bibliothèque ?</h3>
+<div id="tbl-libraries" class="quarto-float quarto-figure quarto-figure-center anchored" data-tbl-colwidths="[20,26,27,27]">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-libraries-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;2: Méthodes de prévision et bibliothèques Python correspondantes
+</figcaption>
+<div aria-describedby="tbl-libraries-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<colgroup>
+<col style="width: 20%">
+<col style="width: 26%">
+<col style="width: 27%">
+<col style="width: 27%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Méthode</th>
+<th>Bibliothèque</th>
+<th>À privilégier quand</th>
+<th>Points de vigilance</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Méthode naïve saisonnière</td>
+<td><code>numpy</code>, ou <code>statsforecast</code></td>
+<td>Toujours, comme seuil minimal à dépasser</td>
+<td>Ne peut pas actualiser le niveau</td>
+</tr>
+<tr class="even">
+<td>ETS</td>
+<td><code>statsmodels</code> (utilisé ici), <code>statsforecast</code></td>
+<td>Une série, quelques centaines de lignes</td>
+<td>Nécessite deux cycles saisonniers complets</td>
+</tr>
+<tr class="odd">
+<td>ARIMA</td>
+<td><code>statsmodels</code>, <code>statsforecast</code></td>
+<td>Autocorrélation, régresseurs exogènes</td>
+<td>L’ajustement d’une saison de 52 semaines est lent</td>
+</tr>
+<tr class="even">
+<td>Prophet</td>
+<td><code>prophet</code> (utilisé ici)</td>
+<td>Données quotidiennes, calendriers des fêtes</td>
+<td>Les intervalles omettent l’incertitude sur la saisonnalité</td>
+</tr>
+<tr class="odd">
+<td>Boosting de gradient</td>
+<td><code>lightgbm</code> + <code>mlforecast</code> (utilisés ici)</td>
+<td>Nombreuses séries, variables riches</td>
+<td>Nécessite beaucoup plus de lignes qu’une seule série n’en fournit</td>
+</tr>
+<tr class="even">
+<td>Modèles de fondation</td>
+<td><code>timesfm</code> (utilisé ici), <code>chronos</code></td>
+<td>Aucun historique pour l’ajustement, ou nombreuses séries sans lien entre elles</td>
+<td>Téléchargements volumineux ; les poids les plus récents sont souvent réservés à un usage non commercial</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<p>Une série de quelques centaines de lignes hebdomadaires est le cas courant en planification ; un modèle saisonnier à espace d’états, accompagné des références naïves, suffit généralement à le couvrir. Le boosting de gradient trouve sa place avec de nombreuses séries et des variables riches. Les modèles de fondation méritent d’être connus, car ils ne nécessitent aucun ajustement, ce qui est réellement utile pour une nouvelle référence sans historique ; vérifiez toutefois la licence, car ce chapitre utilise les poids de TimesFM 2.5 précisément parce que les poids plus récents de la version 3.0 sont réservés à un usage non commercial. Quelle que soit la bibliothèque utilisée, c’est la comparaison de la section suivante qui tranche.</p>
+</section>
+</section>
+<section id="sec-rolling-backtest" class="level2">
+<h2 class="anchored" data-anchor-id="sec-rolling-backtest">Valider la référence par un test rétrospectif à origine glissante</h2>
+<p>L’approche habituelle consiste à répartir aléatoirement les données entre apprentissage et test. Sur ces données, elle donne à LightGBM une WAPE de 4.5 %. Mais ce chiffre est trompeur pour deux raisons. Premièrement, le mélange permet au modèle d’apprendre sur des semaines postérieures à celles qu’il prévoit et, avec des variables retardées, la plupart des lignes de test ont des semaines adjacentes dans l’ensemble d’apprentissage. Deuxièmement, une répartition aléatoire évalue une interpolation ligne par ligne : elle ne peut même pas produire l’objet dont la décision a besoin, une trajectoire de 13 semaines à partir d’une origine fixe. Quel que soit le résultat annoncé, il répond à une autre question.</p>
+<p>La règle essentielle, souvent enfreinte en pratique, est que chaque modèle ne doit utiliser que l’information disponible à l’origine de la prévision. Chaque prévision historique utilisée pour l’évaluation doit respecter cette même règle.</p>
+<p>Un test rétrospectif à origine glissante l’impose, et le calendrier des exercices rend ici son application particulièrement nette. Chaque année suit la même structure de 52 semaines ; la décision exacte à laquelle nous faisons face, prévoir la fin d’année depuis fin septembre, peut donc être rejouée au même moment des exercices FY2016, FY2017 et FY2018 (FY2015 dispose de trop peu d’historique pour estimer une saison de 52 semaines). Cela donne trois répétitions honnêtes de la question.</p>
+<div id="fig-split-vs-rolling" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Une chronologie mélangeant apprentissage et test au-dessus de trois lignes ancrées chacune sur une origine, avec apprentissage jusqu’à cette origine et évaluation sur les 13 semaines suivantes.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-split-vs-rolling-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part5/sec5.3/split_vs_rolling_origin.png" class="fig-lg img-fluid figure-img" alt="Une chronologie mélangeant apprentissage et test au-dessus de trois lignes ancrées chacune sur une origine, avec apprentissage jusqu’à cette origine et évaluation sur les 13 semaines suivantes.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-split-vs-rolling-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4: Répartition aléatoire et origine glissante
+</figcaption>
+</figure>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>HORIZON <span class="op">=</span> <span class="dv">13</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>SEPT_ORIGINS <span class="op">=</span> [<span class="dv">143</span>, <span class="dv">195</span>, <span class="dv">247</span>]      <span class="co"># end of fiscal week 39, FY2016..FY2018</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> origin <span class="kw">in</span> SEPT_ORIGINS:</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    train <span class="op">=</span> y[:origin]              <span class="co"># nothing after the origin, for any model</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    actual <span class="op">=</span> y[origin:origin <span class="op">+</span> HORIZON]</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> name, forecast <span class="kw">in</span> fit_all_models(train, HORIZON).items():</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>        score(name, origin, actual, forecast)</span></code></pre></div><button title="Copier vers le presse-papier" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Deux indicateurs ponctuels suffisent pour comparer les modèles. La WAPE hebdomadaire, <span class="math inline">\(\sum_t |y_t - \hat y_t| / \sum_t |y_t|\)</span>, est l’erreur que reconnaît un planificateur. La question de fin d’année dépend de l’erreur signée sur le total des 13 semaines, car les erreurs hebdomadaires se compensent en partie dans la somme trimestrielle.</p>
+<div id="tbl-backtest" class="quarto-float quarto-figure quarto-figure-center anchored" data-tbl-colwidths="[34,22,22,22]">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-backtest-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;3: Test rétrospectif à origine glissante sur les trois répétitions de septembre (erreur sur le total : moyenne absolue ; biais : moyenne signée)
+</figcaption>
+<div aria-describedby="tbl-backtest-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<colgroup>
+<col style="width: 34%">
+<col style="width: 22%">
+<col style="width: 22%">
+<col style="width: 22%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Modèle</th>
+<th>WAPE hebdomadaire</th>
+<th>Erreur sur le total des 13 semaines</th>
+<th>Biais</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Méthode naïve</td>
+<td>13.2%</td>
+<td>6.8%</td>
+<td>-6.8%</td>
+</tr>
+<tr class="even">
+<td>Méthode naïve saisonnière</td>
+<td>8.6%</td>
+<td>5.5%</td>
+<td>-5.5%</td>
+</tr>
+<tr class="odd">
+<td>ETS, niveau + tendance</td>
+<td>13.3%</td>
+<td>4.7%</td>
+<td>-4.7%</td>
+</tr>
+<tr class="even">
+<td>ETS, niveau + tendance + saisonnalité</td>
+<td>7.4%</td>
+<td>2.6%</td>
+<td>-1.3%</td>
+</tr>
+<tr class="odd">
+<td>LightGBM, retards + calendrier</td>
+<td>12.3%</td>
+<td>5.7%</td>
+<td>-5.7%</td>
+</tr>
+<tr class="even">
+<td>Prophet, régresseurs calendaires</td>
+<td>10.5%</td>
+<td>5.3%</td>
+<td>+1.8%</td>
+</tr>
+<tr class="odd">
+<td>TimesFM 2.5, sans apprentissage sur la série</td>
+<td>10.8%</td>
+<td>2.6%</td>
+<td>-1.5%</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<p>La saisonnalité détermine le trimestre, et l’ETS saisonnier l’emporte dans les deux colonnes. Trois des résultats moins bons méritent toutefois qu’on s’y attarde.</p>
+<p>TimesFM est la surprise. Avec pour seule entrée la série brute, il égale l’ETS saisonnier sur le total des 13 semaines, la colonne dont dépend la question de fin d’année, tout en restant 3.4 points derrière semaine par semaine. Aucun ajustement, aucun calendrier promotionnel, et pourtant un résultat compétitif sur le trimestre.</p>
+<p>Prophet est la déception, et c’est celui que beaucoup d’équipes auraient mis en production. À 5.3 % sur le total, il améliore à peine la simple répétition du profil de l’année précédente, car sa saison annuelle suit un cycle de 365.25 jours, alors que cette entreprise planifie sur des années fixes de 52 semaines : le pic qu’il ajuste se décale donc par rapport au pic pertinent. LightGBM ne peut pas rivaliser sur une seule série de quelques centaines de lignes ; sa WAPE à origine glissante de 12.3 %, contre 4.5 % avec la répartition aléatoire, quantifie la leçon sur la fuite d’information.</p>
+<p>L’ETS saisonnier constitue désormais la référence. Il remporte la comparaison et c’est le seul candidat qui produit des trajectoires de prévision complètes plutôt qu’un chiffre par semaine, ce dont l’étape suivante a besoin.</p>
+</section>
+<section id="sec-target-probability" class="level2">
+<h2 class="anchored" data-anchor-id="sec-target-probability">La probabilité d’atteindre l’objectif</h2>
+<p>Passons maintenant à l’application au présent du dispositif que le test rétrospectif vient de valider. Ajustez l’ETS saisonnier sur toutes les données jusqu’à fin septembre, simulez 5 000 trajectoires complètes de 13 semaines et ajoutez le total de chacune aux $8.02M de ventes déjà réalisées.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>result <span class="op">=</span> fit_ets(y[:LIVE_ORIGIN], seasonal<span class="op">=</span><span class="st">"add"</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>paths <span class="op">=</span> simulate_paths(result, h<span class="op">=</span><span class="dv">13</span>, repetitions<span class="op">=</span><span class="dv">5000</span>)   <span class="co"># centered residual bootstrap</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>year_end <span class="op">=</span> sales_so_far <span class="op">+</span> paths.<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">0</span>)              <span class="co"># one total per path</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>p10, p50, p90 <span class="op">=</span> np.percentile(year_end, [<span class="dv">10</span>, <span class="dv">50</span>, <span class="dv">90</span>])</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>p_hit <span class="op">=</span> (year_end <span class="op">&gt;=</span> target).mean()</span></code></pre></div><button title="Copier vers le presse-papier" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="fig-year-end-pacing" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Ventes cumulées jusqu’à la semaine 39, puis bande qui s’élargit et trajectoire médiane jusqu’à la semaine 52, avec l’objectif annuel juste au-dessus de la bande.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-year-end-pacing-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part5/sec5.3/year_end_pacing.png" class="fig-lg img-fluid figure-img" alt="Ventes cumulées jusqu’à la semaine 39, puis bande qui s’élargit et trajectoire médiane jusqu’à la semaine 52, avec l’objectif annuel juste au-dessus de la bande.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-year-end-pacing-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5: Trajectoire vers la fin d’année selon le plan actuel
+</figcaption>
+</figure>
+</div>
+<p>La prévision médiane de fin d’année est de $10.91M, avec un intervalle à 80 % allant de $10.79M à $11.05M. La médiane est ce qui figure généralement dans les présentations, mais ce n’est pas un engagement. La traiter comme tel revient à ignorer l’incertitude qui compte pour la planification. L’objectif de $11.12M se situe juste au-dessus du P90 : la probabilité de l’atteindre avec le plan actuel est donc de 4 %. Ce n’est pas impossible, mais c’est clairement peu probable, et l’équipe dispose désormais d’un chiffre pour quantifier à quel point.</p>
+<section id="sec-interval-calibration" class="level3">
+<h3 class="anchored" data-anchor-id="sec-interval-calibration">Vérifier la calibration des intervalles</h3>
+<p>Les 4 % proviennent d’une distribution simulée ; celle-ci mérite donc sa propre vérification, sur la grandeur qui guide notre décision : le total des 13 semaines. Les erreurs de prévision hebdomadaires sont corrélées sur l’horizon et les quantiles ne s’additionnent pas ; l’intervalle sur le total ne peut donc pas être construit en empilant les quantiles hebdomadaires du modèle. C’est pourquoi le code simule des trajectoires complètes et calcule la somme de chacune.</p>
+<p>La vérification rejoue la même procédure à des origines passées et examine si le total réalisé se situe dans la bande à 80 %. Sur 15 fenêtres de 13 semaines sans chevauchement, cela s’est produit 12 fois, soit un résultat proche du taux nominal de 80 % ; pour les trois répétitions de septembre, la couverture était de 2 sur 3.</p>
+<div id="fig-interval-coverage" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Quinze fenêtres historiques de 13 semaines, chacune représentée par une bande à 80 % et un point pour le total réalisé ; trois points sont hors de leur bande.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-interval-coverage-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part5/sec5.3/interval_coverage.png" class="fig-lg img-fluid figure-img" alt="Quinze fenêtres historiques de 13 semaines, chacune représentée par une bande à 80 % et un point pour le total réalisé ; trois points sont hors de leur bande.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-interval-coverage-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;6: Vérification des intervalles sur 15 fenêtres historiques
+</figcaption>
+</figure>
+</div>
+<p>La couverture étaye la dispersion, mais pas la queue de distribution : l’objectif se situe au-delà du P90, là où 15 fenêtres ne permettent pas de certifier un chiffre aussi faible que 4 %. Faites confiance à l’ordre de grandeur de la réponse, quelques pour cent, et planifiez sur la base de « clairement peu probable » plutôt que de 4.0 %.</p>
+</section>
+</section>
+<section id="sec-marketing-scenarios" class="level2">
+<h2 class="anchored" data-anchor-id="sec-marketing-scenarios">Les scénarios marketing exigent des incréments mesurés</h2>
+<p>La distribution de référence nous indique désormais où le plan actuel a des chances d’aboutir. Vient alors la question posée dans toutes les réunions : une campagne supplémentaire changerait-elle la réponse ?</p>
+<p>L’an dernier, les semaines de promotion des fêtes ont enregistré des ventes supérieures d’environ 22 % à celles des semaines voisines ; il est donc tentant d’inscrire +22 % pour une campagne supplémentaire. Ce chiffre est erroné à trois titres. Les promotions sont programmées pendant les semaines les plus fortes : une partie des 22 % relève donc de la saisonnalité. La référence intègre déjà l’effet moyen des promotions récurrentes : l’essentiel du reste y est donc déjà inclus. Ce qui subsiste mêle l’effet de la promotion et tout ce que le modèle a manqué. Une variable de promotion peut aider à prévoir, mais son coefficient n’est pas un effet causal : la prévision indique ce qui va probablement se passer, pas ce qui s’est produit grâce au marketing.</p>
+<p>Ainsi, <span class="math inline">\(\Delta_s\)</span> provient de l’extérieur de la prévision. Avant de pouvoir entrer dans la simulation, un incrément exige deux éléments : une condition de référence, c’est-à-dire ce par rapport à quoi il constitue un supplément, et une distribution d’incertitude.</p>
+<div id="tbl-scenarios" class="quarto-float quarto-figure quarto-figure-center anchored" data-tbl-colwidths="[24,38,38]">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-scenarios-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;4: Incréments des scénarios et leurs sources
+</figcaption>
+<div aria-describedby="tbl-scenarios-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<colgroup>
+<col style="width: 24%">
+<col style="width: 38%">
+<col style="width: 38%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Scénario</th>
+<th>Incrément</th>
+<th>Origine du chiffre</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Plan actuel (référence)</td>
+<td>0</td>
+<td>la prévision de référence</td>
+</tr>
+<tr class="even">
+<td>Campagne supplémentaire pour les fêtes</td>
+<td>+8 % sur les quatre semaines de campagne (erreur-type de 2.5 points)</td>
+<td>une expérimentation géographique (<a href="../part6/sec6.3-incrementality-experiments.html">Section 6.3</a>) ou une analyse d’impact causal (<a href="../part3/sec3.4-causal-impact.html">Section 3.4</a>) portant sur la campagne de l’année précédente</td>
+</tr>
+<tr class="odd">
+<td>Investissement média supplémentaire</td>
+<td>+$60k sur le trimestre (erreur-type de $25k)</td>
+<td>une courbe de réponse d’un MMM calibré (<a href="../part6/sec6.2-mmm-fundamentals.html">Section 6.2</a>, <a href="../part6/sec6.4-mmm-calibration.html">Section 6.4</a>)</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<p>Ces incréments sont des valeurs illustratives présentées sous la forme de mesures réelles. Renseignez chaque ligne à partir du chapitre pertinent, ou omettez-la ; une source bayésienne, comme un MMM calibré, peut fournir directement des tirages de la distribution a posteriori.</p>
+</section>
+<section id="sec-scenario-distributions" class="level2">
+<h2 class="anchored" data-anchor-id="sec-scenario-distributions">Comparer les distributions des scénarios</h2>
+<p>Les unités comptent lorsqu’un incrément entre dans la simulation. L’effet de campagne est <em>relatif</em> : il multiplie les ventes des semaines de campagne propres à chaque trajectoire ; une saison des fêtes forte génère donc un gain en dollars proportionnellement plus élevé. L’effet média arrive en dollars et s’ajoute directement.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>beta <span class="op">=</span> rng.normal(<span class="fl">0.08</span>, <span class="fl">0.025</span>, size<span class="op">=</span>n_paths)        <span class="co"># campaign lift per path</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>campaign_base <span class="op">=</span> paths[CAMPAIGN_STEPS, :].<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>year_end_campaign <span class="op">=</span> sales_so_far <span class="op">+</span> paths.<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">0</span>) <span class="op">+</span> beta <span class="op">*</span> campaign_base</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>media <span class="op">=</span> rng.normal(<span class="dv">60_000</span>, <span class="dv">25_000</span>, size<span class="op">=</span>n_paths)    <span class="co"># dollars over the quarter</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>year_end_media <span class="op">=</span> sales_so_far <span class="op">+</span> paths.<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">0</span>) <span class="op">+</span> media</span></code></pre></div><button title="Copier vers le presse-papier" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="tbl-outcomes" class="quarto-float quarto-figure quarto-figure-center anchored" data-tbl-colwidths="[26,12,12,12,16,22]">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-outcomes-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;5: Résultats de fin d’année simulés par rapport à l’objectif de $11.12M
+</figcaption>
+<div aria-describedby="tbl-outcomes-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<colgroup>
+<col style="width: 26%">
+<col style="width: 12%">
+<col style="width: 12%">
+<col style="width: 12%">
+<col style="width: 16%">
+<col style="width: 22%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Scénario</th>
+<th>P10</th>
+<th>P50</th>
+<th>P90</th>
+<th>P(atteindre l’objectif)</th>
+<th>Interprétation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Plan actuel (référence)</td>
+<td>$10.79M</td>
+<td>$10.91M</td>
+<td>$11.05M</td>
+<td>4%</td>
+<td>Peu probable</td>
+</tr>
+<tr class="even">
+<td>Campagne supplémentaire pour les fêtes</td>
+<td>$10.87M</td>
+<td>$11.00M</td>
+<td>$11.14M</td>
+<td>13%</td>
+<td>Plus de chances, mais toujours peu probable</td>
+</tr>
+<tr class="odd">
+<td>Investissement média supplémentaire</td>
+<td>$10.85M</td>
+<td>$10.97M</td>
+<td>$11.11M</td>
+<td>8%</td>
+<td>Utile, mais insuffisant à lui seul</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<div id="fig-year-end" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Trois distributions superposées des ventes de fin d’année simulées, une par scénario, avec une ligne verticale en pointillés au niveau de l’objectif annuel.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-year-end-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part5/sec5.3/year_end_scenarios.png" class="fig-md img-fluid figure-img" alt="Trois distributions superposées des ventes de fin d’année simulées, une par scénario, avec une ligne verticale en pointillés au niveau de l’objectif annuel.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-year-end-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;7: Ventes de fin d’année simulées pour chaque scénario
+</figcaption>
+</figure>
+</div>
+<p>La campagne fait passer la médiane de $10.91M à $11.00M et la probabilité d’atteindre l’objectif de 4 % à 13 %. Deux affirmations que l’on entendra en réunion sont toutes deux fausses. « L’objectif est impossible » : non, le scénario de campagne le place dans la bande. « La campagne rend l’objectif probable » : non, 13 % n’est pas une probabilité élevée. Le tableau présente ces deux faits simultanément, ce qu’une prévision ponctuelle ne pourrait jamais faire.</p>
+</section>
+<section id="sec-working-backward" class="level2">
+<h2 class="anchored" data-anchor-id="sec-working-backward">Raisonner à rebours à partir de l’objectif</h2>
+<p>La même simulation répond à la question inverse : de combien le trimestre devrait-il dépasser la médiane de référence, et quelque chose de comparable s’est-il déjà produit ?</p>
+<div id="tbl-reverse" class="quarto-float quarto-figure quarto-figure-center anchored" data-tbl-colwidths="[62,38]">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-reverse-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;6: Ce qu’il faudrait, mis en regard de ce qui s’est produit
+</figcaption>
+<div aria-describedby="tbl-reverse-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<colgroup>
+<col style="width: 62%">
+<col style="width: 38%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Comparaison</th>
+<th>Hausse par rapport au trimestre de référence</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Nécessaire pour atteindre l’objectif</td>
+<td>+7.2%</td>
+</tr>
+<tr class="even">
+<td>Plus grand dépassement de la prévision de septembre</td>
+<td>+6.0%</td>
+</tr>
+<tr class="odd">
+<td>Incrément de campagne (médiane)</td>
+<td>+3.0%</td>
+</tr>
+<tr class="even">
+<td>Incrément média (médiane)</td>
+<td>+2.1%</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<p>Atteindre l’objectif exige de dépasser la prévision médiane de 7.2 %. Ne confondez pas ce chiffre avec la croissance de 7.3 % du cumul annuel, mesurée par rapport à l’année précédente et non par rapport au modèle. Aucune des trois répétitions de septembre n’a dépassé la médiane d’autant ; le plus grand dépassement était de 6.0 %. Le seul écart supérieur parmi les 15 fenêtres de validation sans chevauchement était de +11.9 %, lors du rebond après le creux de deux semaines de mi-2016 : un choc ponctuel, pas un plan. Même les deux incréments réunis ajoutent environ 5 %, ce qui reste insuffisant.</p>
+</section>
+<section id="sec-forecast-to-decision" class="level2">
+<h2 class="anchored" data-anchor-id="sec-forecast-to-decision">De la prévision à la décision</h2>
+<p>Les trois questions de l’introduction ont désormais des réponses chiffrées. Environ $10.91M avec le plan actuel. Une probabilité de 4 % d’atteindre l’objectif. Les actions dont l’effet a été mesuré portent cette probabilité à 13 % au mieux, et même ensemble, elles laissent un écart de quelques points du trimestre. Aucun scénario ne rend l’objectif probable, mais l’écart est désormais un chiffre autour duquel l’équipe peut planifier, dès septembre, au lieu de le découvrir en janvier.</p>
+<p>Gardez chaque outil centré sur son propre terme de l’équation. La référence indique ce qui est probable si le plan actuel se poursuit ; elle ne peut pas dire ce qu’une campagne provoquera. Cela relève de <span class="math inline">\(\Delta_s\)</span> et exige des éléments causaux : une expérimentation (<a href="../part3/sec3.2-ab-testing.html">Section 3.2</a>), un test géographique (<a href="../part6/sec6.3-incrementality-experiments.html">Section 6.3</a>), un MMM calibré (<a href="../part6/sec6.4-mmm-calibration.html">Section 6.4</a>), une courbe d’élasticité (<a href="sec5.1-price-elasticity.html">Section 5.1</a>) ou une analyse d’impact causal (<a href="../part3/sec3.4-causal-impact.html">Section 3.4</a>). La réciproque vaut aussi : une estimation rigoureuse de l’effet incrémental ne peut pas produire le total du prochain trimestre.</p>
+<p>La bande de prévision a encore un usage une fois la réunion terminée : une semaine qui se situe en dehors est un signal à examiner, pas la preuve que l’activité a changé.</p>
+</section>
+<section id="key-takeaways" class="level2">
+<h2 class="anchored" data-anchor-id="key-takeaways">Points clés à retenir</h2>
+<ul>
+<li>Validez la référence à l’horizon et au point du calendrier utilisés pour la décision, avec uniquement l’information disponible à chaque origine. Une répartition aléatoire répond à une autre question.</li>
+<li>Décidez à partir de la distribution, pas du point. Simuler des trajectoires complètes sur l’horizon transforme une prévision médiane en une probabilité de 4 % d’atteindre l’objectif, à lire comme quelques pour cent, pas comme une fréquence précise.</li>
+<li>Un scénario est la référence augmentée d’un incrément mesuré séparément, chacun avec une condition de référence et une incertitude. Les ventes des semaines de promotion ne sont pas un incrément.</li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copié");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copié");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/marketing-science-in-python\.com\/fr\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../part5/sec5.2-assortment-optimization.html" class="pagination-link" aria-label="5.2 Optimisation de l’assortiment de produits">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">5.2 Optimisation de l’assortiment de produits</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../part6/_part6.html" class="pagination-link" aria-label="Partie 6. Investissement média et optimisation">
+        <span class="nav-page-text">Partie 6. Investissement média et optimisation</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

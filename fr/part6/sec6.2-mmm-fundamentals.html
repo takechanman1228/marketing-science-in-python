@@ -1,0 +1,1448 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="fr" xml:lang="fr"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="Construire un MMM avec Google Meridian : adstock, saturation, données requises, approche bayésienne, comparaison des bibliothèques et allocation budgétaire.">
+
+<title>Modélisation du mix marketing en Python – Marketing Science in Python</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../part6/sec6.3-incrementality-experiments.html" rel="next">
+<link href="../part6/sec6.1-media-measurement-problem.html" rel="prev">
+<link href="../assets/favicon.png" rel="icon" type="image/png">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-491b769ea73b1ce4946cf8743b832a60.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-ec576e9d6a0f00bdcb4dbec60768df31.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-491b769ea73b1ce4946cf8743b832a60.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "Pas de résultats",
+    "search-matching-documents-text": "documents trouvés",
+    "search-copy-link-title": "Copier le lien vers la recherche",
+    "search-hide-matches-text": "Cacher les correspondances additionnelles",
+    "search-more-match-text": "correspondance de plus dans ce document",
+    "search-more-matches-text": "correspondances de plus dans ce document",
+    "search-clear-button-title": "Effacer",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Annuler",
+    "search-submit-button-title": "Envoyer",
+    "search-label": "Recherche"
+  }
+}</script>
+<script async="" src="https://www.googletagmanager.com/gtag/js?id=G-YY0LCGYER5"></script>
+
+<script type="text/javascript">
+
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
+</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../custom.css">
+<meta property="og:title" content="Modélisation du mix marketing en Python">
+<meta property="og:description" content="Construire un MMM avec Google Meridian : adstock, saturation, données requises, approche bayésienne, comparaison des bibliothèques et allocation budgétaire.">
+<meta property="og:image" content="https://marketing-science-in-python.com/images/common/book_cover_online.png">
+<meta property="og:site_name" content="Marketing Science in Python">
+<meta property="og:image:alt" content="Couverture montrant des flux de données abstraits convergeant vers un réseau géométrique">
+<meta name="twitter:title" content="Modélisation du mix marketing en Python">
+<meta name="twitter:description" content="Construire un MMM avec Google Meridian : adstock, saturation, données requises, approche bayésienne, comparaison des bibliothèques et allocation budgétaire.">
+<meta name="twitter:image" content="https://marketing-science-in-python.com/images/common/book_cover_online.png">
+<meta name="twitter:image:alt" content="Couverture montrant des flux de données abstraits convergeant vers un réseau géométrique">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://marketing-science-in-python.com/fr/part6/sec6.2-mmm-fundamentals.html">
+<!-- msbook-i18n-head:start -->
+<link rel="alternate" hreflang="en" href="https://marketing-science-in-python.com/part6/sec6.2-mmm-fundamentals.html">
+<link rel="alternate" hreflang="ja" href="https://marketing-science-in-python.com/ja/part6/sec6.2-mmm-fundamentals.html">
+<link rel="alternate" hreflang="fr" href="https://marketing-science-in-python.com/fr/part6/sec6.2-mmm-fundamentals.html">
+<link rel="alternate" hreflang="x-default" href="https://marketing-science-in-python.com/part6/sec6.2-mmm-fundamentals.html">
+<!-- msbook-i18n-head:end -->
+</head>
+
+<body class="nav-sidebar floating quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Basculer la barre latérale" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part6/_part6.html">Partie 6. Investissement média et optimisation</a></li><li class="breadcrumb-item"><a href="../part6/sec6.2-mmm-fundamentals.html"><span class="chapter-title">6.2 Construire et optimiser un MMM</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Basculer la barre latérale" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <!-- msbook-language-switch-mobile:start -->
+<div class="msbook-language-switch-mobile" aria-label="Language"><a lang="en" hreflang="en" href="../../part6/sec6.2-mmm-fundamentals.html" onclick="this.hash=window.location.hash">EN</a><span aria-hidden="true"> | </span><a lang="ja" hreflang="ja" href="../../ja/part6/sec6.2-mmm-fundamentals.html" onclick="this.hash=window.location.hash">日本語</a><span aria-hidden="true"> | </span><span lang="fr" aria-current="page">FR</span></div>
+<!-- msbook-language-switch-mobile:end -->
+<button type="button" class="btn quarto-search-button" aria-label="Recherche" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">Marketing Science in Python</a> 
+        <div class="sidebar-tools-main tools-wide">
+    <a href="https://github.com/takechanman1228/marketing-science-in-python" title="Code source" class="quarto-navigation-tool px-1" aria-label="Code source"><i class="bi bi-github"></i></a>
+    <div class="dropdown">
+      <a href="" title="Share" id="quarto-navigation-tool-dropdown-0" class="quarto-navigation-tool dropdown-toggle px-1" data-bs-toggle="dropdown" aria-expanded="false" role="link" aria-label="Share"><i class="bi bi-share"></i></a>
+      <ul class="dropdown-menu" aria-labelledby="quarto-navigation-tool-dropdown-0">
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://twitter.com/intent/tweet?url=|url|">
+              <i class="bi bi-twitter pe-1"></i>
+            Twitter
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://www.linkedin.com/sharing/share-offsite/?url=|url|">
+              <i class="bi bi-linkedin pe-1"></i>
+            LinkedIn
+            </a>
+          </li>
+      </ul>
+    </div>
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Basculer le mode sombre"><i class="bi"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Recherche"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Préface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part1/_part1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Partie 1. Introduction</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Basculer la section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1/sec1.1-what-is-marketing-science.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">1.1 Qu’est-ce que la science du marketing ?</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1/sec1.2-data-landscape.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">1.2 Comprendre les données marketing</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part2/_part2.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Partie 2. Analyser pour mieux décider</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Basculer la section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.1-right-question.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.1 Formuler la bonne question</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.2-kpi-design.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.2 Concevoir des KPI pour le diagnostic</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.3-storytelling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.3 Transformer les données en récit</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part3/_part3.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Partie 3. L’inférence causale pour le marketing</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Basculer la section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.1-thinking-causally.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.1 Raisonner en termes de causalité</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.2-ab-testing.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.2 Concevoir un test A/B</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.3-quasi-experiments.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.3 Quasi-expériences</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.4-causal-impact.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.4 Impact causal avec les séries temporelles</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.5-meta-learners.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.5 Méta-apprenants pour les effets de traitement</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.6-uplift-modeling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.6 Modélisation de l’uplift pour le ciblage</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part4/_part4.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Partie 4. Analyse client</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Basculer la section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part4/sec4.1-segmentation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">4.1 Segmentation client</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part4/sec4.2-clv-modeling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">4.2 Modélisation de la valeur vie client</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part5/_part5.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Partie 5. Analyse commerciale</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Basculer la section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.1-price-elasticity.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.1 Élasticité-prix et décisions tarifaires</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.2-assortment-optimization.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.2 Optimisation de l’assortiment de produits</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.3-sales-forecasting.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.3 Prévision des ventes et planification par scénarios</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part6/_part6.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Partie 6. Investissement média et optimisation</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Basculer la section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.1-media-measurement-problem.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.1 Le problème de la mesure des médias</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.2-mmm-fundamentals.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">6.2 Construire et optimiser un MMM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.3-incrementality-experiments.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.3 Expériences d’incrémentalité</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.4-mmm-calibration.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.4 Calibrer le MMM à l’aide d’expériences</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.5-when-tools-disagree.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.5 Décider lorsque les outils de mesure divergent</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendix/further-reading.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Références et lectures complémentaires</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendix/notebooks.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Notebooks et code</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../marketing-analytics-in-python.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">L’analyse marketing avec Python</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+<!-- msbook-language-switch:start -->
+<div class="msbook-language-switch" aria-label="Language"><a lang="en" hreflang="en" href="../../part6/sec6.2-mmm-fundamentals.html" onclick="this.hash=window.location.hash">English</a><span aria-hidden="true"> | </span><a lang="ja" hreflang="ja" href="../../ja/part6/sec6.2-mmm-fundamentals.html" onclick="this.hash=window.location.hash">日本語</a><span aria-hidden="true"> | </span><span lang="fr" aria-current="page">Français</span></div>
+<!-- msbook-language-switch:end -->
+
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table des matières</h2>
+   
+  <ul>
+  <li><a href="#what-is-marketing-mix-modeling" id="toc-what-is-marketing-mix-modeling" class="nav-link active" data-scroll-target="#what-is-marketing-mix-modeling">Qu’est-ce que la modélisation du mix marketing ?</a></li>
+  <li><a href="#the-mmm-equation" id="toc-the-mmm-equation" class="nav-link" data-scroll-target="#the-mmm-equation">L’équation du MMM</a></li>
+  <li><a href="#saturation-diminishing-returns" id="toc-saturation-diminishing-returns" class="nav-link" data-scroll-target="#saturation-diminishing-returns">Saturation (rendements décroissants)</a></li>
+  <li><a href="#adstock-carryover-effects" id="toc-adstock-carryover-effects" class="nav-link" data-scroll-target="#adstock-carryover-effects">Adstock (effets de rémanence)</a></li>
+  <li><a href="#sec-mmm-data-requirements" id="toc-sec-mmm-data-requirements" class="nav-link" data-scroll-target="#sec-mmm-data-requirements">Données requises</a></li>
+  <li><a href="#the-bayesian-angle" id="toc-the-bayesian-angle" class="nav-link" data-scroll-target="#the-bayesian-angle">L’approche bayésienne</a></li>
+  <li><a href="#a-walkthrough-with-meridian" id="toc-a-walkthrough-with-meridian" class="nav-link" data-scroll-target="#a-walkthrough-with-meridian">Un parcours guidé avec Meridian</a></li>
+  <li><a href="#budget-allocation" id="toc-budget-allocation" class="nav-link" data-scroll-target="#budget-allocation">Allocation budgétaire</a></li>
+  <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways">Points clés à retenir</a></li>
+  </ul>
+<div class="quarto-code-links"><h2>Liens de code</h2><ul><li><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part6-media-optimization/sec6.2_6.4_mmm_meridian.ipynb"><i class="bi bi-github"></i>sec6.2_6.4_mmm_meridian.ipynb</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part6/_part6.html">Partie 6. Investissement média et optimisation</a></li><li class="breadcrumb-item"><a href="../part6/sec6.2-mmm-fundamentals.html"><span class="chapter-title">6.2 Construire et optimiser un MMM</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span id="sec-mmm-fundamentals" class="quarto-section-identifier"><span class="chapter-title">6.2 Construire et optimiser un MMM</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="translation-notice">
+<p><strong>À propos de la version française</strong><br>
+Cette page est une traduction par IA de la version anglaise de <em>Marketing Science in Python</em>. La version anglaise fait foi et prévaut en cas de divergence. Le code, les notebooks et le texte intégré aux images restent en anglais. <a href="../../part6/sec6.2-mmm-fundamentals.html" class="translation-source-link">Lire la version anglaise</a></p>
+</div>
+<section id="what-is-marketing-mix-modeling" class="level2">
+<h2 class="anchored" data-anchor-id="what-is-marketing-mix-modeling">Qu’est-ce que la modélisation du mix marketing ?</h2>
+<p>La modélisation du mix marketing (MMM) est une approche statistique qui utilise des séries temporelles agrégées (généralement les ventes hebdomadaires et les dépenses médias par canal) pour estimer la contribution de chaque canal marketing aux résultats de l’entreprise. Contrairement à l’attribution au niveau de l’utilisateur, le MMM exploite des données agrégées et ne nécessite aucun suivi individuel, ce qui le rend résilient face à la disparition des cookies, à App Tracking Transparency et aux restrictions des écosystèmes fermés.</p>
+<p>Le MMM remplit trois fonctions :</p>
+<ol type="1">
+<li><strong>Mesurer</strong> : quantifier la contribution de chaque canal et son retour sur dépenses publicitaires (ROAS).</li>
+<li><strong>Simuler</strong> : répondre à des questions hypothétiques, par exemple : que deviennent les ventes si nous réduisons les dépenses TV de 30 % ?</li>
+<li><strong>Optimiser</strong> : répartir un budget fixe entre les canaux pour maximiser le résultat attendu.</li>
+</ol>
+<div id="fig-mmm-purpose" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Le MMM éclaire trois décisions : mesurer l’efficacité passée des médias, simuler les modifications futures des dépenses et optimiser le budget média.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-mmm-purpose-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part6/sec6.2/mmm_purpose.png" class="fig-md img-fluid figure-img" alt="Le MMM éclaire trois décisions : mesurer l’efficacité passée des médias, simuler les modifications futures des dépenses et optimiser le budget média.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-mmm-purpose-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: Les trois fonctions du MMM : mesurer, simuler, optimiser.
+</figcaption>
+</figure>
+</div>
+<p>Le regain d’intérêt pour le MMM ne relève pas simplement de la nostalgie. À mesure que le suivi individuel devient moins fiable, la modélisation agrégée constitue désormais le moyen le plus pratique de mesurer l’efficacité des médias sur l’ensemble des canaux.</p>
+</section>
+<section id="the-mmm-equation" class="level2">
+<h2 class="anchored" data-anchor-id="the-mmm-equation">L’équation du MMM</h2>
+<p>Dans sa forme la plus simple, le MMM est une régression des ventes hebdomadaires sur les dépenses médias, qui tient compte des jours fériés, des promotions et des autres facteurs non médiatiques :</p>
+<p><span class="math display">\[
+y_t = \beta_0 + \sum_{c=1}^{C} \beta_c \cdot x_{c,t} + \sum_{k} \gamma_k \cdot z_{k,t} + \varepsilon_t
+\]</span></p>
+<p>où <span class="math inline">\(y_t\)</span> représente les ventes à l’instant <span class="math inline">\(t\)</span>, <span class="math inline">\(x_{c,t}\)</span> les dépenses du canal <span class="math inline">\(c\)</span>, <span class="math inline">\(z_{k,t}\)</span> les variables de contrôle et <span class="math inline">\(\varepsilon_t\)</span> le bruit.</p>
+<div id="fig-mmm-simple-equation" class="fig-sm quarto-float quarto-figure quarto-figure-center anchored" alt="Un MMM linéaire simple représente les ventes comme la somme des ventes de base, des variables médias pondérées et des variables de contrôle pondérées.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-mmm-simple-equation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part6/sec6.2/simple_equation.png" class="fig-sm img-fluid figure-img" alt="Un MMM linéaire simple représente les ventes comme la somme des ventes de base, des variables médias pondérées et des variables de contrôle pondérées.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-mmm-simple-equation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2: MMM linéaire simple : ventes ~ dépenses médias + contrôles.
+</figcaption>
+</figure>
+</div>
+<p>Cette régression simple ne suffit pas, pour deux raisons. Premièrement, les effets des médias ne sont pas immédiats : une publicité télévisée diffusée cette semaine peut encore influencer les achats au cours des semaines suivantes (rémanence). Deuxièmement, les effets des médias ne sont pas linéaires : le centième GRP (gross rating point, une mesure standard de la pression publicitaire télévisée) d’une semaine apporte moins que le premier (rendements décroissants).</p>
+<p>Un modèle plus réaliste applique des transformations d’adstock (rémanence) et de saturation (rendements décroissants) avant la combinaison linéaire :</p>
+<p><span class="math display">\[
+y_t = \beta_0 + \sum_{c=1}^{C} \beta_c \cdot \text{Saturation}\bigl(\text{Adstock}(x_{c,t})\bigr) + \sum_{k} \gamma_k \cdot z_{k,t} + \varepsilon_t
+\]</span></p>
+<div id="fig-mmm-full-equation" class="fig-sm quarto-float quarto-figure quarto-figure-center anchored" alt="Un MMM complet applique des transformations d’adstock et de saturation aux variables médias, tout en conservant les variables de contrôle et le bruit aléatoire.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-mmm-full-equation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part6/sec6.2/full_equation.png" class="fig-sm img-fluid figure-img" alt="Un MMM complet applique des transformations d’adstock et de saturation aux variables médias, tout en conservant les variables de contrôle et le bruit aléatoire.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-mmm-full-equation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3: MMM complet : transformations d’adstock et de saturation des variables médias.
+</figcaption>
+</figure>
+</div>
+</section>
+<section id="saturation-diminishing-returns" class="level2">
+<h2 class="anchored" data-anchor-id="saturation-diminishing-returns">Saturation (rendements décroissants)</h2>
+<p>Tout canal média finit par saturer : plus vous dépensez sur un canal, moins chaque dollar supplémentaire rapporte. Le premier million de dollars dépensé en TV génère des ventes incrémentales importantes ; le dixième million en génère beaucoup moins. <a href="#fig-saturation-zones" class="quarto-xref">Figure&nbsp;<span>4</span></a> présente les trois régimes qui en résultent : une zone de sous-investissement où chaque dollar reste très productif, une plage optimale et une zone de saturation où les dépenses supplémentaires sont en grande partie gaspillées.</p>
+<div id="fig-saturation-zones" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Une courbe de réponse concave représentant l’effet publicitaire en fonction des dépenses publicitaires, divisée en une zone de sous-investissement, une plage optimale et une zone de saturation (surinvestissement).">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-saturation-zones-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part6/sec6.2/saturation_zones.png" class="fig-md img-fluid figure-img" alt="Une courbe de réponse concave représentant l’effet publicitaire en fonction des dépenses publicitaires, divisée en une zone de sous-investissement, une plage optimale et une zone de saturation (surinvestissement).">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-saturation-zones-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4: Les trois zones de la courbe de saturation.
+</figcaption>
+</figure>
+</div>
+<p>La fonction de Hill est le moyen le plus courant de modéliser ce phénomène :</p>
+<p><span class="math display">\[
+\text{Hill}(x) = \frac{x^S}{x^S + K^S}
+\]</span></p>
+<p>où <span class="math inline">\(K\)</span> (le point de demi-saturation, souvent appelé EC50) est le niveau de dépenses auquel le canal atteint 50 % de son effet maximal, et <span class="math inline">\(S\)</span> (la pente) détermine à quel point la courbe s’infléchit.</p>
+<p>Une remarque pratique sur <span class="math inline">\(K\)</span> lorsque vous définissez sa loi a priori. Meridian applique l’adstock sans le normaliser : un canal dont la demi-vie est de six semaines présente donc une valeur après adstock plusieurs fois supérieure à sa médiane hebdomadaire, et son point de demi-saturation doit se situer sur cette échelle plus élevée. Une loi a priori centrée pour un canal à décroissance rapide exclura la vraie valeur pour un canal à décroissance lente. La démonstration conserve donc sa structure par étape du parcours de conversion pour l’adstock et attribue à la saturation une loi a priori unique, indépendante du canal, suffisamment large pour couvrir toutes les courbes des données, puis laisse la vraisemblance situer chacune d’elles.</p>
+<p>Cette courbure fait tout l’intérêt de la réallocation budgétaire. Dans <a href="#fig-saturation-reallocation" class="quarto-xref">Figure&nbsp;<span>5</span></a>, le canal X se trouve bien à l’intérieur de sa zone de saturation, tandis que le canal Y dispose encore d’une marge de progression. Réduire le budget de X coûte 1 million de dollars de ventes, tandis qu’ajouter ce budget à Y rapporte 3 millions de dollars : un gain net de 2 millions de dollars pour une dépense totale identique. Transférer du budget des canaux saturés vers les canaux sous-investis peut accroître le rendement total, même si le ROAS moyen du canal saturé paraît supérieur. Le ROAS moyen divise le chiffre d’affaires incrémental total d’un canal par ses dépenses totales ; le ROAS marginal correspond à la pente de la courbe au point où se situe actuellement le canal, et c’est ce que rapporte le dollar suivant.</p>
+<div id="fig-saturation-reallocation" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Deux courbes de saturation : réduire le budget du canal saturé X fait perdre 1 million de dollars de ventes, tandis qu’augmenter celui du canal moins saturé Y rapporte 3 millions de dollars, soit une variation nette de +2 millions de dollars.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-saturation-reallocation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part6/sec6.2/saturation_reallocation.png" class="fig-md img-fluid figure-img" alt="Deux courbes de saturation : réduire le budget du canal saturé X fait perdre 1 million de dollars de ventes, tandis qu’augmenter celui du canal moins saturé Y rapporte 3 millions de dollars, soit une variation nette de +2 millions de dollars.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-saturation-reallocation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5: Réallocation du budget d’un canal saturé vers un canal non saturé.
+</figcaption>
+</figure>
+</div>
+</section>
+<section id="adstock-carryover-effects" class="level2">
+<h2 class="anchored" data-anchor-id="adstock-carryover-effects">Adstock (effets de rémanence)</h2>
+<p>La publicité ne cesse pas d’agir dès que sa diffusion s’arrête. L’adstock rend compte de cet effet différé. Sa forme la plus simple est la décroissance géométrique :</p>
+<p><span class="math display">\[
+\text{Adstock}_t = x_t + \lambda \cdot \text{Adstock}_{t-1}
+\]</span></p>
+<p>où <span class="math inline">\(\lambda \in [0, 1]\)</span> est le taux de rétention. Un <span class="math inline">\(\lambda\)</span> plus élevé signifie une rémanence plus longue. <a href="#fig-adstock-tv" class="quarto-xref">Figure&nbsp;<span>6</span></a> et <a href="#fig-adstock-digital" class="quarto-xref">Figure&nbsp;<span>7</span></a> montrent les mêmes trois vagues publicitaires avec deux taux de rétention. À un taux élevé, caractéristique des canaux du haut du parcours de conversion comme la TV, l’effet de chaque vague persiste bien après sa diffusion, et les effets des vagues qui se chevauchent se cumulent. À un taux plus faible, caractéristique des canaux numériques, l’effet s’estompe en quelques jours.</p>
+<div id="fig-adstock-tv" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Diagramme en barres de l’effet publicitaire sur 26 jours pour trois vagues publicitaires TV avec un taux d’adstock de 80 % ; l’effet de chaque vague décroît lentement et se cumule avec celui de la suivante.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-adstock-tv-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part6/sec6.2/adstock_tv.png" class="fig-md img-fluid figure-img" alt="Diagramme en barres de l’effet publicitaire sur 26 jours pour trois vagues publicitaires TV avec un taux d’adstock de 80 % ; l’effet de chaque vague décroît lentement et se cumule avec celui de la suivante.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-adstock-tv-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;6: Adstock avec un taux de rétention élevé (TV).
+</figcaption>
+</figure>
+</div>
+<div id="fig-adstock-digital" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Diagramme en barres de l’effet publicitaire sur 26 jours pour trois vagues publicitaires numériques avec un taux d’adstock de 60 % ; l’effet de chaque vague décroît rapidement.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-adstock-digital-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part6/sec6.2/adstock_digital.png" class="fig-md img-fluid figure-img" alt="Diagramme en barres de l’effet publicitaire sur 26 jours pour trois vagues publicitaires numériques avec un taux d’adstock de 60 % ; l’effet de chaque vague décroît rapidement.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-adstock-digital-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;7: Adstock avec un taux de rétention plus faible (numérique).
+</figcaption>
+</figure>
+</div>
+<p>Le taux de rétention est plus facile à interpréter sous la forme d’une demi-vie, c’est-à-dire le nombre de périodes nécessaires pour que l’effet diminue de moitié, <span class="math inline">\(\ln(0.5) / \ln(\lambda)\)</span>. À une granularité hebdomadaire, les canaux du haut du parcours de conversion comme la TV sont couramment modélisés avec des demi-vies de plusieurs semaines, tandis que les canaux du bas du parcours comme le référencement payant voient leur effet décroître en environ une semaine. La démonstration associée modélise chaque canal avec un adstock géométrique sur une fenêtre de 12 semaines et centre les lois a priori de décroissance selon l’étape du parcours : 6 semaines pour TV/CTV et OOH (<span class="math inline">\(\lambda \approx 0.89\)</span>), 3 semaines pour Meta et TikTok (<span class="math inline">\(\lambda \approx 0.79\)</span>) et 1 semaine pour Google Search (<span class="math inline">\(\lambda = 0.5\)</span>). Considérez ces valeurs comme des a priori de départ que les données doivent faire évoluer, et non comme des faits : les recommandations publiées varient, et les valeurs appropriées dépendent de votre catégorie et de la granularité de vos données. Un taux de rétention « hebdomadaire » appliqué à des données quotidiennes implique une demi-vie très différente.</p>
+<p>Il existe des solutions plus souples. L’adstock de Weibull permet une décroissance non monotone : l’effet peut culminer quelques jours après l’exposition avant de diminuer, ce qui représente mieux des canaux comme l’e-mail ou le courrier publicitaire, pour lesquels il existe un délai de traitement naturel.</p>
+</section>
+<section id="sec-mmm-data-requirements" class="level2">
+<h2 class="anchored" data-anchor-id="sec-mmm-data-requirements">Données requises</h2>
+<p>Le MMM nécessite trois catégories de données d’entrée :</p>
+<ol type="1">
+<li><strong>Variable cible</strong> : chiffre d’affaires ou volume des ventes hebdomadaire au niveau de la marque ou du produit.</li>
+<li><strong>Dépenses médias</strong> : dépenses hebdomadaires par canal (TV, réseaux sociaux, publicité display, recherche, courrier publicitaire, etc.).</li>
+<li><strong>Variables de contrôle</strong> : jours fériés, indicateurs de saisonnalité, promotions, changements de prix, activité des concurrents, facteurs macroéconomiques ou tout facteur non médiatique susceptible d’expliquer les variations des ventes.</li>
+</ol>
+<div id="fig-data-requirements" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Le MMM nécessite un résultat commercial et les dépenses médias par canal, auxquels on ajoute la saisonnalité et d’autres variables de contrôle non médiatiques lorsqu’elles sont disponibles.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-data-requirements-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part6/sec6.2/data_requirements.png" class="fig-md img-fluid figure-img" alt="Le MMM nécessite un résultat commercial et les dépenses médias par canal, auxquels on ajoute la saisonnalité et d’autres variables de contrôle non médiatiques lorsqu’elles sont disponibles.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-data-requirements-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;8: Données d’entrée du MMM : cible, dépenses médias par canal, contrôles.
+</figcaption>
+</figure>
+</div>
+<p>Granularité recommandée :</p>
+<ul>
+<li><strong>Temps</strong> : hebdomadaire. Les données quotidiennes sont plus bruitées ; les données mensuelles comportent trop peu d’observations.</li>
+<li><strong>Historique</strong> : au moins 2 à 3 ans de données (environ 104 à 156 semaines). Avec moins d’historique, il devient difficile de distinguer les effets des médias de la saisonnalité.</li>
+<li><strong>Géographie</strong> : le niveau national ou celui de la marque est courant. Les modèles infranationaux (par zone géographique) peuvent être plus puissants, mais ils nécessitent davantage de données et une modélisation soigneuse.</li>
+<li><strong>Canaux</strong> : n’incluez que les canaux dont les dépenses varient réellement. Si un canal dépense la même somme chaque semaine, le modèle ne peut pas en apprendre l’effet.</li>
+</ul>
+<p>Une vérification s’ajoute à ces exigences et s’oublie facilement. L’adstock et la saturation lissent la contribution d’un canal, si bien que les médias peuvent finir par faire moins varier les ventes d’une semaine à l’autre que ce que les variables de contrôle n’expliquent pas. Dans ce cas, les coefficients médias ne sont pas identifiés, et aucun choix de loi a priori n’y remédie : l’estimateur ne dispose plus de rien pour séparer les médias du niveau de base. Comparez les deux quantités avant l’ajustement. Le notebook associé le fait à l’étape 2b.</p>
+<p>Autre raison pour laquelle les variables de contrôle comptent : les dépenses médias et les ventes partagent généralement, par construction, une tendance et une saisonnalité, et un calendrier commun peut à lui seul créer une forte corrélation entre deux séries qui n’ont rien à voir l’une avec l’autre. Les contrôles de saisonnalité et de tendance empêchent cette structure commune de se retrouver dans les coefficients médias.</p>
+<div id="fig-example-dataset" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Le jeu de données MMM hebdomadaire aligne par date les ventes, cinq séries de dépenses par canal média, la saisonnalité et un indicateur de jours fériés.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-example-dataset-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part6/sec6.2/example_dataset.png" class="fig-lg img-fluid figure-img" alt="Le jeu de données MMM hebdomadaire aligne par date les ventes, cinq séries de dépenses par canal média, la saisonnalité et un indicateur de jours fériés.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-example-dataset-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;9: Exemple de jeu de données MMM : date, ventes, dépenses par canal, contrôles.
+</figcaption>
+</figure>
+</div>
+</section>
+<section id="the-bayesian-angle" class="level2">
+<h2 class="anchored" data-anchor-id="the-bayesian-angle">L’approche bayésienne</h2>
+<p>Avant de parcourir une implémentation, un choix de conception mérite notre attention : le MMM moderne est principalement bayésien. La raison est pratique, et non philosophique.</p>
+<ol type="1">
+<li><strong>Les lois a priori encodent les connaissances métier.</strong> Si votre équipe sait, grâce à des expériences passées, que le ROAS de la TV est d’environ 2,0, vous pouvez encoder cette information dans une loi a priori. Le modèle actualise cette croyance à partir des données. Sans lois a priori, le modèle pourrait produire des estimations invraisemblables simplement à cause de la multicolinéarité. Le revers de cette commodité mérite d’être énoncé une fois : pour un canal que les données ne permettent pas d’identifier, le nombre renvoyé par le modèle est celui que vous avez inscrit dans la loi a priori. La démonstration comporte un tel canal, et la <a href="sec6.3-incrementality-experiments.html">section 6.3</a> passe à la mesure de son effet.</li>
+<li><strong>Des intervalles de crédibilité, plutôt que des estimations ponctuelles.</strong> Au lieu de « ROAS TV = 2,3 », vous obtenez « ROAS TV : médiane 2,3, intervalle de crédibilité à 90 % [1,1 ; 3,8] ». Un intervalle large signifie que vous devez être prudent avant de procéder à d’importants transferts budgétaires fondés sur cette estimation.</li>
+<li><strong>Une intégration naturelle avec les expériences.</strong> Lorsque vous réalisez une expérience de mesure du gain incrémental par zone géographique et estimez l’effet incrémental d’un canal, vous pouvez intégrer ces résultats au MMM sous la forme d’une loi a priori informative. Cela resserre la loi a posteriori et améliore l’identifiabilité, selon une démarche que nous développons en détail à la <a href="sec6.4-mmm-calibration.html">section 6.4</a>.</li>
+</ol>
+<p>C’est pourquoi des outils comme Meridian et PyMC-Marketing reposent sur l’inférence bayésienne.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Astuce</span>Bibliothèques de MMM en 2026
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Plusieurs bibliothèques open source mettent en œuvre les concepts de ce chapitre. Voici les trois plus utilisées :</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Bibliothèque</th>
+<th>Fonctionnalités</th>
+<th>GitHub</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Meridian</strong></td>
+<td>MMM bayésien en Python proposé par Google. Prise en charge poussée des données géographiques et de la calibration à partir d’expériences. Successeur de LightweightMMM, désormais déprécié.</td>
+<td><a href="https://github.com/google/meridian">google/meridian</a></td>
+</tr>
+<tr class="even">
+<td><strong>PyMC-Marketing</strong></td>
+<td>Boîte à outils de modélisation marketing bayésienne en Python. Couvre le MMM, la valeur vie client (CLV) et les modèles de choix des clients. Souple, mais exige davantage de discernement dans la modélisation.</td>
+<td><a href="https://github.com/pymc-labs/pymc-marketing">pymc-labs/pymc-marketing</a></td>
+</tr>
+<tr class="odd">
+<td><strong>Robyn</strong></td>
+<td>Bibliothèque de MMM en R proposée par Meta. Utilise la régression Ridge et Prophet. Adaptée à la création rapide de modèles de référence.</td>
+<td><a href="https://github.com/facebookexperimental/Robyn">facebookexperimental/Robyn</a></td>
+</tr>
+</tbody>
+</table>
+<p>Les concepts fondamentaux (adstock, saturation, estimation bayésienne et optimisation budgétaire) sont les mêmes dans les trois bibliothèques. Ce chapitre utilise Meridian parce qu’il repose sur Python et qu’il est facile à prendre en main : même avec peu de personnalisation, il produit des rapports HTML soignés de deux pages sur les résultats du modèle et l’optimisation budgétaire, que vous pouvez partager avec les parties prenantes. Le parcours ci-dessous fournit des liens vers les deux.</p>
+</div>
+</div>
+</section>
+<section id="a-walkthrough-with-meridian" class="level2">
+<h2 class="anchored" data-anchor-id="a-walkthrough-with-meridian">Un parcours guidé avec Meridian</h2>
+<p><strong>Notebook associé :</strong> <code>sec6.2_6.4_mmm_meridian.ipynb</code> présente un processus complet de MMM avec la bibliothèque Meridian de Google.<br>
+<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part6-media-optimization/sec6.2_6.4_mmm_meridian.ipynb">Consulter sur GitHub</a></p>
+<p><strong>Chargement et préparation des données.</strong> Le jeu de données de démonstration contient 157 semaines de données de ventes avec 5 canaux médias (TV/CTV, OOH, Google Search, Meta, TikTok) et des contrôles pour les jours fériés et la saisonnalité. Meridian utilise un <code>DataFrameInputDataBuilder</code> pour construire ses données d’entrée à partir d’un DataFrame pandas. La mise à l’échelle est gérée en interne ; aucune normalisation manuelle n’est nécessaire. Le détail important est que Meridian applique la saturation à <code>media_cols</code> (volume d’exposition, par exemple les impressions ou les clics), tandis que <code>media_spend_cols</code> sert de base de coût pour le ROAS.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>channels <span class="op">=</span> [<span class="st">"TV/CTV"</span>, <span class="st">"OOH"</span>, <span class="st">"Google Search"</span>, <span class="st">"Meta"</span>, <span class="st">"TikTok"</span>]</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>media_cols <span class="op">=</span> [</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"tv_ctv_impressions"</span>, <span class="st">"ooh_impressions"</span>, <span class="st">"google_clicks"</span>,</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"meta_impressions"</span>, <span class="st">"tiktok_impressions"</span>,</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>media_spend_cols <span class="op">=</span> [</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"tv_ctv_spend"</span>, <span class="st">"ooh_spend"</span>, <span class="st">"google_spend"</span>,</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">"meta_spend"</span>, <span class="st">"tiktok_spend"</span>,</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>control_cols <span class="op">=</span> [</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">"seas_sin52"</span>, <span class="st">"seas_cos52"</span>,</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">"hldy_thanksgiving"</span>, <span class="st">"hldy_christmas"</span>,</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="st">"trend"</span>, <span class="st">"trend_sq"</span>,</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>builder <span class="op">=</span> data_frame_input_data_builder.DataFrameInputDataBuilder(</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    kpi_type<span class="op">=</span><span class="st">'revenue'</span>,</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    default_kpi_column<span class="op">=</span><span class="st">'sales'</span>,</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    default_time_column<span class="op">=</span><span class="st">'time'</span>,</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    default_geo_column<span class="op">=</span><span class="st">'geo'</span>,</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>data <span class="op">=</span> (</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>    builder</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>    .with_kpi(df)</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>    .with_media(df,</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>        media_cols<span class="op">=</span>media_cols,</span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>        media_spend_cols<span class="op">=</span>media_spend_cols,</span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>        media_channels<span class="op">=</span>channels)</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>    .with_controls(df, control_cols<span class="op">=</span>control_cols)</span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>    .build()</span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copier vers le presse-papier" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Entraînement du modèle.</strong> Meridian utilise le No-U-Turn Sampler (NUTS) pour les méthodes MCMC. Nous effectuons d’abord des tirages dans la loi a priori pour vérifier leur plausibilité, puis échantillonnons la loi a posteriori.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>mmm <span class="op">=</span> model.Meridian(input_data<span class="op">=</span>data, model_spec<span class="op">=</span>model_spec)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>mmm.sample_prior(<span class="dv">500</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>mmm.sample_posterior(</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    n_chains<span class="op">=</span><span class="dv">4</span>, n_adapt<span class="op">=</span><span class="dv">500</span>, n_burnin<span class="op">=</span><span class="dv">500</span>, n_keep<span class="op">=</span><span class="dv">1000</span>, seed<span class="op">=</span>SEED</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Production runs typically use n_chains=10, n_keep=2000 (≈ 5× compute).</span></span></code></pre></div><button title="Copier vers le presse-papier" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Diagnostics.</strong> Le <code>ModelReviewer</code> de Meridian exécute des contrôles qualité automatisés (convergence, validation du niveau de base, qualité de l’ajustement et décalage entre les lois a priori et a posteriori) et attribue un statut de réussite, d’examen nécessaire ou d’échec.</p>
+<div id="fig-model-summary" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="La synthèse par canal compare les dépenses, le retour sur investissement moyen, les intervalles d’incertitude et les résultats incrémentaux estimés des différents canaux médias.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-model-summary-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part6/sec6.2/model_summary.png" class="fig-lg img-fluid figure-img" alt="La synthèse par canal compare les dépenses, le retour sur investissement moyen, les intervalles d’incertitude et les résultats incrémentaux estimés des différents canaux médias.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-model-summary-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;10: Synthèse du modèle Meridian par canal.
+</figcaption>
+</figure>
+</div>
+<p><strong>Ajustement du modèle.</strong> En réservant aléatoirement 25 % des semaines pour la validation, la démonstration obtient un R² ≈ 0,97 dans l’échantillon d’entraînement et un R² ≈ 0,97 hors échantillon. Un faible écart entre les deux est attendu ici : des données synthétiques associées à un échantillon de validation aléatoire (en interpolation) constituent un cas presque idéal. Sur des données de production comportant du bruit réel, des périodes de rupture de tendance et une activité promotionnelle irrégulière, un R² hors échantillon compris entre 0,6 et 0,7 est courant et acceptable. Fiez-vous au sens des estimations médias, et pas seulement à la qualité globale de l’ajustement.</p>
+<p>Pourquoi un échantillon de validation aléatoire, alors que la <a href="../part5/sec5.3-sales-forecasting.html#sec-rolling-backtest">section 5.3</a> rejette catégoriquement les découpages aléatoires ? Parce que les deux évaluent des choses différentes. Une prévision doit extrapoler au-delà de sa fenêtre d’entraînement et doit donc être évaluée à partir d’une origine fixe, vers le futur. Un MMM attribue les ventes déjà réalisées aux différents facteurs, au sein d’une période qu’il a observée. Réserver un bloc final pour la validation lui demanderait d’extrapoler la tendance et la saisonnalité au-delà de cette période, ce qui ferait baisser le R² hors échantillon pour des raisons sans rapport avec la mesure des médias. Répartir les semaines de validation sur la période permet de poser la question utile pour ce modèle : la structure ajustée reste-t-elle valable sur des semaines que la vraisemblance n’a jamais vues ? Interprétez ce nombre comme un diagnostic d’interpolation, et non comme la preuve que le modèle peut prédire le trimestre suivant.</p>
+<div id="fig-in-sample-fit" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Les ventes prédites suivent de près la tendance générale des ventes observées pendant l’entraînement, tout en manquant certains pics et creux à court terme.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-in-sample-fit-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part6/sec6.2/in_sample_fit.png" class="fig-lg img-fluid figure-img" alt="Les ventes prédites suivent de près la tendance générale des ventes observées pendant l’entraînement, tout en manquant certains pics et creux à court terme.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-in-sample-fit-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;11: Ajustement dans l’échantillon : ventes prédites et ventes réelles.
+</figcaption>
+</figure>
+</div>
+<div id="fig-out-of-sample-fit" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Sur les semaines réservées à la validation, les ventes prédites suivent le profil général observé, mais lissent plusieurs écarts importants d’une semaine à l’autre.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-out-of-sample-fit-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part6/sec6.2/out_of_sample_fit.png" class="fig-lg img-fluid figure-img" alt="Sur les semaines réservées à la validation, les ventes prédites suivent le profil général observé, mais lissent plusieurs écarts importants d’une semaine à l’autre.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-out-of-sample-fit-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;12: Ajustement hors échantillon : ventes prédites et ventes réelles.
+</figcaption>
+</figure>
+</div>
+<p><strong>Enseignements sur les médias.</strong> Le modèle fournit des estimations du ROAS avec des intervalles de crédibilité pour chaque canal. Des intervalles larges signifient qu’il existe une réelle incertitude : c’est une propriété souhaitable, pas un défaut. Les estimations ponctuelles seules peuvent induire en erreur ; les intervalles de crédibilité indiquent le degré de confiance à accorder aux résultats.</p>
+<div id="fig-roi-estimates" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Estimations du ROAS avec des intervalles de crédibilité à 90 % pour chaque canal média. Des intervalles larges indiquent une forte incertitude sur l’estimation.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-roi-estimates-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part6/sec6.2/roi_estimates.png" class="fig-lg img-fluid figure-img" alt="Estimations du ROAS avec des intervalles de crédibilité à 90 % pour chaque canal média. Des intervalles larges indiquent une forte incertitude sur l’estimation.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-roi-estimates-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;13: Estimations du ROAS avec des intervalles de crédibilité à 90 % par canal.
+</figcaption>
+</figure>
+</div>
+<div id="fig-attribution-over-time" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Les ventes estimées sont décomposées en une importante composante de base et des contributions plus faibles, variables dans le temps, provenant de cinq canaux médias.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-attribution-over-time-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part6/sec6.2/attribution_over_time.png" class="fig-lg img-fluid figure-img" alt="Les ventes estimées sont décomposées en une importante composante de base et des contributions plus faibles, variables dans le temps, provenant de cinq canaux médias.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-attribution-over-time-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;14: Contributions des canaux et niveau de base au fil du temps.
+</figcaption>
+</figure>
+</div>
+<p>Vous n’avez pas à construire ces graphiques un par un. Un seul appel, <code>summarizer.Summarizer(mmm).output_model_results_summary(...)</code>, produit un rapport HTML de deux pages prêt à être partagé avec les parties prenantes, qui couvre l’ajustement du modèle, les contributions des canaux, le ROAS avec ses intervalles de crédibilité et les courbes de réponse. Voici celui produit par le notebook associé : <a href="https://marketing-science-in-python.com/notebooks/part6-media-optimization/summary_output.html">summary_output.html</a>.</p>
+</section>
+<section id="budget-allocation" class="level2">
+<h2 class="anchored" data-anchor-id="budget-allocation">Allocation budgétaire</h2>
+<p>Les trois fonctions du modèle (mesurer, simuler, optimiser) convergent ici. Une fois les courbes de réponse ajustées, l’optimiseur recherche l’allocation qui maximise l’indicateur clé de performance (KPI) prédit sous une contrainte de budget fixe :</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>budget_optimizer <span class="op">=</span> optimizer.BudgetOptimizer(mmm)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>optimization_results <span class="op">=</span> budget_optimizer.optimize()</span></code></pre></div><button title="Copier vers le presse-papier" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Il s’agit de la même logique de saturation que dans <a href="#fig-saturation-reallocation" class="quarto-xref">Figure&nbsp;<span>5</span></a>, appliquée cette fois à l’ensemble du mix média plutôt qu’à deux canaux : l’optimiseur transfère du budget vers les canaux où le dollar suivant reste le plus productif.</p>
+<div id="fig-budget-optimization" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Budget par canal avant et après optimisation ; les dépenses sont réorientées vers les canaux non saturés, tandis que le budget total reste fixe.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-budget-optimization-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part6/sec6.2/budget_optimization.png" class="fig-lg img-fluid figure-img" alt="Budget par canal avant et après optimisation ; les dépenses sont réorientées vers les canaux non saturés, tandis que le budget total reste fixe.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-budget-optimization-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;15: Budget par canal avant et après optimisation.
+</figcaption>
+</figure>
+</div>
+<p>L’optimiseur offre la même commodité de restitution : <code>optimization_results.output_optimization_summary(...)</code> produit un rapport HTML de deux pages sur la réallocation recommandée (<a href="https://marketing-science-in-python.com/notebooks/part6-media-optimization/optimization_output.html">optimization_output.html</a>).</p>
+<p>Dans la démonstration, l’optimiseur réalloue les dépenses entre les cinq canaux modélisés (TV/CTV, OOH, Google Search, Meta et TikTok), en transférant du budget des canaux aux courbes de réponse marginale plus plates vers ceux qui disposent encore d’une plus grande marge de progression. Le budget total reste identique ; seule sa répartition change. Des gains de 5 à 10 % de ventes attribuables aux médias (incrémentales), dus à la seule réallocation, sont courants lorsque les équipes mettent en œuvre le MMM pour la première fois ; cette démonstration affiche environ +4 %, soit à peu près +1,4 % des ventes totales.</p>
+<p>Une autre règle s’intercale entre l’optimiseur et le plan. L’optimiseur déplace le budget en fonction des moyennes a posteriori ; le plan devrait le déplacer en fonction de ce que le modèle sait réellement. Le notebook applique donc un garde-fou à la quantité utilisée par l’optimiseur, le ROAS marginal : un canal dont l’intervalle à 90 % est plus large que 0,8 fois son estimation est maintenu à son niveau de dépenses actuel, quelle que soit l’ampleur du transfert recommandé. Un intervalle large signifie que le modèle n’a pas identifié ce canal, et la réponse consiste à recueillir des preuves, pas à miser davantage. Il s’agit d’une règle de gouvernance illustrative, et non d’un seuil statistique universel. Dans la démonstration, elle autorise 74 % du mouvement recommandé et maintient un canal inchangé.</p>
+<p>Utilisez les résultats de l’optimiseur comme point de départ de la planification, et non comme un plan média définitif. Le modèle ne tient pas compte des contraintes réelles, comme les contrats, les seuils minimaux de dépenses ou les délais opérationnels. Il faut les intégrer séparément. Et dans cette démonstration, il produit une recommandation qu’il ne peut pas défendre :</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Décision à valider</th>
+<th>Valeur</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Canal</td>
+<td>Google Search</td>
+</tr>
+<tr class="even">
+<td>Optimiseur</td>
+<td>−30 % (−38,1 millions de dollars), bloqué à la borne inférieure de la contrainte</td>
+</tr>
+<tr class="odd">
+<td>Garde-fou</td>
+<td>MAINTIEN : intervalle du ROAS marginal [0,31 ; 8,28], demi-largeur relative de 1,41</td>
+</tr>
+<tr class="even">
+<td>Prédiction avant le test</td>
+<td>Une réduction de 30 % fait perdre 2,54 dollars de chiffre d’affaires par dollar retiré sur 8 semaines, avec un intervalle de crédibilité à 90 % [0,28 ; 7,21]</td>
+</tr>
+<tr class="odd">
+<td>Test proposé</td>
+<td>−30 % sur la recherche dans 8 paires de zones géographiques appariées, pendant 8 semaines</td>
+</tr>
+<tr class="even">
+<td>Règle de décision</td>
+<td>Réduire si la borne supérieure de l’intervalle de confiance à 95 % est inférieure à 2,50 (seuil de rentabilité avec une marge de 40 %)</td>
+</tr>
+</tbody>
+</table>
+<p>La prédiction est consignée dès maintenant, avant tout résultat, afin que l’expérience puisse évaluer le modèle aussi bien que le canal. Puisque les courbes de réponse sont construites à partir de données observationnelles, l’étape suivante consiste à valider cette recommandation. La <a href="sec6.3-incrementality-experiments.html">section 6.3</a> conçoit et analyse cette expérience ; la <a href="sec6.4-mmm-calibration.html">section 6.4</a> réintègre son résultat dans le modèle.</p>
+</section>
+<section id="key-takeaways" class="level2">
+<h2 class="anchored" data-anchor-id="key-takeaways">Points clés à retenir</h2>
+<ul>
+<li>Le MMM estime la contribution des canaux à partir de séries temporelles agrégées ; il résiste donc à la disparition des cookies et aux écosystèmes fermés. Il nécessite des données hebdomadaires, deux à trois ans d’historique et de réelles variations de dépenses dans chaque canal.</li>
+<li>L’adstock et la saturation transforment les dépenses en courbe de réponse, et cette courbe explique pourquoi l’allocation doit reposer sur le rendement marginal plutôt que sur le rendement moyen. Un canal au ROAS moyen élevé peut déjà être saturé.</li>
+<li>Pour un canal que les données ne permettent pas d’identifier, le modèle renvoie la loi a priori que vous lui avez donnée. Suspendez les recommandations dont les intervalles sont trop larges pour être défendables, consignez la prédiction du modèle et passez à la mesure.</li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copié");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copié");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/marketing-science-in-python\.com\/fr\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../part6/sec6.1-media-measurement-problem.html" class="pagination-link" aria-label="6.1 Le problème de la mesure des médias">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">6.1 Le problème de la mesure des médias</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../part6/sec6.3-incrementality-experiments.html" class="pagination-link" aria-label="6.3 Expériences d’incrémentalité">
+        <span class="nav-page-text"><span class="chapter-title">6.3 Expériences d’incrémentalité</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

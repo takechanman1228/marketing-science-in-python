@@ -1,0 +1,1534 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="fr" xml:lang="fr"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="Modéliser la CLV avec les modèles BG/NBD et Gamma-Gamma dans PyMC-Marketing : les limites de la formule traditionnelle et les applications concrètes de la CLV.">
+
+<title>La valeur vie client en Python – Marketing Science in Python</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../part5/_part5.html" rel="next">
+<link href="../part4/sec4.1-segmentation.html" rel="prev">
+<link href="../assets/favicon.png" rel="icon" type="image/png">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-491b769ea73b1ce4946cf8743b832a60.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-ec576e9d6a0f00bdcb4dbec60768df31.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-491b769ea73b1ce4946cf8743b832a60.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "Pas de résultats",
+    "search-matching-documents-text": "documents trouvés",
+    "search-copy-link-title": "Copier le lien vers la recherche",
+    "search-hide-matches-text": "Cacher les correspondances additionnelles",
+    "search-more-match-text": "correspondance de plus dans ce document",
+    "search-more-matches-text": "correspondances de plus dans ce document",
+    "search-clear-button-title": "Effacer",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Annuler",
+    "search-submit-button-title": "Envoyer",
+    "search-label": "Recherche"
+  }
+}</script>
+<script async="" src="https://www.googletagmanager.com/gtag/js?id=G-YY0LCGYER5"></script>
+
+<script type="text/javascript">
+
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
+</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../custom.css">
+<meta property="og:title" content="La valeur vie client en Python">
+<meta property="og:description" content="Modéliser la CLV avec les modèles BG/NBD et Gamma-Gamma dans PyMC-Marketing : les limites de la formule traditionnelle et les applications concrètes de la CLV.">
+<meta property="og:image" content="https://marketing-science-in-python.com/images/common/book_cover_online.png">
+<meta property="og:site_name" content="Marketing Science in Python">
+<meta property="og:image:alt" content="Couverture montrant des flux de données abstraits convergeant vers un réseau géométrique">
+<meta name="twitter:title" content="La valeur vie client en Python">
+<meta name="twitter:description" content="Modéliser la CLV avec les modèles BG/NBD et Gamma-Gamma dans PyMC-Marketing : les limites de la formule traditionnelle et les applications concrètes de la CLV.">
+<meta name="twitter:image" content="https://marketing-science-in-python.com/images/common/book_cover_online.png">
+<meta name="twitter:image:alt" content="Couverture montrant des flux de données abstraits convergeant vers un réseau géométrique">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://marketing-science-in-python.com/fr/part4/sec4.2-clv-modeling.html">
+<!-- msbook-i18n-head:start -->
+<link rel="alternate" hreflang="en" href="https://marketing-science-in-python.com/part4/sec4.2-clv-modeling.html">
+<link rel="alternate" hreflang="ja" href="https://marketing-science-in-python.com/ja/part4/sec4.2-clv-modeling.html">
+<link rel="alternate" hreflang="fr" href="https://marketing-science-in-python.com/fr/part4/sec4.2-clv-modeling.html">
+<link rel="alternate" hreflang="x-default" href="https://marketing-science-in-python.com/part4/sec4.2-clv-modeling.html">
+<!-- msbook-i18n-head:end -->
+</head>
+
+<body class="nav-sidebar floating quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Basculer la barre latérale" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part4/_part4.html">Partie 4. Analyse client</a></li><li class="breadcrumb-item"><a href="../part4/sec4.2-clv-modeling.html"><span class="chapter-title">4.2 Modélisation de la valeur vie client</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Basculer la barre latérale" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <!-- msbook-language-switch-mobile:start -->
+<div class="msbook-language-switch-mobile" aria-label="Language"><a lang="en" hreflang="en" href="../../part4/sec4.2-clv-modeling.html" onclick="this.hash=window.location.hash">EN</a><span aria-hidden="true"> | </span><a lang="ja" hreflang="ja" href="../../ja/part4/sec4.2-clv-modeling.html" onclick="this.hash=window.location.hash">日本語</a><span aria-hidden="true"> | </span><span lang="fr" aria-current="page">FR</span></div>
+<!-- msbook-language-switch-mobile:end -->
+<button type="button" class="btn quarto-search-button" aria-label="Recherche" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">Marketing Science in Python</a> 
+        <div class="sidebar-tools-main tools-wide">
+    <a href="https://github.com/takechanman1228/marketing-science-in-python" title="Code source" class="quarto-navigation-tool px-1" aria-label="Code source"><i class="bi bi-github"></i></a>
+    <div class="dropdown">
+      <a href="" title="Share" id="quarto-navigation-tool-dropdown-0" class="quarto-navigation-tool dropdown-toggle px-1" data-bs-toggle="dropdown" aria-expanded="false" role="link" aria-label="Share"><i class="bi bi-share"></i></a>
+      <ul class="dropdown-menu" aria-labelledby="quarto-navigation-tool-dropdown-0">
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://twitter.com/intent/tweet?url=|url|">
+              <i class="bi bi-twitter pe-1"></i>
+            Twitter
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://www.linkedin.com/sharing/share-offsite/?url=|url|">
+              <i class="bi bi-linkedin pe-1"></i>
+            LinkedIn
+            </a>
+          </li>
+      </ul>
+    </div>
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Basculer le mode sombre"><i class="bi"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Recherche"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Préface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part1/_part1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Partie 1. Introduction</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Basculer la section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1/sec1.1-what-is-marketing-science.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">1.1 Qu’est-ce que la science du marketing ?</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1/sec1.2-data-landscape.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">1.2 Comprendre les données marketing</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part2/_part2.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Partie 2. Analyser pour mieux décider</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Basculer la section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.1-right-question.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.1 Formuler la bonne question</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.2-kpi-design.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.2 Concevoir des KPI pour le diagnostic</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.3-storytelling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.3 Transformer les données en récit</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part3/_part3.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Partie 3. L’inférence causale pour le marketing</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Basculer la section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.1-thinking-causally.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.1 Raisonner en termes de causalité</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.2-ab-testing.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.2 Concevoir un test A/B</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.3-quasi-experiments.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.3 Quasi-expériences</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.4-causal-impact.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.4 Impact causal avec les séries temporelles</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.5-meta-learners.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.5 Méta-apprenants pour les effets de traitement</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.6-uplift-modeling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.6 Modélisation de l’uplift pour le ciblage</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part4/_part4.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Partie 4. Analyse client</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Basculer la section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part4/sec4.1-segmentation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">4.1 Segmentation client</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part4/sec4.2-clv-modeling.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">4.2 Modélisation de la valeur vie client</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part5/_part5.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Partie 5. Analyse commerciale</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Basculer la section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.1-price-elasticity.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.1 Élasticité-prix et décisions tarifaires</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.2-assortment-optimization.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.2 Optimisation de l’assortiment de produits</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.3-sales-forecasting.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.3 Prévision des ventes et planification par scénarios</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part6/_part6.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Partie 6. Investissement média et optimisation</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Basculer la section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.1-media-measurement-problem.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.1 Le problème de la mesure des médias</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.2-mmm-fundamentals.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.2 Construire et optimiser un MMM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.3-incrementality-experiments.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.3 Expériences d’incrémentalité</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.4-mmm-calibration.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.4 Calibrer le MMM à l’aide d’expériences</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.5-when-tools-disagree.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.5 Décider lorsque les outils de mesure divergent</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendix/further-reading.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Références et lectures complémentaires</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendix/notebooks.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Notebooks et code</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../marketing-analytics-in-python.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">L’analyse marketing avec Python</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+<!-- msbook-language-switch:start -->
+<div class="msbook-language-switch" aria-label="Language"><a lang="en" hreflang="en" href="../../part4/sec4.2-clv-modeling.html" onclick="this.hash=window.location.hash">English</a><span aria-hidden="true"> | </span><a lang="ja" hreflang="ja" href="../../ja/part4/sec4.2-clv-modeling.html" onclick="this.hash=window.location.hash">日本語</a><span aria-hidden="true"> | </span><span lang="fr" aria-current="page">Français</span></div>
+<!-- msbook-language-switch:end -->
+
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table des matières</h2>
+   
+  <ul>
+  <li><a href="#why-clv-changes-the-decision" id="toc-why-clv-changes-the-decision" class="nav-link active" data-scroll-target="#why-clv-changes-the-decision">Pourquoi la CLV change la décision</a></li>
+  <li><a href="#sec-limitations" id="toc-sec-limitations" class="nav-link" data-scroll-target="#sec-limitations">Pourquoi la formule traditionnelle ne suffit pas</a></li>
+  <li><a href="#sec-btyd" id="toc-sec-btyd" class="nav-link" data-scroll-target="#sec-btyd">BTYD : le cadre BG/NBD + Gamma-Gamma</a>
+  <ul class="collapse">
+  <li><a href="#bgnbd-model" id="toc-bgnbd-model" class="nav-link" data-scroll-target="#bgnbd-model">Modèle BG/NBD</a></li>
+  <li><a href="#gamma-gamma-model" id="toc-gamma-gamma-model" class="nav-link" data-scroll-target="#gamma-gamma-model">Modèle Gamma-Gamma</a></li>
+  </ul></li>
+  <li><a href="#sec-implementation" id="toc-sec-implementation" class="nav-link" data-scroll-target="#sec-implementation">Implémentation avec PyMC-Marketing</a>
+  <ul class="collapse">
+  <li><a href="#data-and-rfm-t-summary" id="toc-data-and-rfm-t-summary" class="nav-link" data-scroll-target="#data-and-rfm-t-summary">Données et synthèse RFM-T</a></li>
+  <li><a href="#fitting-and-estimating-clv" id="toc-fitting-and-estimating-clv" class="nav-link" data-scroll-target="#fitting-and-estimating-clv">Ajustement et estimation de la CLV</a></li>
+  <li><a href="#probability-alive-matrix" id="toc-probability-alive-matrix" class="nav-link" data-scroll-target="#probability-alive-matrix">Matrice de probabilité d’être actif</a></li>
+  <li><a href="#revenue-clv-profit-clv" id="toc-revenue-clv-profit-clv" class="nav-link" data-scroll-target="#revenue-clv-profit-clv">CLV en chiffre d’affaires → CLV en bénéfice</a></li>
+  <li><a href="#combining-segments-and-clv" id="toc-combining-segments-and-clv" class="nav-link" data-scroll-target="#combining-segments-and-clv">Combiner segments et CLV</a></li>
+  </ul></li>
+  <li><a href="#sec-using-clv" id="toc-sec-using-clv" class="nav-link" data-scroll-target="#sec-using-clv">Mettre la CLV en pratique</a></li>
+  <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways">Points clés à retenir</a></li>
+  </ul>
+<div class="quarto-code-links"><h2>Liens de code</h2><ul><li><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.2_clv_pymc_marketing.ipynb"><i class="bi bi-github"></i>sec4.2_clv_pymc_marketing.ipynb</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part4/_part4.html">Partie 4. Analyse client</a></li><li class="breadcrumb-item"><a href="../part4/sec4.2-clv-modeling.html"><span class="chapter-title">4.2 Modélisation de la valeur vie client</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span id="sec-clv-modeling" class="quarto-section-identifier"><span class="chapter-title">4.2 Modélisation de la valeur vie client</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="translation-notice">
+<p><strong>À propos de la version française</strong><br>
+Cette page est une traduction par IA de la version anglaise de <em>Marketing Science in Python</em>. La version anglaise fait foi et prévaut en cas de divergence. Le code, les notebooks et le texte intégré aux images restent en anglais. <a href="../../part4/sec4.2-clv-modeling.html" class="translation-source-link">Lire la version anglaise</a></p>
+</div>
+<p>La plupart des équipes marketing se concentrent sur le coût par acquisition (CPA), souvent employé indifféremment avec le CAC (coût d’acquisition client) : un CPA plus faible signifie une meilleure campagne. La valeur vie client (CLV), souvent appelée LTV dans les contextes de l’analytique et du SaaS, reformule la question. Au lieu de demander à quel coût minimal vous pouvez acquérir un client, elle demande combien chaque client rapporte au fil du temps, puis utilise cette réponse pour fixer le plafond de CPA.</p>
+<p>Ce chapitre montre comment prédire la CLV à l’échelle individuelle à l’aide de modèles probabilistes BTYD (BG/NBD + Gamma-Gamma avec PyMC-Marketing), et comment transformer ces prédictions en décisions budgétaires.</p>
+<section id="why-clv-changes-the-decision" class="level2">
+<h2 class="anchored" data-anchor-id="why-clv-changes-the-decision">Pourquoi la CLV change la décision</h2>
+<p>Prenons une marque de mode en ligne qui acquiert des clients grâce à des publicités et à des bons de réduction. Supposons que deux segments dominent le parcours de conversion : les étudiants et les actifs. Voici ce que donne le premier achat :</p>
+<ul>
+<li>Étudiant : coût d’acquisition de $10, achat de $100 → ROAS de 10×.</li>
+<li>Actif : coût d’acquisition de $20, achat de $100 → ROAS de 5×.</li>
+</ul>
+<div id="fig-first-purchase" class="fig-sm quarto-float quarto-figure quarto-figure-center anchored" alt="L’étudiant coûte moins cher à acquérir que l’actif et génère la même valeur au premier achat ; le ROAS de la première commande favorise donc l’étudiant.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-first-purchase-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.2/first_purchase.png" class="fig-sm img-fluid figure-img" alt="L’étudiant coûte moins cher à acquérir que l’actif et génère la même valeur au premier achat ; le ROAS de la première commande favorise donc l’étudiant.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-first-purchase-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: Comparaison du premier achat : étudiants et actifs.
+</figcaption>
+</figure>
+</div>
+<p>À en juger par le ROAS du premier jour, le choix paraît évident : consacrer davantage de budget aux étudiants. Mais la perspective à long terme inverse la conclusion. Les étudiants cessent d’acheter après la première transaction, si bien que leurs dépenses sur l’ensemble de la relation client restent proches de $100. Les actifs reviennent et dépensent davantage au fil du temps, avec des dépenses moyennes de $400 sur l’ensemble de la relation. Soudain, le segment « cher » est en réalité la bonne affaire.</p>
+<div id="fig-long-term-comparison" class="fig-sm quarto-float quarto-figure quarto-figure-center anchored" alt="Après les achats répétés, l’actif génère un retour sur dépenses publicitaires deux fois plus élevé, tandis que le client étudiant cesse d’acheter.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-long-term-comparison-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.2/long_term_comparison.png" class="fig-sm img-fluid figure-img" alt="Après les achats répétés, l’actif génère un retour sur dépenses publicitaires deux fois plus élevé, tandis que le client étudiant cesse d’acheter.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-long-term-comparison-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2: Rentabilité une fois les achats répétés pris en compte.
+</figcaption>
+</figure>
+</div>
+<p>C’est cette lacune que comble la modélisation de la CLV. Sans elle, tous les clients se voient attribuer le même plafond de CPA, ce qui revient à payer trop cher pour les clients à faible valeur et trop peu pour ceux à forte valeur. Avec elle, le plafond s’ajuste à la valeur prédite, de sorte qu’un même budget permet d’acquérir davantage de clients pertinents.</p>
+<div id="fig-cpa-adjustment" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Sans CLV, un CPA fixe conduit à surinvestir dans les clients à faible valeur ; avec la CLV, le CPA s’ajuste à la valeur vie de chaque client.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-cpa-adjustment-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.2/cpa_adjustment.png" class="fig-md img-fluid figure-img" alt="Sans CLV, un CPA fixe conduit à surinvestir dans les clients à faible valeur ; avec la CLV, le CPA s’ajuste à la valeur vie de chaque client.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-cpa-adjustment-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3: CPA fixe (à gauche) et CPA ajusté à la CLV (à droite).
+</figcaption>
+</figure>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>La CLV tout au long du cycle de vie client
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>La CLV est utile à chaque étape : à l’acquisition pour dépenser davantage sur les segments à forte valeur, à la croissance pour accorder la priorité aux clients à forte valeur en matière de service et d’offres exclusives, et à la fidélisation pour concentrer les campagnes de rétention là où les calculs les justifient réellement.</p>
+</div>
+</div>
+<p>Les trois objectifs d’un modèle de CLV en découlent directement : (1) prédire la valeur future à l’échelle individuelle, (2) identifier ce qui distingue les clients à CLV élevée et (3) intégrer ces deux éléments aux décisions budgétaires marketing.</p>
+</section>
+<section id="sec-limitations" class="level2">
+<h2 class="anchored" data-anchor-id="sec-limitations">Pourquoi la formule traditionnelle ne suffit pas</h2>
+<p>La formule classique de la CLV comporte trois composantes :</p>
+<p><span class="math display">\[
+\text{CLV} = \text{Average Order Value} \times \text{Purchase Frequency} \times \text{Customer Lifespan}
+\]</span></p>
+<p>Pour une marque de mode dont les clients dépensent $100 par commande, achètent 4 fois par an et restent fidèles pendant 3 ans : <span class="math inline">\(\text{CLV} = 100 \times 4 \times 3 = \$1{,}200\)</span>. Simple, intuitive et utile pour estimer les ordres de grandeur de l’activité, mais trop grossière pour prendre des décisions à l’échelle du client. Elle échoue sur trois points.</p>
+<div id="fig-limitations" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Les trois limites de la formule traditionnelle de la CLV : l’hétérogénéité des clients, les différences de date du premier achat et l’ambiguïté entre client « mort ou vivant ».">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-limitations-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.2/limitations.png" class="fig-md img-fluid figure-img" alt="Les trois limites de la formule traditionnelle de la CLV : l’hétérogénéité des clients, les différences de date du premier achat et l’ambiguïté entre client « mort ou vivant ».">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-limitations-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4: Trois limites de la formule traditionnelle de la CLV.
+</figcaption>
+</figure>
+</div>
+<p>Limite 1 : tous les clients ne se ressemblent pas. Une moyenne sur l’ensemble de la clientèle représente mal les deux extrémités de la distribution :</p>
+<div id="tbl-heterogeneity" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-heterogeneity-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;1: La CLV moyenne de $1,090 représente mal les deux groupes.
+</figcaption>
+<div aria-describedby="tbl-heterogeneity-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Groupe de clients</th>
+<th style="text-align: center;">Nombre de clients</th>
+<th style="text-align: center;">CLV moyenne</th>
+<th style="text-align: center;">Ventes totales</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Clients ordinaires</td>
+<td style="text-align: center;">90</td>
+<td style="text-align: center;">$100</td>
+<td style="text-align: center;">$9,000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Gros acheteurs</td>
+<td style="text-align: center;">10</td>
+<td style="text-align: center;">$10,000</td>
+<td style="text-align: center;">$100,000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Total</strong></td>
+<td style="text-align: center;"><strong>100</strong></td>
+<td style="text-align: center;"><strong>$1,090</strong></td>
+<td style="text-align: center;"><strong>$109,000</strong></td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<p>La moyenne de $1,090 existe dans les données et ne décrit personne. Il vous faut une CLV à l’échelle individuelle.</p>
+<p>Limite 2 : des dates de premier achat différentes. Un client qui a commencé à acheter il y a un an dispose d’une année complète de données observables ; celui qui a commencé il y a trois mois en a beaucoup moins. Les décomptes bruts de fréquence confondent « faible engagement » et « arrivée récente » si l’on ne tient pas compte de l’ancienneté.</p>
+<div id="fig-tenure" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Les clients qui commencent à acheter à des dates différentes ont des fenêtres d’observation différentes, ce qui rend trompeurs les décomptes bruts de fréquence.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-tenure-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.2/tenure.png" class="fig-md img-fluid figure-img" alt="Les clients qui commencent à acheter à des dates différentes ont des fenêtres d’observation différentes, ce qui rend trompeurs les décomptes bruts de fréquence.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-tenure-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5: Biais d’ancienneté dans les fenêtres d’observation des clients.
+</figcaption>
+</figure>
+</div>
+<p>Limite 3 : mort ou vivant ? Dans les abonnements, l’attrition est observable : le client résilie. Dans le commerce de détail et le commerce en ligne, elle ne l’est pas. Le fait de considérer un client comme « vivant » dépend de ses habitudes propres. Une personne qui achète chaque mois et ne donne plus signe de vie pendant trois mois constitue un signal d’alerte ; une absence de trois mois chez quelqu’un qui achète tous les six mois est normale.</p>
+<div id="fig-dead-or-alive" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Un même délai depuis le dernier achat d’un client peut indiquer une inactivité temporaire ou un départ définitif, lequel n’est pas directement observé.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-dead-or-alive-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.2/dead_or_alive.png" class="fig-md img-fluid figure-img" alt="Un même délai depuis le dernier achat d’un client peut indiquer une inactivité temporaire ou un départ définitif, lequel n’est pas directement observé.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-dead-or-alive-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;6: Ambiguïté entre client mort ou vivant dans les habitudes d’achat.
+</figcaption>
+</figure>
+</div>
+<p>Ces trois problèmes ont la même origine : une moyenne unique ne peut pas représenter une clientèle hétérogène. La solution consiste à modéliser la CLV à l’échelle individuelle, ce que fait précisément BTYD.</p>
+</section>
+<section id="sec-btyd" class="level2">
+<h2 class="anchored" data-anchor-id="sec-btyd">BTYD : le cadre BG/NBD + Gamma-Gamma</h2>
+<p>La modélisation « acheter jusqu’à disparaître », ou Buy-Till-You-Die (BTYD), assemble deux modèles probabilistes :</p>
+<ol type="1">
+<li>BG/NBD prédit la probabilité qu’un client soit encore actif et son nombre de transactions futures.</li>
+<li>Gamma-Gamma estime le montant moyen de ses commandes.</li>
+</ol>
+<p>Multipliez les deux, appliquez une actualisation dans le temps, et vous obtenez une CLV individuelle accompagnée d’un intervalle de crédibilité autour de chaque estimation.</p>
+<div id="fig-btyd-overview" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Cadre BTYD : BG/NBD prédit la probabilité d’être actif et les transactions futures, Gamma-Gamma prédit le montant des commandes ; ensemble, ils donnent la CLV.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-btyd-overview-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.2/btyd_overview.png" class="fig-md img-fluid figure-img" alt="Cadre BTYD : BG/NBD prédit la probabilité d’être actif et les transactions futures, Gamma-Gamma prédit le montant des commandes ; ensemble, ils donnent la CLV.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-btyd-overview-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;7: Le cadre BTYD : BG/NBD et Gamma-Gamma.
+</figcaption>
+</figure>
+</div>
+<section id="bgnbd-model" class="level3">
+<h3 class="anchored" data-anchor-id="bgnbd-model">Modèle BG/NBD</h3>
+<p>Le modèle BG/NBD suppose deux processus latents dans le cycle de vie d’un client :</p>
+<ul>
+<li>Processus d’achat. Tant que le client est vivant, les achats suivent un processus de Poisson de taux <span class="math inline">\(\lambda\)</span>.</li>
+<li>Processus de départ. Après chaque achat, le client a une probabilité <span class="math inline">\(p\)</span> de devenir définitivement inactif.</li>
+</ul>
+<div id="fig-bgnbd-assumptions" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="BG/NBD modélise les achats observés comme un processus de transaction qui se poursuit jusqu’à ce qu’un processus de départ non observé rende le client inactif.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-bgnbd-assumptions-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.2/bgnbd_assumptions.png" class="fig-md img-fluid figure-img" alt="BG/NBD modélise les achats observés comme un processus de transaction qui se poursuit jusqu’à ce qu’un processus de départ non observé rende le client inactif.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-bgnbd-assumptions-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;8: BG/NBD : un processus d’achat avec départ définitif.
+</figcaption>
+</figure>
+</div>
+<p>Les paramètres <span class="math inline">\(\lambda\)</span> et <span class="math inline">\(p\)</span> varient tous deux d’un client à l’autre. Une structure bayésienne hiérarchique prend cette variation en compte : les valeurs de <span class="math inline">\(\lambda\)</span> suivent une loi Gamma dans la clientèle, celles de <span class="math inline">\(p\)</span> suivent une loi Bêta. Le modèle apprend les régularités à l’échelle de la population tout en produisant des estimations individuelles.</p>
+<p>Une conséquence utile : la probabilité qu’un client soit vivant évolue au fil du temps. Elle diminue à mesure que le délai depuis le dernier achat s’allonge, puis remonte brusquement dès qu’un nouvel achat survient.</p>
+<div id="fig-prob-alive-time" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="La probabilité qu’un client soit actif diminue à mesure que le temps passe sans achat, puis augmente fortement lorsqu’un nouvel achat survient.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-prob-alive-time-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.2/prob_alive_time.png" class="fig-md img-fluid figure-img" alt="La probabilité qu’un client soit actif diminue à mesure que le temps passe sans achat, puis augmente fortement lorsqu’un nouvel achat survient.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-prob-alive-time-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;9: La probabilité d’être actif diminue entre les achats, puis remonte.
+</figcaption>
+</figure>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Astuce</span>Pour approfondir (BG/NBD)
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Pour une dérivation complète comprenant le modèle graphique et la fonction de vraisemblance, voir <span class="citation" data-cites="fader2005counting">Fader et al. (<a href="../appendix/further-reading.html#ref-fader2005counting" role="doc-biblioref">2005</a>)</span>.</p>
+</div>
+</div>
+</section>
+<section id="gamma-gamma-model" class="level3">
+<h3 class="anchored" data-anchor-id="gamma-gamma-model">Modèle Gamma-Gamma</h3>
+<p>Le modèle Gamma-Gamma estime le montant moyen des commandes. Il utilise une hiérarchie bayésienne à deux niveaux : une loi Gamma par client (ses habitudes de dépenses propres) et une autre loi Gamma sur l’ensemble de la clientèle (la variation entre clients).</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Astuce</span>Pour approfondir (Gamma-Gamma)
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Pour une dérivation complète, voir <span class="citation" data-cites="fader2013gammagamma">Fader et Hardie (<a href="../appendix/further-reading.html#ref-fader2013gammagamma" role="doc-biblioref">2013</a>)</span>.</p>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Astuce</span>Quand BTYD n’est pas l’outil adapté
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>BTYD suppose un contexte non contractuel : l’attrition n’est jamais observée, le modèle la déduit donc des intervalles entre les achats. Dans les contextes contractuels comme le SaaS et les abonnements, l’attrition correspond à un événement explicite de résiliation, et le modèle Bêta-Géométrique décalé (sBG) exploite directement ce signal ; PyMC-Marketing le propose sous le nom <code>ShiftedBetaGeoModel</code> (voir le <a href="https://www.pymc-marketing.io/en/latest/notebooks/clv/sbg.html">notebook sBG</a>). Pour expliquer les facteurs d’attrition avec des covariables dépendantes du temps, utilisez l’analyse de survie (modèle à risques proportionnels de Cox). Enfin, si vous disposez de variables comportementales riches et d’une chaîne d’apprentissage automatique en production, une régression par apprentissage automatique (par exemple LightGBM) sur une cible à horizon fixe peut surpasser BTYD en précision ; avant de changer d’approche, mettez ce gain en balance avec le volume de données nécessaire, l’effort de réentraînement et de déploiement, la maintenance de la chaîne de préparation des variables, l’explicabilité et la quantification de l’incertitude fournie. Une approche hybride pratique consiste à utiliser les sorties de BTYD (probabilité d’être actif, nombre attendu d’achats) comme variables d’entrée du modèle d’apprentissage automatique ; les scripts complémentaires dans <a href="https://github.com/takechanman1228/marketing-science-in-python/tree/main/notebooks/part4-customer-analytics/lightgbm-companion/"><code>lightgbm-companion/</code></a> présentent une implémentation LightGBM de bout en bout.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="sec-implementation" class="level2">
+<h2 class="anchored" data-anchor-id="sec-implementation">Implémentation avec PyMC-Marketing</h2>
+<p><a href="https://github.com/pymc-labs/pymc-marketing">PyMC-Marketing</a> repose sur <a href="https://www.pymc.io/">PyMC</a> et remplace la bibliothèque <code>lifetimes</code> (désormais en mode maintenance). Sa fonctionnalité phare est la quantification intégrée de l’incertitude : chaque estimation de CLV s’accompagne des bornes d’un intervalle de plus haute densité (HDI), ce qui permet de voir le degré de confiance du modèle pour chaque client.</p>
+<p>Le modèle de CLV n’a besoin que des transactions de vente : identifiant client, date de transaction, montant de transaction. Deux à trois ans d’historique suffisent généralement.</p>
+<div id="fig-required-data" class="fig-sm quarto-float quarto-figure quarto-figure-center anchored" alt="La modélisation de la CLV part d’enregistrements au niveau des transactions contenant un identifiant client, une date de transaction et un montant de transaction.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-required-data-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.2/required_data.png" class="fig-sm img-fluid figure-img" alt="La modélisation de la CLV part d’enregistrements au niveau des transactions contenant un identifiant client, une date de transaction et un montant de transaction.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-required-data-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;10: Données d’entrée nécessaires à la modélisation de la CLV.
+</figcaption>
+</figure>
+</div>
+<section id="data-and-rfm-t-summary" class="level3">
+<h3 class="anchored" data-anchor-id="data-and-rfm-t-summary">Données et synthèse RFM-T</h3>
+<p>Nous utilisons le jeu de données de distribution alimentaire <a href="https://www.kaggle.com/datasets/frtgnn/dunnhumby-the-complete-journey">Dunnhumby “The Complete Journey”</a>, également utilisé dans le notebook de segmentation traditionnelle (<code>sec4.1_traditional_segmentation.ipynb</code>). Cela permet de reprendre les mêmes quelque 2 500 ménages de la chaîne de segmentation traditionnelle pour la CLV ; après le nettoyage habituel (suppression des transactions de montant négatif et des lignes de quantité nulle) et la construction des indicateurs RFM-T, le notebook complémentaire ajuste BG/NBD sur l’ensemble des 2 500 ménages, tandis que le modèle de dépenses Gamma-Gamma utilise les 2 497 ménages ayant effectué au moins un achat répété.</p>
+<div id="tbl-rfmt" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-rfmt-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;2: Indicateurs RFM-T utilisés dans le modèle BTYD.
+</figcaption>
+<div aria-describedby="tbl-rfmt-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: center;">Indicateur</th>
+<th style="text-align: left;">Définition</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;">Récence</td>
+<td style="text-align: left;">Durée entre le premier achat d’un client et son achat le plus récent</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">Fréquence</td>
+<td style="text-align: left;">Nombre d’achats répétés (nombre total d’achats moins un)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">Montant</td>
+<td style="text-align: left;">Montant moyen des achats répétés d’un client (le premier achat est exclu)</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">Ancienneté</td>
+<td style="text-align: left;">Durée entre le premier achat d’un client et la fin de la période d’étude</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>La récence ici n’est pas la récence RFM
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Dans la <a href="sec4.1-segmentation.html">section 4.1</a>, la récence désignait le nombre de jours depuis le dernier achat. Dans la convention BTYD, suivie par <code>rfm_summary</code> de PyMC-Marketing, il s’agit de la durée entre le premier achat d’un client et son achat le plus récent ; une valeur <em>plus élevée</em> signifie donc une activité plus récente.</p>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> datetime <span class="im">import</span> datetime, timedelta</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pymc_marketing <span class="im">import</span> clv</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Load Dunnhumby transactions and convert DAY counter to datetime</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co"># (see companion notebook for the full pipeline)</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>BASE_DATE <span class="op">=</span> datetime(<span class="dv">2012</span>, <span class="dv">1</span>, <span class="dv">1</span>)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>data[<span class="st">"date"</span>] <span class="op">=</span> data[<span class="st">"DAY"</span>].<span class="bu">apply</span>(<span class="kw">lambda</span> d: BASE_DATE <span class="op">+</span> timedelta(days<span class="op">=</span><span class="bu">int</span>(d) <span class="op">-</span> <span class="dv">1</span>))</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>data_summary <span class="op">=</span> clv.utils.rfm_summary(</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    data, <span class="st">"CustomerID"</span>, <span class="st">"date"</span>, <span class="st">"TotalSales"</span>, time_unit<span class="op">=</span><span class="st">"D"</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>data_summary.index <span class="op">=</span> data_summary[<span class="st">"customer_id"</span>]</span></code></pre></div><button title="Copier vers le presse-papier" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Notebook complémentaire :</strong> <code>sec4.2_clv_pymc_marketing.ipynb</code> ajuste les modèles BG/NBD et Gamma-Gamma, estime la CLV et analyse les segments démographiques sur le jeu de données Dunnhumby.<br>
+<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.2_clv_pymc_marketing.ipynb">Voir sur GitHub</a></p>
+</section>
+<section id="fitting-and-estimating-clv" class="level3">
+<h3 class="anchored" data-anchor-id="fitting-and-estimating-clv">Ajustement et estimation de la CLV</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># --- BG/NBD: purchase frequency + P(alive) ---</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>bgm <span class="op">=</span> clv.BetaGeoModel()</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>bgm.fit(data<span class="op">=</span>data_summary)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co"># --- Gamma-Gamma: average order value ---</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>nonzero <span class="op">=</span> data_summary.query(<span class="st">"frequency &gt; 0 and monetary_value &gt; 0"</span>)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>gg_data <span class="op">=</span> nonzero[[<span class="st">"customer_id"</span>, <span class="st">"frequency"</span>, <span class="st">"monetary_value"</span>]]</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>gg <span class="op">=</span> clv.GammaGammaModel()</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>gg.fit(data<span class="op">=</span>gg_data)</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co"># --- Combined CLV estimate (DCF with 1% monthly discount) ---</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>clv_estimate <span class="op">=</span> gg.expected_customer_lifetime_value(</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    transaction_model<span class="op">=</span>bgm,</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    data<span class="op">=</span>data_summary[[</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>        <span class="st">"customer_id"</span>, <span class="st">"frequency"</span>, <span class="st">"recency"</span>, <span class="st">"T"</span>, <span class="st">"monetary_value"</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    ]],</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    future_t<span class="op">=</span><span class="dv">120</span>,       <span class="co"># 120 months = 10 years</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    discount_rate<span class="op">=</span><span class="fl">0.01</span>,</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    time_unit<span class="op">=</span><span class="st">"D"</span>,</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copier vers le presse-papier" class="code-copy-button"><i class="bi"></i></button></div>
+<p>La sortie comprend non seulement des estimations ponctuelles, mais aussi les bornes d’un HDI (intervalle de plus haute densité). Dans cette API, <code>future_t</code> se mesure en mois, tandis que <code>time_unit="D"</code> indique au modèle que les données RFM-T en entrée sont mesurées en jours. Le modèle indique son degré de confiance pour chaque client, mais uniquement en ce qui concerne le calendrier des achats : la distribution a posteriori des dépenses est résumée par sa moyenne avant l’actualisation ; considérez donc ces bornes comme une limite inférieure de l’incertitude réelle.</p>
+<p>L’horizon relève d’une décision, pas d’une valeur par défaut. Ce jeu de données couvre environ 23 mois ; une projection à 120 mois s’étend donc sur une durée d’environ cinq fois la fenêtre observée. L’estimation ne s’emballe pas, car BG/NBD intègre le départ des clients dans la projection, mais ce taux de départ est lui-même estimé à partir de ces 23 mois. Le notebook complémentaire applique à nouveau l’actualisation à la même distribution a posteriori sur des horizons de 3, 5 et 10 ans. Sur ce jeu de données, le classement des clients varie à peine entre les trois horizons : le ciblage fondé sur le rang est donc insensible aux horizons testés ; l’estimation médiane à 10 ans représente environ 2,23 fois celle à 3 ans, si bien que toute conversion de la CLV en plafond monétaire doit préciser l’horizon utilisé.</p>
+</section>
+<section id="probability-alive-matrix" class="level3">
+<h3 class="anchored" data-anchor-id="probability-alive-matrix">Matrice de probabilité d’être actif</h3>
+<p>La matrice de probabilité d’être actif permet de voir rapidement ce que le modèle BG/NBD a appris. La récence sur un axe, la fréquence sur l’autre, la couleur représentant la probabilité d’être actif. Rappelons que la récence correspond ici à la définition BTYD du tableau ci-dessus, la durée entre le premier et le dernier achat : une récence élevée signifie donc que le client achetait encore récemment, à l’inverse du sens donné à ce terme dans le RFM marketing. Les quatre coins racontent quatre histoires : les acheteurs réguliers fidèles (fréquence élevée, récence élevée, achats fréquents et activité toujours présente), les fidèles à risque (fréquence élevée, récence faible, ils achetaient beaucoup puis ont cessé de donner signe de vie), les clients de passage (fréquence faible, récence faible, un ou deux achats juste après l’acquisition puis plus rien) et les clients à historique limité (fréquence faible, récence élevée, trop peu d’achats pour être certain, mais le plus récent est frais ; le modèle leur accorde donc le bénéfice du doute ; la figure appelle ce coin les nouveaux clients).</p>
+<div id="fig-prob-alive-matrix" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Matrice de probabilité d’être actif selon la fréquence d’achat (x) et la récence (y) ; la couleur indique cette probabilité pour chaque position de client.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-prob-alive-matrix-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.2/prob_alive_matrix.png" class="fig-lg img-fluid figure-img" alt="Matrice de probabilité d’être actif selon la fréquence d’achat (x) et la récence (y) ; la couleur indique cette probabilité pour chaque position de client.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-prob-alive-matrix-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;11: La matrice de probabilité d’être actif.
+</figcaption>
+</figure>
+</div>
+</section>
+<section id="revenue-clv-profit-clv" class="level3">
+<h3 class="anchored" data-anchor-id="revenue-clv-profit-clv">CLV en chiffre d’affaires → CLV en bénéfice</h3>
+<p>Le modèle Gamma-Gamma estime le chiffre d’affaires par transaction. Pour rendre la CLV utile aux décisions budgétaires, convertissez le chiffre d’affaires en bénéfice :</p>
+<p><span class="math display">\[
+\text{CLV}_{\text{profit}} = \text{CLV}_{\text{revenue}} \times \text{Gross Margin}
+\]</span></p>
+<p>Si les marges varient fortement d’une catégorie de produits à l’autre, calculez des marges propres à chaque client à partir de son historique d’achat plutôt que d’utiliser un taux uniforme.</p>
+</section>
+<section id="combining-segments-and-clv" class="level3">
+<h3 class="anchored" data-anchor-id="combining-segments-and-clv">Combiner segments et CLV</h3>
+<p>Rapprochez le <code>segment_id</code> du chapitre sur la segmentation (chapitre 4.1) de l’estimation de CLV de chaque client. Vous obtenez ainsi le tableau opérationnel vers lequel cette partie progresse : de quel type de client il s’agit, quelle est sa valeur et ce que l’entreprise devrait faire pour lui.</p>
+<p>Les données démographiques peuvent toujours aider à décrire ou à atteindre un segment, mais la décision repose principalement sur le croisement segment comportemental × valeur prédite. Le notebook complémentaire joint les estimations de CLV au fichier Dunnhumby <code>hh_demographic.csv</code> pour dresser le profil de chaque segment selon des dimensions démographiques telles que le revenu : utile pour choisir la création publicitaire et le canal, moins pour fixer le budget.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Astuce</span>Modèles de dépenses propres à chaque segment
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Une pratique de production rapportée par PyMC Labs : tester des modèles Gamma-Gamma propres à chaque segment lorsque les distributions de dépenses diffèrent sensiblement entre segments, et conserver un modèle de transaction commun à l’ensemble de la population. Construisez les segments sur la seule période de calibration et comparez-les au modèle commun sur des données hors échantillon ; sinon, les segments dérivés du montant des achats partagent de l’information avec le modèle de dépenses qu’ils alimentent.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="sec-using-clv" class="level2">
+<h2 class="anchored" data-anchor-id="sec-using-clv">Mettre la CLV en pratique</h2>
+<p>Une fois que vous disposez d’un <code>clv_estimate</code> par client, trois applications deviennent accessibles presque sans effort supplémentaire. Ces approches fonctionnent avec n’importe quel score de CLV : les systèmes en aval n’ont besoin que d’un identifiant client et d’un nombre.</p>
+<ol type="1">
+<li>Plafonds de CPA pour les enchères publicitaires</li>
+</ol>
+<p>Fixez le CPA maximal comme une fraction de la CLV prédite en bénéfice :</p>
+<p><span class="math display">\[
+\text{Allowable CPA} = \text{CLV}_{\text{profit}} \times \text{Target acquisition ratio}
+\]</span></p>
+<p>Si un segment a une CLV prédite en bénéfice de $200 et que votre ratio cible d’acquisition est de 33 %, le CPA maximal est de $66. Pour enchérir en situation d’incertitude, utilisez une borne inférieure prudente de la CLV prédite en bénéfice plutôt que la moyenne. De nombreuses plateformes publicitaires peuvent intégrer des signaux de valeur pour des enchères fondées sur la valeur ou des règles d’audience, mais l’implémentation précise dépend de la plateforme.</p>
+<ol start="2" type="1">
+<li>Alertes d’attrition pour le CRM</li>
+</ol>
+<p>Signalez les clients dont la probabilité d’être actif baisse de plus de 30 points en 30 jours. Le signal réside dans la vitesse de variation, pas dans le niveau absolu. Le cas d’un client dont cette probabilité est passée de 0,85 à 0,40 en un mois est bien plus urgent que celui d’un client dont elle reste stable à 0,35 depuis six mois. Le premier se désengage ; le second achète simplement peu souvent.</p>
+<ol start="3" type="1">
+<li>Prévisions par cohorte pour la direction financière</li>
+</ol>
+<p>La direction financière planifie selon des cycles budgétaires, pas sur toute la durée de vie des clients : agrégez donc les estimations individuelles de CLV par cohorte d’acquisition et projetez le chiffre d’affaires à 12, 24 et 36 mois. Incluez les bornes HDI pour que la direction financière sache qu’il s’agit d’estimations probabilistes et non d’objectifs fixes. C’est ainsi que vous répondez à la question « Quel est le retour attendu de nos dépenses d’acquisition du troisième trimestre ? » sans obliger le directeur financier à apprendre BG/NBD.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Astuce</span>Suivi
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Comparez le chiffre d’affaires prédit au chiffre d’affaires réel par cohorte à 3, 6 et 12 mois. Si le ratio s’écarte de plus de ±20 %, réentraînez le modèle. Vérifiez aussi si les prédictions de CLV présentent un biais à l’encontre de groupes protégés : les modèles entraînés sur des segments insuffisamment servis perpétueront ce biais en prédisant une CLV plus faible et en fixant des enchères d’acquisition plus basses.</p>
+</div>
+</div>
+</section>
+<section id="key-takeaways" class="level2">
+<h2 class="anchored" data-anchor-id="key-takeaways">Points clés à retenir</h2>
+<ul>
+<li>La CLV remplace une cible de CPA uniforme par des dépenses proportionnelles à la valeur de chaque client. La moyenne existe dans les données et ne décrit personne.</li>
+<li>Dans les contextes non contractuels, BG/NBD modélise les achats futurs et Gamma-Gamma les dépenses, à partir des seules données transactionnelles. Chaque client dispose d’un intervalle de crédibilité : fondez donc vos enchères sur une borne inférieure prudente plutôt que sur la moyenne.</li>
+<li>Convertissez la CLV en chiffre d’affaires en CLV en bénéfice avant de l’utiliser pour fixer un plafond de CPA, et précisez l’horizon : l’estimation médiane à dix ans représente environ 2,23 fois celle à trois ans, même si le classement varie à peine.</li>
+</ul>
+
+
+<div id="refs" class="references csl-bib-body hanging-indent" role="list" style="display: none">
+<div id="ref-fader2013gammagamma" class="csl-entry" role="listitem">
+Fader, Peter S, et Bruce GS Hardie. 2013. <em>The Gamma-Gamma Model of Monetary Value</em>. Wharton School, University of Pennsylvania. <a href="https://www.brucehardie.com/notes/025/gamma_gamma.pdf">https://www.brucehardie.com/notes/025/gamma_gamma.pdf</a>.
+</div>
+<div id="ref-fader2005counting" class="csl-entry" role="listitem">
+Fader, Peter S, Bruce GS Hardie, et Ka Lok Lee. 2005. <span>«&nbsp;Counting Your Customers the Easy Way: An Alternative to the Pareto/NBD Model&nbsp;»</span>. <em>Marketing Science</em> 24 (2): 275‑84.
+</div>
+</div>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copié");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copié");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/marketing-science-in-python\.com\/fr\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../part4/sec4.1-segmentation.html" class="pagination-link" aria-label="4.1 Segmentation client">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">4.1 Segmentation client</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../part5/_part5.html" class="pagination-link" aria-label="Partie 5. Analyse commerciale">
+        <span class="nav-page-text">Partie 5. Analyse commerciale</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

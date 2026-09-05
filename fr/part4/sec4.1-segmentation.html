@@ -1,0 +1,1373 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="fr" xml:lang="fr"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="Une segmentation client opérationnelle : déciles et RFM, regroupement comportemental avec K-Means, plongements vectoriels avec BERTopic et critères pour juger la qualité d’une segmentation.">
+
+<title>Segmentation client en Python – Marketing Science in Python</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../part4/sec4.2-clv-modeling.html" rel="next">
+<link href="../part4/_part4.html" rel="prev">
+<link href="../assets/favicon.png" rel="icon" type="image/png">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-491b769ea73b1ce4946cf8743b832a60.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-ec576e9d6a0f00bdcb4dbec60768df31.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-491b769ea73b1ce4946cf8743b832a60.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "Pas de résultats",
+    "search-matching-documents-text": "documents trouvés",
+    "search-copy-link-title": "Copier le lien vers la recherche",
+    "search-hide-matches-text": "Cacher les correspondances additionnelles",
+    "search-more-match-text": "correspondance de plus dans ce document",
+    "search-more-matches-text": "correspondances de plus dans ce document",
+    "search-clear-button-title": "Effacer",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Annuler",
+    "search-submit-button-title": "Envoyer",
+    "search-label": "Recherche"
+  }
+}</script>
+<script async="" src="https://www.googletagmanager.com/gtag/js?id=G-YY0LCGYER5"></script>
+
+<script type="text/javascript">
+
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
+</script>
+
+
+<link rel="stylesheet" href="../custom.css">
+<meta property="og:title" content="Segmentation client en Python">
+<meta property="og:description" content="Une segmentation client opérationnelle : déciles et RFM, regroupement comportemental avec K-Means, plongements vectoriels avec BERTopic et critères pour juger la qualité d’une segmentation.">
+<meta property="og:image" content="https://marketing-science-in-python.com/images/common/book_cover_online.png">
+<meta property="og:site_name" content="Marketing Science in Python">
+<meta property="og:image:alt" content="Couverture montrant des flux de données abstraits convergeant vers un réseau géométrique">
+<meta name="twitter:title" content="Segmentation client en Python">
+<meta name="twitter:description" content="Une segmentation client opérationnelle : déciles et RFM, regroupement comportemental avec K-Means, plongements vectoriels avec BERTopic et critères pour juger la qualité d’une segmentation.">
+<meta name="twitter:image" content="https://marketing-science-in-python.com/images/common/book_cover_online.png">
+<meta name="twitter:image:alt" content="Couverture montrant des flux de données abstraits convergeant vers un réseau géométrique">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://marketing-science-in-python.com/fr/part4/sec4.1-segmentation.html">
+<!-- msbook-i18n-head:start -->
+<link rel="alternate" hreflang="en" href="https://marketing-science-in-python.com/part4/sec4.1-segmentation.html">
+<link rel="alternate" hreflang="ja" href="https://marketing-science-in-python.com/ja/part4/sec4.1-segmentation.html">
+<link rel="alternate" hreflang="fr" href="https://marketing-science-in-python.com/fr/part4/sec4.1-segmentation.html">
+<link rel="alternate" hreflang="x-default" href="https://marketing-science-in-python.com/part4/sec4.1-segmentation.html">
+<!-- msbook-i18n-head:end -->
+</head>
+
+<body class="nav-sidebar floating quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Basculer la barre latérale" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part4/_part4.html">Partie 4. Analyse client</a></li><li class="breadcrumb-item"><a href="../part4/sec4.1-segmentation.html"><span class="chapter-title">4.1 Segmentation client</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Basculer la barre latérale" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <!-- msbook-language-switch-mobile:start -->
+<div class="msbook-language-switch-mobile" aria-label="Language"><a lang="en" hreflang="en" href="../../part4/sec4.1-segmentation.html" onclick="this.hash=window.location.hash">EN</a><span aria-hidden="true"> | </span><a lang="ja" hreflang="ja" href="../../ja/part4/sec4.1-segmentation.html" onclick="this.hash=window.location.hash">日本語</a><span aria-hidden="true"> | </span><span lang="fr" aria-current="page">FR</span></div>
+<!-- msbook-language-switch-mobile:end -->
+<button type="button" class="btn quarto-search-button" aria-label="Recherche" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">Marketing Science in Python</a> 
+        <div class="sidebar-tools-main tools-wide">
+    <a href="https://github.com/takechanman1228/marketing-science-in-python" title="Code source" class="quarto-navigation-tool px-1" aria-label="Code source"><i class="bi bi-github"></i></a>
+    <div class="dropdown">
+      <a href="" title="Share" id="quarto-navigation-tool-dropdown-0" class="quarto-navigation-tool dropdown-toggle px-1" data-bs-toggle="dropdown" aria-expanded="false" role="link" aria-label="Share"><i class="bi bi-share"></i></a>
+      <ul class="dropdown-menu" aria-labelledby="quarto-navigation-tool-dropdown-0">
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://twitter.com/intent/tweet?url=|url|">
+              <i class="bi bi-twitter pe-1"></i>
+            Twitter
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://www.linkedin.com/sharing/share-offsite/?url=|url|">
+              <i class="bi bi-linkedin pe-1"></i>
+            LinkedIn
+            </a>
+          </li>
+      </ul>
+    </div>
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Basculer le mode sombre"><i class="bi"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Recherche"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Préface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part1/_part1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Partie 1. Introduction</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Basculer la section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1/sec1.1-what-is-marketing-science.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">1.1 Qu’est-ce que la science du marketing ?</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1/sec1.2-data-landscape.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">1.2 Comprendre les données marketing</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part2/_part2.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Partie 2. Analyser pour mieux décider</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Basculer la section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.1-right-question.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.1 Formuler la bonne question</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.2-kpi-design.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.2 Concevoir des KPI pour le diagnostic</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.3-storytelling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.3 Transformer les données en récit</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part3/_part3.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Partie 3. L’inférence causale pour le marketing</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Basculer la section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.1-thinking-causally.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.1 Raisonner en termes de causalité</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.2-ab-testing.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.2 Concevoir un test A/B</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.3-quasi-experiments.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.3 Quasi-expériences</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.4-causal-impact.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.4 Impact causal avec les séries temporelles</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.5-meta-learners.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.5 Méta-apprenants pour les effets de traitement</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.6-uplift-modeling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.6 Modélisation de l’uplift pour le ciblage</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part4/_part4.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Partie 4. Analyse client</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Basculer la section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part4/sec4.1-segmentation.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">4.1 Segmentation client</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part4/sec4.2-clv-modeling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">4.2 Modélisation de la valeur vie client</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part5/_part5.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Partie 5. Analyse commerciale</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Basculer la section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.1-price-elasticity.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.1 Élasticité-prix et décisions tarifaires</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.2-assortment-optimization.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.2 Optimisation de l’assortiment de produits</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.3-sales-forecasting.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.3 Prévision des ventes et planification par scénarios</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part6/_part6.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Partie 6. Investissement média et optimisation</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Basculer la section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.1-media-measurement-problem.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.1 Le problème de la mesure des médias</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.2-mmm-fundamentals.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.2 Construire et optimiser un MMM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.3-incrementality-experiments.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.3 Expériences d’incrémentalité</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.4-mmm-calibration.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.4 Calibrer le MMM à l’aide d’expériences</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.5-when-tools-disagree.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.5 Décider lorsque les outils de mesure divergent</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendix/further-reading.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Références et lectures complémentaires</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendix/notebooks.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Notebooks et code</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../marketing-analytics-in-python.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">L’analyse marketing avec Python</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+<!-- msbook-language-switch:start -->
+<div class="msbook-language-switch" aria-label="Language"><a lang="en" hreflang="en" href="../../part4/sec4.1-segmentation.html" onclick="this.hash=window.location.hash">English</a><span aria-hidden="true"> | </span><a lang="ja" hreflang="ja" href="../../ja/part4/sec4.1-segmentation.html" onclick="this.hash=window.location.hash">日本語</a><span aria-hidden="true"> | </span><span lang="fr" aria-current="page">Français</span></div>
+<!-- msbook-language-switch:end -->
+
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table des matières</h2>
+   
+  <ul>
+  <li><a href="#sec-behavioral-vs-profile" id="toc-sec-behavioral-vs-profile" class="nav-link active" data-scroll-target="#sec-behavioral-vs-profile">Variables comportementales et variables de profil</a></li>
+  <li><a href="#sec-value-tiers" id="toc-sec-value-tiers" class="nav-link" data-scroll-target="#sec-value-tiers">Commencer simplement : déciles et RFM</a>
+  <ul class="collapse">
+  <li><a href="#decile-analysis" id="toc-decile-analysis" class="nav-link" data-scroll-target="#decile-analysis">Analyse par déciles</a></li>
+  <li><a href="#rfm-analysis" id="toc-rfm-analysis" class="nav-link" data-scroll-target="#rfm-analysis">Analyse RFM</a></li>
+  </ul></li>
+  <li><a href="#sec-kmeans" id="toc-sec-kmeans" class="nav-link" data-scroll-target="#sec-kmeans">Regroupement comportemental avec K-Means</a></li>
+  <li><a href="#sec-embedding" id="toc-sec-embedding" class="nav-link" data-scroll-target="#sec-embedding">Segmentation fondée sur les plongements vectoriels avec BERTopic</a>
+  <ul class="collapse">
+  <li><a href="#why-bertopic" id="toc-why-bertopic" class="nav-link" data-scroll-target="#why-bertopic">Pourquoi BERTopic ?</a></li>
+  <li><a href="#constructing-the-customer-document" id="toc-constructing-the-customer-document" class="nav-link" data-scroll-target="#constructing-the-customer-document">Construire le document client</a></li>
+  <li><a href="#reading-the-output" id="toc-reading-the-output" class="nav-link" data-scroll-target="#reading-the-output">Lire les résultats</a></li>
+  <li><a href="#when-one-theme-dominates" id="toc-when-one-theme-dominates" class="nav-link" data-scroll-target="#when-one-theme-dominates">Lorsqu’un thème domine</a></li>
+  <li><a href="#the-llm-naming-trap" id="toc-the-llm-naming-trap" class="nav-link" data-scroll-target="#the-llm-naming-trap">Le piège des noms donnés par un LLM</a></li>
+  </ul></li>
+  <li><a href="#sec-segment-validation" id="toc-sec-segment-validation" class="nav-link" data-scroll-target="#sec-segment-validation">Votre segmentation est-elle de bonne qualité ?</a></li>
+  <li><a href="#sec-method-cheat-sheet" id="toc-sec-method-cheat-sheet" class="nav-link" data-scroll-target="#sec-method-cheat-sheet">Aide-mémoire des méthodes</a></li>
+  <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways">Points clés à retenir</a></li>
+  </ul>
+<div class="quarto-code-links"><h2>Liens de code</h2><ul><li><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_traditional_segmentation.ipynb"><i class="bi bi-github"></i>sec4.1_traditional_segmentation.ipynb</a></li><li><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_semantic_segmentation.ipynb"><i class="bi bi-github"></i>sec4.1_semantic_segmentation.ipynb</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part4/_part4.html">Partie 4. Analyse client</a></li><li class="breadcrumb-item"><a href="../part4/sec4.1-segmentation.html"><span class="chapter-title">4.1 Segmentation client</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span id="sec-segmentation" class="quarto-section-identifier"><span class="chapter-title">4.1 Segmentation client</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="translation-notice">
+<p><strong>À propos de la version française</strong><br>
+Cette page est une traduction par IA de la version anglaise de <em>Marketing Science in Python</em>. La version anglaise fait foi et prévaut en cas de divergence. Le code, les notebooks et le texte intégré aux images restent en anglais. <a href="../../part4/sec4.1-segmentation.html" class="translation-source-link">Lire la version anglaise</a></p>
+</div>
+<p>Un projet de segmentation doit produire quelque chose que votre équipe peut réellement utiliser, et pas seulement une présentation. Le véritable livrable est un <code>segment_id</code> directement exploitable dans votre CRM et vos plateformes publicitaires, accompagné d’une fiche synthétique pour chaque segment : qui sont ces clients, pourquoi ils comptent et quelles actions votre équipe doit entreprendre.</p>
+<p>Ce chapitre explique comment construire ce type de livrable en trois étapes :</p>
+<ol type="1">
+<li>D’abord, classer les clients selon leur valeur actuelle. L’analyse par déciles et la méthode RFM (récence, fréquence, montant) permettent de segmenter rapidement selon la valeur.</li>
+<li>Ensuite, regrouper les clients selon leur comportement. Le regroupement comportemental fait ressortir des tendances que les niveaux de valeur seuls ne peuvent pas saisir.</li>
+<li>Enfin, ajouter le sens des achats. La segmentation fondée sur les plongements vectoriels montre ce que les clients achètent réellement, et pas seulement combien ils dépensent.</li>
+</ol>
+<section id="sec-behavioral-vs-profile" class="level2">
+<h2 class="anchored" data-anchor-id="sec-behavioral-vs-profile">Variables comportementales et variables de profil</h2>
+<p>Lorsqu’on construit des segments de clientèle, les variables se répartissent en deux grandes catégories. Les variables comportementales décrivent ce que font les clients : récence, fréquence, dépenses, catégories achetées, diversité des produits, retours et dépendance aux remises. Les variables de profil décrivent qui ils sont ou où vous pouvez les toucher : âge, revenu, composition du ménage, localisation géographique, niveau dans le programme de fidélité et préférence de canal.</p>
+<p>Pour la segmentation marketing, les variables comportementales constituent une base plus solide. Ce qu’une personne a consulté ou acheté, ou ce que des clients similaires ont choisi, prédit généralement mieux sa prochaine action que les caractéristiques démographiques. S’appuyer uniquement sur ces dernières, par exemple « ce produit pour un homme d’une trentaine d’années » ou « cette offre pour une personne à revenu élevé », fournit un signal beaucoup plus faible que l’historique d’achats réel du client.</p>
+<p>Les variables de profil ont néanmoins leur rôle. Utilisez-les après avoir construit les segments pour comprendre qui compose chaque groupe, où le toucher et comment adapter la communication.</p>
+</section>
+<section id="sec-value-tiers" class="level2">
+<h2 class="anchored" data-anchor-id="sec-value-tiers">Commencer simplement : déciles et RFM</h2>
+<p>L’approche la plus simple repose sur des règles : vous définissez les seuils au lieu de vous en remettre à un algorithme. L’analyse par déciles et la méthode RFM en sont les exemples les plus courants.</p>
+<section id="decile-analysis" class="level3">
+<h3 class="anchored" data-anchor-id="decile-analysis">Analyse par déciles</h3>
+<p>L’analyse par déciles répartit les clients en dix groupes de même taille selon le chiffre d’affaires. La répartition suit souvent le principe de Pareto : un petit groupe génère l’essentiel du chiffre d’affaires. Le décile supérieur bénéficie d’actions de fidélisation et d’un traitement VIP. Les trois déciles suivants sont la cible principale des campagnes de développement. Les trois déciles intermédiaires reçoivent des communications automatisées peu coûteuses pour entretenir la relation, et les trois derniers sont exclus des offres coûteuses. Vous pouvez mettre cela en place rapidement et donner à votre équipe un plan d’action clair.</p>
+<div id="fig-decile-distribution" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="La valeur client se concentre dans les déciles supérieurs, les 20 pour cent de clients en tête contribuant à plus de la moitié du chiffre d’affaires.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-decile-distribution-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.1/decile_distribution.png" class="fig-md img-fluid figure-img" alt="La valeur client se concentre dans les déciles supérieurs, les 20 pour cent de clients en tête contribuant à plus de la moitié du chiffre d’affaires.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-decile-distribution-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: Répartition typique de la valeur client par décile.
+</figcaption>
+</figure>
+</div>
+</section>
+<section id="rfm-analysis" class="level3">
+<h3 class="anchored" data-anchor-id="rfm-analysis">Analyse RFM</h3>
+<p>La méthode RFM offre une vision plus nuancée. C’est le cadre de segmentation le plus utilisé en marketing direct, car les équipes raisonnent déjà en ces termes : anciens gros acheteurs devenus inactifs, nouveaux acheteurs fréquents et autres profils similaires.</p>
+<div id="tbl-rfm-variables" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-rfm-variables-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;1: Variables RFM et leur interprétation.
+</figcaption>
+<div aria-describedby="tbl-rfm-variables-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Variable</th>
+<th>Définition</th>
+<th>Sens favorable</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Récence (R)</td>
+<td>Nombre de jours depuis le dernier achat du client</td>
+<td>Plus faible = mieux</td>
+</tr>
+<tr class="even">
+<td>Fréquence (F)</td>
+<td>Nombre d’achats pendant la période d’observation</td>
+<td>Plus élevé = mieux</td>
+</tr>
+<tr class="odd">
+<td>Montant (M)</td>
+<td>Dépenses totales pendant la période d’observation</td>
+<td>Plus élevé = mieux</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<p>Le classement indépendant divise chaque variable en quintiles séparément, créant un score à trois chiffres (R=5, F=4, M=3) et jusqu’à 125 groupes. Le classement séquentiel imbrique les divisions : d’abord selon la récence, puis selon la fréquence au sein de chaque groupe de récence, puis selon le montant ; la récence reçoit donc le poids le plus important.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Astuce</span>Calculer les scores RFM en un seul appel
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>PyMC-Marketing, la bibliothèque utilisée pour la modélisation de la CLV dans la <a href="sec4.2-clv-modeling.html">section 4.2</a>, fournit un utilitaire <code>rfm_segments()</code> fondé sur les quartiles, qui attribue des scores R, F et M ainsi que des segments nommés directement à partir d’une table de transactions. Il est moins souple que K-Means, mais fonctionne bien en pratique et reste rapide sur de très grandes bases de clientèle.</p>
+</div>
+</div>
+<p>Les déciles et la méthode RFM sont rapides à mettre en place et faciles à utiliser. Mais ils ne créent que des niveaux de valeur, pas des profils clients complets. Deux clients ayant des scores RFM similaires peuvent se comporter très différemment : l’un peut acheter des articles au prix fort dans de nombreuses catégories, tandis que l’autre n’achète que des articles remisés dans une seule catégorie. Pour voir ces différences, il faut passer des niveaux de valeur à des variables comportementales plus riches.</p>
+</section>
+</section>
+<section id="sec-kmeans" class="level2">
+<h2 class="anchored" data-anchor-id="sec-kmeans">Regroupement comportemental avec K-Means</h2>
+<p>K-Means est un algorithme classique de regroupement qui reste efficace pour la segmentation marketing. Standardisez les variables avec StandardScaler pour que les dépenses ne dominent pas, et commencez avec 6 à 10 variables comportementales. Au-delà de RFM, le montant moyen des commandes, la taille du panier et le taux de retour sont des ajouts utiles.</p>
+<p>Appliquez une transformation logarithmique aux variables asymétriques avant la mise à l’échelle. Les dépenses, la fréquence, la récence et la taille du panier présentent généralement une forte asymétrie à droite : une poignée de clients achètent beaucoup plus que tous les autres. StandardScaler ne fait que centrer et remettre à l’échelle, de sorte que ces longues queues de distribution subsistent. Alimenté par les valeurs brutes, K-Means consacre ses premières divisions à séparer les gros acheteurs des petits et retrouve essentiellement des niveaux de valeur ; tout groupe supplémentaire qu’il découvre est une minuscule poche de valeurs atypiques, trop petite pour justifier une action. Appliquer <code>log1p</code> aux variables asymétriques (règle simple : transformer toute variable dont le coefficient d’asymétrie dépasse environ 1) comprime les queues de distribution. Les groupes reflètent alors la <em>forme</em> des comportements plutôt que le niveau des dépenses, et des segments équilibrés, utilisables pour agir, émergent. Sur le jeu de données du notebook associé, c’est ce qui fait la différence entre un K-Means qui se réduit à trois niveaux de valeur et un K-Means qui répartit la clientèle en cinq groupes comportementaux équilibrés, de tailles comparables.</p>
+<p>Choisir K relève à la fois des statistiques et du jugement. La méthode du coude aide à resserrer la plage de valeurs, mais fixe rarement le nombre. Sur les données clients, le coude le plus marqué se situe souvent à K=3, ce qui ne fait généralement que retrouver des niveaux de valeur (gros acheteurs, acheteurs moyens, clients inactifs) que les déciles et RFM saisissent déjà. Pour segmenter selon le comportement plutôt que la valeur, explorez la plage utile en pratique (souvent 4 à 8 segments) et laissez les possibilités d’action trancher : retenez le K dont les segments seraient réellement traités différemment par votre équipe marketing. Si elle ne peut pas décrire une action distincte pour chaque segment, vous en avez trop.</p>
+<div id="fig-elbow" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="La variation au sein des groupes diminue rapidement jusqu’à environ cinq groupes, puis s’améliore plus progressivement à mesure que des groupes supplémentaires sont ajoutés.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-elbow-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.1/elbow.png" class="fig-md img-fluid figure-img" alt="La variation au sein des groupes diminue rapidement jusqu’à environ cinq groupes, puis s’améliore plus progressivement à mesure que des groupes supplémentaires sont ajoutés.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-elbow-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2: Graphique du coude pour choisir K.
+</figcaption>
+</figure>
+</div>
+<p>Sur le jeu de données du notebook associé, K=5 est le point où les segments cessent d’être des niveaux de valeur et deviennent des fiches d’action. <a href="#tbl-kmeans-segments" class="quarto-xref">Table&nbsp;<span>2</span></a> présente ce résultat. Les proportions et les moyennes des profils proviennent du notebook (les dépenses, les visites et les rayons sont des totaux sur deux ans, moyennés au sein du segment) ; les noms et les deux dernières actions sont l’interprétation par l’analyste de la carte thermique des profils, étape que le notebook vous laisse réaliser.</p>
+<div id="tbl-kmeans-segments" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-kmeans-segments-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;2: Les segments à K=5 sur les données d’achats alimentaires, issus du notebook associé.
+</figcaption>
+<div aria-describedby="tbl-kmeans-segments-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Segment</th>
+<th style="text-align: right;">Proportion</th>
+<th style="text-align: left;">Profil</th>
+<th style="text-align: left;">Action</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Gros acheteurs fidèles</td>
+<td style="text-align: right;">25%</td>
+<td style="text-align: left;">$7,300 de dépenses, 209 visites, 17 rayons</td>
+<td style="text-align: left;">Fidélisation VIP</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Petits paniers fréquents</td>
+<td style="text-align: right;">23%</td>
+<td style="text-align: left;">$3,228 de dépenses, 157 visites, commandes de $24</td>
+<td style="text-align: left;">Accroître le panier</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Gros paniers occasionnels</td>
+<td style="text-align: right;">22%</td>
+<td style="text-align: left;">$1,938 de dépenses, 56 visites, commandes de $38</td>
+<td style="text-align: left;">Entretenir la relation à faible coût</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Amateurs de remises</td>
+<td style="text-align: right;">19%</td>
+<td style="text-align: left;">$1,087 de dépenses, 19% de part de remises, assortiment restreint</td>
+<td style="text-align: left;">Offres uniquement avec des garde-fous sur la marge</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Clients inactifs</td>
+<td style="text-align: right;">11%</td>
+<td style="text-align: left;">$334 de dépenses, dernier achat il y a 17 semaines</td>
+<td style="text-align: left;">Une seule relance peu coûteuse, puis arrêt</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<p>Les noms sont des raccourcis ; chaque ligne constitue la fiche d’action. C’est ce tableau qu’il faut remettre à l’équipe marketing pour vérifier les possibilités d’action décrites ci-dessous : si deux lignes recevraient la même campagne, fusionnez-les.</p>
+<p>Le regroupement numérique gomme encore le sens des produits. Avec des variables d’entrée comme la fréquence, les dépenses, la récence, la diversité des catégories et la dépendance aux remises, deux clients peuvent sembler similaires même si les produits qu’ils achètent sont très différents. Pour saisir ce sens, intégrez directement le texte des produits dans la segmentation.</p>
+</section>
+<section id="sec-embedding" class="level2">
+<h2 class="anchored" data-anchor-id="sec-embedding">Segmentation fondée sur les plongements vectoriels avec BERTopic</h2>
+<p>Pour saisir ce que les clients achètent réellement, traitez l’historique d’achats de chaque client comme du texte : concaténez les descriptions des produits achetés en une seule chaîne de caractères (le document client), puis utilisez un modèle de plongement vectoriel pour convertir cette chaîne en un vecteur dense. Dans cet espace vectoriel, les bougies d’anniversaire et les assiettes de fête sont proches, tandis qu’une théière ancienne est éloignée. Le regroupement des vecteurs sépare donc les clients selon le sens de leurs achats, et pas seulement selon leur volume d’achats.</p>
+<p>Les exemples utilisent le jeu de données UCI Online Retail II, qui contient environ un million de transactions d’un détaillant britannique d’articles cadeaux, dont les descriptions de produits en texte libre sont précisément ce que lit un modèle de plongement vectoriel. Nous exécutons toute la chaîne de traitement avec BERTopic.</p>
+<div id="fig-umap-clusters" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Projection UMAP des plongements vectoriels des documents clients : chaque point représente un client, coloré selon le segment découvert par BERTopic.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-umap-clusters-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.1/umap_clusters.png" class="fig-md img-fluid figure-img" alt="Projection UMAP des plongements vectoriels des documents clients : chaque point représente un client, coloré selon le segment découvert par BERTopic.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-umap-clusters-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3: Documents clients dans l’espace des plongements vectoriels.
+</figcaption>
+</figure>
+</div>
+<section id="why-bertopic" class="level3">
+<h3 class="anchored" data-anchor-id="why-bertopic">Pourquoi BERTopic ?</h3>
+<p>Construire cette chaîne à la main revient à enchaîner quatre bibliothèques : SentenceTransformers pour vectoriser les documents, UMAP pour réduire les dimensions, HDBSCAN pour former les groupes, et du code personnalisé pour lire le résultat. BERTopic réunit les quatre derrière une seule API et ajoute les éléments qui rendent la sortie exploitable : c-TF-IDF pour extraire les mots-clés distinctifs de chaque segment, <code>reduce_outliers()</code> pour les clients que HDBSCAN laisse sans affectation, <code>transform()</code> pour attribuer un segment à de nouveaux clients sans réajuster le modèle, et une étape facultative utilisant un LLM pour nommer les segments. Le reste de cette section suit cette chaîne de traitement.</p>
+</section>
+<section id="constructing-the-customer-document" class="level3">
+<h3 class="anchored" data-anchor-id="constructing-the-customer-document">Construire le document client</h3>
+<p>Par exemple, le document d’un client pourrait ressembler à ceci :</p>
+<p><code>red retrospot cake stand, party bunting, paper cups, birthday candles, cake cases</code></p>
+<p>Un modèle numérique peut ne voir dans ce client qu’un acheteur fréquent ou un gros acheteur. Le modèle de plongement vectoriel saisit le sens des produits : articles de fête et achats liés aux célébrations.</p>
+<p>Pour construire un document, on regroupe et concatène les éléments du journal des transactions :</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Keep each customer's top-N products by revenue, then join the descriptions</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>prod_rev <span class="op">=</span> (</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    df.groupby([<span class="st">"CustomerID"</span>, <span class="st">"Description"</span>])[<span class="st">"Revenue"</span>].<span class="bu">sum</span>()</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    .reset_index()</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    .sort_values([<span class="st">"CustomerID"</span>, <span class="st">"Revenue"</span>], ascending<span class="op">=</span>[<span class="va">True</span>, <span class="va">False</span>])</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>top_products <span class="op">=</span> prod_rev.groupby(<span class="st">"CustomerID"</span>).head(TOP_N)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>customer_docs <span class="op">=</span> (</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    top_products.groupby(<span class="st">"CustomerID"</span>)[<span class="st">"Description"</span>]</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    .<span class="bu">apply</span>(<span class="kw">lambda</span> d: <span class="st">", "</span>.join(d))</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    .reset_index(name<span class="op">=</span><span class="st">"doc"</span>)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copier vers le presse-papier" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Trois décisions pratiques déterminent la qualité des segments plus que tout le reste.</p>
+<p>Quels produits inclure. Les N articles les plus achetés (selon la fréquence ou le chiffre d’affaires) donnent généralement de meilleurs résultats que l’historique d’achats complet. La liste complète ajoute du bruit provenant des achats ponctuels ; les articles principaux captent les habitudes réelles du client.</p>
+<p>Faut-il pondérer par le chiffre d’affaires ? Inclure une fois un article de forte valeur et une fois un article de faible valeur peut donner une image trompeuse de ce qui compte pour le client. La pondération par le chiffre d’affaires (répéter les mentions des produits proportionnellement aux dépenses) précise les segments pour les clients aux paniers mixtes. Plafonnez les poids ou utilisez une pondération par le logarithme des dépenses lorsque les écarts de prix entre produits sont importants ; sinon, un seul achat de luxe peut dominer le document.</p>
+<p>Filtrer les produits génériques. Les articles comme « Carte cadeau », « Frais de port » ou les références produit génériques sont du bruit : ils apparaissent dans tous les segments et diluent les mots-clés. Filtrez-les à l’aide de motifs dans StockCode ou maintenez une courte liste d’exclusion. Cette seule étape fait souvent la différence entre des segments qui ont un sens et des segments qui n’en ont aucun.</p>
+<p>Un modèle léger de plongement vectoriel de phrases suffit pour la plupart des catalogues de vente au détail. La qualité de vos segments dépend beaucoup plus de la façon dont vous concevez et validez le document client que du modèle de plongement vectoriel choisi. Le notebook utilise un modèle SentenceTransformers local pour assurer la reproductibilité, mais le même processus peut aussi utiliser des modèles de plongement vectoriel accessibles par API, comme ceux d’OpenAI.</p>
+</section>
+<section id="reading-the-output" class="level3">
+<h3 class="anchored" data-anchor-id="reading-the-output">Lire les résultats</h3>
+<p>L’ajustement à l’origine de cette carte tient en un seul appel. Un modèle de plongement vectoriel local convertit chaque document en vecteur, et BERTopic se charge du regroupement et de l’extraction des mots-clés :</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> bertopic <span class="im">import</span> BERTopic</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sentence_transformers <span class="im">import</span> SentenceTransformer</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>embedding_model <span class="op">=</span> SentenceTransformer(<span class="st">"all-MiniLM-L6-v2"</span>)   <span class="co"># local, lightweight</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>embeddings <span class="op">=</span> embedding_model.encode(customer_docs[<span class="st">"doc"</span>].tolist())</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>topic_model <span class="op">=</span> BERTopic(embedding_model<span class="op">=</span>embedding_model)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>topics, probs <span class="op">=</span> topic_model.fit_transform(</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    customer_docs[<span class="st">"doc"</span>].tolist(), embeddings<span class="op">=</span>embeddings</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copier vers le presse-papier" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Le notebook associé configure explicitement les sous-modèles UMAP, HDBSCAN et c-TF-IDF ; il s’agit ici de la même chaîne de traitement avec les paramètres par défaut. Le résultat est une signature de mots-clés pour chaque segment :</p>
+<div id="fig-bertopic-barchart" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Principaux mots-clés distinctifs par segment issus des plongements vectoriels des descriptions de produits, que le regroupement numérique RFM ne peut pas révéler.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-bertopic-barchart-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.1/bertopic_barchart.png" class="fig-md img-fluid figure-img" alt="Principaux mots-clés distinctifs par segment issus des plongements vectoriels des descriptions de produits, que le regroupement numérique RFM ne peut pas révéler.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-bertopic-barchart-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4: Principaux mots-clés distinctifs par segment.
+</figcaption>
+</figure>
+</div>
+<p>Remettez ces graphiques à un spécialiste du marketing : il devrait rapidement voir quelles catégories, quelles campagnes et quelles créations publicitaires conviennent à chaque groupe.</p>
+</section>
+<section id="when-one-theme-dominates" class="level3">
+<h3 class="anchored" data-anchor-id="when-one-theme-dominates">Lorsqu’un thème domine</h3>
+<p>Les catalogues réels présentent souvent un thème large couvrant la plupart des clients et, en périphérie, une série de niches bien définies. HDBSCAN fait ressortir les deux, mais après la réduction des valeurs atypiques, le thème large enfle jusqu’à devenir un seul méga-thème, trop vaste pour être traité comme un segment unique. La correction est ciblée : appliquez K-Means <strong>uniquement aux plongements vectoriels du méga-thème</strong> et divisez-le en sous-segments de taille adaptée aux campagnes, tout en conservant les petits thèmes de niche comme résultats exploratoires. Cela applique le principe « HDBSCAN pour la découverte, K-Means pour les opérations » à l’intérieur du groupe dominant, et non à l’ensemble de la clientèle. Le notebook associé le fait automatiquement dès qu’un thème dépasse 50% de la clientèle.</p>
+</section>
+<section id="the-llm-naming-trap" class="level3">
+<h3 class="anchored" data-anchor-id="the-llm-naming-trap">Le piège des noms donnés par un LLM</h3>
+<p>Nommer les segments avec l’aide d’un LLM peut les rendre plus crédibles qu’ils ne le sont réellement. Donnez n’importe quel groupe à un LLM, même un groupe aléatoire, et demandez-lui un nom et un persona : vous obtiendrez une description soignée et convaincante. Le récit paraît plausible, que le groupe ait un sens ou non.</p>
+<p>Deux garde-fous :</p>
+<ul>
+<li>Validez les éléments fournis par les mots-clés avant de lire le récit du LLM. Si vous ne pouvez pas vous-même discerner un thème clair dans les principaux mots-clés, le nom proposé par le LLM est une fiction.</li>
+<li>Testez le nom auprès de l’équipe marketing. Si elle rédigerait le même brief de campagne pour deux segments portant des noms différents, les noms sont décoratifs, pas informatifs.</li>
+</ul>
+<p><strong>Notebooks associés :</strong> le code complet et fonctionnel est réparti entre deux notebooks, chacun utilisant le jeu de données adapté à sa méthode.</p>
+<ul>
+<li><code>sec4.1_traditional_segmentation.ipynb</code> : déciles, RFM et K-Means sur le jeu de données Dunnhumby « The Complete Journey », également utilisé dans le chapitre sur la CLV, ce qui permet de conserver l’appartenance aux segments d’un chapitre à l’autre. <a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_traditional_segmentation.ipynb">Voir sur GitHub</a></li>
+<li><code>sec4.1_semantic_segmentation.ipynb</code> : la chaîne de traitement par plongements vectoriels (construction des documents clients, filtrage des produits génériques, plongement vectoriel, regroupement BERTopic, extraction des mots-clés et attribution de noms assistée par LLM) sur le jeu de données UCI Online Retail II, qui possède les descriptions de produits riches dont cette méthode a besoin. L’étape facultative d’attribution de noms par LLM est actuellement configurée pour Anthropic et nécessite le paquet <code>litellm</code> ainsi qu’une <code>ANTHROPIC_API_KEY</code> ; sans cette clé, la cellule est ignorée et le reste s’exécute quand même. <a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_semantic_segmentation.ipynb">Voir sur GitHub</a></li>
+</ul>
+</section>
+</section>
+<section id="sec-segment-validation" class="level2">
+<h2 class="anchored" data-anchor-id="sec-segment-validation">Votre segmentation est-elle de bonne qualité ?</h2>
+<p>Trois vérifications, par ordre de priorité.</p>
+<p>La possibilité d’agir est ce qui compte le plus. Présentez les profils des segments à votre équipe marketing. Pour chaque paire de segments, demandez : « Utiliseriez-vous un message, un canal, une offre ou une fréquence différents ? » Si la réponse est « Je ferais la même chose pour les deux », la segmentation ne permet pas d’actions distinctes, aussi rigoureuses que paraissent les mathématiques. Le responsable habituel est un segment moyen sur tous les critères ; fusionnez-le avec un segment voisin ou revoyez votre sélection de variables.</p>
+<p>La stabilité. Relancez le regroupement sur deux périodes sans chevauchement et vérifiez que les clients se retrouvent majoritairement dans les mêmes segments. L’indice de Rand ajusté (ARI) quantifie cette stabilité ; si trop de clients changent de segment entre les périodes, vous ne pouvez pas vous appuyer sur ces segments pour vos campagnes. Les notebooks associés présentent les deux vérifications : le calcul de l’ARI dans le notebook sémantique et une matrice de migration dans le notebook traditionnel.</p>
+<p>Sur les données d’achats alimentaires, la matrice de migration classe les clients par quintile de chiffre d’affaires chaque année au lieu de les regrouper à nouveau : 70% du quintile supérieur et 61% du quintile inférieur restent en place d’une année à l’autre, tandis que les trois quintiles intermédiaires ne conservent qu’environ 40% de leurs clients. C’est au milieu de la clientèle que les affectations aux segments sont les moins fiables ; c’est donc là qu’une campagne fondée sur ces affectations doit prévoir le plus de souplesse.</p>
+<div id="fig-segment-heatmap" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Carte thermique des profils des segments : les lignes sont les segments, les colonnes les variables de base, et la couleur indique l’écart à la moyenne de la population.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-segment-heatmap-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.1/bertopic_segment_heatmap.png" class="fig-md img-fluid figure-img" alt="Carte thermique des profils des segments : les lignes sont les segments, les colonnes les variables de base, et la couleur indique l’écart à la moyenne de la population.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-segment-heatmap-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5: Carte thermique des profils des segments.
+</figcaption>
+</figure>
+</div>
+<p>La taille. Chaque segment doit être assez grand pour permettre une action, mais le minimum approprié dépend de l’entreprise et de la campagne : il n’existe pas de seuil universel. À titre indicatif, évitez les segments si petits que vous ne pouvez pas y mener une campagne utile ; pour un ciblage large, cela signifie souvent environ 10 pour cent de la clientèle, tandis qu’une niche réellement à forte valeur peut constituer une exception délibérée. En pratique, une poignée de segments, souvent 4 à 8, suffit.</p>
+<p>Les segments sont construits à partir de différences comportementales, mais les campagnes qui leur sont affectées doivent tout de même être testées. Reportez-vous à la <a href="../part3/sec3.2-ab-testing.html">conception des tests A/B</a> avant de crier victoire.</p>
+</section>
+<section id="sec-method-cheat-sheet" class="level2">
+<h2 class="anchored" data-anchor-id="sec-method-cheat-sheet">Aide-mémoire des méthodes</h2>
+<div id="tbl-method-cheat-sheet" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-method-cheat-sheet-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;3: Choisissez la méthode selon la question à laquelle elle répond, et non selon son degré de sophistication.
+</figcaption>
+<div aria-describedby="tbl-method-cheat-sheet-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Question</th>
+<th style="text-align: left;">Méthode</th>
+<th style="text-align: left;">Entrée</th>
+<th style="text-align: left;">Sortie</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Quels clients méritent davantage d’attention maintenant ?</td>
+<td style="text-align: left;">Déciles / RFM</td>
+<td style="text-align: left;">Journal des transactions</td>
+<td style="text-align: left;">Niveaux de valeur ou scores R/F/M</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Quels comportements existent au-delà des niveaux de valeur ?</td>
+<td style="text-align: left;">K-Means</td>
+<td style="text-align: left;">Variables comportementales numériques</td>
+<td style="text-align: left;">Étiquettes de segments comportementaux</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Qu’achètent réellement les clients ?</td>
+<td style="text-align: left;">Regroupement fondé sur les plongements vectoriels</td>
+<td style="text-align: left;">Documents clients issus des descriptions de produits</td>
+<td style="text-align: left;">Segments fondés sur le sens des achats, avec signatures de mots-clés</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+</section>
+<section id="key-takeaways" class="level2">
+<h2 class="anchored" data-anchor-id="key-takeaways">Points clés à retenir</h2>
+<ul>
+<li>Construisez les segments à partir des comportements, puis ajoutez les caractéristiques démographiques pour décrire et toucher chaque groupe. Le livrable est un <code>segment_id</code> que votre CRM et vos plateformes publicitaires peuvent utiliser, pas un diaporama.</li>
+<li>Validez d’abord les possibilités d’action, puis la stabilité et la taille. Si deux segments recevraient la même campagne, fusionnez-les.</li>
+<li>Un nom de segment convaincant n’est pas une preuve. Un LLM en produira un pour n’importe quel groupe, y compris un groupe aléatoire ; lisez donc vous-même les principaux mots-clés avant de vous fier à l’étiquette.</li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copié");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copié");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/marketing-science-in-python\.com\/fr\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../part4/_part4.html" class="pagination-link" aria-label="Partie 4. Analyse client">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Partie 4. Analyse client</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../part4/sec4.2-clv-modeling.html" class="pagination-link" aria-label="4.2 Modélisation de la valeur vie client">
+        <span class="nav-page-text"><span class="chapter-title">4.2 Modélisation de la valeur vie client</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

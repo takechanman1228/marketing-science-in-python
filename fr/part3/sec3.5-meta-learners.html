@@ -1,0 +1,1307 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="fr" xml:lang="fr"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="Comprendre l’ATE, le CATE et l’ITE, puis appliquer les apprenants S, T et les méta-apprenants avancés aux effets hétérogènes d’un traitement par e-mail.">
+
+<title>Méta-apprenants et CATE en Python – Marketing Science in Python</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../part3/sec3.6-uplift-modeling.html" rel="next">
+<link href="../part3/sec3.4-causal-impact.html" rel="prev">
+<link href="../assets/favicon.png" rel="icon" type="image/png">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-491b769ea73b1ce4946cf8743b832a60.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-ec576e9d6a0f00bdcb4dbec60768df31.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-491b769ea73b1ce4946cf8743b832a60.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "Pas de résultats",
+    "search-matching-documents-text": "documents trouvés",
+    "search-copy-link-title": "Copier le lien vers la recherche",
+    "search-hide-matches-text": "Cacher les correspondances additionnelles",
+    "search-more-match-text": "correspondance de plus dans ce document",
+    "search-more-matches-text": "correspondances de plus dans ce document",
+    "search-clear-button-title": "Effacer",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Annuler",
+    "search-submit-button-title": "Envoyer",
+    "search-label": "Recherche"
+  }
+}</script>
+<script async="" src="https://www.googletagmanager.com/gtag/js?id=G-YY0LCGYER5"></script>
+
+<script type="text/javascript">
+
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
+</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../custom.css">
+<meta property="og:title" content="Méta-apprenants et CATE en Python">
+<meta property="og:description" content="Comprendre l’ATE, le CATE et l’ITE, puis appliquer les apprenants S, T et les méta-apprenants avancés aux effets hétérogènes d’un traitement par e-mail.">
+<meta property="og:image" content="https://marketing-science-in-python.com/images/common/book_cover_online.png">
+<meta property="og:site_name" content="Marketing Science in Python">
+<meta property="og:image:alt" content="Couverture montrant des flux de données abstraits convergeant vers un réseau géométrique">
+<meta name="twitter:title" content="Méta-apprenants et CATE en Python">
+<meta name="twitter:description" content="Comprendre l’ATE, le CATE et l’ITE, puis appliquer les apprenants S, T et les méta-apprenants avancés aux effets hétérogènes d’un traitement par e-mail.">
+<meta name="twitter:image" content="https://marketing-science-in-python.com/images/common/book_cover_online.png">
+<meta name="twitter:image:alt" content="Couverture montrant des flux de données abstraits convergeant vers un réseau géométrique">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://marketing-science-in-python.com/fr/part3/sec3.5-meta-learners.html">
+<!-- msbook-i18n-head:start -->
+<link rel="alternate" hreflang="en" href="https://marketing-science-in-python.com/part3/sec3.5-meta-learners.html">
+<link rel="alternate" hreflang="ja" href="https://marketing-science-in-python.com/ja/part3/sec3.5-meta-learners.html">
+<link rel="alternate" hreflang="fr" href="https://marketing-science-in-python.com/fr/part3/sec3.5-meta-learners.html">
+<link rel="alternate" hreflang="x-default" href="https://marketing-science-in-python.com/part3/sec3.5-meta-learners.html">
+<!-- msbook-i18n-head:end -->
+</head>
+
+<body class="nav-sidebar floating quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Basculer la barre latérale" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part3/_part3.html">Partie 3. L’inférence causale pour le marketing</a></li><li class="breadcrumb-item"><a href="../part3/sec3.5-meta-learners.html"><span class="chapter-title">3.5 Méta-apprenants pour les effets de traitement</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Basculer la barre latérale" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <!-- msbook-language-switch-mobile:start -->
+<div class="msbook-language-switch-mobile" aria-label="Language"><a lang="en" hreflang="en" href="../../part3/sec3.5-meta-learners.html" onclick="this.hash=window.location.hash">EN</a><span aria-hidden="true"> | </span><a lang="ja" hreflang="ja" href="../../ja/part3/sec3.5-meta-learners.html" onclick="this.hash=window.location.hash">日本語</a><span aria-hidden="true"> | </span><span lang="fr" aria-current="page">FR</span></div>
+<!-- msbook-language-switch-mobile:end -->
+<button type="button" class="btn quarto-search-button" aria-label="Recherche" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">Marketing Science in Python</a> 
+        <div class="sidebar-tools-main tools-wide">
+    <a href="https://github.com/takechanman1228/marketing-science-in-python" title="Code source" class="quarto-navigation-tool px-1" aria-label="Code source"><i class="bi bi-github"></i></a>
+    <div class="dropdown">
+      <a href="" title="Share" id="quarto-navigation-tool-dropdown-0" class="quarto-navigation-tool dropdown-toggle px-1" data-bs-toggle="dropdown" aria-expanded="false" role="link" aria-label="Share"><i class="bi bi-share"></i></a>
+      <ul class="dropdown-menu" aria-labelledby="quarto-navigation-tool-dropdown-0">
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://twitter.com/intent/tweet?url=|url|">
+              <i class="bi bi-twitter pe-1"></i>
+            Twitter
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://www.linkedin.com/sharing/share-offsite/?url=|url|">
+              <i class="bi bi-linkedin pe-1"></i>
+            LinkedIn
+            </a>
+          </li>
+      </ul>
+    </div>
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Basculer le mode sombre"><i class="bi"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Recherche"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Préface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part1/_part1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Partie 1. Introduction</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Basculer la section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1/sec1.1-what-is-marketing-science.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">1.1 Qu’est-ce que la science du marketing ?</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1/sec1.2-data-landscape.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">1.2 Comprendre les données marketing</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part2/_part2.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Partie 2. Analyser pour mieux décider</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Basculer la section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.1-right-question.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.1 Formuler la bonne question</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.2-kpi-design.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.2 Concevoir des KPI pour le diagnostic</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.3-storytelling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.3 Transformer les données en récit</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part3/_part3.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Partie 3. L’inférence causale pour le marketing</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Basculer la section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.1-thinking-causally.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.1 Raisonner en termes de causalité</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.2-ab-testing.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.2 Concevoir un test A/B</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.3-quasi-experiments.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.3 Quasi-expériences</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.4-causal-impact.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.4 Impact causal avec les séries temporelles</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.5-meta-learners.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">3.5 Méta-apprenants pour les effets de traitement</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.6-uplift-modeling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.6 Modélisation de l’uplift pour le ciblage</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part4/_part4.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Partie 4. Analyse client</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Basculer la section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part4/sec4.1-segmentation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">4.1 Segmentation client</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part4/sec4.2-clv-modeling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">4.2 Modélisation de la valeur vie client</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part5/_part5.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Partie 5. Analyse commerciale</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Basculer la section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.1-price-elasticity.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.1 Élasticité-prix et décisions tarifaires</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.2-assortment-optimization.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.2 Optimisation de l’assortiment de produits</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.3-sales-forecasting.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.3 Prévision des ventes et planification par scénarios</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part6/_part6.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Partie 6. Investissement média et optimisation</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Basculer la section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.1-media-measurement-problem.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.1 Le problème de la mesure des médias</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.2-mmm-fundamentals.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.2 Construire et optimiser un MMM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.3-incrementality-experiments.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.3 Expériences d’incrémentalité</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.4-mmm-calibration.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.4 Calibrer le MMM à l’aide d’expériences</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.5-when-tools-disagree.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.5 Décider lorsque les outils de mesure divergent</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendix/further-reading.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Références et lectures complémentaires</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendix/notebooks.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Notebooks et code</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../marketing-analytics-in-python.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">L’analyse marketing avec Python</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+<!-- msbook-language-switch:start -->
+<div class="msbook-language-switch" aria-label="Language"><a lang="en" hreflang="en" href="../../part3/sec3.5-meta-learners.html" onclick="this.hash=window.location.hash">English</a><span aria-hidden="true"> | </span><a lang="ja" hreflang="ja" href="../../ja/part3/sec3.5-meta-learners.html" onclick="this.hash=window.location.hash">日本語</a><span aria-hidden="true"> | </span><span lang="fr" aria-current="page">Français</span></div>
+<!-- msbook-language-switch:end -->
+
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table des matières</h2>
+   
+  <ul>
+  <li><a href="#treatment-effects-ate-cate-ite" id="toc-treatment-effects-ate-cate-ite" class="nav-link active" data-scroll-target="#treatment-effects-ate-cate-ite">Effets de traitement : ATE, CATE, ITE</a></li>
+  <li><a href="#why-we-need-meta-learners" id="toc-why-we-need-meta-learners" class="nav-link" data-scroll-target="#why-we-need-meta-learners">Pourquoi avons-nous besoin de méta-apprenants ?</a></li>
+  <li><a href="#s-learner-start-with-a-single-model" id="toc-s-learner-start-with-a-single-model" class="nav-link" data-scroll-target="#s-learner-start-with-a-single-model">Apprenant S : commencer par un seul modèle</a></li>
+  <li><a href="#t-learner-two-separate-models" id="toc-t-learner-two-separate-models" class="nav-link" data-scroll-target="#t-learner-two-separate-models">Apprenant T : deux modèles distincts</a></li>
+  <li><a href="#advanced-meta-learners" id="toc-advanced-meta-learners" class="nav-link" data-scroll-target="#advanced-meta-learners">Méta-apprenants avancés</a></li>
+  <li><a href="#example-estimating-heterogeneous-email-effects" id="toc-example-estimating-heterogeneous-email-effects" class="nav-link" data-scroll-target="#example-estimating-heterogeneous-email-effects">Exemple : estimer les effets hétérogènes d’un e-mail</a></li>
+  <li><a href="#what-to-check-before-trusting-cate" id="toc-what-to-check-before-trusting-cate" class="nav-link" data-scroll-target="#what-to-check-before-trusting-cate">Que vérifier avant de se fier au CATE ?</a></li>
+  <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways">Points à retenir</a></li>
+  </ul>
+<div class="quarto-code-links"><h2>Liens de code</h2><ul><li><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.5_meta_learners.ipynb"><i class="bi bi-github"></i>sec3.5_meta_learners.ipynb</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part3/_part3.html">Partie 3. L’inférence causale pour le marketing</a></li><li class="breadcrumb-item"><a href="../part3/sec3.5-meta-learners.html"><span class="chapter-title">3.5 Méta-apprenants pour les effets de traitement</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span id="sec-meta-learners" class="quarto-section-identifier"><span class="chapter-title">3.5 Méta-apprenants pour les effets de traitement</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="translation-notice">
+<p><strong>À propos de la version française</strong><br>
+Cette page est une traduction par IA de la version anglaise de <em>Marketing Science in Python</em>. La version anglaise fait foi et prévaut en cas de divergence. Le code, les notebooks et le texte intégré aux images restent en anglais. <a href="../../part3/sec3.5-meta-learners.html" class="translation-source-link">Lire la version anglaise</a></p>
+</div>
+<p>Les méthodes des chapitres précédents estiment un seul nombre pour tout un groupe : l’effet moyen du traitement (ATE), c’est-à-dire l’impact moyen d’un traitement sur l’ensemble des personnes qui l’ont reçu. Mais en marketing, les moyennes peuvent être trompeuses. Par exemple, un bon de réduction peut augmenter les achats de 5 % en moyenne, mais ce chiffre masque la réalité. Certains clients peuvent réagir par une hausse de 20 %, tandis que d’autres ne présentent aucun effet, voire une baisse. Si vous pouviez identifier les clients qui réagissent réellement, vous pourriez dépenser votre budget bien plus efficacement.</p>
+<p>Les méta-apprenants cherchent à estimer les effets de traitement pour chaque client. Mais à quoi cela ressemble-t-il concrètement ?</p>
+<section id="treatment-effects-ate-cate-ite" class="level2">
+<h2 class="anchored" data-anchor-id="treatment-effects-ate-cate-ite">Effets de traitement : ATE, CATE, ITE</h2>
+<p>Pour définir l’effet de traitement, nous nous appuyons sur le cadre des résultats potentiels. L’effet de traitement est la différence de résultats causée par un traitement : formellement, <span class="math inline">\(\tau = Y(1) - Y(0)\)</span>, où <span class="math inline">\(Y(1)\)</span> est le résultat sous traitement et <span class="math inline">\(Y(0)\)</span> le résultat en condition témoin. Par exemple, si le taux d’achat potentiel avec un bon de réduction est de 20 % et le taux sans ce bon de 10 %, l’effet de traitement est de 10 %.</p>
+<div id="fig-treatment-effect-def" class="fig-sm quarto-float quarto-figure quarto-figure-center anchored" alt="L’effet de traitement d’un client est la différence entre ses taux d’achat potentiels avec et sans bon de réduction.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-treatment-effect-def-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part3/sec3.5/treatment_effect_definition.png" class="fig-sm img-fluid figure-img" alt="L’effet de traitement d’un client est la différence entre ses taux d’achat potentiels avec et sans bon de réduction.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-treatment-effect-def-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: L’effet de traitement comme différence entre résultats potentiels.
+</figcaption>
+</figure>
+</div>
+<p>Il existe trois niveaux de granularité :</p>
+<ul>
+<li>ATE (effet moyen du traitement) : l’effet moyen sur l’ensemble des clients. « Le bon de réduction a-t-il augmenté les ventes ? »</li>
+<li>CATE (effet moyen conditionnel du traitement) : l’effet moyen pour les clients présentant des caractéristiques précises. « Le bon de réduction a-t-il mieux fonctionné auprès des clients urbains de moins de 30 ans ? »</li>
+<li>ITE (effet individuel du traitement) : l’effet pour un individu donné. Il est inobservable en pratique, mais le CATE en fournit notre meilleure estimation.</li>
+</ul>
+<p>Pourquoi cette distinction compte-t-elle ? Parce que tous les clients ne se comportent pas de la même façon. Un client sensible au prix peut se précipiter sur une remise, tandis qu’un client fidèle à la marque aurait de toute façon acheté au prix fort. Si vous savez les distinguer, vous pouvez cibler les remises là où elles génèrent réellement des ventes supplémentaires, au lieu de céder de la marge à des clients qui auraient acheté quoi qu’il arrive.</p>
+</section>
+<section id="why-we-need-meta-learners" class="level2">
+<h2 class="anchored" data-anchor-id="why-we-need-meta-learners">Pourquoi avons-nous besoin de méta-apprenants ?</h2>
+<p>Considérons cette question : un bon de réduction a-t-il augmenté les ventes ? Pour y répondre, nous examinons les données de différents clients, notamment leurs caractéristiques (âge, genre, lieu de résidence), le traitement (bon de réduction ou non) et le résultat (achat ou non).</p>
+<p>La colonne <span class="math inline">\(Y(1)\)</span> représente le résultat lorsque le bon de réduction est utilisé, tandis que <span class="math inline">\(Y(0)\)</span> représente le résultat sans ce bon. Si nous disposions des deux colonnes pour le même individu, calculer l’effet de traitement se résumerait à soustraire l’une de l’autre. Mais la difficulté tient au fait que nous ne pouvons observer qu’un seul résultat pour chaque individu.</p>
+<div id="fig-missing-counterfactual" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Un tableau de clients où une seule des deux colonnes de résultats potentiels, Y(1) ou Y(0), est renseignée pour chaque personne ; l’effet individuel du traitement est donc inconnu.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-missing-counterfactual-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part3/sec3.5/missing_counterfactual.png" class="fig-lg img-fluid figure-img" alt="Un tableau de clients où une seule des deux colonnes de résultats potentiels, Y(1) ou Y(0), est renseignée pour chaque personne ; l’effet individuel du traitement est donc inconnu.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-missing-counterfactual-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2: Le contrefactuel manquant : un seul résultat est observé par client.
+</figcaption>
+</figure>
+</div>
+<p>Pour résoudre ce problème, nous utilisons des méta-apprenants. Ce sont des cadres d’apprentissage automatique qui prédisent ce qui se serait passé si un client avait reçu l’autre traitement. En complétant ces contrefactuels manquants, nous pouvons estimer l’effet de traitement pour chaque personne.</p>
+</section>
+<section id="s-learner-start-with-a-single-model" class="level2">
+<h2 class="anchored" data-anchor-id="s-learner-start-with-a-single-model">Apprenant S : commencer par un seul modèle</h2>
+<p>Le « S » de l’apprenant S signifie « unique », car il repose sur un seul modèle d’apprentissage automatique. Nous l’entraînons sur toutes les données, en incluant l’indicateur de traitement comme une variable explicative parmi les autres. Pour estimer l’effet pour un client de caractéristiques <span class="math inline">\(x\)</span>, nous demandons deux prédictions à ce même modèle :</p>
+<p><span class="math display">\[\hat{Y}(1 \mid X=x) = \text{predicted outcome if treated}\]</span></p>
+<p><span class="math display">\[\hat{Y}(0 \mid X=x) = \text{predicted outcome if not treated}\]</span></p>
+<p>L’effet de traitement estimé est la différence entre les deux :</p>
+<p><span class="math display">\[\hat{\tau}(x) = \hat{Y}(1 \mid X=x) - \hat{Y}(0 \mid X=x)\]</span></p>
+<p>Dans le code, l’apprenant S obtient ces deux prédictions à partir du même modèle : une fois en fixant le traitement à 1, et une fois en le fixant à 0.</p>
+<div id="fig-s-learner" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Un seul modèle entraîné sur toutes les données est interrogé deux fois pour remplir les colonnes Y(1) et Y(0), dont la différence donne l’effet de traitement de chaque client.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-s-learner-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part3/sec3.5/s_learner.png" class="fig-lg img-fluid figure-img" alt="Un seul modèle entraîné sur toutes les données est interrogé deux fois pour remplir les colonnes Y(1) et Y(0), dont la différence donne l’effet de traitement de chaque client.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-s-learner-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3: Apprenant S : un modèle prédit les deux résultats potentiels.
+</figcaption>
+</figure>
+</div>
+<p>Pseudo-code :</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Train a single model with treatment as a feature</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>X <span class="op">=</span> df[[<span class="st">'age'</span>, <span class="st">'gender'</span>, <span class="st">'location'</span>, <span class="st">'treatment'</span>]]</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> df[<span class="st">'sales'</span>]</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> xgb.XGBRegressor()</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>model.fit(X, y)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'sales_treated'</span>] <span class="op">=</span> model.predict(X.assign(treatment<span class="op">=</span><span class="dv">1</span>))</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'sales_control'</span>] <span class="op">=</span> model.predict(X.assign(treatment<span class="op">=</span><span class="dv">0</span>))</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'treatment_effect'</span>] <span class="op">=</span> df[<span class="st">'sales_treated'</span>] <span class="op">-</span> df[<span class="st">'sales_control'</span>]</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>ATE <span class="op">=</span> df[<span class="st">'treatment_effect'</span>].mean()</span></code></pre></div><button title="Copier vers le presse-papier" class="code-copy-button"><i class="bi"></i></button></div>
+<p>L’apprenant S est la façon la plus simple de commencer et constitue souvent une référence raisonnable. Mais il présente une faiblesse majeure : si l’effet de traitement est faible par rapport aux autres variables explicatives, le modèle peut finir par ignorer la variable de traitement, surtout si vous utilisez une régularisation. Vos estimations du CATE peuvent alors être biaisées vers zéro.</p>
+</section>
+<section id="t-learner-two-separate-models" class="level2">
+<h2 class="anchored" data-anchor-id="t-learner-two-separate-models">Apprenant T : deux modèles distincts</h2>
+<p>Le « T » de l’apprenant T signifie « deux ». Au lieu d’un seul modèle, nous entraînons deux modèles distincts : l’un sur le groupe traité et l’autre sur le groupe témoin. Nous obtenons <span class="math inline">\(\hat{Y}(1 \mid X=x)\)</span> à partir du modèle du groupe traité et <span class="math inline">\(\hat{Y}(0 \mid X=x)\)</span> à partir du modèle du groupe témoin, puis nous calculons la différence :</p>
+<p><span class="math display">\[\hat{\tau}(x) = \hat{Y}(1 \mid X=x) - \hat{Y}(0 \mid X=x)\]</span></p>
+<div id="fig-t-learner" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Un modèle du groupe traité prédit la colonne Y(1) et un modèle distinct du groupe témoin prédit la colonne Y(0) ; leur différence donne l’effet de traitement de chaque client.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-t-learner-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part3/sec3.5/t_learner.png" class="fig-lg img-fluid figure-img" alt="Un modèle du groupe traité prédit la colonne Y(1) et un modèle distinct du groupe témoin prédit la colonne Y(0) ; leur différence donne l’effet de traitement de chaque client.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-t-learner-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4: Apprenant T : des modèles distincts remplissent chaque colonne de résultats potentiels.
+</figcaption>
+</figure>
+</div>
+<p>Pseudo-code :</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>df_treated <span class="op">=</span> df[df[<span class="st">'treatment'</span>] <span class="op">==</span> <span class="dv">1</span>]</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>df_control <span class="op">=</span> df[df[<span class="st">'treatment'</span>] <span class="op">==</span> <span class="dv">0</span>]</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Train separate models, one per arm</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>model_treated <span class="op">=</span> xgb.XGBRegressor()</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>model_treated.fit(df_treated[[<span class="st">'age'</span>, <span class="st">'gender'</span>, <span class="st">'location'</span>]], df_treated[<span class="st">'sales'</span>])</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>model_control <span class="op">=</span> xgb.XGBRegressor()</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>model_control.fit(df_control[[<span class="st">'age'</span>, <span class="st">'gender'</span>, <span class="st">'location'</span>]], df_control[<span class="st">'sales'</span>])</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'sales_treated'</span>] <span class="op">=</span> model_treated.predict(df[[<span class="st">'age'</span>, <span class="st">'gender'</span>, <span class="st">'location'</span>]])</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'sales_control'</span>] <span class="op">=</span> model_control.predict(df[[<span class="st">'age'</span>, <span class="st">'gender'</span>, <span class="st">'location'</span>]])</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'treatment_effect'</span>] <span class="op">=</span> df[<span class="st">'sales_treated'</span>] <span class="op">-</span> df[<span class="st">'sales_control'</span>]</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>ATE <span class="op">=</span> df[<span class="st">'treatment_effect'</span>].mean()</span></code></pre></div><button title="Copier vers le presse-papier" class="code-copy-button"><i class="bi"></i></button></div>
+<p>L’apprenant T est plus flexible, car chaque modèle peut apprendre des relations différentes pour les groupes traité et témoin. Mais il y a une contrepartie : sa variance peut être élevée, surtout si les groupes traité et témoin sont déséquilibrés. Lorsque vous soustrayez les prédictions, les erreurs des deux modèles peuvent s’additionner.</p>
+<p>L’apprenant S est donc simple, mais tend à sous-estimer les effets. L’apprenant T évite ce problème particulier, au prix d’estimations plus bruitées. Que pouvons-nous faire ensuite ?</p>
+</section>
+<section id="advanced-meta-learners" class="level2">
+<h2 class="anchored" data-anchor-id="advanced-meta-learners">Méta-apprenants avancés</h2>
+<p>Au-delà des apprenants S et T, plusieurs méthodes plus élaborées répondent à leurs limites :</p>
+<ul>
+<li>Apprenant X : une extension de l’apprenant T conçue pour les groupes de traitement déséquilibrés. Il impute les contrefactuels manquants et les combine au moyen d’une pondération par le score de propension. Il fonctionne bien lorsqu’un groupe est beaucoup plus grand que l’autre.</li>
+<li>Apprenant DR (doublement robuste) : il combine la modélisation du résultat et l’estimation du score de propension. Il est convergent si l’un ou l’autre des modèles est correctement spécifié, d’où « doublement robuste ».</li>
+<li>DML (double apprentissage automatique) : il utilise l’ajustement croisé pour éviter le biais de surapprentissage, avec de solides garanties théoriques. Plus coûteux en calcul, environ un ordre de grandeur plus lent que l’apprenant S dans le notebook associé, il fournit toutefois des intervalles de confiance valides.</li>
+</ul>
+<div id="fig-method-comparison" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Les méta-apprenants vont de l’apprenant S à modèle unique aux méthodes plus complexes doublement robustes et de double apprentissage automatique.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-method-comparison-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part3/sec3.5/method_comparison.png" class="fig-lg img-fluid figure-img" alt="Les méta-apprenants vont de l’apprenant S à modèle unique aux méthodes plus complexes doublement robustes et de double apprentissage automatique.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-method-comparison-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5: Méthodes de méta-apprentissage, des plus simples aux plus complexes.
+</figcaption>
+</figure>
+</div>
+<p>La théorie nous indique ce que chaque méthode est censée optimiser. Mais le véritable test consiste à observer leurs performances sur le même jeu de données, où les différences pratiques deviennent visibles.</p>
+</section>
+<section id="example-estimating-heterogeneous-email-effects" class="level2">
+<h2 class="anchored" data-anchor-id="example-estimating-heterogeneous-email-effects">Exemple : estimer les effets hétérogènes d’un e-mail</h2>
+<p>Pour voir comment ces méthodes se comportent, nous avons besoin d’un jeu de données permettant de vérifier leur travail. C’est plus difficile qu’il n’y paraît. Dans les données réelles, nous n’observons jamais le véritable effet de traitement d’un client ; nous ne pouvons donc pas savoir si un méta-apprenant a retrouvé la bonne structure ou simplement produit un bruit plausible.</p>
+<p>Nous résolvons ce problème avec un exemple semi-synthétique construit à partir de l’expérience d’e-mailing MineThatData de Kevin Hillstrom, un jeu de données classique en marketing portant sur 64 000 clients répartis aléatoirement entre un e-mail proposant des articles pour hommes, un e-mail proposant des articles pour femmes et aucun e-mail. Nous conservons les caractéristiques réelles des clients (récence, historique d’achat, canal et les autres) ainsi que l’affectation aléatoire réelle pour la comparaison binaire entre e-mail pour hommes et absence d’e-mail. Seuls les résultats sont simulés : nous définissons une probabilité d’achat de base et un effet de traitement <span class="math inline">\(\tau(x)\)</span> plus élevé pour les acheteurs d’articles pour hommes, les clients récemment actifs et les acheteurs multicanaux. Comme nous avons nous-mêmes défini <span class="math inline">\(\tau(x)\)</span>, nous connaissons le véritable CATE de chaque client et pouvons évaluer chaque apprenant par rapport à lui.</p>
+<p>Il s’agit d’un dispositif pédagogique. L’objectif n’est pas de mieux estimer l’effet moyen que ne le fait déjà l’expérience, mais de vérifier si un méta-apprenant retrouve l’hétérogénéité que nous avons introduite.</p>
+<p><strong>Notebook associé :</strong> <code>sec3.5_meta_learners.ipynb</code> compare les apprenants S, T, X et DR ainsi que CausalForestDML au véritable CATE connu dans l’expérience semi-synthétique MineThatData.<br>
+<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.5_meta_learners.ipynb">Voir sur GitHub</a></p>
+<p>Les cinq apprenants retrouvent l’effet moyen et, ce qui est plus utile, la structure au niveau des segments. Le nuage de points ci-dessous compare le CATE estimé à l’effet véritable pour un apprenant représentatif. Les estimations se concentrent autour de la droite à 45 degrés : les clients sont donc classés dans un ordre globalement correct, avec une dispersion verticale qui reflète le bruit des résultats binaires.</p>
+<div id="fig-true-vs-est" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Un nuage de points du CATE estimé en fonction de l’effet simulé véritable, avec des points concentrés autour de la droite à 45 degrés.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-true-vs-est-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part3/sec3.5/true_vs_estimated_cate.png" class="fig-md img-fluid figure-img" alt="Un nuage de points du CATE estimé en fonction de l’effet simulé véritable, avec des points concentrés autour de la droite à 45 degrés.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-true-vs-est-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;6: CATE estimé et CATE véritable.
+</figcaption>
+</figure>
+</div>
+<p>Le calcul des moyennes par segment rend cette restitution plus nette : en répartissant les clients selon l’achat d’articles pour hommes, la récence, l’historique d’achat et le canal, l’effet estimé suit de près l’effet véritable et reproduit la réponse plus forte que nous avons introduite chez les acheteurs d’articles pour hommes, les clients récents et les acheteurs multicanaux.</p>
+<div id="fig-cate-by-segment" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Des barres groupées comparent les CATE moyens véritables et estimés par segment d’achat d’articles pour hommes, de récence, d’historique et de canal.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-cate-by-segment-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part3/sec3.5/cate_by_segment.png" class="fig-lg img-fluid figure-img" alt="Des barres groupées comparent les CATE moyens véritables et estimés par segment d’achat d’articles pour hommes, de récence, d’historique et de canal.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-cate-by-segment-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;7: CATE estimé et CATE véritable par segment.
+</figcaption>
+</figure>
+</div>
+<p>L’apprenant qui classe le mieux les clients dépend des données. Évaluée par rapport au véritable CATE sur l’échantillon réservé à l’évaluation, cette expérience sans complications et équilibrée favorise les apprenants simples :</p>
+<div id="tbl-cate-recovery" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-cate-recovery-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;1: Restitution du véritable CATE par apprenant sur l’échantillon réservé à l’évaluation.
+</figcaption>
+<div aria-describedby="tbl-cate-recovery-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Méthode</th>
+<th style="text-align: right;">Corr(est., vrai)</th>
+<th style="text-align: right;">MAE</th>
+<th style="text-align: right;">CATE estimé moyen</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Apprenant S</td>
+<td style="text-align: right;">0.77</td>
+<td style="text-align: right;">0.030</td>
+<td style="text-align: right;">0.108</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Apprenant X</td>
+<td style="text-align: right;">0.69</td>
+<td style="text-align: right;">0.038</td>
+<td style="text-align: right;">0.109</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">CausalForestDML</td>
+<td style="text-align: right;">0.60</td>
+<td style="text-align: right;">0.051</td>
+<td style="text-align: right;">0.109</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Apprenant T</td>
+<td style="text-align: right;">0.59</td>
+<td style="text-align: right;">0.050</td>
+<td style="text-align: right;">0.109</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Apprenant DR</td>
+<td style="text-align: right;">0.58</td>
+<td style="text-align: right;">0.049</td>
+<td style="text-align: right;">0.109</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<p>Les cinq retrouvent l’effet moyen d’environ 11 points que nous avons introduit ; ce qui les distingue est la corrélation avec le véritable CATE, laquelle détermine la qualité du classement. Les apprenants S et X arrivent en tête, tandis que les apprenants à deux modèles et ceux utilisant l’ajustement croisé en paient le prix en variance. Sur des données plus bruitées ou déséquilibrées, l’ordre peut changer : c’est précisément pourquoi il faut vérifier la restitution de l’effet plutôt que se fier à la réputation d’une méthode.</p>
+</section>
+<section id="what-to-check-before-trusting-cate" class="level2">
+<h2 class="anchored" data-anchor-id="what-to-check-before-trusting-cate">Que vérifier avant de se fier au CATE ?</h2>
+<p>Cet exemple était délibérément favorable : traitement randomisé, recouvrement parfait et réponse connue. Les projets réels le sont rarement. Avant d’agir sur la base d’estimations du CATE :</p>
+<ul>
+<li>Un méta-apprenant ne crée pas de comparaison causale. Il modélise la variation de l’effet au sein d’une comparaison dont vous disposez déjà ; sur des données observationnelles, le CATE hérite donc de tous les problèmes de confusion que porte la comparaison sous-jacente.</li>
+<li>L’effet individuel du traitement n’est jamais observé dans les données réelles. Nous n’avons pu évaluer les apprenants ici que parce que nous avons simulé la vérité.</li>
+<li>Le CATE est une estimation issue d’un modèle, pas une mesure. Interprétez-le au niveau du groupe ou du segment, et non comme un chiffre à prendre au pied de la lettre pour un client.</li>
+<li>Vérifiez la plausibilité de la moyenne. Si le CATE estimé moyen s’écarte fortement d’une simple différence de moyennes dans une expérience, quelque chose ne va pas.</li>
+<li>Vérifiez la stabilité entre apprenants. Si S, T, X et la forêt causale ne s’accordent pas sur le classement, ne vous fiez encore à aucun d’eux.</li>
+<li>Surveillez le recouvrement. Là où les clients traités et témoins ne coexistent pas, le CATE est une extrapolation plutôt qu’une estimation.</li>
+</ul>
+</section>
+<section id="key-takeaways" class="level2">
+<h2 class="anchored" data-anchor-id="key-takeaways">Points à retenir</h2>
+<ul>
+<li>L’ATE demande si le traitement a fonctionné ; le CATE demande pour qui. Les méta-apprenants estiment cette variation au sein d’une comparaison causale dont vous disposez déjà, et aucun ne corrige les facteurs de confusion que vous n’avez pas mesurés.</li>
+<li>Le CATE est une estimation de modèle au niveau du groupe, et l’effet véritable n’est jamais observé dans les données réelles : aucun apprenant ne mérite donc votre confiance sur sa seule réputation. Vérifiez la moyenne par rapport à l’expérience, la stabilité entre apprenants et le recouvrement.</li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copié");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copié");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/marketing-science-in-python\.com\/fr\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../part3/sec3.4-causal-impact.html" class="pagination-link" aria-label="3.4 Impact causal avec les séries temporelles">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">3.4 Impact causal avec les séries temporelles</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../part3/sec3.6-uplift-modeling.html" class="pagination-link" aria-label="3.6 Modélisation de l’uplift pour le ciblage">
+        <span class="nav-page-text"><span class="chapter-title">3.6 Modélisation de l’uplift pour le ciblage</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

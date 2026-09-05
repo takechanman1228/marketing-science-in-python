@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="fr" xml:lang="fr"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="Régression sur discontinuité, doubles différences et contrôle synthétique : choisir un protocole quasi expérimental lorsqu’un test A/B n’est pas possible.">
+
+<title>Quasi-expériences en Python – Marketing Science in Python</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../part3/sec3.4-causal-impact.html" rel="next">
+<link href="../part3/sec3.2-ab-testing.html" rel="prev">
+<link href="../assets/favicon.png" rel="icon" type="image/png">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-491b769ea73b1ce4946cf8743b832a60.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-ec576e9d6a0f00bdcb4dbec60768df31.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-491b769ea73b1ce4946cf8743b832a60.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "Pas de résultats",
+    "search-matching-documents-text": "documents trouvés",
+    "search-copy-link-title": "Copier le lien vers la recherche",
+    "search-hide-matches-text": "Cacher les correspondances additionnelles",
+    "search-more-match-text": "correspondance de plus dans ce document",
+    "search-more-matches-text": "correspondances de plus dans ce document",
+    "search-clear-button-title": "Effacer",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Annuler",
+    "search-submit-button-title": "Envoyer",
+    "search-label": "Recherche"
+  }
+}</script>
+<script async="" src="https://www.googletagmanager.com/gtag/js?id=G-YY0LCGYER5"></script>
+
+<script type="text/javascript">
+
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
+</script>
+
+
+<link rel="stylesheet" href="../custom.css">
+<meta property="og:title" content="Quasi-expériences en Python">
+<meta property="og:description" content="Régression sur discontinuité, doubles différences et contrôle synthétique : choisir un protocole quasi expérimental lorsqu’un test A/B n’est pas possible.">
+<meta property="og:image" content="https://marketing-science-in-python.com/images/common/book_cover_online.png">
+<meta property="og:site_name" content="Marketing Science in Python">
+<meta property="og:image:alt" content="Couverture montrant des flux de données abstraits convergeant vers un réseau géométrique">
+<meta name="twitter:title" content="Quasi-expériences en Python">
+<meta name="twitter:description" content="Régression sur discontinuité, doubles différences et contrôle synthétique : choisir un protocole quasi expérimental lorsqu’un test A/B n’est pas possible.">
+<meta name="twitter:image" content="https://marketing-science-in-python.com/images/common/book_cover_online.png">
+<meta name="twitter:image:alt" content="Couverture montrant des flux de données abstraits convergeant vers un réseau géométrique">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://marketing-science-in-python.com/fr/part3/sec3.3-quasi-experiments.html">
+<!-- msbook-i18n-head:start -->
+<link rel="alternate" hreflang="en" href="https://marketing-science-in-python.com/part3/sec3.3-quasi-experiments.html">
+<link rel="alternate" hreflang="ja" href="https://marketing-science-in-python.com/ja/part3/sec3.3-quasi-experiments.html">
+<link rel="alternate" hreflang="fr" href="https://marketing-science-in-python.com/fr/part3/sec3.3-quasi-experiments.html">
+<link rel="alternate" hreflang="x-default" href="https://marketing-science-in-python.com/part3/sec3.3-quasi-experiments.html">
+<!-- msbook-i18n-head:end -->
+</head>
+
+<body class="nav-sidebar floating quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Basculer la barre latérale" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part3/_part3.html">Partie 3. L’inférence causale pour le marketing</a></li><li class="breadcrumb-item"><a href="../part3/sec3.3-quasi-experiments.html"><span class="chapter-title">3.3 Quasi-expériences</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Basculer la barre latérale" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <!-- msbook-language-switch-mobile:start -->
+<div class="msbook-language-switch-mobile" aria-label="Language"><a lang="en" hreflang="en" href="../../part3/sec3.3-quasi-experiments.html" onclick="this.hash=window.location.hash">EN</a><span aria-hidden="true"> | </span><a lang="ja" hreflang="ja" href="../../ja/part3/sec3.3-quasi-experiments.html" onclick="this.hash=window.location.hash">日本語</a><span aria-hidden="true"> | </span><span lang="fr" aria-current="page">FR</span></div>
+<!-- msbook-language-switch-mobile:end -->
+<button type="button" class="btn quarto-search-button" aria-label="Recherche" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">Marketing Science in Python</a> 
+        <div class="sidebar-tools-main tools-wide">
+    <a href="https://github.com/takechanman1228/marketing-science-in-python" title="Code source" class="quarto-navigation-tool px-1" aria-label="Code source"><i class="bi bi-github"></i></a>
+    <div class="dropdown">
+      <a href="" title="Share" id="quarto-navigation-tool-dropdown-0" class="quarto-navigation-tool dropdown-toggle px-1" data-bs-toggle="dropdown" aria-expanded="false" role="link" aria-label="Share"><i class="bi bi-share"></i></a>
+      <ul class="dropdown-menu" aria-labelledby="quarto-navigation-tool-dropdown-0">
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://twitter.com/intent/tweet?url=|url|">
+              <i class="bi bi-twitter pe-1"></i>
+            Twitter
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://www.linkedin.com/sharing/share-offsite/?url=|url|">
+              <i class="bi bi-linkedin pe-1"></i>
+            LinkedIn
+            </a>
+          </li>
+      </ul>
+    </div>
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Basculer le mode sombre"><i class="bi"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Recherche"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Préface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part1/_part1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Partie 1. Introduction</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Basculer la section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1/sec1.1-what-is-marketing-science.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">1.1 Qu’est-ce que la science du marketing ?</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1/sec1.2-data-landscape.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">1.2 Comprendre les données marketing</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part2/_part2.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Partie 2. Analyser pour mieux décider</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Basculer la section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.1-right-question.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.1 Formuler la bonne question</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.2-kpi-design.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.2 Concevoir des KPI pour le diagnostic</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.3-storytelling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.3 Transformer les données en récit</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part3/_part3.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Partie 3. L’inférence causale pour le marketing</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Basculer la section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.1-thinking-causally.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.1 Raisonner en termes de causalité</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.2-ab-testing.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.2 Concevoir un test A/B</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.3-quasi-experiments.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">3.3 Quasi-expériences</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.4-causal-impact.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.4 Impact causal avec les séries temporelles</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.5-meta-learners.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.5 Méta-apprenants pour les effets de traitement</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.6-uplift-modeling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.6 Modélisation de l’uplift pour le ciblage</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part4/_part4.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Partie 4. Analyse client</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Basculer la section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part4/sec4.1-segmentation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">4.1 Segmentation client</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part4/sec4.2-clv-modeling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">4.2 Modélisation de la valeur vie client</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part5/_part5.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Partie 5. Analyse commerciale</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Basculer la section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.1-price-elasticity.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.1 Élasticité-prix et décisions tarifaires</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.2-assortment-optimization.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.2 Optimisation de l’assortiment de produits</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.3-sales-forecasting.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.3 Prévision des ventes et planification par scénarios</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part6/_part6.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Partie 6. Investissement média et optimisation</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Basculer la section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.1-media-measurement-problem.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.1 Le problème de la mesure des médias</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.2-mmm-fundamentals.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.2 Construire et optimiser un MMM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.3-incrementality-experiments.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.3 Expériences d’incrémentalité</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.4-mmm-calibration.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.4 Calibrer le MMM à l’aide d’expériences</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.5-when-tools-disagree.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.5 Décider lorsque les outils de mesure divergent</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendix/further-reading.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Références et lectures complémentaires</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendix/notebooks.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Notebooks et code</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../marketing-analytics-in-python.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">L’analyse marketing avec Python</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+<!-- msbook-language-switch:start -->
+<div class="msbook-language-switch" aria-label="Language"><a lang="en" hreflang="en" href="../../part3/sec3.3-quasi-experiments.html" onclick="this.hash=window.location.hash">English</a><span aria-hidden="true"> | </span><a lang="ja" hreflang="ja" href="../../ja/part3/sec3.3-quasi-experiments.html" onclick="this.hash=window.location.hash">日本語</a><span aria-hidden="true"> | </span><span lang="fr" aria-current="page">Français</span></div>
+<!-- msbook-language-switch:end -->
+
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table des matières</h2>
+   
+  <ul>
+  <li><a href="#which-design-fits-your-situation" id="toc-which-design-fits-your-situation" class="nav-link active" data-scroll-target="#which-design-fits-your-situation">Quel protocole convient à votre situation ?</a></li>
+  <li><a href="#regression-discontinuity-rdd" id="toc-regression-discontinuity-rdd" class="nav-link" data-scroll-target="#regression-discontinuity-rdd">Régression sur discontinuité (RDD)</a>
+  <ul class="collapse">
+  <li><a href="#when-rdd-doesnt-work" id="toc-when-rdd-doesnt-work" class="nav-link" data-scroll-target="#when-rdd-doesnt-work">Quand la RDD ne fonctionne pas</a></li>
+  </ul></li>
+  <li><a href="#difference-in-differences-did" id="toc-difference-in-differences-did" class="nav-link" data-scroll-target="#difference-in-differences-did">Doubles différences (DiD)</a>
+  <ul class="collapse">
+  <li><a href="#the-parallel-trends-assumption" id="toc-the-parallel-trends-assumption" class="nav-link" data-scroll-target="#the-parallel-trends-assumption">L’hypothèse des tendances parallèles</a></li>
+  <li><a href="#when-did-doesnt-work" id="toc-when-did-doesnt-work" class="nav-link" data-scroll-target="#when-did-doesnt-work">Quand les DiD ne fonctionnent pas</a></li>
+  <li><a href="#estimating-did-with-a-regression" id="toc-estimating-did-with-a-regression" class="nav-link" data-scroll-target="#estimating-did-with-a-regression">Estimer les DiD par régression</a></li>
+  </ul></li>
+  <li><a href="#synthetic-control" id="toc-synthetic-control" class="nav-link" data-scroll-target="#synthetic-control">Contrôle synthétique</a>
+  <ul class="collapse">
+  <li><a href="#when-synthetic-control-doesnt-work" id="toc-when-synthetic-control-doesnt-work" class="nav-link" data-scroll-target="#when-synthetic-control-doesnt-work">Quand le contrôle synthétique ne fonctionne pas</a></li>
+  </ul></li>
+  <li><a href="#when-there-is-no-control-group" id="toc-when-there-is-no-control-group" class="nav-link" data-scroll-target="#when-there-is-no-control-group">Lorsqu’il n’y a pas de groupe témoin</a></li>
+  <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways">Points à retenir</a></li>
+  </ul>
+<div class="quarto-code-links"><h2>Liens de code</h2><ul><li><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.3_quasi_experiments.ipynb"><i class="bi bi-github"></i>sec3.3_quasi_experiments.ipynb</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part3/_part3.html">Partie 3. L’inférence causale pour le marketing</a></li><li class="breadcrumb-item"><a href="../part3/sec3.3-quasi-experiments.html"><span class="chapter-title">3.3 Quasi-expériences</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span id="sec-quasi-experiments" class="quarto-section-identifier"><span class="chapter-title">3.3 Quasi-expériences</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="translation-notice">
+<p><strong>À propos de la version française</strong><br>
+Cette page est une traduction par IA de la version anglaise de <em>Marketing Science in Python</em>. La version anglaise fait foi et prévaut en cas de divergence. Le code, les notebooks et le texte intégré aux images restent en anglais. <a href="../../part3/sec3.3-quasi-experiments.html" class="translation-source-link">Lire la version anglaise</a></p>
+</div>
+<p>Le test A/B est la méthode de référence pour mesurer les relations de cause à effet. Attribuez le traitement au hasard, et le groupe témoin vous indique ce qui se serait passé sans lui. Mais il n’est pas toujours possible d’en mener un. Comme l’expliquait la <a href="../part3/sec3.1-thinking-causally.html#limitations-of-ab-testing">section 3.1</a>, de nombreuses raisons peuvent exclure le recours à un test A/B.</p>
+<p>Lorsque vous ne pouvez pas randomiser, vous recourez à une quasi-expérience. Une quasi-expérience estime les relations de cause à effet sans assignation aléatoire. Elle exploite les possibilités de comparaison laissées par le processus opérationnel : un seuil, un déploiement qui a épargné certaines unités, une date de lancement. C’est là toute la difficulté. Un déploiement non aléatoire ne constitue pas automatiquement une quasi-expérience exploitable. Il doit laisser une comparaison dont vous pouvez défendre les hypothèses, et chaque protocole de ce chapitre s’accompagne de l’hypothèse que vous devrez défendre.</p>
+<p>Ce chapitre présente trois protocoles : la régression sur discontinuité (RDD), les doubles différences (DiD) et le contrôle synthétique. Chacun exige des unités non traitées auxquelles se comparer : un groupe témoin de magasins qui n’ont pas reçu le présentoir, ou un ensemble de magasins à combiner pour en constituer un. Le quatrième protocole, CausalImpact, s’applique lorsqu’il n’existe aucune unité non traitée. Il fait l’objet du <a href="sec3.4-causal-impact.html">chapitre suivant</a>.</p>
+<section id="which-design-fits-your-situation" class="level2">
+<h2 class="anchored" data-anchor-id="which-design-fits-your-situation">Quel protocole convient à votre situation ?</h2>
+<p>Quatre protocoles, cela fait beaucoup de choix, et leurs noms ne vous disent pas lequel il vous faut. Appliquons-les donc tous à un même problème concret. Une enseigne possède 100 magasins. Elle a déployé un nouveau présentoir en magasin et veut savoir quel a été son effet sur les ventes de la catégorie.</p>
+<p>La première question est toujours la même : le présentoir a-t-il été attribué au hasard ? Si oui, les magasins non traités constituent votre groupe témoin et vous revenez à la <a href="sec3.2-ab-testing.html">section 3.2</a>. Sinon, c’est son mode d’attribution qui détermine le protocole.</p>
+<div id="tbl-hundred-stores" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-hundred-stores-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;1: Les mêmes 100 magasins, cinq façons d’attribuer le présentoir.
+</figcaption>
+<div aria-describedby="tbl-hundred-stores-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Qui a reçu le présentoir</th>
+<th style="text-align: left;">Protocole</th>
+<th style="text-align: left;">La comparaison</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">50 magasins, choisis au hasard</td>
+<td style="text-align: left;">Test A/B</td>
+<td style="text-align: left;">Les 50 autres</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Tous les magasins dont le chiffre d’affaires annuel dépasse $1M</td>
+<td style="text-align: left;">RDD</td>
+<td style="text-align: left;">Les magasins juste en dessous de $1M comparés à ceux juste au-dessus, et uniquement ceux-là</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">50 magasins, choisis par l’équipe commerciale</td>
+<td style="text-align: left;">DiD</td>
+<td style="text-align: left;">Les 50 autres, avant et après</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Le magasin de New York uniquement</td>
+<td style="text-align: left;">Contrôle synthétique</td>
+<td style="text-align: left;">Une combinaison pondérée des 99 autres, ajustée sur les ventes passées</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Les 100, le même jour</td>
+<td style="text-align: left;">CausalImpact (<a href="sec3.4-causal-impact.html">chapitre suivant</a>)</td>
+<td style="text-align: left;">Une prévision fondée sur l’historique de l’enseigne et sur des séries de marché que le présentoir ne pouvait pas affecter</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<p>Chaque ligne porte sur les mêmes 100 magasins. Ce qui change, c’est la manière dont le présentoir a été attribué, et cela détermine à la fois le protocole et les données nécessaires : la variable d’assignation pour la RDD, un panel avant-après pour les DiD, une longue période préalable et un ensemble de magasins non traités pour le contrôle synthétique. Cinquante magasins choisis au hasard et cinquante choisis par l’équipe commerciale peuvent produire la même feuille de calcul, mais seul le premier cas est une expérience. C’est la règle de tout ce chapitre. L’assignation détermine le protocole. Les données déterminent ensuite si ce protocole est crédible.</p>
+<p>Ce tableau présente les cinq options d’une enseigne. <a href="#fig-method-decision-tree" class="quarto-xref">Figure&nbsp;<span>1</span></a> en fait un guide d’orientation pour tout déploiement : deux questions auxquelles répondre par oui ou par non, puis un choix qui dépend de la quantité de données non traitées dont vous disposez encore.</p>
+<div id="fig-method-decision-tree" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Deux filtres, l’assignation aléatoire puis une règle de seuil, suivis d’une échelle à trois échelons allant d’un groupe témoin à un ensemble de donneurs, puis à une prévision.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-method-decision-tree-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part3/sec3.3/method_decision_tree.png" class="fig-lg img-fluid figure-img" alt="Deux filtres, l’assignation aléatoire puis une règle de seuil, suivis d’une échelle à trois échelons allant d’un groupe témoin à un ensemble de donneurs, puis à une prévision.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-method-decision-tree-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: Choisir une comparaison crédible
+</figcaption>
+</figure>
+</div>
+<p>Ces quatre protocoles ne sont pas non plus quatre astuces sans rapport entre elles. L’un d’eux, la RDD, utilise un seuil et rien d’autre. Les trois autres forment une échelle. Les DiD empruntent la tendance des magasins témoins. Le contrôle synthétique combine des magasins témoins pour construire une meilleure comparaison lorsqu’aucun ne convient à lui seul. CausalImpact prévoit la comparaison lorsqu’il n’existe aucun magasin témoin. Chaque échelon s’appuie davantage sur un modèle. Ce chapitre couvre la RDD et les deux premiers échelons.</p>
+</section>
+<section id="regression-discontinuity-rdd" class="level2">
+<h2 class="anchored" data-anchor-id="regression-discontinuity-rdd">Régression sur discontinuité (RDD)</h2>
+<p><strong>Idée centrale :</strong> au voisinage immédiat du seuil, l’assignation est aussi bonne qu’une assignation aléatoire.</p>
+<p>Partons de la deuxième ligne de <a href="#tbl-hundred-stores" class="quarto-xref">Table&nbsp;<span>1</span></a>. Au lieu de choisir les magasins, l’équipe commerciale a fixé une règle : tout magasin dont le chiffre d’affaires annuel dépasse $1M reçoit le nouveau présentoir. Les magasins pilotes sont désormais les plus grands par construction. Les comparer aux autres ne ferait que mesurer ce que signifie être un grand magasin.</p>
+<p>Mais regardez les magasins proches du seuil. Un magasin réalisant $1.02M et un autre réalisant $0.98M ont à peu près la même taille, servent des clients similaires et organisent des promotions similaires. Le côté de $1M où ils se trouvent relève presque du pile ou face. La RDD le traite comme tel. Elle compare les résultats juste au-dessus du seuil à ceux juste en dessous, et si les ventes de la catégorie font un saut à $1M, ce saut est l’effet du présentoir. La même logique vaut pour les clients : si ceux qui ont dépensé au moins $500 par le passé reçoivent un coupon, comparez les clients à $502 à ceux à $498.</p>
+<section id="when-rdd-doesnt-work" class="level3">
+<h3 class="anchored" data-anchor-id="when-rdd-doesnt-work">Quand la RDD ne fonctionne pas</h3>
+<p>La RDD exige beaucoup d’unités près du seuil, car elle n’utilise que celles-là. Sur 100 magasins, une dizaine se trouvent peut-être à quelques pour cent de $1M, ce qui est trop peu pour ajuster une droite de chaque côté et discerner un saut au-delà du bruit. Avec 20 000 clients proches de $500, ce n’est plus le cas. Voilà pourquoi la RDD est surtout un outil d’analyse au niveau du client en marketing : coupons ou points attribués selon les dépenses passées, seuils de score des prospects pour les prises de contact commerciales. <a href="#fig-rdd-discontinuity" class="quarto-xref">Figure&nbsp;<span>2</span></a> illustre cette version.</p>
+<div id="fig-rdd-discontinuity" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Nuage de points des achats ultérieurs en fonction des dépenses avant campagne, avec des droites ajustées de chaque côté du seuil de $500 ; le résultat présente un saut au seuil.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-rdd-discontinuity-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part3/sec3.3/rdd_discontinuity.png" class="fig-md img-fluid figure-img" alt="Nuage de points des achats ultérieurs en fonction des dépenses avant campagne, avec des droites ajustées de chaque côté du seuil de $500 ; le résultat présente un saut au seuil.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-rdd-discontinuity-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2: Régression sur discontinuité : un saut au seuil.
+</figcaption>
+</figure>
+</div>
+<p>Deux autres limites. L’effet est local : le saut à $500 indique ce que le coupon a changé pour les clients qui dépensent environ $500, pas pour ceux qui dépensent $5,000. Et les unités ne doivent pas pouvoir franchir délibérément le seuil. Si un programme de fidélité fait passer les clients au niveau supérieur à $1,000 et qu’ils le savent, certains feront un achat supplémentaire en décembre pour le franchir. Si un responsable de magasin touche une prime en atteignant $1M, les magasins à $0.97M en novembre trouvent un moyen de terminer à $1.01M. Dans les deux cas, les unités juste au-dessus du seuil sont celles qui ont fait davantage d’efforts, et la RDD interprète cela comme l’effet du traitement. Un histogramme de la variable d’assignation montrant une concentration juste au-dessus du seuil est le signe révélateur. Avec un tel seuil, la RDD ne peut pas être utilisée.</p>
+</section>
+</section>
+<section id="difference-in-differences-did" class="level2">
+<h2 class="anchored" data-anchor-id="difference-in-differences-did">Doubles différences (DiD)</h2>
+<p><strong>Idée centrale :</strong> comparez les variations, pas les niveaux. La variation du groupe témoin au fil du temps représente ce qu’aurait fait le groupe traité.</p>
+<p>Passons à la troisième ligne de <a href="#tbl-hundred-stores" class="quarto-xref">Table&nbsp;<span>1</span></a> : l’équipe commerciale a choisi 50 magasins pour le nouveau présentoir, et 50 magasins comparables ont conservé l’agencement habituel des rayons. Vous disposez des ventes de la catégorie par magasin, avant et après le déploiement, pour les deux groupes.</p>
+<p>Les magasins pilotes sont passés de $42k à $48k. Le présentoir vaut donc $6k par magasin ?</p>
+<p>Probablement pas. Les magasins de comparaison sont passés de $40k à $43k sans aucun présentoir. Quelque chose a fait progresser toute la catégorie d’environ $3k : la saisonnalité, la fréquentation, une rupture de stock chez un concurrent. Une comparaison avant-après limitée aux magasins pilotes attribue cette croissance du marché au présentoir.</p>
+<p>Comparons donc plutôt les deux groupes après le déploiement. $48k contre $43k, cela fait $5k. Est-ce l’effet ?</p>
+<p>Non plus. Les magasins pilotes avaient déjà $2k d’avance avant toute intervention, avec $42k contre $40k. L’équipe commerciale n’a pas choisi au hasard, et une comparaison entre groupe traité et groupe témoin sur la période postérieure attribue cette avance initiale au présentoir.</p>
+<p>Chaque comparaison naïve échoue à cause d’un facteur de confusion différent. La comparaison avant-après capte la tendance temporelle commune. La comparaison entre groupe traité et groupe témoin capte l’écart préexistant entre les groupes. Prenez la différence des deux différences, et les deux s’annulent :</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Groupe de magasins</th>
+<th>Avant</th>
+<th>Après</th>
+<th>Variation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Magasins pilotes</td>
+<td>$42k</td>
+<td>$48k</td>
+<td>+$6k</td>
+</tr>
+<tr class="even">
+<td>Magasins de comparaison</td>
+<td>$40k</td>
+<td>$43k</td>
+<td>+$3k</td>
+</tr>
+<tr class="odd">
+<td>Estimation DiD</td>
+<td></td>
+<td></td>
+<td>+$3k</td>
+</tr>
+</tbody>
+</table>
+<p>Les magasins pilotes ont progressé de $6k, les magasins de comparaison de $3k, et la différence est de $3k. Vous obtenez la même réponse dans l’autre sens : un écart de $5k après moins un écart de $2k avant. C’est la méthode des doubles différences. La tendance commune s’annule. Toute différence fixe entre les groupes aussi. Il reste la part de la variation des magasins pilotes que les magasins de comparaison ne peuvent pas expliquer.</p>
+<p>Dans le code, l’estimation se réduit à ces deux différences :</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>did <span class="op">=</span> pd.DataFrame({</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"group"</span>:  [<span class="st">"Pilot stores"</span>, <span class="st">"Comparison stores"</span>],</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"before"</span>: [<span class="dv">42</span>, <span class="dv">40</span>],   <span class="co"># category sales per store, $k</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"after"</span>:  [<span class="dv">48</span>, <span class="dv">43</span>],</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>did[<span class="st">"change"</span>] <span class="op">=</span> did[<span class="st">"after"</span>] <span class="op">-</span> did[<span class="st">"before"</span>]              <span class="co"># +6 and +3</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>did_estimate <span class="op">=</span> did.loc[<span class="dv">0</span>, <span class="st">"change"</span>] <span class="op">-</span> did.loc[<span class="dv">1</span>, <span class="st">"change"</span>]</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"DiD estimate: $</span><span class="sc">{</span>did_estimate<span class="sc">}</span><span class="ss">k"</span>)                  <span class="co"># DiD estimate: $3k</span></span></code></pre></div><button title="Copier vers le presse-papier" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Les DiD conviennent à la plupart des situations marketing où « certaines unités ont changé, d’autres non » : tests pilotes de présentoirs en magasin, réaménagements des rayons, déploiements de promotions par région, changements de prix sur certains marchés, fonctionnalité d’application lancée d’abord sur une seule plateforme.</p>
+<section id="the-parallel-trends-assumption" class="level3">
+<h3 class="anchored" data-anchor-id="the-parallel-trends-assumption">L’hypothèse des tendances parallèles</h3>
+<p>Les DiD reposent sur des tendances parallèles (aussi appelées tendances communes) : sans le traitement, les deux groupes auraient suivi la même <em>tendance</em>. La tendance, pas le niveau. Les groupes peuvent partir de niveaux de ventes différents, comme les magasins pilotes. Ce qui compte, c’est que la variation du groupe de comparaison après le déploiement représente correctement ce qu’auraient fait les magasins pilotes sans intervention.</p>
+<p>Vous ne pouvez jamais le vérifier complètement, car vous n’observez pas les magasins pilotes sans le présentoir. Mais vous pouvez examiner la période précédant le déploiement.</p>
+<div id="fig-did-parallel-trends" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Doubles différences : tendances préalables parallèles, puis divergence après l’intervention ; l’écart est l’effet causal.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-did-parallel-trends-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part3/sec3.3/did_parallel_trends.png" class="fig-md img-fluid figure-img" alt="Doubles différences : tendances préalables parallèles, puis divergence après l’intervention ; l’écart est l’effet causal.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-did-parallel-trends-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3: Doubles différences : tendances préalables et divergence.
+</figcaption>
+</figure>
+</div>
+<p>Tracez l’évolution des deux groupes et regardez la partie qui précède le présentoir. Si les deux courbes évoluent ensemble, les DiD sont crédibles. Des tendances préalables bien parallèles constituent une vérification de crédibilité, pas une preuve, mais c’est la vérification que tout le monde demandera.</p>
+</section>
+<section id="when-did-doesnt-work" class="level3">
+<h3 class="anchored" data-anchor-id="when-did-doesnt-work">Quand les DiD ne fonctionnent pas</h3>
+<p>Les DiD échouent lorsque l’équipe commerciale a choisi les magasins sur leur dynamique de croissance. Si elle a retenu des magasins qui progressaient déjà plus vite, les deux groupes ne partagent pas la même tendance, et l’estimation DiD s’attribue une croissance qui serait survenue de toute façon. Vous le verrez sur le graphique de la période préalable : les courbes divergeaient déjà avant le présentoir. Dans ce cas, ne forcez pas le recours aux DiD. Appariez les groupes plus soigneusement, pondérez les magasins de comparaison ou passez au contrôle synthétique.</p>
+</section>
+<section id="estimating-did-with-a-regression" class="level3">
+<h3 class="anchored" data-anchor-id="estimating-did-with-a-regression">Estimer les DiD par régression</h3>
+<p>Le tableau à deux lignes et deux colonnes exprime l’idée. Ce n’est pas ce que vous présenteriez dans un rapport, pour deux raisons. Il ne fournit pas d’erreur-type, donc vous ne pouvez pas dire si +$3k se distingue de zéro. Et les données réelles ne se limitent pas à deux périodes : ce sont 24 mois de ventes pour 100 magasins. La version par régression traite ces deux problèmes. Une ligne par magasin et par mois, un effet fixe pour chaque magasin, un effet fixe pour chaque mois et un terme d’interaction pour les magasins traités sur la période postérieure. Les effets magasin absorbent toutes les différences fixes entre magasins. Les effets mois absorbent toutes les tendances et tous les chocs qui ont touché l’ensemble des magasins ce mois-là. Le terme d’interaction <em>est</em> l’estimation DiD.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> statsmodels.formula.api <span class="im">as</span> smf</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co"># df: one row per store-month (store_id, period, treated, post, category_sales)</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> smf.ols(</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"category_sales ~ C(store_id) + C(period) + treated:post"</span>,</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    data<span class="op">=</span>df,</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>).fit(cov_type<span class="op">=</span><span class="st">"cluster"</span>, cov_kwds<span class="op">=</span>{<span class="st">"groups"</span>: df[<span class="st">"store_id"</span>]})</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>coef, se <span class="op">=</span> model.params[<span class="st">"treated:post"</span>], model.bse[<span class="st">"treated:post"</span>]</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"DiD estimate: </span><span class="sc">{</span>coef<span class="sc">:.2f}</span><span class="ss"> (SE </span><span class="sc">{</span>se<span class="sc">:.2f}</span><span class="ss">)"</span>)   <span class="co"># DiD estimate: 3.02 (SE 0.04)</span></span></code></pre></div><button title="Copier vers le presse-papier" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Regrouper les erreurs-types par magasin permet de tenir compte des mesures répétées pour chaque magasin. La même régression vérifie les tendances préalables : remplacez <code>treated:post</code> par un terme <code>treated</code> × mois pour chaque mois et confirmez que les termes antérieurs au déploiement sont proches de zéro. Le notebook d’accompagnement détaille le panel complet et cette vérification.</p>
+</section>
+</section>
+<section id="synthetic-control" class="level2">
+<h2 class="anchored" data-anchor-id="synthetic-control">Contrôle synthétique</h2>
+<p><strong>Idée centrale :</strong> lorsqu’aucune unité témoin ne convient à elle seule, construisez-en une en combinant plusieurs unités.</p>
+<p>Les DiD fonctionnaient parce que 50 magasins témoins fournissaient une tendance convaincante à emprunter. Prenons maintenant la quatrième ligne de <a href="#tbl-hundred-stores" class="quarto-xref">Table&nbsp;<span>1</span></a> : seul le magasin de New York a reçu le présentoir. Lequel des 99 autres constitue la bonne comparaison ? Ils diffèrent par leur taille, la composition de leurs ventes par catégorie et la concurrence locale, et aucun magasin ne représente à lui seul un substitut convaincant à New York.</p>
+<p>Le contrôle synthétique n’en choisit pas un. Il traite les 99 autres magasins comme un <strong>ensemble de donneurs</strong> et construit un « New York synthétique » en les combinant avec des pondérations choisies pour que la combinaison suive au plus près les ventes de New York avant l’installation du présentoir. Dans le notebook d’accompagnement, la combinaison obtenue se compose à 36 % du magasin de Boston, à 28 % de celui de Philadelphie, à 22 % de celui de Chicago, avec quelques pour cent répartis entre quatre autres magasins. Une fois le présentoir installé, l’écart entre le New York réel et son jumeau synthétique est l’effet estimé.</p>
+<div id="fig-synthetic-control" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Contrôle synthétique : observations réelles et contrefactuel synthétique ; les courbes se superposent avant l’intervention, et l’écart après celle-ci est l’effet.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-synthetic-control-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part3/sec3.3/synthetic_control.png" class="fig-md img-fluid figure-img" alt="Contrôle synthétique : observations réelles et contrefactuel synthétique ; les courbes se superposent avant l’intervention, et l’écart après celle-ci est l’effet.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-synthetic-control-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4: Contrôle synthétique : observations réelles et contrefactuel synthétique.
+</figcaption>
+</figure>
+</div>
+<p>C’est le protocole naturel lorsqu’une unité reçoit le traitement et que de nombreuses unités similaires ne le reçoivent pas : un magasin rénové, une agglomération faisant l’objet d’une campagne d’affichage extérieur, une référence produit dont le prix change avec des références apparentées comme donneurs. Ces protocoles au niveau géographique reviennent dans la <a href="../part6/sec6.3-incrementality-experiments.html">section 6.3</a> comme vérification de robustesse pour les expériences géographiques et dans la <a href="../part6/sec6.4-mmm-calibration.html">section 6.4</a> comme point d’ancrage pour calibrer les modèles de mix média.</p>
+<section id="when-synthetic-control-doesnt-work" class="level3">
+<h3 class="anchored" data-anchor-id="when-synthetic-control-doesnt-work">Quand le contrôle synthétique ne fonctionne pas</h3>
+<p>La vérification de crédibilité porte sur l’ajustement pendant la période préalable. Si aucune combinaison des 99 magasins ne peut reproduire l’historique de New York avant le présentoir, ne vous fiez pas à l’écart après son installation. Les donneurs doivent aussi rester non affectés : un présentoir à New York ne modifie pas les ventes à Chicago, mais une campagne télévisée à New York peut toucher le New Jersey, et un donneur exposé au traitement entraîne le jumeau synthétique vers la trajectoire traitée. Cette méthode ne peut pas non plus s’appliquer à un seul client. Les dépenses hebdomadaires d’un client isolé se composent surtout de zéros et de bruit, et aucune combinaison d’autres clients ne les suivra. Les questions au niveau du client exigent de nombreux clients, ce qui relève des DiD ou de la RDD.</p>
+</section>
+</section>
+<section id="when-there-is-no-control-group" class="level2">
+<h2 class="anchored" data-anchor-id="when-there-is-no-control-group">Lorsqu’il n’y a pas de groupe témoin</h2>
+<p>Les DiD empruntaient une tendance aux magasins témoins. Le contrôle synthétique combinait des magasins témoins lorsqu’aucun ne convenait à lui seul. La RDD comparait les magasins juste en dessous d’un seuil à ceux juste au-dessus. Tous trois empruntent la comparaison à des unités que l’action n’a pas touchées, et aucun ne peut aider lorsqu’elle a touché tout le monde :</p>
+<ul>
+<li>Le nouveau présentoir a été installé dans les 100 magasins le même jour.</li>
+<li>La campagne a été diffusée dans toutes les régions, et pas seulement dans quelques-unes.</li>
+<li>Le coupon a été envoyé à tous les clients.</li>
+</ul>
+<p>Il n’existe aucun magasin, aucune région ni aucun client non traité auquel se comparer. Il faut donc prévoir la comparaison : à partir de l’évolution de la série avant l’action et de celle, après l’action, d’autres séries qu’elle ne pouvait pas affecter. C’est le dernier échelon de l’échelle, CausalImpact, qui fait l’objet du <a href="sec3.4-causal-impact.html">chapitre suivant</a>.</p>
+<p><strong>Notebook d’accompagnement :</strong> <code>sec3.3_quasi_experiments.ipynb</code> présente la RDD, les DiD (tableau, régression et vérification des tendances préalables) et le contrôle synthétique sur des données synthétiques avec <code>statsmodels</code> et <code>scipy</code>.<br>
+<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.3_quasi_experiments.ipynb">Voir sur GitHub</a></p>
+</section>
+<section id="key-takeaways" class="level2">
+<h2 class="anchored" data-anchor-id="key-takeaways">Points à retenir</h2>
+<ul>
+<li>L’assignation détermine le protocole. Randomisez et vous obtenez un test A/B ; un seuil donne une RDD ; les autres cas montent une échelle allant des DiD au contrôle synthétique, puis à CausalImpact, chaque échelon s’appuyant davantage sur un modèle.</li>
+<li>La crédibilité d’une quasi-expérience dépend de celle de son hypothèse d’identification. Un graphique des tendances préalables ou un ajustement sur la période préalable peut révéler un protocole fragile, mais réussir cette vérification atteste sa crédibilité sans constituer une preuve.</li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copié");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copié");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/marketing-science-in-python\.com\/fr\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../part3/sec3.2-ab-testing.html" class="pagination-link" aria-label="3.2 Concevoir un test A/B">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">3.2 Concevoir un test A/B</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../part3/sec3.4-causal-impact.html" class="pagination-link" aria-label="3.4 Impact causal avec les séries temporelles">
+        <span class="nav-page-text"><span class="chapter-title">3.4 Impact causal avec les séries temporelles</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
