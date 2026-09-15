@@ -576,12 +576,10 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
     <h2 id="toc-title">目次</h2>
    
   <ul>
-  <li><a href="#why-calibrate" id="toc-why-calibrate" class="nav-link active" data-scroll-target="#why-calibrate">なぜ較正するのか？</a></li>
-  <li><a href="#why-you-cannot-paste-0.20-into-the-model" id="toc-why-you-cannot-paste-0.20-into-the-model" class="nav-link" data-scroll-target="#why-you-cannot-paste-0.20-into-the-model">なぜ0.20をそのままモデルへ入れられないのか</a></li>
-  <li><a href="#turning-the-experiment-into-a-prior" id="toc-turning-the-experiment-into-a-prior" class="nav-link" data-scroll-target="#turning-the-experiment-into-a-prior">実験を事前分布へ変換する</a></li>
+  <li><a href="#match-the-evidence-to-the-model-quantity" id="toc-match-the-evidence-to-the-model-quantity" class="nav-link active" data-scroll-target="#match-the-evidence-to-the-model-quantity">証拠をモデルの量に合わせる</a></li>
+  <li><a href="#turn-the-experiment-into-a-prior" id="toc-turn-the-experiment-into-a-prior" class="nav-link" data-scroll-target="#turn-the-experiment-into-a-prior">実験を事前分布へ変換する</a></li>
   <li><a href="#sec-calibration-what-changed" id="toc-sec-calibration-what-changed" class="nav-link" data-scroll-target="#sec-calibration-what-changed">何が変わったか？</a></li>
   <li><a href="#before-acting-on-the-calibrated-plan" id="toc-before-acting-on-the-calibrated-plan" class="nav-link" data-scroll-target="#before-acting-on-the-calibrated-plan">較正後の計画で行動する前に</a></li>
-  <li><a href="#calibration-as-a-learning-loop" id="toc-calibration-as-a-learning-loop" class="nav-link" data-scroll-target="#calibration-as-a-learning-loop">学習ループとしての較正</a></li>
   <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways">重要なポイント</a></li>
   </ul>
 <div class="quarto-code-links"><h2>コードリンクス</h2><ul><li><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part6-media-optimization/sec6.2_6.4_mmm_meridian.ipynb"><i class="bi bi-github"></i>sec6.2_6.4_mmm_meridian.ipynb</a></li></ul></div></nav>
@@ -613,14 +611,12 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 <p><strong>日本語版について</strong><br>
 このページは英語版 <em>Marketing Science in Python</em> のAI翻訳です。英語版を正本とし、差異がある場合は英語版を優先してください。コード、Notebook、画像内の文字は英語のままです。 <a href="../../part6/sec6.4-mmm-calibration.html" class="translation-source-link">英語版を読む</a></p>
 </div>
-<p><a href="sec6.3-incrementality-experiments.html">Section 6.3</a>では、<a href="sec6.2-mmm-fundamentals.html">Section 6.2</a>のモデルが推定しかできなかったものを測定した。8つのテスト市場でGoogle Searchを30%削減すると、削減1ドルあたり<strong>0.200</strong>の売上を失い、95%区間は<strong>[0.040, 0.361]</strong>だった。モデルはSearchのROASを<strong>3.53</strong>、90%信用区間を<strong>0.39</strong>から<strong>10.29</strong>としていた。並べて読むと、モデルは18倍も外れたように見える。本当にそうだろうか。</p>
-<p>そうではない。理由は2つある。第一は推定対象である。実験は、30%削減で取り除かれるSearchの<em>最後の</em>支出のリターンを測った。モデルの代表値は、ゼロから平均した<em>全支出</em>のリターンである。実験と同じ問い、すなわち8週間の30%削減が何を失うかをモデルに尋ねると、答えは<strong>2.54</strong>、90%信用区間は<strong>[0.28, 7.21]</strong>となる。差は18倍から13倍へ縮まり、2つの区間は接する。実験側は0.361まで、モデル側は0.28まで届く。しかし差は解消しない。</p>
-<p>第二の理由は、モデルのSearchの数値が、実のところ証拠ではなかったことだ。3年間の履歴でSearch支出はほとんど動かなかったため、尤度が語れることは少なく、事後分布は季節性の傾きを加えた事前分布にすぎない。事後分布の服を着た事前分布である。モデル自身の数値では、Searchの限界ROASは2.83で閾値2.50の損益分岐を超えたが、それでも5チャネル中で最弱だったため、オプティマイザーは削減した。実験によれば、どちらの基準も超えない。テストがモデルを採点できるよう、モデルの予測はテスト前に記録していた。採点結果は、モデルは行動に移すには不確実すぎ、しかも自身の区間の端で間違っていた、というものだ。この実験はSearchに関する初めての設計ベースの因果的証拠であり、その不確実性は支えるべき意思決定に比べて小さい。</p>
-<p>この例の成果は売上なので、MeridianのROIは数値上、売上ROASとなる。本文ではROASと呼び、コードではMeridianの名称を保つ。較正は、その証拠をモデルへ取り込む方法である。実験を事前分布へ変換し、再適合し、何が変わったかを見る。目的はモデルを実験に同意させることではない。よりよい因果的証拠が意思決定を変えるか、変えないならなぜかを明らかにすることである。</p>
-<div id="fig-calibration-workflow" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="較正ワークフロー：実験を行い、リフトを推定し、対応するパラメータの事前分布へ変換し、MMMを再適合し、前後の推奨を比較する。">
+<p>地域実験を行う前に、MMMはGoogle Searchの30%削減が何を失うかを予測していた。削減1ドルあたり$2.54の売上、90%信用区間は0.28から7.21である。<a href="sec6.3-incrementality-experiments.html">Section 6.3</a>の実験は0.200を測り、95%信頼区間は0.040から0.361だった。モデルは行動に移すには不確実すぎ、しかも測定値は区間の下端を下回った。どちらも驚くことではない。Search支出は3年間の履歴でほとんど動かなかったため、モデルのSearch推定値の大部分は出発点の事前分布のままであり、この実験がこのチャネルに関する初めての因果的証拠である。</p>
+<p>較正は、その証拠をモデルへ入れる作業である。実験が測ったのは1つのチャネルの1つの運用点、1つの期間だが、<a href="sec6.2-mmm-fundamentals.html">Section 6.2</a>のモデルは5チャネルの予算を決めなければならない。そこで実験結果を事前分布へ変換し、再適合し、推奨が変わるかを確かめる。目的はモデルを実験に同意させることではない。よりよい証拠が意思決定を変えるか、変えないならなぜかを知ることである。この例の成果は売上なので、MeridianのROIは数値上は売上ROASになる。本文ではROASと呼び、コードではMeridianの名称を保つ。</p>
+<div id="fig-calibration-workflow" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="5つのステップ：地域テスト、DiD推定、事前分布への変換、MMMの再適合、ガードレールの下での予算決定。そこから次のテストへ戻る。">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-calibration-workflow-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part6/sec6.4/calibration_workflow.png" class="fig-lg img-fluid figure-img" alt="較正ワークフロー：実験を行い、リフトを推定し、対応するパラメータの事前分布へ変換し、MMMを再適合し、前後の推奨を比較する。">
+<img src="../images/part6/sec6.4/calibration_workflow.png" class="fig-lg img-fluid figure-img" alt="5つのステップ：地域テスト、DiD推定、事前分布への変換、MMMの再適合、ガードレールの下での予算決定。そこから次のテストへ戻る。">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-calibration-workflow-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 図&nbsp;1: MMMの較正ワークフロー。
@@ -629,14 +625,9 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 </div>
 <p><strong>付属ノートブック：</strong> <code>sec6.2_6.4_mmm_meridian.ipynb</code>は<a href="sec6.2-mmm-fundamentals.html">Section 6.2</a>と共通である。Step 14〜18では、テストに対するモデル自身の予測を記録し、実験推定値を事前分布へ変換し、モデルを再適合し、予算を再最適化する。<br>
 <a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part6-media-optimization/sec6.2_6.4_mmm_meridian.ipynb">GitHubで見る</a></p>
-<section id="why-calibrate" class="level2">
-<h2 class="anchored" data-anchor-id="why-calibrate">なぜ較正するのか？</h2>
-<p>MMMは全体像を見る。すべてのチャネル、全履歴、各反応曲線の形状である。しかし観測的に見ている。複数チャネルが一緒に出稿されたり、販促や季節需要とともにメディアが増えたりすると、尤度は何が売上を動かしたかを区別できない。モデルが売上をよく予測しても、チャネルのROAS事後分布は広いままとなる。Section 6.2のSearchで起きたのがこれである。適合はよいが、区間は行動に移すには広すぎた。</p>
-<p>実験は、1つの期間、1つの運用点で、1つのものを見るが、それを因果的に見る。実験は代替ではなく錨である。その錨をモデルに入れれば、他のチャネル、曲線、履歴というモデルの強みが残りを担う。だからSection 6.3の証拠パッケージには、数値だけでなく推定対象と不確実性も含めた。</p>
-</section>
-<section id="why-you-cannot-paste-0.20-into-the-model" class="level2">
-<h2 class="anchored" data-anchor-id="why-you-cannot-paste-0.20-into-the-model">なぜ0.20をそのままモデルへ入れられないのか</h2>
-<p>Meridianの<code>roi_m</code>パラメータは平均ROAS、すなわちチャネルの総増分売上を総支出で割った値である。実験が測ったのは限界ROAS、すなわち現在の支出水準における反応曲線の傾きである。<a href="sec6.2-mmm-fundamentals.html">Section 6.2</a>では、飽和曲線上で両者が異なる理由を示した。<a href="#fig-marginal-vs-average" class="quarto-xref">図&nbsp;<span>2</span></a> は1つの図で両者を示す。初期の1ドルは後半の1ドルより生産的なので、曲線が曲がり始めた場所では平均ROASが限界ROASを上回る。</p>
+<section id="match-the-evidence-to-the-model-quantity" class="level2">
+<h2 class="anchored" data-anchor-id="match-the-evidence-to-the-model-quantity">証拠をモデルの量に合わせる</h2>
+<p>実験が測ったのは、1つの支出ブロックのリターンである。Searchの予算を8週間、100%から70%へ落としたとき、1ドルあたりいくらの売上を失ったか、という量だ。モデルは同じチャネルについて、別の2つのリターンを報告する。<strong>平均ROAS</strong>は、Searchの総増分売上を総支出で割った値で、ゼロから平均したリターンである。<strong>限界ROAS</strong>は、現在の支出における反応曲線の傾き、つまり次の1ドルのリターンである。飽和曲線では最初の1ドルほどよく働くため、曲線が曲がり始めた場所では平均ROASが限界ROASを上回る（<a href="#fig-marginal-vs-average" class="quarto-xref">図&nbsp;<span>2</span></a>）。テストした削減は支出の上位30%にわたって曲線を平均するため、限界リターンに近く、平均リターンよりかなり低い値になる。</p>
 <div id="fig-marginal-vs-average" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="限界ROASは現在の支出水準での接線の傾き、平均ROASは飽和曲線上の原点からその点までの傾きである。">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-marginal-vs-average-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -647,41 +638,13 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 </figcaption>
 </figure>
 </div>
-<p>それでも平均ROASの事前分布を0.20に設定するとどうなるか。ノートブックで試している。事後の平均ROASは従順に<strong>0.21</strong>へ動く。しかしモデルには曲線が残り、平均が0.20の曲線では限界値はそれより低い。較正モデルのSearch限界ROASは<strong>0.17</strong>となる。実験の測定値0.200、データに埋め込んだ0.213と合わない。オプティマイザーは限界ROASを使うため、誤差は意思決定を行う場所に正確に落ちる。</p>
-<p>ここでのずれは14%で、無害に見えるほど小さい。しかしこれは間違いの性質ではなく、このチャネルの性質である。誤差の大きさはチャネルの平均リターンと限界リターンの差で決まり、Searchの曲線は緩やかである。真の限界値は真の平均値の0.61倍だ。Metaは0.75、TV/CTVは0.43、TikTokは0.27である。TikTokで同じ置換をすれば、モデルはほぼ4倍間違う。教訓は誤りが小さいということではない。その大きさは、たまたま誤りを犯したチャネルによって決まるということだ。</p>
-<div class="callout callout-style-default callout-warning callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-警告
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>実験の推定対象は、較正するパラメータと一致しなければならない。Section 6.3のテストが測ったのは限界ROASである。Meridianには、まさにそのためのパラメータ化がある。</p>
-</div>
-</div>
+<p>Meridianの既定の事前分布<code>roi_m</code>は平均ROASに置かれる。そこへ実験の0.200を貼り付ければ、モデルは従う。ノートブックで試すと、事後の平均ROASは0.21になる。しかしモデルには曲線が残っており、平均が0.20の曲線では限界リターンはそれより低い。Searchの限界ROASは0.17となり、データに埋め込んだ0.213と合わない。そして限界ROASこそ、オプティマイザーが配分に使う量である。ここでのずれが小さいのは、Searchの曲線が緩やかだからだ。限界リターンが平均のおよそ4分の1しかないTikTokで同じ置き換えをすれば、モデルは4倍近く間違う。測定値は、それに対応するパラメータに置く。</p>
 </section>
-<section id="turning-the-experiment-into-a-prior" class="level2">
-<h2 class="anchored" data-anchor-id="turning-the-experiment-into-a-prior">実験を事前分布へ変換する</h2>
-<p>Meridianでは、平均ROIではなく限界ROIに事前分布を置ける。その定義は局所的で、観測された支出経路に沿って支出を1%増やしたときのリターンである。削減テストが測ったのは、同じ運用点の反対側にある、支出の70%から100%までのブロックという、より広い対比である。これは平均ROIより限界ROIにはるかに近いが、同じ数値ではない。したがって実験はmROI事前分布を正確に観測するのではなく、錨として固定する。このデータではSearchの曲線が緩やかでキャリーオーバーが短いため、2つは丸め誤差の範囲、<strong>0.213対0.200</strong>にある。TV/CTVではそうならず、<strong>1.80対0.83</strong>となる。</p>
-<p>3つの調整はGoogle自身の文書から、1つは本書独自のものである。中心を動かすのは<strong>期間</strong>だけだ。短いウィンドウではキャリーオーバーを取りこぼすため、点推定値を、ウィンドウが捉えたチャネルのアドストック重みの割合で割る。Searchのキャリーオーバーは半減期1週間と短いため、8週間のウィンドウで<strong>99.6%</strong>を捉え、中心はほとんど動かない。TV/CTVのような半減期6週間のチャネルでは、同じウィンドウで78%しか捉えず、補正が実質的になる。</p>
-<p>残りは中心をずらさず幅を広げる。<strong>支出スケール</strong>は、実験の平均日次支出率をチャネル全体と比較する。8つのテスト市場は全国の約5分の1の率で稼働し、その割合が小さくなるほどペナルティが大きくなるため、ここでは他のすべてを圧倒する。<strong>新しさ</strong>は、52週間の半減期で古い証拠を割り引く。このテストはモデル化期間が終わった6週間<em>後</em>に行ったので、古くなく、ペナルティはゼロである。1年前の結果なら、事前分布は実質的に広くなる。4つ目の調整はGoogleではなく本書独自である。実験は30%のブロック全体で曲線を平均したが、事前分布は現在の支出における傾きを表す。モデルはこの差について見解を持つが、その見解は実験が修正しようとしている適合から来ているため、中心を動かすのではなく事前分布を広げる。ノートブックは各項を計算して出力する。これらを合わせても中心は<strong>0.201</strong>のまま、標準誤差は0.075から<strong>0.161</strong>へ広がる。ほぼすべてが支出スケール項による。実験自体の精度は十分で、事前分布を広げたのは8市場がチャネル全体の5分の1だという点である。</p>
-<div class="callout callout-style-default callout-note callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-ノート
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>GoogleのMeridian文書には、支出、新しさ、期間の調整を適用し、反実仮想が支出ゼロであるリフト実験からROI事前分布を作る<code>CalibrationBuilder</code>が記載されている。ここでは機械的には使わない。この実験にはゼロでない反実仮想があり、30%の局所対比を推定するため、同文書が警告する推定対象の不一致に該当するからである。代わりにノートブックでは変換の仮定を明示し、それらに対して意思決定が安定しているかを検証する。ノートブックはMeridian 1.6.2に固定している。</p>
-</div>
-</div>
-<p>このパラメータ化では、すべてのチャネルの事前分布を同じ形で記述する。そのため他の4チャネルには弱い限界ROI事前分布<code>LogNormal(-0.49, 0.90)</code>を残す。これはSection 6.2の弱いROAS事前分布を限界スケールで表し直したものである。このパネルでは事後の限界リターンが事後平均リターンのおよそ半分だからだ。さらに平坦にしたくなる誘惑には抵抗する。飽和曲線上で限界ROIに拡散的な事前分布を置くと、平均ROIの上限がなくなり、未較正チャネルは役に立たないほど広い信用区間を伴って戻ってくる。</p>
+<section id="turn-the-experiment-into-a-prior" class="level2">
+<h2 class="anchored" data-anchor-id="turn-the-experiment-into-a-prior">実験を事前分布へ変換する</h2>
+<p>Meridianでは、<code>media_prior_type="mroi"</code>を指定して、事前分布を限界ROIに置ける。このパラメータは支出を1%増やしたときのリターンなので、30%のブロックはそれより広い対比であり、実験はパラメータを正確に観測するのではなく、事前分布の錨として働く。Searchでは両者の差は丸め誤差の範囲、0.213対0.200である。</p>
+<p>推定値は2つの調整を経て事前分布になる。どちらもGoogleのMeridian向けの指針に従う。<strong>期間</strong>は、テスト期間が取りこぼしたキャリーオーバーの分だけ中心を補正する。Searchの半減期は1週間なので、8週間の期間でほぼすべてを捉えており、中心は0.201のままである。TV/CTVのような減衰の遅いチャネルなら、補正は実質的なものになる。<strong>支出スケール</strong>は事前分布の幅を広げる。8つのテスト市場は全国の支出率の約5分の1で稼働しており、テストがチャネルの規模から離れるほど、その結果が他の地域にも当てはまると仮定しにくくなる。この項が標準誤差を0.075から0.161へ広げる。実験自体の精度は十分だった。事前分布を広げたのは、8市場がチャネル全体の5分の1にすぎないという事実である。ノートブックは各項を出力し、ここではほとんど効かない小さな2項も併せて示す。</p>
+<p>他の4チャネルは弱い限界ROI事前分布<code>LogNormal(-0.49, 0.90)</code>を保つ。これはSection 6.2の弱いROAS事前分布を限界スケールで表し直したものである。これ以上平坦にしてはいけない。飽和曲線上で限界ROIに拡散的な事前分布を置くと平均ROIの上限がなくなり、未較正のチャネルは使いものにならない区間を返してくる。</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> tensorflow <span class="im">as</span> tf</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> tensorflow_probability <span class="im">as</span> tfp</span>
@@ -705,26 +668,11 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 <span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>model_spec <span class="op">=</span> spec.ModelSpec(prior<span class="op">=</span>prior, media_prior_type<span class="op">=</span><span class="st">"mroi"</span>, max_lag<span class="op">=</span><span class="dv">12</span>)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
-<p>事後要約を後から編集するのではなく、再適合する。較正対象チャネルは証拠へ近づき、よりよく識別されるはずだが、正確に0.200へ着地する必要はない。尤度、曲線、事前分布がすべて寄与する。1チャネルを狭めると、相関するチャネル間の寄与も再配分されるため、Searchだけでなく全チャネルと総予測を見る。</p>
-<div class="callout callout-style-default callout-tip callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-ヒント
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>PyMC-Marketingの<a href="https://www.pymc-marketing.io/en/stable/api/generated/classmethods/pymc_marketing.mmm.mmm.MMM.add_lift_test_measurements.html"><code>add_lift_test_measurements</code></a>は別の方法を取る。支出変更を明示し、リフト観測を反応曲線に結びついた尤度項として追加する。増額・削減テストには直接的な適合方法である。パッケージではなく、推定対象の整合性とモデル構造で選ぶ。</p>
-</div>
-</div>
-<p>負またはゼロに近いリフトも妥当な結果である。LogNormal事前分布では、ゼロ以下を中心とする証拠を表せない。推定値を小さな正数に切り上げるのではなく、適切な台を持つ分布族を使う。</p>
+<p>そのうえで、ROASの表を後から書き換えるのではなく、モデルを再適合する。較正したチャネルは証拠へ近づくはずだが、正確に0.200へ着地する必要はない。尤度、曲線、事前分布のすべてが結果に関与するからだ。1つのチャネルを狭めると、相関する他のチャネルとの間で寄与の配分も変わるため、再適合後は全チャネルと全体の適合を読む。</p>
 </section>
 <section id="sec-calibration-what-changed" class="level2">
 <h2 class="anchored" data-anchor-id="sec-calibration-what-changed">何が変わったか？</h2>
-<p>モデルはいま、実験を組み込んでいる。公正に比較するため、3つの適合を使う。基準となるSection 6.2のモデル、実験なしで限界ROI事前分布へ切り替えた対照適合、較正後の適合である。地域テストを見たのは最後のモデルだけなので、最後の2つの差は証拠だけによる。</p>
-<p>モデルと実験が同じものを測る1行、すなわち8週間のSearch 30%削減が何を失うかから始める。</p>
+<p>公平に比較するため、3つの適合を使う。基準となるSection 6.2のモデル、実験なしで限界ROI事前分布へ切り替えた対照適合、そして較正後の適合である。地域テストを見たのは最後の1つだけなので、最後の2列の差は証拠そのものであり、それ以外の要因を含まない。最初の行は、モデルと実験が同じものを測っている唯一の場所である。</p>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -773,9 +721,7 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 </tr>
 </tbody>
 </table>
-<p>実験の測定値は0.200だった。埋め込んだ真値は限界0.213、平均0.35、テストした削減では0.200である。</p>
-<p>点推定値はあるべき場所に着地する。Searchの限界リターンは1.76から0.22へ動き、埋め込んだ真値との差は0.01以内になる。テストした削減に対するモデル予測は1.57から0.20へ動き、測定値0.200と一致する。数値そのものについては、較正が機能した。</p>
-<p>より興味深い結果は区間である。十分には狭まらないからだ。相対半幅は1.76から1.13へ動くが、ガードレールはHOLDのままである。</p>
+<p>実験の測定値は0.200で、埋め込んだ真値は限界で0.213、平均で0.35、テストした削減では0.200である。較正は点推定値を正しい場所へ着地させた。Searchの限界リターンは1.76から0.22へ動き、真値との差は0.01以内になった。テストした削減に対するモデル予測も1.57から0.20へ動いた。<a href="#fig-response-curve-calibrated" class="quarto-xref">図&nbsp;<span>3</span></a> は、同じ結果を曲線全体で示す。基準適合と対照適合は、オプティマイザーが検討しうるどの支出水準でも1.5から3のリターンを読むが、較正後の曲線は同じ範囲で約0.2を読み、実験点を通る。</p>
 <div id="fig-response-curve-calibrated" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="6.2節の基準、対照適合、較正適合について、支出水準ごとのGoogle Searchの方針ROASを示す。較正曲線は他の2本よりはるか下にあり、支出70%の実験点を通る。">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-response-curve-calibrated-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -786,10 +732,8 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 </figcaption>
 </figure>
 </div>
-<p><a href="#fig-response-curve-calibrated" class="quarto-xref">図&nbsp;<span>3</span></a> は、実際に何が動いたかを示す。基準曲線と対照曲線は、オプティマイザーが検討しうる全支出水準で1.5から3のリターンを示す。較正曲線は同じ範囲で約0.2を示し、実験点を通る。実験は1つの数値をわずかに動かしたのではなく、曲線を移動させた。</p>
-<p>では、なぜ区間はまだ広いのか。実験の精度が低かったからではない。点推定値0.200に対して標準誤差0.075で、精密な測定である。幅は変換から生じ、そのほぼすべてが1つの項による。8つのテスト市場はチャネル全体の日次支出率の約5分の1で稼働し、その差だけで標準誤差がおよそ2倍になる。区間に残るのは、その市場で何が起きたかへの疑念ではない。国内の残りの地域も同じように振る舞うかへの疑念である。</p>
-<p>この区別は、ガードレールが解除されること以上に価値がある。次に行う実験を明確にするからだ。より長いテストはあまり役に立たない。Searchのキャリーオーバーは8週間ですでに完全に捉えている。より多くの市場でのテストなら役に立つ。</p>
-<p>一方、配分には意外な展開がない。そして、それこそが発見である。</p>
+<p>解決しなかったのは区間である。相対半幅は1.76から1.13へ下がったが、Section 6.2のガードレールはまだHOLDを示す。この幅は実験から来たものではない。実験の標準誤差は0.200に対して0.075で、精密な測定だった。幅は変換の支出スケール項から来ている。モデルがまだ疑っているのは、テストした8市場のように残りの32市場も振る舞うかどうかである。この疑いが、次の実験を決める。Searchのキャリーオーバーはすでに8週間の中に収まっているので、テストを長くしても得るものは少ない。市場を増やしたテストなら、この幅を狭められる。</p>
+<p>配分はほとんど動かない（<a href="#fig-allocation-before-after" class="quarto-xref">図&nbsp;<span>4</span></a>）。Searchは3つの適合すべてで−30%の下限にあり、OOHとMetaは3つすべてで解放された予算を受け取り、TV/CTVとTikTokは数十分の1ポイント動くだけである。較正が変えたのはモデルがSearchについて知っていることであり、オプティマイザーが指す方向ではない。</p>
 <div id="fig-allocation-before-after" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="基準、対照、較正の適合について、チャネル別のオプティマイザー支出変更を示す。Google Searchは3つすべてでマイナス30%の制約下限にある。">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-allocation-before-after-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -800,11 +744,8 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 </figcaption>
 </figure>
 </div>
-<p>Searchはすべての適合で下限にある。OOHとMetaは、すべての適合で解放された予算を受け取る。対照モデルと較正モデルの間で動いたのは、TV/CTVとTikTokの数十分の1ポイントであり、計画会議のノイズに十分収まる。較正はモデルが知っていることを変えたが、モデルが指す方向は変えなかった。</p>
-<p>Section 6.3から本章に残された問いが1つある。Searchの最後の30%が元を取れるかではない。取れないことはわかっている。その1ドルが他の場所でもっと稼ぐかである。較正モデルが答える。Searchの限界リターン上限は0.54で、他の全チャネルの区間下限は0.95を上回る。0.22のリターンに対する相対半幅1.13は、金額では狭くても比率では広いため、ガードレールの幅ルールはまだHOLDを示す。ガードレールはモデルが単独で行動する場合に書かれた。この意思決定はモデルだけに依存しない。実験の閾値が削減を決め、ポートフォリオ比較が予算の移動先を決める。</p>
-<p>これは明言する価値がある。較正が答えを発見するものだと説明しがちだからである。しかし、そうではない。Section 6.3の閾値ルールですでに今四半期の削減は決まっていた。実験の95%区間上限は0.361、損益分岐ROASは2.50で、この数値を合理的に解釈しても支出維持を支持できない。較正によって得たのは、この証拠を今回以降のすべての配分に持ち越すモデル、8倍高かった数値が正しくなった限界推定値、次のテストが何でなければならないかという正確な記述である。</p>
-<p>Section 6.3の保守的な幅、すなわち16市場ではなく8つのマッチドペアでクラスタ化した標準誤差でも同じ較正を行うと、限界推定値は0.23へわずかに動くだけで、相対半幅は1.46となる。判定は変わらない。配分も変わらない。正当化可能な両方の幅に耐える推奨なら会議へ持ち込める。その間で反転するなら、証拠がまだ決着をつけていないとわかる。</p>
-<p>較正の目的は、MMMを実験に同意させることではない。よりよい因果的証拠が意思決定を変えるかを見ることである。</p>
+<p>今四半期の削減を決めたのは較正ではない。実験の区間上限が0.361で、損益分岐ROASの2.50をはるかに下回っていたため、Section 6.3の閾値ルールがすでに決着をつけていた。較正が加えたのは、Section 6.3が残した問い、すなわちそのSearchの予算は他の場所でもっと稼ぐのか、への答えである。較正後のモデルではSearchの限界リターンの上限は0.54で、他の全チャネルの区間下限は0.95を上回る。解放された予算には、より良い行き先がある。ガードレールがHOLDを示し続けるのは、その幅ルールがモデル単独で行動する場合のために書かれたからだ。ここでは実験が削減を決め、ポートフォリオ比較が行き先を決める。今四半期の先では、モデルはこの証拠を今後のすべての配分へ持ち越す。Searchの推定値は、8倍高すぎる値ではなく正しい値になった。</p>
+<p>Section 6.3の広い方の標準誤差、すなわち16市場ではなく8つのマッチドペアでクラスタ化した値で同じ較正を行うと、Searchの限界推定値は0.23へ動き、相対半幅は1.46になる。判定も配分も変わらない。正当化できる2つの幅の両方で維持される推奨なら、計画会議へ持ち込める。</p>
 </section>
 <section id="before-acting-on-the-calibrated-plan" class="level2">
 <h2 class="anchored" data-anchor-id="before-acting-on-the-calibrated-plan">較正後の計画で行動する前に</h2>
@@ -813,20 +754,17 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 <li><strong>推定対象の整合性。</strong> 実験は、同じ成果、同じ対比、そして推奨が実際に訪れる運用点を測っているか。</li>
 <li><strong>実験の信頼性。</strong> 意思決定に必要な検出力があり、設計どおり配信され、波及とカレンダーショックがなかったか。</li>
 <li><strong>モデルの健全性。</strong> 再適合後も、適合、反応曲線、他チャネルは妥当か。</li>
-<li><strong>意思決定の安定性。</strong> 正当化可能な変換幅の範囲で、推奨行動は維持されるか。その間で反転するなら、点推定値が何を示しても証拠は意思決定を解決していない。</li>
+<li><strong>意思決定の安定性。</strong> 正当化できる変換幅の範囲で、推奨行動は維持されるか。その間で反転するなら、点推定値が何を示しても証拠は意思決定を解決していない。</li>
 </ol>
 <p>データ品質と一般的なモデル検証は<a href="sec6.2-mmm-fundamentals.html#sec-mmm-data-requirements">Section 6.2</a>で扱っており、ここで繰り返す必要はない。</p>
-</section>
-<section id="calibration-as-a-learning-loop" class="level2">
-<h2 class="anchored" data-anchor-id="calibration-as-a-learning-loop">学習ループとしての較正</h2>
-<p>すべてのチャネルで実験する必要はない。支出が重要で、モデルの区間が広く、結果が行動を変えうる場所をテストする。Section 6.2の意思決定カードのように、テスト前にモデル予測を記録し、プログラムが自身の較正を測れるようにする。次の配分前にモデルを更新し、次の不一致に次のテストを選ばせる。</p>
+<p>すべてのチャネルで実験する必要はない。支出が重要で、モデルの区間が広く、結果が行動を変えうる場所をテストする。Section 6.2の意思決定カードのように、各テストの前にモデルの予測を記録する。次の配分の前にモデルを更新し、次の不一致に次のテストを選ばせる。</p>
 </section>
 <section id="key-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="key-takeaways">重要なポイント</h2>
 <ul>
-<li>推定対象を一致させ、移植ではなく変換する。限界の測定値は限界パラメータに置き、キャリーオーバーを補正し、スケールに応じて幅を広げ、実験の不確実性も一緒に運ぶ。</li>
-<li>較正対象チャネルだけでなくシステム全体を再適合する。較正によりSearchの限界リターンは真値の8倍から、ほぼ正確な値へ動いた。</li>
-<li>意思決定が変わるかで判断する。区間はガードレールを解除できるほど狭まらず、配分も動かなかった。それが発見であり、次のテストを明確にする。</li>
+<li>較正の前に推定対象を一致させる。1つの支出ブロックの測定値は限界パラメータに置き、キャリーオーバーで補正し、スケールに応じて幅を広げ、その不確実性も一緒に運ぶ。</li>
+<li>モデル全体を再適合し、対照適合を残す。証拠の効果を、パラメータ化の変更と切り分けるためである。ここでは、Searchの限界リターンが8倍高すぎる値から真値との差0.01以内へ動いた。</li>
+<li>較正は、意思決定が変わるかで判断する。配分は維持され、ガードレールはHOLDのままだった。その結果が次のテストを決める。週数を増やすのではなく、市場を増やす。</li>
 </ul>
 
 
