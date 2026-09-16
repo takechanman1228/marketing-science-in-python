@@ -58,14 +58,16 @@ TRUE_HALF_LIFE_WEEKS = {
 
 #: True average ROI (incremental revenue / spend over the whole period).
 TRUE_AVERAGE_ROI = {
-    "TV_CTV": 4.17, "OOH": 6.28, "Google": 0.35, "Meta": 3.75, "TikTok": 3.01,
+    "TV_CTV": 4.17, "OOH": 6.28, "Google": 3.30, "Meta": 3.75, "TikTok": 3.01,
 }
 
 #: True marginal ROI, defined as Meridian defines mROI: the return on a 1%
 #: exposure increase. OOH and Meta sit above a 40%-margin break-even ROAS of
 #: 2.50; TV/CTV, TikTok and Google sit below it. TV/CTV outranks Meta on the
 #: average and is outranked by it on the margin, which is the whole point of
-#: optimising on marginal rather than average return.
+#: optimising on marginal rather than average return. Google is profitable on
+#: average (3.30 > 2.50) and overfunded at the margin, so a channel that
+#: "works" can still be the right one to cut.
 TRUE_MARGINAL_ROI = {
     "TV_CTV": 1.80,
     "OOH": 3.50,
@@ -75,8 +77,9 @@ TRUE_MARGINAL_ROI = {
 
 #: Google Search is pinned on the quantity Chapter 6.3's geo experiment
 #: measures instead: the ROAS of a 30% spend cut sustained for eight weeks.
-#: Its 1% mROI then follows from the curve rather than being chosen.
-GOOGLE_PULLBACK_ROAS = 0.20
+#: Its 1% mROI then follows from the curve rather than being chosen. Keep
+#: equal to TRUE_PULLBACK_ROAS in geo_experiment_data_generation.py.
+GOOGLE_PULLBACK_ROAS = 1.50
 PULLBACK_MULTIPLIER = 0.70
 PULLBACK_WEEKS = 8
 
@@ -123,7 +126,11 @@ OBSERVATION_NOISE_R2 = 0.980
 
 
 def geometric_adstock(exposure, decay: float, max_lag: int = TRUE_MAX_LAG):
-    """Return sum_{i=0..max_lag} x_{t-i} * decay**i -- Meridian's own definition."""
+    """Return sum_{i=0..max_lag} x_{t-i} * decay**i, unnormalized.
+
+    Meridian uses the same geometric weights but divides by their sum, so its
+    adstocked series is this one scaled by a per-channel constant; the Hill
+    half-saturation points in the truth table are in these unnormalized units."""
     exposure = np.asarray(exposure, dtype=float)
     out = np.zeros(len(exposure), dtype=float)
     for lag in range(max_lag + 1):
@@ -326,9 +333,9 @@ def generate_dataset(
             "frequency_of_campaigns": 1,
             "start_date": "2021/1/1",
             "true_cvr": {
-                # Conversion rates chosen so most channels land at a true ROI
-                # of roughly 3-6, with Google deliberately low (~0.2) to give
-                # the §6.4 calibration demo a channel worth calibrating.
+                # Conversion rates set the exposure and spend scale only. The
+                # planted ROI comes from the response curves solved below
+                # (TRUE_AVERAGE_ROI, TRUE_MARGINAL_ROI, GOOGLE_PULLBACK_ROAS).
                 "TV_CTV": 0.0020,
                 "OOH": 0.0015,
                 "Google": 0.15,

@@ -15,12 +15,13 @@ control, and placebo workflow in seconds.
 
 - 8 matched pairs selected from 40 candidate geographies
 - 1 geography randomized to treatment within each pair
-- 8-week test from 2025-02-03 through 2025-03-24
-- 25% spend increase in treated geographies
-- true marginal ROAS of approximately 0.20
+- 8-week test from 2024-02-05 through 2024-03-25
+- 30% spend cut in treated geographies
+- the return on that cut (revenue given up per dollar removed) planted at
+  1.50, the same value the MMM generator pins for Google Search
 
-The observed panel carries no treatment flag and no lift column (the 25%
-spend change itself is visible, as in any real experiment). The companion
+The observed panel carries no treatment flag and no lift column (the 30%
+spend cut itself is visible, as in any real experiment). The companion
 notebook reconstructs the assignment from pre-period data alone and opens
 the ground-truth file only after estimation.
 

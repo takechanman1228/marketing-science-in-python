@@ -3,7 +3,9 @@
 The data is created from scratch for this repository. It contains 40 anonymous
 geographies observed for 104 Mondays. The final eight weeks are a randomized
 matched-pair experiment: one geography in each of eight pairs has its Google
-Search spend cut by 30%, with true marginal ROAS planted at 0.20. The panel ends
+Search spend cut by 30%. The planted return on that cut (revenue given up per
+dollar removed, ``TRUE_PULLBACK_ROAS``) is the same quantity the MMM generator
+pins as ``GOOGLE_PULLBACK_ROAS``; the two must agree. The panel ends
 six weeks after the sec6.2 modeling period, so the experiment can calibrate that
 model without a recency gap.
 
@@ -29,7 +31,9 @@ N_PAIRS = 8
 TEST_WEEKS = 8
 START_DATE = "2022-04-04"
 SPEND_MULTIPLIER = 0.70
-TRUE_ROAS = 0.20
+#: Return on the tested cut. Keep equal to GOOGLE_PULLBACK_ROAS in
+#: mmm_data_generation.py; test_geo_experiment.py checks the committed CSVs agree.
+TRUE_PULLBACK_ROAS = 1.50
 
 
 def _ar1_noise(
@@ -199,7 +203,7 @@ def generate_dataset(seed: int = SEED) -> tuple[pd.DataFrame, pd.DataFrame, pd.D
     treated_window = panel["geo"].isin(treated_geos) & week_values.between(test_start, test_end)
     baseline_test_spend = panel.loc[treated_window, "spend"].to_numpy(dtype=float)
     incremental_spend = baseline_test_spend * (SPEND_MULTIPLIER - 1.0)
-    incremental_revenue = incremental_spend * TRUE_ROAS
+    incremental_revenue = incremental_spend * TRUE_PULLBACK_ROAS
 
     panel.loc[treated_window, "spend"] = np.round(
         baseline_test_spend + incremental_spend, 2
