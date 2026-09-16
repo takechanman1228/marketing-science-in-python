@@ -650,7 +650,7 @@ window.Quarto = {
 
 <section id="sec-what-is-incrementality" class="level2">
 <h2 class="anchored" data-anchor-id="sec-what-is-incrementality">What Is Incrementality?</h2>
-<p>The MMM’s optimizer wants to cut Google Search by 30%, all the way to its constraint floor, and the model can’t defend the move: Search’s marginal ROAS interval runs from 0.3 to 8.3, too wide to act on. That was where <a href="sec6.2-mmm-fundamentals.html">Section 6.2</a> ended. The reason is in the history. Search has run always-on at a nearly constant weekly budget for three years, so the model has never seen its spend move, and the estimate is mostly the prior it started with. Cutting a channel on an estimate like that is a bet, not a decision. Before cutting nationally, we need to know what the last 30% of Search spend was actually buying.</p>
+<p>The MMM’s optimizer wants to cut Google Search by 30%, all the way to its constraint floor, and the model can’t defend the move: Search’s marginal ROAS interval runs from 0.4 to 9.5, too wide to act on. That was where <a href="sec6.2-mmm-fundamentals.html">Section 6.2</a> ended. The reason is in the history. Search has run always-on at a nearly constant weekly budget for three years, so the model has never seen its spend move, and the estimate is mostly the prior it started with. Cutting a channel on an estimate like that is a bet, not a decision. Before cutting nationally, we need to know what the last 30% of Search spend was actually buying.</p>
 <p>That number is an incremental effect. <strong>Incrementality</strong> is the outcome that would not have happened without the advertising: if a campaign records $120,000 in sales and $100,000 would have come in anyway, the incremental revenue is $20,000. Attribution has nothing to say about the $100,000, and the MMM can only estimate it from variation in the history, of which Search has none. To get the number, we have to change the data: run an experiment in which we control what changes, and where.</p>
 </section>
 <section id="sec-experimental-unit" class="level2">
@@ -757,22 +757,22 @@ Figure&nbsp;2: A geo experiment in four steps.
 <section id="power-and-mde-by-simulation" class="level3">
 <h3 class="anchored" data-anchor-id="power-and-mde-by-simulation">Power and MDE by simulation</h3>
 <p>Before committing, ask whether this panel can detect an effect the business would care about. The notebook picks pseudo-launch dates in the history, subtracts the revenue a candidate return would lose on the planned cut, reruns the same clustered estimator, and counts how often the effect is detected. Repeating that across durations and cut sizes gives a simulated minimum detectable effect, or MDE.</p>
-<div id="fig-mde-by-duration" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Three curves show that longer tests and larger cuts lower the return detectable with 80 percent power; a 30 percent cut over eight weeks detects returns of about 0.30 and above.">
+<div id="fig-mde-by-duration" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Three curves show that longer tests and larger cuts lower the return detectable with 80 percent power; a 30 percent cut over eight weeks detects returns of about 0.40 and above.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-mde-by-duration-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part6/sec6.3/mde_by_duration.png" class="fig-lg img-fluid figure-img" alt="Three curves show that longer tests and larger cuts lower the return detectable with 80 percent power; a 30 percent cut over eight weeks detects returns of about 0.30 and above.">
+<img src="../images/part6/sec6.3/mde_by_duration.png" class="fig-lg img-fluid figure-img" alt="Three curves show that longer tests and larger cuts lower the return detectable with 80 percent power; a 30 percent cut over eight weeks detects returns of about 0.40 and above.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-mde-by-duration-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Figure&nbsp;3: Simulated MDE by test duration and size of the cut.
 </figcaption>
 </figure>
 </div>
-<p>In <a href="#fig-mde-by-duration" class="quarto-xref">Figure&nbsp;<span>3</span></a>, a 30% cut over eight weeks detects a return of about 0.30 and above, while four weeks would need 0.40. These numbers belong to this panel. A 20-50% spend change over four to eight weeks is a common starting point, not a rule; simulating on your own history is the rule.</p>
+<p>In <a href="#fig-mde-by-duration" class="quarto-xref">Figure&nbsp;<span>3</span></a>, a 30% cut over eight weeks detects a return of about 0.40 and above, while four weeks would need 0.50. These numbers belong to this panel. A 20-50% spend change over four to eight weeks is a common starting point, not a rule; simulating on your own history is the rule.</p>
 </section>
 <section id="sec-geo-decision-rule" class="level3">
 <h3 class="anchored" data-anchor-id="sec-geo-decision-rule">Decision rule and design freeze</h3>
 <p>The MDE says what the test can tell apart from zero. The CFO is asking something else: does Search earn enough to keep its money? “Enough” has a number. With a contribution margin of <span class="math inline">\(m\)</span>, a dollar of spend breaks even when it returns <span class="math inline">\(1/m\)</span> of revenue, so at a 40% margin a Search dollar has to bring back $2.50. That hurdle is a business input, not a statistical one, and it settles one decision only: whether this block of spend should stay in the media budget at all. Where the money should go instead is a comparison across all five channels, and that comparison is the job of <a href="sec6.4-mmm-calibration.html">Section 6.4</a>.</p>
-<p>So we write the rule before launch. If the 95% confidence interval for the return on the tested cut sits entirely above 2.50, keep the budget. If it sits entirely below, cut as the optimizer proposed. If it straddles 2.50, hold the national plan and design a follow-up test; extending this one after seeing its result would turn it into a different test. The design has power to spare for a cut verdict, though not for telling apart a return that sits just above the hurdle. The notebook shows both in the units of the decision, by simulating the verdict rather than the p-value:</p>
+<p>So we write the rule before launch. If the 95% confidence interval for the return on the tested cut sits entirely above 2.50, keep the budget. If it sits entirely below, cut as the optimizer proposed. If it straddles 2.50, hold the national plan and design a follow-up test; extending this one after seeing its result would turn it into a different test. The design has power to spare for a cut verdict when the return is well under the hurdle, little when it sits just under, and none for a keep verdict at these sizes. The notebook shows all three in the units of the decision, by simulating the verdict rather than the p-value:</p>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -784,15 +784,15 @@ Figure&nbsp;3: Simulated MDE by test duration and size of the cut.
 </thead>
 <tbody>
 <tr class="odd">
-<td style="text-align: right;">0.2</td>
-<td style="text-align: right;">1.00</td>
-<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">1.5</td>
+<td style="text-align: right;">0.99</td>
+<td style="text-align: right;">0.01</td>
 <td style="text-align: right;">0.00</td>
 </tr>
 <tr class="even">
-<td style="text-align: right;">1.0</td>
-<td style="text-align: right;">1.00</td>
-<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">2.0</td>
+<td style="text-align: right;">0.21</td>
+<td style="text-align: right;">0.79</td>
 <td style="text-align: right;">0.00</td>
 </tr>
 <tr class="odd">
@@ -804,8 +804,8 @@ Figure&nbsp;3: Simulated MDE by test duration and size of the cut.
 <tr class="even">
 <td style="text-align: right;">3.0</td>
 <td style="text-align: right;">0.00</td>
-<td style="text-align: right;">0.83</td>
-<td style="text-align: right;">0.17</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">0.00</td>
 </tr>
 </tbody>
 </table>
@@ -818,19 +818,19 @@ Figure&nbsp;3: Simulated MDE by test duration and size of the cut.
 </section>
 <section id="sec-geo-measurement" class="level2">
 <h2 class="anchored" data-anchor-id="sec-geo-measurement">Step 4: Post-Test Measurement</h2>
-<p>Here is the first number a stakeholder will compute, whether or not you do: revenue in the test markets during the test, against the eight weeks before it. In the notebook that comparison gives a return of <strong>-0.87</strong>. Search spend went down and revenue went up, so cutting Search apparently increased sales. Every ad manager has heard this argument, usually followed by “so let’s cut more.” It’s wrong here because revenue was rising into the test window in every market, control markets included. The before-and-after comparison credits the cut with the season. This is why we chose control markets in step two.</p>
+<p>Here is the first number a stakeholder will compute, whether or not you do: revenue in the test markets during the test, against the eight weeks before it. In the notebook that comparison gives a return of <strong>0.44</strong>: revenue in the test markets dipped, but only by about 44 cents per dollar of Search removed, so the cut looks nearly free. Every ad manager has heard this argument, usually followed by “so let’s cut more.” It’s wrong here because revenue was rising into the test window in every market, control markets included, and the season hid most of what the cut cost. This is why we chose control markets in step two.</p>
 <p>The estimator follows the assignment mechanism, the same principle as in <a href="../part3/sec3.3-quasi-experiments.html">Section 3.3</a>. Randomization within matched pairs is the design, and paired Difference-in-Differences is the estimator that matches it. The basic interaction is:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> smf.ols(<span class="st">"revenue ~ treat * post"</span>, data<span class="op">=</span>analysis).fit(</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    cov_type<span class="op">=</span><span class="st">"cluster"</span>,</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    cov_kwds<span class="op">=</span>{<span class="st">"groups"</span>: analysis[<span class="st">"geo"</span>]},</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    cov_kwds<span class="op">=</span>{<span class="st">"groups"</span>: analysis[<span class="st">"pair"</span>]},</span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>The notebook’s version replaces the <code>treat</code> and <code>post</code> main effects with a fixed effect for each market and a separate test-period term for each pair, so one pair’s local shock isn’t read as lift. The <code>treat:post</code> coefficient is incremental revenue per treated market-week, negative here because the test markets lost revenue relative to their pairs. Dividing its total by the spend the experiment removed gives the return on the tested cut: both numbers are negative, and their ratio is the revenue lost per dollar not spent. The denominator has to be the spend the experiment changed, in these markets, on these dates, not the national Search budget.</p>
-<p>The design-consistent estimate is <strong>0.200</strong>, with SE <strong>0.075</strong> and 95% CI <strong>[0.040, 0.361]</strong>, using the t distribution because there are only 16 market clusters. It recovers the planted truth of 0.200. Each Search dollar removed had been buying about twenty cents of revenue.</p>
+<p>The design-consistent estimate is <strong>1.500</strong>, with SE <strong>0.257</strong> and 95% CI <strong>[0.892, 2.109]</strong>, clustered on the eight matched pairs because the pair is the unit that was randomized, and using the t distribution because there are only eight of them. It recovers the planted truth of 1.500. Each Search dollar removed had been buying about $1.50 of revenue, more than three times what the before-and-after comparison suggested.</p>
 <section id="does-the-result-hold-up" class="level3">
 <h3 class="anchored" data-anchor-id="does-the-result-hold-up">Does the result hold up?</h3>
 <p>One estimate from one estimator is a claim; the checks below make it a result.</p>
 <p>First, the pre-period. The event-study chart in the notebook centers each pair on the week before launch, and the pre-period differences fluctuate around zero rather than drifting. If they drifted, the pairs weren’t parallel, and the DiD would be measuring the drift.</p>
-<p>Second, an alternative counterfactual. A synthetic control aggregates the eight test markets and builds a weighted blend of untreated donors, with non-negative weights that sum to one and minimize pre-period error. A close pre-period fit is the admission ticket. Here it fits (<a href="#fig-actual-vs-synthetic-gap" class="quarto-xref">Figure&nbsp;<span>4</span></a>), and the synthetic-control estimate is <strong>0.186</strong>, close to the DiD and to the truth. Two estimators that compress the untreated information differently and still agree is informative; it isn’t a license to average methods until the preferred number appears.</p>
+<p>Second, an alternative counterfactual. A synthetic control aggregates the eight test markets and builds a weighted blend of untreated donors, with non-negative weights that sum to one and minimize pre-period error. A close pre-period fit is the admission ticket. Here it fits (<a href="#fig-actual-vs-synthetic-gap" class="quarto-xref">Figure&nbsp;<span>4</span></a>), and the synthetic-control estimate is <strong>1.486</strong>, close to the DiD and to the truth. Two estimators that compress the untreated information differently and still agree is informative; it isn’t a license to average methods until the preferred number appears.</p>
 <div id="fig-actual-vs-synthetic-gap" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="The treated aggregate and its weighted synthetic control track closely before launch, then the treated series falls below its counterfactual during the test.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-actual-vs-synthetic-gap-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -841,7 +841,7 @@ Figure&nbsp;4: Observed revenue in the test markets versus their synthetic contr
 </figcaption>
 </figure>
 </div>
-<p>Third, placebos. An in-space placebo asks what the analysis would report under assignments that never happened. With eight pairs, swapping roles inside each pair gives <span class="math inline">\(2^8 = 256\)</span> possible assignments, few enough to enumerate. Their distribution is centered at zero by construction, and 11.7% of them produce an estimate at least as extreme as the observed 0.200 (<a href="#fig-placebo-distribution" class="quarto-xref">Figure&nbsp;<span>5</span></a>). In-time placebos move the same eight-week window through earlier history; their mean is 0.053, with fake effects on both sides of zero rather than a repeated lift at every date.</p>
+<p>Third, placebos. An in-space placebo asks what the analysis would report under assignments that never happened. With eight pairs, swapping roles inside each pair gives <span class="math inline">\(2^8 = 256\)</span> possible assignments, few enough to enumerate. Their distribution is centered at zero by construction, and only 2 of the 256 produce an estimate at least as extreme as the observed 1.500 (<a href="#fig-placebo-distribution" class="quarto-xref">Figure&nbsp;<span>5</span></a>), a randomization p of 0.008. In-time placebos move the same eight-week window through earlier history; their mean is 0.053, with fake effects on both sides of zero rather than a repeated lift at every date.</p>
 <div id="fig-placebo-distribution" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="A histogram of within-pair placebo ROAS estimates centered near zero, with the observed estimate in the positive tail; earlier fake launches appear as marks along the axis.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-placebo-distribution-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -857,9 +857,9 @@ Figure&nbsp;5: The real estimate against placebo assignments.
 </section>
 <section id="sec-geo-lift-to-decision" class="level2">
 <h2 class="anchored" data-anchor-id="sec-geo-lift-to-decision">From Lift to Decision</h2>
-<p>Now apply the rule we froze. The hurdle was 2.50, and the interval’s upper bound of 0.361 is less than a sixth of it. The rule says cut. Each dollar removed was buying twenty cents of revenue, eight cents of contribution at a 40% margin, and no reading of the uncertainty makes that dollar pay for itself.</p>
-<p>Notice what the decision did not depend on. The randomization test put 11.7% of placebo assignments beyond the observed estimate, so it couldn’t reject zero at 5%, while the clustered-t interval excludes zero. Neither is a computation error; a borderline result can land on opposite sides of an arbitrary cutoff. Run the meeting on “was it significant” and it ends in an argument about p-values. Run it on the hurdle and the same numbers give a clear answer, because the distance from 0.36 to 2.50 is large and the distance from 0.04 to zero was never the question. A test can fail to distinguish an effect from zero and still settle a budget.</p>
-<p>One more number travels to the next chapter. Assignment was eight coin flips, one per pair, but the estimator clusters on sixteen markets. Cluster on the pairs instead and the point estimate stays at 0.200 while the standard error widens from 0.075 to 0.110, an interval of [-0.060, 0.461]. The verdict is the same, because 2.50 is far above both, but a prior built on the narrower of two defensible widths is a choice, so both widths go to <a href="sec6.4-mmm-calibration.html">Section 6.4</a>.</p>
+<p>Now apply the rule we froze. The hurdle was 2.50, and the interval’s upper bound of 2.109 sits below it. The rule says cut. Each dollar removed was buying $1.50 of revenue, 60 cents of contribution at a 40% margin, and no reading of the uncertainty gets that dollar back to a dollar.</p>
+<p>Notice what the decision did not depend on. The effect is as significant as this design can make it: two placebo assignments in 256, an interval that excludes zero by a wide margin. A stakeholder who reads “ROAS 1.5, p below 0.01” will hear that Search works, and both halves are true. The budget still goes, because the question was never whether the ads move revenue. It was whether the last $421,906 moved enough of it to cover its own cost, and $1.50 of revenue is 60 cents of margin. Run the meeting on “was it significant” and Search keeps its money. Run it on the hurdle and the same numbers say cut. A test can establish an effect and still fail to justify the spend.</p>
+<p>One more number travels to the next chapter. Clustering on the sixteen markets instead of the eight pairs is common, and it narrows the standard error from 0.257 to 0.176, an interval of [1.126, 1.875]. It also treats the two halves of one coin flip as independent, which they are not, so the pair reading is the one we pre-specified. The verdict is the same either way, because both intervals stop short of 2.50, but the pair interval comes within 0.4 of it. Both widths go to <a href="sec6.4-mmm-calibration.html">Section 6.4</a>.</p>
 <p>What we know is precise and narrow: the effect of this 30% cut, in these markets, over this eight-week window. It is one point on the response curve, and the handoff preserves that scope.</p>
 <table class="caption-top table">
 <thead>
@@ -891,23 +891,23 @@ Figure&nbsp;5: The real estimate against placebo assignments.
 </tr>
 <tr class="even">
 <td>Return on the tested cut (30% block)</td>
-<td>0.200</td>
+<td>1.500</td>
 </tr>
 <tr class="odd">
-<td>Standard error (clustered on markets)</td>
-<td>0.075</td>
+<td>Standard error (clustered on pairs, pre-specified)</td>
+<td>0.257</td>
 </tr>
 <tr class="even">
-<td>Standard error (clustered on pairs)</td>
-<td>0.110</td>
+<td>Standard error (clustered on markets)</td>
+<td>0.176</td>
 </tr>
 <tr class="odd">
-<td>95% CI (clustered t)</td>
-<td>[0.040, 0.361]</td>
+<td>95% CI (pair-clustered t)</td>
+<td>[0.892, 2.109]</td>
 </tr>
 <tr class="even">
 <td>Randomization p</td>
-<td>0.117</td>
+<td>0.008</td>
 </tr>
 <tr class="odd">
 <td>Tested markets’ share of national Search spend</td>
@@ -925,7 +925,7 @@ Figure&nbsp;5: The real estimate against placebo assignments.
 <h2 class="anchored" data-anchor-id="key-takeaways">Key Takeaways</h2>
 <ul>
 <li>Incrementality is the outcome that would not have happened without the ad. Choose the unit and the design before the estimator, simulate power on your own history, and freeze the decision rule.</li>
-<li>Decide against the business hurdle, not against significance: a test can fail to separate an effect from zero and still settle a budget. Hand off the estimand, its uncertainty, and its operating point, not just a ROAS.</li>
+<li>Decide against the business hurdle, not against significance: a test can establish an effect and still fail to justify the spend. Hand off the estimand, its uncertainty, and its operating point, not just a ROAS.</li>
 </ul>
 
 

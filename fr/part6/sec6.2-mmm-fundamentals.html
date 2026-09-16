@@ -716,7 +716,7 @@ Figure&nbsp;4: Les trois zones de la courbe de saturation.
 \text{Hill}(x) = \frac{x^S}{x^S + K^S}
 \]</span></p>
 <p>où <span class="math inline">\(K\)</span> (le point de demi-saturation, souvent appelé EC50) est le niveau de dépenses auquel le canal atteint 50 % de son effet maximal, et <span class="math inline">\(S\)</span> (la pente) détermine à quel point la courbe s’infléchit.</p>
-<p>Une remarque pratique sur <span class="math inline">\(K\)</span> : Meridian applique l’adstock sans le normaliser, si bien que la valeur après adstock d’un canal à décroissance lente se situe plusieurs fois au-dessus de ses dépenses hebdomadaires, et une loi a priori sur <span class="math inline">\(K\)</span> centrée pour un canal rapide exclurait la vraie valeur pour un canal lent. La démonstration attribue donc à la saturation une loi a priori unique et large, indépendante du canal, et conserve la structure par étape du parcours de conversion pour l’adstock ; le notebook présente la configuration.</p>
+<p>Une remarque pratique sur <span class="math inline">\(K\)</span> : Meridian le mesure dans ses propres unités, les médias étant mis à l’échelle par leur médiane et les poids d’adstock normalisés pour que leur somme vaille un, si bien qu’un canal actif en continu se situe près de 1 sur cette échelle. La démonstration attribue à la saturation une loi a priori unique et large, indépendante du canal, qui favorise les courbes s’infléchissant doucement, conserve la structure par étape du parcours de conversion pour l’adstock, et montre dans le notebook ce que ce choix décide pour un canal que les données ne permettent pas d’identifier.</p>
 <p>Cette courbure fait tout l’intérêt de la réallocation budgétaire. Dans <a href="#fig-saturation-reallocation" class="quarto-xref">Figure&nbsp;<span>5</span></a>, le canal X se trouve bien à l’intérieur de sa zone de saturation, tandis que le canal Y dispose encore d’une marge de progression. Réduire le budget de X coûte 1 million de dollars de ventes, tandis qu’ajouter ce budget à Y rapporte 3 millions de dollars : un gain net de 2 millions de dollars pour une dépense totale identique. Transférer du budget des canaux saturés vers les canaux sous-investis peut accroître le rendement total, même si le ROAS moyen du canal saturé paraît supérieur. Le ROAS moyen divise le chiffre d’affaires incrémental total d’un canal par ses dépenses totales ; le ROAS marginal correspond à la pente de la courbe au point où se situe actuellement le canal, et c’est ce que rapporte le dollar suivant.</p>
 <div id="fig-saturation-reallocation" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Deux courbes de saturation : réduire le budget du canal saturé X fait perdre 1 million de dollars de ventes, tandis qu’augmenter celui du canal moins saturé Y rapporte 3 millions de dollars, soit une variation nette de +2 millions de dollars.">
 <figure class="quarto-float quarto-float-fig figure">
@@ -731,7 +731,7 @@ Figure&nbsp;5: Réallocation du budget d’un canal saturé vers un canal non sa
 </section>
 <section id="adstock-carryover-effects" class="level2">
 <h2 class="anchored" data-anchor-id="adstock-carryover-effects">Adstock (effets de rémanence)</h2>
-<p>La publicité ne cesse pas d’agir dès que sa diffusion s’arrête. L’adstock rend compte de cet effet différé. Sa forme la plus simple est la décroissance géométrique :</p>
+<p>La publicité ne cesse pas d’agir dès que sa diffusion s’arrête. L’adstock rend compte de cet effet différé. Sa forme la plus simple est la décroissance géométrique (Meridian utilise les mêmes poids, divisés par leur somme) :</p>
 <p><span class="math display">\[
 \text{Adstock}_t = x_t + \lambda \cdot \text{Adstock}_{t-1}
 \]</span></p>
@@ -964,9 +964,9 @@ Figure&nbsp;15: Budget par canal avant et après optimisation.
 </figure>
 </div>
 <p>L’optimiseur offre la même commodité de restitution : <code>optimization_results.output_optimization_summary(...)</code> produit un rapport HTML de deux pages sur la réallocation recommandée (<a href="https://marketing-science-in-python.com/notebooks/part6-media-optimization/optimization_output.html">optimization_output.html</a>).</p>
-<p>Dans la démonstration, l’optimiseur réalloue les dépenses entre les cinq canaux modélisés (TV/CTV, OOH, Google Search, Meta et TikTok), en transférant du budget des canaux aux courbes de réponse marginale plus plates vers ceux qui disposent encore d’une plus grande marge de progression. Le budget total reste identique ; seule sa répartition change. Des gains de 5 à 10 % de ventes attribuables aux médias (incrémentales), dus à la seule réallocation, sont courants lorsque les équipes mettent en œuvre le MMM pour la première fois ; cette démonstration affiche environ +4 %, soit à peu près +1,4 % des ventes totales.</p>
+<p>Dans la démonstration, l’optimiseur réalloue les dépenses entre les cinq canaux modélisés (TV/CTV, OOH, Google Search, Meta et TikTok), en transférant du budget des canaux aux courbes de réponse marginale plus plates vers ceux qui disposent encore d’une plus grande marge de progression. Le budget total reste identique ; seule sa répartition change. Des gains de 5 à 10 % de ventes attribuables aux médias (incrémentales), dus à la seule réallocation, sont courants lorsque les équipes mettent en œuvre le MMM pour la première fois ; cette démonstration affiche environ +3 %, soit à peu près +1,2 % des ventes totales.</p>
 <p>Une autre règle s’intercale entre l’optimiseur et le plan. L’optimiseur déplace le budget en fonction des moyennes a posteriori ; le plan devrait le déplacer en fonction de ce que le modèle sait réellement. Le notebook applique donc un garde-fou à la quantité utilisée par l’optimiseur, le ROAS marginal : un canal dont l’intervalle à 90 % a une demi-largeur relative supérieure à 0,8 (la moitié de la largeur de l’intervalle, divisée par l’estimation) est maintenu à son niveau de dépenses actuel, quelle que soit l’ampleur du transfert recommandé. Un intervalle large signifie que le modèle n’a pas identifié ce canal, et la réponse consiste à recueillir des preuves, pas à miser davantage. Il s’agit d’une règle de gouvernance illustrative, et non d’un seuil statistique universel. Dans la démonstration, elle autorise 74 % du mouvement recommandé et maintient un canal inchangé.</p>
-<p>Utilisez les résultats de l’optimiseur comme point de départ de la planification, et non comme un plan média définitif. Le modèle ne tient pas compte des contraintes réelles, comme les contrats, les seuils minimaux de dépenses ou les délais opérationnels. Il faut les intégrer séparément. Et dans cette démonstration, il produit une recommandation qu’il ne peut pas défendre :</p>
+<p>Utilisez les résultats de l’optimiseur comme point de départ de la planification, et non comme un plan média définitif. Le modèle ne tient pas compte des contraintes réelles, comme les contrats, les seuils minimaux de dépenses ou les délais opérationnels. Il faut les intégrer séparément. Et dans cette démonstration, il produit une recommandation qu’il ne peut pas défendre. Le notebook montre à quel point elle repose sur peu de chose : changez seulement la loi a priori de saturation, de celle utilisée ici à celle par défaut de Meridian, et le mouvement proposé pour Search s’inverse, d’une réduction de 30 % à une hausse de 30 %, les deux modèles ajustés échouant à la règle de largeur. L’historique ne détermine pas la direction ; la réduction proposée a besoin de preuves expérimentales.</p>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -985,11 +985,11 @@ Figure&nbsp;15: Budget par canal avant et après optimisation.
 </tr>
 <tr class="odd">
 <td>Garde-fou</td>
-<td>MAINTIEN : intervalle du ROAS marginal [0,31 ; 8,28], demi-largeur relative de 1,41</td>
+<td>MAINTIEN, intervalle trop large : ROAS marginal [0,36 ; 9,51], demi-largeur relative de 1,39</td>
 </tr>
 <tr class="even">
 <td>Prédiction avant le test</td>
-<td>Une réduction de 30 % fait perdre 2,54 dollars de chiffre d’affaires par dollar retiré sur 8 semaines, avec un intervalle de crédibilité à 90 % [0,28 ; 7,21]</td>
+<td>Une réduction de 30 % fait perdre 2,95 dollars de chiffre d’affaires par dollar retiré sur 8 semaines, avec un intervalle de crédibilité à 90 % [0,34 ; 8,48]</td>
 </tr>
 <tr class="odd">
 <td>Test proposé</td>

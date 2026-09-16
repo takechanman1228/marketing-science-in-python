@@ -611,7 +611,7 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 <p><strong>À propos de la version française</strong><br>
 Cette page est une traduction par IA de la version anglaise de <em>Marketing Science in Python</em>. La version anglaise fait foi et prévaut en cas de divergence. Le code, les notebooks et le texte intégré aux images restent en anglais. <a href="../../part6/sec6.4-mmm-calibration.html" class="translation-source-link">Lire la version anglaise</a></p>
 </div>
-<p>Avant que l’expérience géographique ne soit menée, le MMM avait prédit ce que coûterait une réduction de 30 % de Google Search : 2,54 $ de chiffre d’affaires par dollar retiré, avec un intervalle de crédibilité à 90 % allant de 0,28 à 7,21. L’expérience de la <a href="sec6.3-incrementality-experiments.html">section 6.3</a> a mesuré 0,200, avec un intervalle de confiance à 95 % allant de 0,040 à 0,361. Le modèle était trop incertain pour servir de base à l’action, et la mesure s’est située sous la borne inférieure de son intervalle. Ni l’un ni l’autre n’est surprenant. Les dépenses Search avaient à peine bougé en trois ans d’historique, si bien que l’estimation du modèle pour Search reflétait surtout la distribution a priori de départ, et l’expérience constitue le premier élément probant causal sur ce canal.</p>
+<p>Avant que l’expérience géographique ne soit menée, le MMM avait prédit ce que coûterait une réduction de 30 % de Google Search : 2,95 $ de chiffre d’affaires par dollar retiré, avec un intervalle de crédibilité à 90 % allant de 0,34 à 8,48. L’expérience de la <a href="sec6.3-incrementality-experiments.html">section 6.3</a> a mesuré 1,500, avec un intervalle de confiance à 95 % allant de 0,892 à 2,109. Le modèle avait à peu près bien estimé la valeur globale du canal, mais le coût de la réduction environ deux fois trop haut, et son intervalle était de toute façon trop large pour servir de base à l’action. Ni l’un ni l’autre n’est surprenant. Les dépenses Search avaient à peine bougé en trois ans d’historique, si bien que l’estimation du modèle pour Search reflétait surtout la distribution a priori de départ, et l’expérience constitue le premier élément probant causal sur ce canal.</p>
 <p>La calibration intègre cet élément probant au modèle. L’expérience a mesuré un canal, à un point de fonctionnement, sur une fenêtre ; le modèle de la <a href="sec6.2-mmm-fundamentals.html">section 6.2</a> doit encore fixer les budgets de cinq canaux. Nous traduisons donc le résultat en une distribution a priori, réestimons le modèle et vérifions si la recommandation change. L’objectif n’est pas de faire concorder le modèle avec l’expérience. Il est de savoir si de meilleurs éléments probants modifient la décision et, si ce n’est pas le cas, pourquoi. Comme le résultat est ici le chiffre d’affaires, le ROI de Meridian est numériquement un ROAS sur le chiffre d’affaires ; le texte parle de ROAS et le code conserve les noms de Meridian.</p>
 <div id="fig-calibration-workflow" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Cinq étapes : test géographique, estimation par différence de différences, traduction en distribution a priori, réestimation du MMM et décision budgétaire sous le garde-fou, avec un retour vers le test suivant.">
 <figure class="quarto-float quarto-float-fig figure">
@@ -638,13 +638,13 @@ Figure&nbsp;2: ROAS marginal et ROAS moyen sur une courbe de saturation.
 </figcaption>
 </figure>
 </div>
-<p>La distribution a priori par défaut de Meridian, <code>roi_m</code>, porte sur le ROAS moyen. Insérez-y le 0,200 de l’expérience et le modèle obéit : le notebook fait l’essai, et le ROAS moyen a posteriori s’établit à 0,21. Mais le modèle conserve une courbe, et une courbe dont la moyenne est 0,20 a un rendement marginal inférieur. Le ROAS marginal de Search ressort à 0,17, contre 0,213 introduit dans les données, et le ROAS marginal est la quantité sur laquelle l’optimiseur répartit le budget. L’écart est faible ici parce que la courbe de Search est douce. Pour TikTok, dont le rendement marginal vaut environ un quart du rendement moyen, la même substitution se tromperait d’un facteur proche de quatre. Une mesure se place sur le paramètre qui lui correspond.</p>
+<p>La distribution a priori par défaut de Meridian, <code>roi_m</code>, porte sur le ROAS moyen. Placez-y l’estimation corrigée de la durée, 1,71, et le modèle obéit : le notebook fait l’essai, et le ROAS moyen a posteriori s’établit à 1,96, contre 3,30 introduit dans les données. Le modèle est désormais contraint d’expliquer Search par une courbe dont le rendement depuis zéro est 40 % trop bas. Ici, le rendement marginal et la prédiction pour la réduction testée atterrissent encore près de la vérité, à 1,59 et 1,44, parce que la courbe est presque droite sur le haut de la plage de Search ; c’est donc la moyenne qui se trompe. Sur un canal plus courbé, les lectures locales se tromperaient avec elle. Pour TikTok, dont le rendement marginal vaut environ un quart du rendement moyen, la même substitution se tromperait d’un facteur proche de quatre. Une mesure se place sur le paramètre qui lui correspond.</p>
 </section>
 <section id="turn-the-experiment-into-a-prior" class="level2">
 <h2 class="anchored" data-anchor-id="turn-the-experiment-into-a-prior">Transformer l’expérience en une distribution a priori</h2>
-<p>Meridian peut placer la distribution a priori sur le ROI marginal, avec <code>media_prior_type="mroi"</code>. Ce paramètre est le rendement d’une hausse de 1 % des dépenses ; une tranche de 30 % constitue donc un contraste plus large que ce qu’il décrit, et l’expérience ancre la distribution a priori plutôt que de l’observer exactement. Pour Search, la différence tient dans l’arrondi : 0,213 contre 0,200.</p>
-<p>L’estimation devient une distribution a priori au moyen de deux ajustements, tous deux issus des recommandations de Google pour Meridian. La <strong>durée</strong> corrige le centre pour les effets différés que la fenêtre de test a manqués. La demi-vie de Search est d’une semaine, si bien qu’une fenêtre de huit semaines en capte presque la totalité et que le centre reste à 0,201 ; pour un canal lent comme la TV/CTV, la correction serait réelle. L’<strong>échelle des dépenses</strong> élargit la distribution a priori. Les huit marchés tests fonctionnaient à environ un cinquième du rythme de dépenses national, et plus un test s’éloigne de l’échelle du canal, moins on peut supposer que son résultat se transpose. Ce terme fait passer l’erreur-type de 0,075 à 0,161. La précision propre de l’expérience était bonne ; ce qui a élargi la distribution a priori, c’est que huit marchés ne représentent qu’un cinquième du canal. Le notebook affiche chaque terme, ainsi que deux termes plus petits qui n’ajoutent presque rien ici.</p>
-<p>Les quatre autres canaux conservent une distribution a priori faible sur le ROI marginal, <code>LogNormal(-0.49, 0.90)</code>, c’est-à-dire la distribution a priori faible du ROAS de la section 6.2 réexprimée à l’échelle marginale. Ne l’aplatissez pas davantage : sur une courbe de saturation, une distribution a priori diffuse sur le ROI marginal laisse le ROI moyen sans borne, et les canaux non calibrés reviennent avec des intervalles inutilisables.</p>
+<p>Meridian peut placer la distribution a priori sur le ROI marginal, avec <code>media_prior_type="mroi"</code>. Ce paramètre est le rendement d’une hausse de 1 % des dépenses. L’expérience a mesuré une réduction de 30 % sur huit semaines ; elle informe donc la distribution a priori par une traduction approximative plutôt qu’en observant le paramètre : des hypothèses sur la forme de la courbe, sur les effets différés et sur la façon dont huit marchés se transposent au pays entier restent partie intégrante du résultat. Pour Search, la tranche et la pente sont proches, 1,50 contre 1,57 introduit dans les données ; pour un canal lent comme la TV/CTV, elles ne le seraient pas, comme le montre la <a href="sec6.5-when-tools-disagree.html">section 6.5</a>.</p>
+<p>La traduction comporte trois parties. La <strong>durée</strong> corrige le centre pour les effets différés que la fenêtre de test a manqués. Une réduction opérée en semaine huit coûte encore du chiffre d’affaires en semaines neuf et dix ; ainsi, même avec la demi-vie d’une semaine de Search, environ 12 % de l’effet d’une réduction soutenue de huit semaines se produit après la fenêtre, et le centre passe de 1,50 à 1,71. Cette part est une approximation, fondée sur des variations hebdomadaires égales et des poids d’effets différés linéaires ; la saturation et la trajectoire réelle des dépenses peuvent la modifier. Pour un canal lent comme la TV/CTV, la correction serait plusieurs fois plus importante. L’<strong>échelle des dépenses</strong> élargit la distribution a priori. Les huit marchés tests fonctionnaient à environ un cinquième du rythme de dépenses national, et plus un test s’éloigne de l’échelle du canal, moins on peut supposer que son résultat se transpose. Ce terme fait passer l’erreur-type de 0,257 à 0,64, et l’incertitude de traduction décrite ci-dessous la porte à 0,69. La précision propre de l’expérience était bonne ; ce qui a élargi la distribution a priori, c’est que huit marchés ne représentent qu’un cinquième du canal. Le notebook affiche chaque terme, ainsi que deux termes plus petits qui n’ajoutent presque rien ici.</p>
+<p>L’<strong>incertitude de traduction</strong> (translation uncertainty) est la troisième partie, et elle vient de nous plutôt que de Google : l’écart entre une tranche de 30 % et une pente de 1 % est une hypothèse de modélisation ; une part déclarée du centre, 15 % ici, est donc ajoutée à la largeur afin qu’une expérience très précise ne puisse pas produire une distribution a priori qui prétende connaître exactement la pente. Les quatre autres canaux conservent une distribution a priori faible sur le ROI marginal, <code>LogNormal(-0.49, 0.90)</code>, c’est-à-dire la distribution a priori faible du ROAS de la section 6.2 réexprimée à l’échelle marginale. Ne l’aplatissez pas davantage : sur une courbe de saturation, une distribution a priori diffuse sur le ROI marginal laisse le ROI moyen sans borne, et les canaux non calibrés reviennent avec des intervalles inutilisables.</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> tensorflow <span class="im">as</span> tf</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> tensorflow_probability <span class="im">as</span> tfp</span>
@@ -657,22 +657,26 @@ Figure&nbsp;2: ROAS marginal et ROAS moyen sur une courbe de saturation.
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Weak marginal-ROI prior for every channel, then the experiment on Search.</span></span>
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>mroi_mu <span class="op">=</span> np.full(<span class="bu">len</span>(channels), <span class="fl">0.2</span> <span class="op">+</span> np.log(<span class="fl">0.5</span>))</span>
 <span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>mroi_sigma <span class="op">=</span> np.full(<span class="bu">len</span>(channels), <span class="fl">0.9</span>)</span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>mroi_mu[target], mroi_sigma[target] <span class="op">=</span> <span class="op">-</span><span class="fl">1.8542</span>, <span class="fl">0.7050</span>   <span class="co"># centre 0.201, SE 0.161</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>mroi_mu[target], mroi_sigma[target] <span class="op">=</span> <span class="fl">0.4635</span>, <span class="fl">0.3877</span>   <span class="co"># centre 1.71, SE 0.69, from the translation above</span></span>
 <span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>prior <span class="op">=</span> prior_distribution.PriorDistribution(</span>
 <span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    mroi_m<span class="op">=</span>tfp.distributions.LogNormal(</span>
 <span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>        loc<span class="op">=</span>tf.constant(mroi_mu, dtype<span class="op">=</span>tf.float32),</span>
 <span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>        scale<span class="op">=</span>tf.constant(mroi_sigma, dtype<span class="op">=</span>tf.float32),</span>
 <span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>        name<span class="op">=</span>constants.MROI_M,</span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>model_spec <span class="op">=</span> spec.ModelSpec(prior<span class="op">=</span>prior, media_prior_type<span class="op">=</span><span class="st">"mroi"</span>, max_lag<span class="op">=</span><span class="dv">12</span>)</span></code></pre></div><button title="Copier vers le presse-papier" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Réestimez ensuite le modèle au lieu de corriger son tableau de ROAS après coup. Le canal calibré doit se rapprocher des éléments probants, mais il n’a pas à atterrir exactement sur 0,200 ; la vraisemblance, la courbe et la distribution a priori ont toutes leur mot à dire. Resserrer un canal redistribue aussi le crédit entre les canaux corrélés : lisez donc chaque canal et l’ajustement global après la réestimation.</p>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>    alpha_m<span class="op">=</span>prior.alpha_m,        <span class="co"># Section 6.2's adstock prior, reused as is</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>    ec_m<span class="op">=</span>prior.ec_m,              <span class="co"># Section 6.2's saturation prior, reused as is</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="co"># Same lag, same holdout weeks as Section 6.2, so the only change is the prior.</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>model_spec <span class="op">=</span> spec.ModelSpec(prior<span class="op">=</span>prior, media_prior_type<span class="op">=</span><span class="st">"mroi"</span>, max_lag<span class="op">=</span><span class="dv">12</span>,</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>                            adstock_decay_spec<span class="op">=</span><span class="st">"geometric"</span>, holdout_id<span class="op">=</span>holdout_id)</span></code></pre></div><button title="Copier vers le presse-papier" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Réestimez ensuite le modèle au lieu de corriger son tableau de ROAS après coup. Le canal calibré doit se rapprocher des éléments probants, mais il n’a pas à atterrir exactement sur 1,500 ; la vraisemblance, la courbe et la distribution a priori ont toutes leur mot à dire. Resserrer un canal redistribue aussi le crédit entre les canaux corrélés : lisez donc chaque canal et l’ajustement global après la réestimation.</p>
 </section>
 <section id="sec-calibration-what-changed" class="level2">
 <h2 class="anchored" data-anchor-id="sec-calibration-what-changed">Qu’est-ce qui a changé ?</h2>
-<p>Trois modèles ajustés rendent la comparaison équitable : le modèle de la section 6.2 comme référence, un modèle témoin qui passe aux distributions a priori sur le ROI marginal sans l’expérience, et le modèle calibré. Seul le dernier a vu le test géographique ; l’écart entre les deux dernières colonnes correspond donc aux éléments probants, et à rien d’autre. La première ligne est le seul endroit où le modèle et l’expérience mesurent la même chose.</p>
+<p>Trois modèles ajustés rendent la comparaison équitable : le modèle de la section 6.2 comme référence, un modèle témoin qui passe aux distributions a priori sur le ROI marginal sans l’expérience, et le modèle calibré. Seul le dernier a vu le test géographique ; l’écart entre les deux dernières colonnes correspond donc aux éléments probants, et à rien d’autre, tandis que l’écart entre les deux premières correspond au changement de spécification de la distribution a priori. La première ligne aligne le contraste de dépenses et la longueur de la fenêtre sur ceux de l’expérience. Les dates du calendrier et la couverture géographique diffèrent toujours.</p>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -685,33 +689,33 @@ Figure&nbsp;2: ROAS marginal et ROAS moyen sur une courbe de saturation.
 <tbody>
 <tr class="odd">
 <td>Coût prédit de la réduction testée</td>
-<td>2,54 [0,28, 7,21]</td>
-<td>1,57 [0,15, 5,52]</td>
-<td><strong>0,20 [0,05, 0,49]</strong></td>
+<td>2,95 [0,34, 8,48]</td>
+<td>1,75 [0,16, 6,29]</td>
+<td><strong>1,82 [0,84, 3,32]</strong></td>
 </tr>
 <tr class="even">
 <td>ROAS moyen</td>
-<td>3,53 [0,39, 10,29]</td>
-<td>2,55 [0,21, 9,25]</td>
-<td><strong>0,27 [0,06, 0,71]</strong></td>
+<td>4,06 [0,46, 11,67]</td>
+<td>2,63 [0,22, 9,58]</td>
+<td><strong>2,82 [1,14, 5,26]</strong></td>
 </tr>
 <tr class="odd">
 <td>ROAS marginal</td>
-<td>2,83 [0,31, 8,28]</td>
-<td>1,76 [0,17, 6,36]</td>
-<td><strong>0,22 [0,05, 0,54]</strong></td>
+<td>3,29 [0,36, 9,51]</td>
+<td>1,95 [0,18, 7,03]</td>
+<td><strong>2,00 [0,93, 3,63]</strong></td>
 </tr>
 <tr class="even">
 <td>Demi-largeur relative</td>
-<td>1,41</td>
+<td>1,39</td>
 <td>1,76</td>
-<td><strong>1,13</strong></td>
+<td><strong>0,67</strong></td>
 </tr>
 <tr class="odd">
-<td>Garde-fou</td>
-<td>MAINTIEN</td>
-<td>MAINTIEN</td>
-<td><strong>MAINTIEN</strong></td>
+<td>Règle de largeur de la section 6.2</td>
+<td>trop large</td>
+<td>trop large</td>
+<td><strong>respectée</strong></td>
 </tr>
 <tr class="even">
 <td>Mouvement de l’optimiseur</td>
@@ -721,31 +725,28 @@ Figure&nbsp;2: ROAS marginal et ROAS moyen sur une courbe de saturation.
 </tr>
 </tbody>
 </table>
-<p>L’expérience a mesuré 0,200, et la vérité introduite dans les données est de 0,213 pour le marginal, 0,35 pour le moyen et 0,200 pour la réduction testée. La calibration place l’estimation ponctuelle au bon endroit : le rendement marginal de Search passe de 1,76 à 0,22, à moins d’un centième de la vérité, et la prédiction du modèle pour la réduction testée passe de 1,57 à 0,20. La <a href="#fig-response-curve-calibrated" class="quarto-xref">Figure&nbsp;<span>3</span></a> montre le même résultat sur toute la courbe. Les modèles de référence et témoin lisent un rendement compris entre 1,5 et 3 à chaque niveau de dépenses que l’optimiseur pourrait envisager, tandis que la courbe calibrée lit environ 0,2 sur la même plage et passe par le point expérimental.</p>
-<div id="fig-response-curve-calibrated" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="ROAS de la politique de dépenses pour Google Search selon le niveau de dépenses, pour la référence de la section 6.2, le modèle témoin et le modèle calibré ; la courbe calibrée se situe très en dessous des deux autres et passe par le point expérimental à 70 pour cent des dépenses.">
+<p>Ce qui a changé, c’est la largeur. Par rapport au modèle témoin, la calibration a fait passer le rendement marginal de Search de 1,95 à 2,00, contre 1,57 introduit dans les données, et a réduit sa demi-largeur relative de 1,76 à 0,67. La prédiction du modèle pour la réduction testée est passée de 1,75 à 1,82, contre 1,50 mesuré. Aucune des deux estimations ponctuelles n’est l’essentiel ; l’intervalle l’est. La <a href="#fig-response-curve-calibrated" class="quarto-xref">Figure&nbsp;<span>3</span></a> le montre le long de la courbe : le modèle de référence lit près de 3 avec une bande qui couvre un ordre de grandeur, le modèle témoin sous 2 avec la même bande, et la courbe calibrée traverse l’intervalle expérimental avec une bande trois fois plus étroite. L’écart plus important entre le modèle de référence et le modèle calibré tient surtout au changement de spécification de la distribution a priori, pas à l’expérience, et c’est pourquoi la colonne témoin est là.</p>
+<div id="fig-response-curve-calibrated" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Rendement d’un déplacement des dépenses de Google Search par rapport au niveau actuel, selon le multiple de dépenses, pour la référence de la section 6.2, le modèle témoin et le modèle calibré ; la courbe calibrée a une bande beaucoup plus étroite que le modèle témoin et traverse l’intervalle expérimental à 70 pour cent des dépenses.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-response-curve-calibrated-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part6/sec6.4/response_curve_calibrated.png" class="fig-lg img-fluid figure-img" alt="ROAS de la politique de dépenses pour Google Search selon le niveau de dépenses, pour la référence de la section 6.2, le modèle témoin et le modèle calibré ; la courbe calibrée se situe très en dessous des deux autres et passe par le point expérimental à 70 pour cent des dépenses.">
+<img src="../images/part6/sec6.4/response_curve_calibrated.png" class="fig-lg img-fluid figure-img" alt="Rendement d’un déplacement des dépenses de Google Search par rapport au niveau actuel, selon le multiple de dépenses, pour la référence de la section 6.2, le modèle témoin et le modèle calibré ; la courbe calibrée a une bande beaucoup plus étroite que le modèle témoin et traverse l’intervalle expérimental à 70 pour cent des dépenses.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-response-curve-calibrated-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;3: Courbe de réponse de Google Search pour les trois modèles ajustés, avec le résultat expérimental superposé.
+Figure&nbsp;3: Courbe de réponse de Google Search pour les trois modèles ajustés (bandes de crédibilité à 90 %), avec l’intervalle de confiance à 95 % de l’expérience superposé.
 </figcaption>
 </figure>
 </div>
-<p>L’intervalle est la partie qui ne s’est pas résolue. La demi-largeur relative passe de 1,76 à 1,13, et le garde-fou de la section 6.2 indique toujours MAINTIEN. Cette largeur ne vient pas de l’expérience, dont l’erreur-type de 0,075 pour une estimation de 0,200 était serrée. Elle vient du terme d’échelle des dépenses dans la traduction : ce dont le modèle doute encore, c’est que les 32 autres marchés se comportent comme les huit testés. Ce doute désigne la prochaine expérience. Un test plus long apporterait peu, puisque les effets différés de Search tiennent déjà dans les huit semaines, mais un test sur davantage de marchés resserrerait l’intervalle.</p>
-<p>L’allocation bouge à peine (<a href="#fig-allocation-before-after" class="quarto-xref">Figure&nbsp;<span>4</span></a>). Search se situe au plancher de −30 % dans les trois modèles, OOH et Meta reçoivent le budget libéré dans les trois, et la TV/CTV et TikTok se déplacent de quelques dixièmes de point. La calibration a changé ce que le modèle sait de Search, pas la direction indiquée par l’optimiseur.</p>
-<div id="fig-allocation-before-after" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Variation des dépenses décidée par l’optimiseur, par canal, pour les modèles de référence, témoin et calibré ; Google Search se situe au plancher de la contrainte, à moins 30 pour cent, dans les trois cas.">
+<p>Ce qui reste inconnu mérite aussi d’être nommé. La ligne du ROAS moyen s’établit à 2,82 contre 3,30 introduit dans les données, avec un intervalle qui atteint 5,3 : l’expérience n’a jamais mesuré le rendement depuis zéro, si bien que cette ligne est une extrapolation du modèle, pas un élément probant. La règle de largeur de la section 6.2 est désormais respectée, mais cette règle vérifie la précision, pas la rentabilité ; la réduction elle-même a été tranchée par le seuil de la section 6.3, et le budget libéré va à OOH et à Meta parce que leurs intervalles marginaux commencent à 2,6 et 3,6, au-dessus de l’estimation de Search, 2,0, mais pas au-dessus de la borne supérieure de son intervalle. Search reste au plancher de −30 % dans chaque colonne (<a href="#fig-allocation-before-after" class="quarto-xref">Figure&nbsp;<span>4</span></a>), tandis que la TV/CTV et TikTok se déplacent modestement, surtout entre le modèle de référence et le modèle témoin, ce qui relève de la spécification de la distribution a priori plutôt que de l’expérience. Refaites la même calibration avec la largeur plus étroite du regroupement par marché : l’estimation marginale est de 1,85 avec une demi-largeur de 0,48, et l’allocation ne bouge pas non plus. L’expérience soutient donc la réduction testée sous la marge et la fenêtre indiquées, la calibration porte cet élément probant dans le modèle d’allocation, et la réallocation qu’il propose reste conditionnelle aux courbes de réponse, à la transposition de huit marchés au pays entier et aux contraintes de l’entreprise que l’optimiseur ne voit pas.</p>
+<div id="fig-allocation-before-after" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Variation des dépenses décidée par l’optimiseur, par canal, pour les modèles de référence, témoin et calibré ; Google Search se situe au plancher de la contrainte, à moins 30 pour cent, dans les trois cas, tandis que la TV/CTV et TikTok se déplacent entre les modèles de référence et témoin.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-allocation-before-after-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part6/sec6.4/allocation_before_after.png" class="fig-lg img-fluid figure-img" alt="Variation des dépenses décidée par l’optimiseur, par canal, pour les modèles de référence, témoin et calibré ; Google Search se situe au plancher de la contrainte, à moins 30 pour cent, dans les trois cas.">
+<img src="../images/part6/sec6.4/allocation_before_after.png" class="fig-lg img-fluid figure-img" alt="Variation des dépenses décidée par l’optimiseur, par canal, pour les modèles de référence, témoin et calibré ; Google Search se situe au plancher de la contrainte, à moins 30 pour cent, dans les trois cas, tandis que la TV/CTV et TikTok se déplacent entre les modèles de référence et témoin.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-allocation-before-after-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Figure&nbsp;4: Allocation de l’optimiseur pour les trois modèles ajustés.
 </figcaption>
 </figure>
 </div>
-<p>La calibration n’a pas décidé la réduction de ce trimestre. La règle du seuil de la section 6.3 l’avait déjà tranchée, parce que l’intervalle de l’expérience plafonnait à 0,361 face à un ROAS d’équilibre de 2,50. Ce que la calibration ajoute, c’est la réponse à la question laissée ouverte par la section 6.3 : ces dollars Search rapportent-ils davantage ailleurs ? Dans le modèle calibré, le rendement marginal de Search plafonne à 0,54 et l’intervalle de chaque autre canal commence au-dessus de 0,95 ; le budget libéré a donc une meilleure destination. Le garde-fou continue d’indiquer MAINTIEN parce que sa règle de largeur a été écrite pour un modèle agissant seul ; ici, l’expérience a tranché la réduction et la comparaison de portefeuille tranche la destination. Au-delà de ce trimestre, le modèle porte désormais les éléments probants dans chaque allocation suivante, avec une estimation de Search qui est juste au lieu d’être huit fois trop élevée.</p>
-<p>Refaites la même calibration avec l’erreur-type plus large de la section 6.3, regroupée par les huit paires appariées plutôt que par les seize marchés : l’estimation marginale de Search passe à 0,23 avec une demi-largeur relative de 1,46. Le verdict et l’allocation restent inchangés. Une recommandation qui tient pour les deux largeurs défendables est une recommandation que l’on peut porter en réunion de planification.</p>
 </section>
 <section id="before-acting-on-the-calibrated-plan" class="level2">
 <h2 class="anchored" data-anchor-id="before-acting-on-the-calibrated-plan">Avant de mettre en œuvre le plan calibré</h2>
@@ -762,9 +763,9 @@ Figure&nbsp;4: Allocation de l’optimiseur pour les trois modèles ajustés.
 <section id="key-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="key-takeaways">Points clés à retenir</h2>
 <ul>
-<li>Alignez l’estimand avant de calibrer. La mesure d’une tranche de dépenses se place sur un paramètre marginal, corrigée des effets différés et élargie selon l’échelle, et son incertitude l’accompagne.</li>
-<li>Réestimez le modèle entier et conservez un modèle témoin, afin de séparer les éléments probants du changement de paramétrisation. Ici, le rendement marginal de Search est passé de huit fois trop élevé à moins d’un centième de la vérité.</li>
-<li>Jugez la calibration selon que la décision change ou non. L’allocation a tenu et le garde-fou est resté sur MAINTIEN, et ce résultat désigne le prochain test : davantage de marchés, pas davantage de semaines.</li>
+<li>Alignez l’estimand avant de calibrer. La mesure d’une tranche de dépenses informe un paramètre marginal par une traduction approximative, et les hypothèses de cette traduction l’accompagnent sous forme de largeur.</li>
+<li>Réestimez le modèle entier et conservez un modèle témoin, afin de séparer les éléments probants du changement de spécification de la distribution a priori. Ici, les éléments probants ont à peine déplacé l’estimation de Search et ont réduit son intervalle des deux tiers.</li>
+<li>Jugez la calibration à ce qu’elle vous permet de soutenir. L’expérience a tranché la réduction ; la calibration l’a portée dans le modèle d’allocation, dont la réallocation repose toujours sur les courbes, les hypothèses de transposition et les contraintes de l’entreprise.</li>
 </ul>
 
 
