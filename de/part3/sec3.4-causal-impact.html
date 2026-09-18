@@ -1,0 +1,1363 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="de" xml:lang="de"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="Messen Sie eine Kampagne ohne Kontrollgruppe. Konstruieren Sie ein Zeitreihen-Kontrafaktum, validieren Sie es vor der Messung und wissen Sie, wann Sie der Schätzung nicht trauen dürfen.">
+
+<title>Causal-Impact-Analyse in Python – Marketing Science in Python</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../part3/sec3.5-meta-learners.html" rel="next">
+<link href="../part3/sec3.3-quasi-experiments.html" rel="prev">
+<link href="../assets/favicon.png" rel="icon" type="image/png">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-491b769ea73b1ce4946cf8743b832a60.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-ec576e9d6a0f00bdcb4dbec60768df31.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-491b769ea73b1ce4946cf8743b832a60.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "Keine Treffer",
+    "search-matching-documents-text": "Treffer",
+    "search-copy-link-title": "Link in die Suche kopieren",
+    "search-hide-matches-text": "Zusätzliche Treffer verbergen",
+    "search-more-match-text": "weitere Treffer in diesem Dokument",
+    "search-more-matches-text": "weitere Treffer in diesem Dokument",
+    "search-clear-button-title": "Zurücksetzen",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Abbrechen",
+    "search-submit-button-title": "Abschicken",
+    "search-label": "Suchen"
+  }
+}</script>
+<script async="" src="https://www.googletagmanager.com/gtag/js?id=G-YY0LCGYER5"></script>
+
+<script type="text/javascript">
+
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
+</script>
+
+
+<link rel="stylesheet" href="../custom.css">
+<meta property="og:title" content="Causal-Impact-Analyse in Python">
+<meta property="og:description" content="Messen Sie eine Kampagne ohne Kontrollgruppe. Konstruieren Sie ein Zeitreihen-Kontrafaktum, validieren Sie es vor der Messung und wissen Sie, wann Sie der Schätzung nicht trauen dürfen.">
+<meta property="og:image" content="https://marketing-science-in-python.com/images/common/book_cover_online.png">
+<meta property="og:site_name" content="Marketing Science in Python">
+<meta property="og:image:alt" content="Buchcover mit abstrakten Datenströmen, die in ein geometrisches Netz münden">
+<meta name="twitter:title" content="Causal-Impact-Analyse in Python">
+<meta name="twitter:description" content="Messen Sie eine Kampagne ohne Kontrollgruppe. Konstruieren Sie ein Zeitreihen-Kontrafaktum, validieren Sie es vor der Messung und wissen Sie, wann Sie der Schätzung nicht trauen dürfen.">
+<meta name="twitter:image" content="https://marketing-science-in-python.com/images/common/book_cover_online.png">
+<meta name="twitter:image:alt" content="Buchcover mit abstrakten Datenströmen, die in ein geometrisches Netz münden">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://marketing-science-in-python.com/de/part3/sec3.4-causal-impact.html">
+<!-- msbook-i18n-head:start -->
+<link rel="alternate" hreflang="en" href="https://marketing-science-in-python.com/part3/sec3.4-causal-impact.html">
+<link rel="alternate" hreflang="ja" href="https://marketing-science-in-python.com/ja/part3/sec3.4-causal-impact.html">
+<link rel="alternate" hreflang="fr" href="https://marketing-science-in-python.com/fr/part3/sec3.4-causal-impact.html">
+<link rel="alternate" hreflang="de" href="https://marketing-science-in-python.com/de/part3/sec3.4-causal-impact.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://marketing-science-in-python.com/zh/part3/sec3.4-causal-impact.html">
+<link rel="alternate" hreflang="x-default" href="https://marketing-science-in-python.com/part3/sec3.4-causal-impact.html">
+<!-- msbook-i18n-head:end -->
+</head>
+
+<body class="nav-sidebar floating quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Seitenleiste umschalten" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part3/_part3.html">Teil 3. Kausalinferenz für das Marketing</a></li><li class="breadcrumb-item"><a href="../part3/sec3.4-causal-impact.html"><span class="chapter-title">3.4 Causal Impact mit Zeitreihen</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Seitenleiste umschalten" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <!-- msbook-language-switch-mobile:start -->
+<div class="msbook-language-switch-mobile" aria-label="Language"><a lang="en" hreflang="en" href="../../part3/sec3.4-causal-impact.html" onclick="this.hash=window.location.hash">EN</a><span aria-hidden="true"> | </span><a lang="ja" hreflang="ja" href="../../ja/part3/sec3.4-causal-impact.html" onclick="this.hash=window.location.hash">日本語</a><span aria-hidden="true"> | </span><a lang="fr" hreflang="fr" href="../../fr/part3/sec3.4-causal-impact.html" onclick="this.hash=window.location.hash">FR</a><span aria-hidden="true"> | </span><span lang="de" aria-current="page">DE</span><span aria-hidden="true"> | </span><a lang="zh-Hans" hreflang="zh-Hans" href="../../zh/part3/sec3.4-causal-impact.html" onclick="this.hash=window.location.hash">中文</a></div>
+<!-- msbook-language-switch-mobile:end -->
+<button type="button" class="btn quarto-search-button" aria-label="Suchen" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">Marketing Science in Python</a> 
+        <div class="sidebar-tools-main tools-wide">
+    <a href="https://github.com/takechanman1228/marketing-science-in-python" title="Quellcode" class="quarto-navigation-tool px-1" aria-label="Quellcode"><i class="bi bi-github"></i></a>
+    <div class="dropdown">
+      <a href="" title="Share" id="quarto-navigation-tool-dropdown-0" class="quarto-navigation-tool dropdown-toggle px-1" data-bs-toggle="dropdown" aria-expanded="false" role="link" aria-label="Share"><i class="bi bi-share"></i></a>
+      <ul class="dropdown-menu" aria-labelledby="quarto-navigation-tool-dropdown-0">
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://twitter.com/intent/tweet?url=|url|">
+              <i class="bi bi-twitter pe-1"></i>
+            Twitter
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://www.linkedin.com/sharing/share-offsite/?url=|url|">
+              <i class="bi bi-linkedin pe-1"></i>
+            LinkedIn
+            </a>
+          </li>
+      </ul>
+    </div>
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Dunkelmodus umschalten"><i class="bi"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Suchen"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Vorwort</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part1/_part1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Teil 1. Einführung</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Abschnitt umschalten">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1/sec1.1-what-is-marketing-science.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">1.1 Was ist Marketing Science?</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1/sec1.2-data-landscape.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">1.2 Marketingdaten verstehen</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part2/_part2.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Teil 2. Analysieren, um besser zu entscheiden</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Abschnitt umschalten">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.1-right-question.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.1 Die richtige Frage formulieren</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.2-kpi-design.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.2 KPIs für die Diagnose entwerfen</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.3-storytelling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.3 Aus Daten eine Story machen</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part3/_part3.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Teil 3. Kausalinferenz für das Marketing</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Abschnitt umschalten">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.1-thinking-causally.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.1 Kausales Denken</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.2-ab-testing.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.2 A/B-Test-Design</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.3-quasi-experiments.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.3 Quasi-Experimente</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.4-causal-impact.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">3.4 Causal Impact mit Zeitreihen</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.5-meta-learners.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.5 Meta-Learner für Treatment-Effekte</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.6-uplift-modeling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.6 Uplift-Modeling für das Targeting</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part4/_part4.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Teil 4. Kundenanalyse</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Abschnitt umschalten">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part4/sec4.1-segmentation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">4.1 Kundensegmentierung</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part4/sec4.2-clv-modeling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">4.2 Modellierung des Customer Lifetime Value</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part5/_part5.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Teil 5. Kommerzielle Analytik</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Abschnitt umschalten">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.1-price-elasticity.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.1 Preiselastizität und Preisentscheidungen</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.2-assortment-optimization.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.2 Sortimentsoptimierung</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.3-sales-forecasting.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.3 Umsatzprognose und Szenarioplanung</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part6/_part6.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Teil 6. Medieninvestition und Optimierung</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Abschnitt umschalten">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.1-media-measurement-problem.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.1 Das Problem der Medienmessung</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.2-mmm-fundamentals.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.2 Ein MMM aufbauen und optimieren</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.3-incrementality-experiments.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.3 Inkrementalitätsexperimente</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.4-mmm-calibration.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.4 MMM mit Experimenten kalibrieren</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.5-when-tools-disagree.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.5 Entscheiden, wenn Messwerkzeuge sich widersprechen</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendix/further-reading.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Quellen und weiterführende Literatur</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendix/notebooks.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Notebooks und Code</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../marketing-analytics-in-python.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Marketing-Analytics mit Python</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+<!-- msbook-language-switch:start -->
+<div class="msbook-language-switch" aria-label="Language"><a lang="en" hreflang="en" href="../../part3/sec3.4-causal-impact.html" onclick="this.hash=window.location.hash">English</a><span aria-hidden="true"> | </span><a lang="ja" hreflang="ja" href="../../ja/part3/sec3.4-causal-impact.html" onclick="this.hash=window.location.hash">日本語</a><span aria-hidden="true"> | </span><a lang="fr" hreflang="fr" href="../../fr/part3/sec3.4-causal-impact.html" onclick="this.hash=window.location.hash">Français</a><span aria-hidden="true"> | </span><span lang="de" aria-current="page">Deutsch</span><span aria-hidden="true"> | </span><a lang="zh-Hans" hreflang="zh-Hans" href="../../zh/part3/sec3.4-causal-impact.html" onclick="this.hash=window.location.hash">中文</a></div>
+<!-- msbook-language-switch:end -->
+
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Inhaltsverzeichnis</h2>
+   
+  <ul>
+  <li><a href="#sec-counterfactual-recipe" id="toc-sec-counterfactual-recipe" class="nav-link active" data-scroll-target="#sec-counterfactual-recipe">Das Kontrafaktum konstruieren</a></li>
+  <li><a href="#sec-preperiod-validation" id="toc-sec-preperiod-validation" class="nav-link" data-scroll-target="#sec-preperiod-validation">Das Kontrafaktum vor der Messung validieren</a>
+  <ul class="collapse">
+  <li><a href="#backtesting-the-forecast" id="toc-backtesting-the-forecast" class="nav-link" data-scroll-target="#backtesting-the-forecast">Backtest der Prognose</a></li>
+  <li><a href="#placebo-interventions" id="toc-placebo-interventions" class="nav-link" data-scroll-target="#placebo-interventions">Placebo-Interventionen</a></li>
+  <li><a href="#checking-that-the-controls-help" id="toc-checking-that-the-controls-help" class="nav-link" data-scroll-target="#checking-that-the-controls-help">Prüfen, dass die Kontrollreihen helfen</a></li>
+  </ul></li>
+  <li><a href="#sec-reading-the-campaign" id="toc-sec-reading-the-campaign" class="nav-link" data-scroll-target="#sec-reading-the-campaign">Den Kampagneneffekt schätzen</a>
+  <ul class="collapse">
+  <li><a href="#choosing-the-reporting-window" id="toc-choosing-the-reporting-window" class="nav-link" data-scroll-target="#choosing-the-reporting-window">Das Berichtsfenster wählen</a></li>
+  <li><a href="#sec-two-uncertainties" id="toc-sec-two-uncertainties" class="nav-link" data-scroll-target="#sec-two-uncertainties">Wie sehr dem Intervall zu trauen ist</a></li>
+  </ul></li>
+  <li><a href="#sec-failure-modes" id="toc-sec-failure-modes" class="nav-link" data-scroll-target="#sec-failure-modes">Wann Sie der Schätzung nicht trauen dürfen</a>
+  <ul class="collapse">
+  <li><a href="#the-campaign-touched-a-control" id="toc-the-campaign-touched-a-control" class="nav-link" data-scroll-target="#the-campaign-touched-a-control">Die Kampagne hat eine Kontrollreihe berührt</a></li>
+  <li><a href="#the-pre-period-relationship-broke" id="toc-the-pre-period-relationship-broke" class="nav-link" data-scroll-target="#the-pre-period-relationship-broke">Die Beziehung der Vorperiode ist gebrochen</a></li>
+  <li><a href="#sec-real-data-check" id="toc-sec-real-data-check" class="nav-link" data-scroll-target="#sec-real-data-check">Die Prognose war nie gut genug</a></li>
+  </ul></li>
+  <li><a href="#sec-intervention-checklist" id="toc-sec-intervention-checklist" class="nav-link" data-scroll-target="#sec-intervention-checklist">Ein praktischer Arbeitsablauf</a></li>
+  <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways">Das Wichtigste in Kürze</a></li>
+  </ul>
+<div class="quarto-code-links"><h2>Code-Links</h2><ul><li><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.4_causal_impact.ipynb"><i class="bi bi-github"></i>sec3.4_causal_impact.ipynb</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part3/_part3.html">Teil 3. Kausalinferenz für das Marketing</a></li><li class="breadcrumb-item"><a href="../part3/sec3.4-causal-impact.html"><span class="chapter-title">3.4 Causal Impact mit Zeitreihen</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span id="sec-intervention-measurement" class="quarto-section-identifier"><span class="chapter-title">3.4 Causal Impact mit Zeitreihen</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="translation-notice">
+<p><strong>Über die deutsche Ausgabe</strong><br>
+Diese Seite ist eine KI-Übersetzung der englischen Ausgabe von <em>Marketing Science in Python</em>. Die englische Ausgabe ist maßgeblich und hat bei Abweichungen Vorrang. Code, Notebooks und Text in Abbildungen bleiben auf Englisch. <a href="../../part3/sec3.4-causal-impact.html" class="translation-source-link">Englische Ausgabe lesen</a></p>
+</div>
+<p>Jedes Design im <a href="sec3.3-quasi-experiments.html">vorherigen Kapitel</a> hatte eine Kontrollgruppe. Manche Filialen bekamen das Display und manche nicht. Ein Markt bekam die Kampagne und die anderen nicht. Dieses Kapitel ist für den Fall, dass es überhaupt keine Kontrollgruppe gibt.</p>
+<p>Eine nationale TV-Kampagne lief acht Wochen. Der Umsatz stieg. Aber jeder Markt war exponiert, es gibt also keinen unbehandelten Markt zum Vergleich. Wie hoch wäre der Umsatz ohne die Kampagne gewesen?</p>
+<p>Dieses Kapitel hat eine einzige Aufgabe: diesen fehlenden Pfad ohne Kampagne zu konstruieren und zu entscheiden, ob er glaubwürdig genug ist, um die Kampagne daran zu messen. Die Konstruktion braucht fünfzehn Zeilen Code. Die Entscheidung, ob man ihr trauen kann, füllt den Rest des Kapitels.</p>
+<section id="sec-counterfactual-recipe" class="level2">
+<h2 class="anchored" data-anchor-id="sec-counterfactual-recipe">Das Kontrafaktum konstruieren</h2>
+<p><strong>Kernidee:</strong> Prognostizieren Sie den Umsatz, den Sie ohne die Kampagne gesehen hätten. Der Effekt ist der beobachtete Umsatz minus dieser Prognose.</p>
+<p>Ohne Kontrollgruppe muss der Vergleich aus der Zeit kommen. Passen Sie ein Zeitreihenmodell an den Umsatz <em>vor</em> der Kampagne an, damit die Kampagne nicht hineinsickern kann. Projizieren Sie das Modell über das Kampagnenfenster nach vorn. Diese Projektion ist das Kontrafaktum, und die Lücke zwischen ihr und dem, was tatsächlich passiert ist, ist der geschätzte Effekt.</p>
+<p>Die Prognose kann trotzdem <strong>Kontrollreihen</strong> verwenden, und es lohnt sich klarzustellen, dass diese keine Kontrollgruppe sind. Eine Kontrollgruppe besteht aus unbehandelten Einheiten derselben Art: Filialen, die das Display nicht bekommen haben. Eine Kontrollreihe ist ein Prädiktor: jede Reihe, die die Kampagne nicht berührt haben kann, etwa ein Nachfrageindex der Kategorie oder eine Schwesterproduktlinie ohne Media. Sie wird nicht mit der Marke verglichen. Sie sagt der Prognose, was der Markt tat, während die Kampagne lief.</p>
+<p>Die bekannteste Implementierung ist <strong>CausalImpact</strong>, das Google als R-Paket veröffentlicht hat und das Brodersen und Kollegen 2015 in einem Paper beschrieben haben. In der Literatur zur Kausalinferenz heißt dasselbe Design unterbrochene Zeitreihe (interrupted time series). Python-Portierungen existieren (<code>tfp-causalimpact</code> sowie <code>InterruptedTimeSeries</code> in <code>CausalPy</code>). Dieses Kapitel baut dieselbe Logik direkt mit <code>statsmodels</code>, damit jede Annahme sichtbar bleibt.</p>
+<p>Es ist die letzte Sprosse der Leiter aus dem vorherigen Kapitel, und die Tabelle zeigt, was sich auf dem Weg nach oben geändert hat:</p>
+<table class="caption-top table">
+<caption>Drei Wege, den Umsatz zu konstruieren, den Sie nicht beobachtet haben.</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Designmerkmal</th>
+<th style="text-align: left;">DiD</th>
+<th style="text-align: left;">Synthetische Kontrolle</th>
+<th style="text-align: left;">CausalImpact</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Benötigte unbehandelte Einheiten</td>
+<td style="text-align: left;">Eine Kontrollgruppe</td>
+<td style="text-align: left;">Ein Donor-Pool</td>
+<td style="text-align: left;">Keine; Kontrollreihen sind Prädiktoren, keine Vergleiche</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Der Vergleich kommt aus</td>
+<td style="text-align: left;">Der Veränderung der Kontrollgruppe über die Zeit</td>
+<td style="text-align: left;">Einer gewichteten Mischung des Donor-Pools</td>
+<td style="text-align: left;">Einer Prognose aus der eigenen Vergangenheit der Reihe</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Die Annahme, die Sie nicht testen können</td>
+<td style="text-align: left;">Parallele Trends</td>
+<td style="text-align: left;">Die Anpassung der Vorperiode hält weiter</td>
+<td style="text-align: left;">Die Kontrollreihen blieben unberührt</td>
+</tr>
+</tbody>
+</table>
+<p>Das ausgearbeitete Beispiel ist eine nationale Konsumgütermarke (CPG): vier Jahre wöchentlicher Umsatz, eine achtwöchige TV- und PR-Kampagne und zwanzig Wochen Beobachtung danach. Zwei Kontrollreihen: ein Nachfrageindex der Subkategorie und eine Schwesterproduktlinie, die keine Media bekam. Die Daten sind synthetisch, der wahre Pfad ohne Kampagne ist also bekannt. Vor jedem Code das Briefing:</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Analyse-Briefing">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Hinweis</span>Analyse-Briefing
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li><strong>Geschäftsfrage:</strong> Wie viel inkrementellen Umsatz hat die Kampagne erzeugt?</li>
+<li><strong>Zielgröße:</strong> Wöchentlicher nationaler Umsatz.</li>
+<li><strong>Treatment:</strong> Die achtwöchige TV-und-PR-Kampagne, gemessen als eine kombinierte Intervention.</li>
+<li><strong>Estimand:</strong> Kumulierter inkrementeller Umsatz über die 28 Wochen nach dem Start, einschließlich Carryover und jeder späteren Rückzahlung.</li>
+</ul>
+</div>
+</div>
+<p>Diese letzte Zeile ist eine Entscheidung, und sie wird jetzt getroffen, bevor jemand eine Zahl gesehen hat. Deshalb läuft die Prognose unten über 28 Wochen, und deshalb ist der Abschnitt zum Berichtsfenster später im Kapitel eine Prüfung und keine Wahl.</p>
+<div id="fig-panel" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Vier Jahre Markenumsatz mit markiertem wahrem unbehandeltem Pfad, darüber ein Nachfrageindex der Subkategorie und eine Schwesterproduktlinie, der achtwöchige Flight schattiert.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-panel-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part3/sec3.4/01_panel_overview.png" class="fig-lg img-fluid figure-img" alt="Vier Jahre Markenumsatz mit markiertem wahrem unbehandeltem Pfad, darüber ein Nachfrageindex der Subkategorie und eine Schwesterproduktlinie, der achtwöchige Flight schattiert.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-panel-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Abbildung&nbsp;1: Die behandelte Marke und ihre zwei Kontrollreihen
+</figcaption>
+</figure>
+</div>
+<p>Hier ist der Code, der das Kontrafaktum konstruiert:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> statsmodels.tsa.statespace.structural <span class="im">import</span> UnobservedComponents</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Fit on the PRE-period only. The campaign is deliberately absent.</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> UnobservedComponents(</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    np.log(y_pre),</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    level<span class="op">=</span><span class="st">"lltrend"</span>,                                   <span class="co"># level and slope</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    freq_seasonal<span class="op">=</span>[{<span class="st">"period"</span>: <span class="dv">52</span>, <span class="st">"harmonics"</span>: <span class="dv">2</span>}],    <span class="co"># annual shape</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    exog<span class="op">=</span>np.log(x_pre),                                <span class="co"># untouched controls</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>res <span class="op">=</span> model.fit(disp<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Simulate 1,000 no-campaign paths across the 28 post-period weeks</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>horizon, draws <span class="op">=</span> <span class="bu">len</span>(y_post), <span class="dv">1000</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>paths <span class="op">=</span> np.exp(</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    np.asarray(res.simulate(horizon, repetitions<span class="op">=</span>draws, anchor<span class="op">=</span><span class="st">"end"</span>,</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>                            exog<span class="op">=</span>np.log(x_post))).reshape(horizon, draws)</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Effect = observed minus counterfactual. The point estimate and the</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="co">#    interval come from the same draws, so both summarize one distribution.</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>counterfactual <span class="op">=</span> paths.mean(axis<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>weekly_effect <span class="op">=</span> y_post <span class="op">-</span> counterfactual</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>cumulative <span class="op">=</span> weekly_effect.<span class="bu">sum</span>()</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>lo, hi <span class="op">=</span> np.percentile((y_post[:, <span class="va">None</span>] <span class="op">-</span> paths).<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">0</span>), [<span class="fl">2.5</span>, <span class="fl">97.5</span>])</span></code></pre></div><button title="In die Zwischenablage kopieren" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Drei Entscheidungen in diesem Code zählen. Das Modell wird nur auf der Vorperiode angepasst, damit die Kampagne ihre eigene Baseline nicht kontaminieren kann. Der Umsatz wird in Logarithmen modelliert, weil ein Kampagnen-Lift und Saisonalität beide multiplikativ sind, und die simulierten Pfade werden in Dollar zurückgerechnet, bevor irgendetwas summiert wird. Und die Kontrollreihen gehen als Regressoren ein, damit die Prognose weiß, was der Markt während der Kampagne tat. Ob das Modell auch einen Trendterm braucht, oder die Kontrollreihen überhaupt, ist keine Geschmacksfrage. Der nächste Abschnitt klärt das durch Messung.</p>
+</section>
+<section id="sec-preperiod-validation" class="level2">
+<h2 class="anchored" data-anchor-id="sec-preperiod-validation">Das Kontrafaktum vor der Messung validieren</h2>
+<p>Dieser Schritt ist nicht optional. Der Effekt, den Sie berichten werden, ist beobachtet minus prognostiziert, also wird jeder Dollar Prognosefehler zu einem Dollar falschem Effekt. Bevor Sie die Prognose zur Messung der Kampagne verwenden, müssen Sie zeigen, dass sie eine Periode vorhersagen kann, in der nichts passiert ist. Drei Prüfungen leisten das, und alle drei laufen allein auf der Vorperiode.</p>
+<section id="backtesting-the-forecast" class="level3">
+<h3 class="anchored" data-anchor-id="backtesting-the-forecast">Backtest der Prognose</h3>
+<p>Kann das Modell die unbehandelte Welt vorhersagen? Tun Sie so, als hätte die Kampagne an einem früheren Datum innerhalb der Vorperiode begonnen. Passen Sie das Modell auf den Daten vor diesem Datum an, prognostizieren Sie die nächsten achtundzwanzig Wochen und vergleichen Sie mit dem, was tatsächlich passiert ist. Wiederholen Sie das von mehreren Daten aus. Achtundzwanzig Wochen, weil das der Estimand im Briefing ist, und ein Modell, das über acht Wochen gut aussieht, kann über achtundzwanzig auseinanderfallen.</p>
+<table class="caption-top table">
+<caption>Validierung mit rollierendem Ursprung über neun Fenster der Vorperiode, in denen nichts passiert ist.</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Spezifikation</th>
+<th style="text-align: right;">Prognosefehler</th>
+<th style="text-align: right;">Verzerrung</th>
+<th style="text-align: right;">Intervallabdeckung</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Saisonal-naiv</td>
+<td style="text-align: right;">7.96%</td>
+<td style="text-align: right;">-5.83%</td>
+<td style="text-align: right;">n.&nbsp;v.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Niveau, ohne Kontrollreihen</td>
+<td style="text-align: right;">5.54%</td>
+<td style="text-align: right;">-1.32%</td>
+<td style="text-align: right;">99.6%</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Niveau + Kontrollreihen</td>
+<td style="text-align: right;">2.62%</td>
+<td style="text-align: right;">-0.60%</td>
+<td style="text-align: right;">96.8%</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Trend + Kontrollreihen</td>
+<td style="text-align: right;">2.43%</td>
+<td style="text-align: right;">+0.48%</td>
+<td style="text-align: right;">87.7%</td>
+</tr>
+</tbody>
+</table>
+<p>Die Tabelle trifft die Entscheidung. Trend plus Kontrollreihen hat den niedrigsten Fehler und die kleinste Verzerrung, also ist das die Spezifikation, die wir verwenden. Zwei Details zählen unterwegs. Die Kontrollreihen halbieren den Fehler, auf diesen Daten verdienen sie sich ihren Platz also. Und der Trendterm zählt an diesem Horizont: Die Marke wächst schneller als ihre Subkategorie, und ein Modell ohne Steigung würde diese Lücke der Kampagne anrechnen.</p>
+</section>
+<section id="placebo-interventions" class="level3">
+<h3 class="anchored" data-anchor-id="placebo-interventions">Placebo-Interventionen</h3>
+<p>Erfindet das Design Effekte, wo nichts passiert ist? Wählen Sie ein Datum in der Vorperiode, sagen wir Woche 120, als es keine Kampagne gab. Tun Sie so, als hätte in dieser Woche eine begonnen, und führen Sie die vollständige Analyse durch. Die richtige Antwort ist null, also ist alles, was zurückkommt, das, was dieses Design aus Rauschen erzeugt. Das ist eine <strong>Placebo-Intervention</strong>, und die neun Backtest-Fenster oben dienen zugleich als neun Placebos. Der größte Placebo-Effekt hier war $636k, und eines der neun lieferte ein Intervall, das null ausschloss. Behalten Sie beide Zahlen. Die Kampagnenschätzung muss sie übertreffen.</p>
+<div id="fig-validation" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Links der Prognosefehler nach Spezifikation über Fenster der Vorperiode; rechts die Streuung der kumulierten Effekte, die das Design an Daten liefert, an denen nichts passiert ist.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-validation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part3/sec3.4/02_validation_and_placebo.png" class="fig-lg img-fluid figure-img" alt="Links der Prognosefehler nach Spezifikation über Fenster der Vorperiode; rechts die Streuung der kumulierten Effekte, die das Design an Daten liefert, an denen nichts passiert ist.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-validation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Abbildung&nbsp;2: Validierungs- und Placebo-Prüfungen vor der Kampagne
+</figcaption>
+</figure>
+</div>
+</section>
+<section id="checking-that-the-controls-help" class="level3">
+<h3 class="anchored" data-anchor-id="checking-that-the-controls-help">Prüfen, dass die Kontrollreihen helfen</h3>
+<p>Verbessern die Kontrollreihen die Prognose tatsächlich? Der Backtest hat auf diesen Daten bereits Ja gesagt, und es lohnt sich zu sehen, was das einbringt. In einer ruhigen Welt verengen die Kontrollreihen das Intervall um den Faktor zwölf. Wenn ein kategorieweiter Einbruch drei Wochen der Kampagne trifft, landet die Schätzung mit Kontrollreihen innerhalb von 1.3% der Wahrheit, weil das Kontrafaktum mit dem Markt einbricht. Ohne Kontrollreihen wird derselbe Einbruch der Kampagne angerechnet, und die Schätzung landet 21% unter der Wahrheit. Das ist es, was eine gute Kontrollreihe tut: Sie absorbiert Schocks, die alle treffen, damit das Modell sie nicht mit der Kampagne verwechselt.</p>
+<p>Das funktioniert nur, wenn die Kampagne die Kontrollreihe nicht berührt hat. Das ist die Annahme, die sich aus den Daten nicht testen lässt, und sie bekommt ihren eigenen Abschnitt, <a href="#sec-failure-modes">Wann Sie der Schätzung nicht trauen dürfen</a>.</p>
+</section>
+</section>
+<section id="sec-reading-the-campaign" class="level2">
+<h2 class="anchored" data-anchor-id="sec-reading-the-campaign">Den Kampagneneffekt schätzen</h2>
+<p>Erst jetzt wird das Kampagnenfenster verwendet. Die gewählte Spezifikation wird auf der vollständigen Vorperiode angepasst und nach vorn projiziert. Das Ergebnis ist das dreiteilige Diagramm, das zur Standarddarstellung einer einmaligen Kampagne geworden ist: beobachtet gegen kontrafaktisch, die wöchentliche Lücke und die laufende Summe.</p>
+<div id="fig-impact-panels" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Drei übereinander gestapelte Felder zeigen die beobachtete Reihe gegen ihr Kontrafaktum, den wöchentlichen Effekt und eine kumulierte Kurve, die steigt und dann einen Teil wieder abgibt.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-impact-panels-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part3/sec3.4/03_impact_three_panel.png" class="fig-lg img-fluid figure-img" alt="Drei übereinander gestapelte Felder zeigen die beobachtete Reihe gegen ihr Kontrafaktum, den wöchentlichen Effekt und eine kumulierte Kurve, die steigt und dann einen Teil wieder abgibt.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-impact-panels-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Abbildung&nbsp;3: Beobachtet, wöchentlicher Effekt und kumulierter Effekt
+</figcaption>
+</figure>
+</div>
+<section id="choosing-the-reporting-window" class="level3">
+<h3 class="anchored" data-anchor-id="choosing-the-reporting-window">Das Berichtsfenster wählen</h3>
+<p>Das Briefing hat den Estimand auf 28 Wochen festgelegt. Hier ist der Grund, warum das zählte. Schauen Sie auf das kumulierte Feld: Die Kurve steigt während des achtwöchigen Flights, steigt noch einige Wochen danach weiter, solange der Carryover läuft, und dreht dann nach unten, wenn vorgezogene Nachfrage zurückgezahlt wird. Drei Fenster, von denen jedes vernünftig klingt, liefern drei verschiedene Zahlen.</p>
+<table class="caption-top table">
+<caption>Dasselbe Modell und dieselbe Kampagne, über drei Fenster gelesen.</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Berichtsfenster</th>
+<th style="text-align: right;">Schätzung</th>
+<th style="text-align: center;">95%-Intervall</th>
+<th style="text-align: right;">Wahrer Wert</th>
+<th style="text-align: right;">Fehler</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Nur Flight, 8 Wochen</td>
+<td style="text-align: right;">$1,157k</td>
+<td style="text-align: center;">$844k bis $1,446k</td>
+<td style="text-align: right;">$1,291k</td>
+<td style="text-align: right;">-10.4%</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Flight und Carryover, 12 Wochen</td>
+<td style="text-align: right;">$1,603k</td>
+<td style="text-align: center;">$1,174k bis $1,996k</td>
+<td style="text-align: right;">$1,574k</td>
+<td style="text-align: right;">+1.8%</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Volles Nachfenster, 28 Wochen</td>
+<td style="text-align: right;">$1,164k</td>
+<td style="text-align: center;">$411k bis $1,890k</td>
+<td style="text-align: right;">$1,124k</td>
+<td style="text-align: right;">+3.6%</td>
+</tr>
+</tbody>
+</table>
+<p>Alle drei Schätzungen sind für das Fenster, das sie abdecken, genau. Nur die letzte beantwortet das Briefing, weil nur sie die Rückzahlung mitzählt. Wer bei Woche 12 stoppt, dem Gipfel der Kurve, überschätzt die vollständige Antwort um 38%. Das Modell war nicht falsch. Das Fenster war es. Deshalb gehört das Fenster ins Briefing, bevor jemand auf die Kurve schaut.</p>
+</section>
+<section id="sec-two-uncertainties" class="level3">
+<h3 class="anchored" data-anchor-id="sec-two-uncertainties">Wie sehr dem Intervall zu trauen ist</h3>
+<p>Das Band im Diagramm hält das angepasste Modell fest und trägt sein Rauschen nach vorn. Das macht es zu einer Untergrenze der wahren Unsicherheit, nicht zu ihrer Gesamtheit. Zwei Dinge helfen beim Lesen. Erstens die Placebo-Ergebnisse: Die Schätzung von $1,164k ist größer als jeder Placebo-Effekt, den dieses Design erzeugt hat, und der größte davon war $636k. Das ist eine nützlichere Aussage als ein p-Wert, weil sie in denselben Einheiten wie die Entscheidung vorliegt. Zweitens das Audit unten.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Vertiefung: Wie gut ist dieses Design wirklich?">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Hinweis</span>Vertiefung: Wie gut ist dieses Design wirklich?
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Das Notebook führt die gewählte Spezifikation auf zweihundert frischen synthetischen Datensätzen erneut aus und bewertet sie jedes Mal gegen die Wahrheit. Das nominale 95%-Intervall deckt die Wahrheit in 90% der Fälle ab. Ein echter Effekt wird in 60% der Fälle als signifikant erkannt. Wenn der wahre Effekt null ist, wird er in 9% der Fälle als signifikant bezeichnet. Das ist kein schwaches Modell. Es ist eine schwache Messsituation: eine behandelte Reihe, keine Randomisierung, ein Effekt, der neben dem Rauschen klein ist. Wenn die Entscheidung mehr braucht als das, führen Sie beim nächsten Mal ein Geo-Experiment durch (<a href="../part6/sec6.3-incrementality-experiments.html">Kapitel 6.3</a>).</p>
+</div>
+</div>
+</section>
+</section>
+<section id="sec-failure-modes" class="level2">
+<h2 class="anchored" data-anchor-id="sec-failure-modes">Wann Sie der Schätzung nicht trauen dürfen</h2>
+<p>Drei Dinge brechen diese Analyse. Zwei davon hinterlassen keine Spur in den Daten.</p>
+<div id="fig-scenarios" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Schätzungen mit Intervallen gegen die bekannte Wahrheit für sechs Szenarien, von sauberen Kontrollreihen über einen Marktschock, eine kontaminierte Kontrollreihe bis zu einer gebrochenen Beziehung.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-scenarios-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part3/sec3.4/04_scenarios.png" class="fig-lg img-fluid figure-img" alt="Schätzungen mit Intervallen gegen die bekannte Wahrheit für sechs Szenarien, von sauberen Kontrollreihen über einen Marktschock, eine kontaminierte Kontrollreihe bis zu einer gebrochenen Beziehung.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-scenarios-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Abbildung&nbsp;4: Was Kontrollreihen einbringen und was sie bricht
+</figcaption>
+</figure>
+</div>
+<section id="the-campaign-touched-a-control" class="level3">
+<h3 class="anchored" data-anchor-id="the-campaign-touched-a-control">Die Kampagne hat eine Kontrollreihe berührt</h3>
+<p>Je prädiktiver eine Kontrollreihe ist, desto wahrscheinlicher hat die Kampagne sie erreicht. Der Subkategorie-Index trägt den Großteil der Erklärungskraft des Modells, und genau deshalb ist eine nationale Kampagne für eine große Marke in dieser Subkategorie eine Bedrohung für ihn. Lassen Sie 35% des Marken-Lifts in den Index durchsickern, und die Schätzung behält nur 65% des wahren Effekts, mit einem Intervall, das null nicht mehr ausschließt. Eine Kampagne, die funktioniert hat, liest sich nun als nicht schlüssig. Und jede Diagnostik besteht: Die Anpassung der Vorperiode ist sauber, das Intervall ist eng, der Backtest sieht gleich aus. Die verletzte Annahme liegt außerhalb der Daten. Der einzige Weg, sie zu prüfen, ist, die Leute zu fragen, die die Kampagne durchgeführt haben, was sie berührt haben könnte.</p>
+</section>
+<section id="the-pre-period-relationship-broke" class="level3">
+<h3 class="anchored" data-anchor-id="the-pre-period-relationship-broke">Die Beziehung der Vorperiode ist gebrochen</h3>
+<p>Eine Beziehung, die vier Jahre gehalten hat, kann trotzdem aufhören. Angenommen, ein Wettbewerber tritt ein und lässt die Subkategorie in der Nachperiode um 5% wachsen, und diese Marke hat daran keinen Anteil. Die Kontrollreihen sagen nun, der Markt sei besser geworden, das Kontrafaktum steigt, und die Schätzung kommt mit minus $460k zurück, gegenüber einem wahren Effekt von plus $1,124k. Es ist das einzige Szenario im Kapitel, in dem die Wahrheit außerhalb des Intervalls liegt, und es ist per Konstruktion aus Daten der Vorperiode nicht testbar. Das ist dieselbe Disziplin, die DiD verlangt: Das Ergebnis ist nur so gut wie die Behauptung, dass sich die Kontrollreihen weiter so verhalten haben wie zuvor.</p>
+</section>
+<section id="sec-real-data-check" class="level3">
+<h3 class="anchored" data-anchor-id="sec-real-data-check">Die Prognose war nie gut genug</h3>
+<p>Der dritte Fehler hinterlässt eine Spur, wenn man hinsieht. Lassen Sie dieselbe Maschinerie auf echten Dunnhumby-Filialdaten laufen: Nehmen Sie die wöchentlichen Verkäufe einer Filiale, multiplizieren Sie die letzten zwölf Wochen mit 1.15 und versuchen Sie, den eingepflanzten Lift mit vier anderen Filialen als Kontrollreihen wiederzufinden.</p>
+<p>Der Lift kommt zurück. Die eingepflanzten 1,775 Einheiten werden als 1,833 wiedergefunden, mit einem Intervall, das null ausschließt. Es wäre leicht, das als erfolgreiche kontrollierte Analyse aufzuschreiben.</p>
+<div id="fig-reality-check" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Eine Korrelation, die zusammenbricht, sobald die Anlaufphase der Rekrutierung abgeschnitten wird, ein flacher Backtest mit und ohne Kontrollreihen und ein engeres Intervall, das der Backtest nicht rechtfertigt.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-reality-check-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part3/sec3.4/05_dunnhumby_reality_check.png" class="fig-lg img-fluid figure-img" alt="Eine Korrelation, die zusammenbricht, sobald die Anlaufphase der Rekrutierung abgeschnitten wird, ein flacher Backtest mit und ohne Kontrollreihen und ein engeres Intervall, das der Backtest nicht rechtfertigt.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-reality-check-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Abbildung&nbsp;5: Echte Kontrollreihen, die keine Information tragen
+</figcaption>
+</figure>
+</div>
+<p>Das ist sie nicht. Die Korrelation zwischen den Filialen, die die Kontrollreihen rechtfertigte, lag bei 0.45, aber das Dunnhumby-Panel beginnt klein und wächst, sodass alle Filialen aus Gründen gemeinsam steigen, die nichts mit Nachfrage zu tun haben. Schneiden Sie diese Anlaufphase ab, und die Korrelation fällt auf 0.01. Der Backtest entscheidet es: Das Hinzufügen der vier Kontrollfilialen bewegt den Prognosefehler von 13.7% auf 13.8%, das heißt gar nicht. Das engere Intervall ist die Falle. Zusätzliche Regressoren saugen Variation innerhalb der Stichprobe auf und verengen das Band, selbst wenn sich die Prognose nicht verbessert hat. Ein engeres Intervall ist kein Beleg dafür, dass die Kontrollreihen geholfen haben. Ein besserer Backtest ist es. Was die Zahl erzeugt hat, war eine Projektion des eigenen jüngsten Niveaus einer Filiale, und ein Prognosefehler von 13.7% ist zu schwach, um eine kausale Behauptung zu tragen. Das zu sagen ist der Befund.</p>
+</section>
+</section>
+<section id="sec-intervention-checklist" class="level2">
+<h2 class="anchored" data-anchor-id="sec-intervention-checklist">Ein praktischer Arbeitsablauf</h2>
+<p>Das Kapitel verdichtet sich auf acht Schritte. Führen Sie sie der Reihe nach aus.</p>
+<ol type="1">
+<li><strong>Schreiben Sie das Briefing.</strong> Geschäftsfrage, Zielgröße, Treatment und der Estimand mit seinem Berichtsfenster. Legen Sie es fest, bevor Sie eine Zahl sehen.</li>
+<li><strong>Wählen Sie die Kontrollreihen.</strong> Es müssen Reihen sein, die die Kampagne nicht berührt haben kann. Fragen Sie die Leute, die sie durchgeführt haben.</li>
+<li><strong>Passen Sie nur auf der Vorperiode an.</strong></li>
+<li><strong>Backtesten Sie das Kontrafaktum</strong> an dem Horizont, den Sie berichten werden. Wählen Sie die Spezifikation nach dem Backtest, nicht nach Geschmack.</li>
+<li><strong>Führen Sie Placebo-Interventionen durch.</strong> Wissen Sie, was das Design aus Rauschen liefert, bevor Sie die echte Zahl lesen.</li>
+<li><strong>Schätzen Sie den Effekt der Nachperiode</strong> über das Fenster, das Sie in Schritt 1 festgelegt haben.</li>
+<li><strong>Unterziehen Sie die Kontrollreihen einem Stresstest.</strong> Könnte die Kampagne sie erreicht haben? Könnte die Beziehung der Vorperiode gebrochen sein?</li>
+<li><strong>Wenn das Kontrafaktum schwach ist, berichten Sie keine kausale Zahl.</strong> Ein Backtest-Fehler von 13.7% ist eine Prognose, keine Messung.</li>
+</ol>
+<p>CausalImpact verwandelt Beobachtungsdaten nicht in ein Experiment. Es gibt Ihnen einen strukturierten Weg zu fragen, ob eine Zeitreihe ein glaubwürdiges Kontrafaktum tragen kann. Wenn sie es nicht kann, ist die Antwort kein besseres Modell. Es ist ein besseres Experiment beim nächsten Mal (<a href="../part6/sec6.3-incrementality-experiments.html">Kapitel 6.3</a>).</p>
+<p><strong>Begleit-Notebook:</strong> <code>sec3.4_causal_impact.ipynb</code> konstruiert das Kontrafaktum, validiert es an Placebo-Daten, auditiert sein Intervall über zweihundert Ziehungen und bricht es dann absichtlich.<br>
+<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.4_causal_impact.ipynb">Auf GitHub ansehen</a></p>
+</section>
+<section id="key-takeaways" class="level2">
+<h2 class="anchored" data-anchor-id="key-takeaways">Das Wichtigste in Kürze</h2>
+<ul>
+<li>Ohne Kontrollgruppe prognostizieren Sie den Pfad ohne Kampagne aus der Vorperiode und aus Reihen, die die Kampagne nicht berühren konnte, und verdienen sich diese Prognose dann mit Backtests an dem Horizont, den Sie berichten werden.</li>
+<li>Zwei Fehler hinterlassen keine Spur in den Daten: eine Kontrollreihe, die die Kampagne erreicht hat, und eine Beziehung der Vorperiode, die gebrochen ist. Ein engeres Intervall ist kein Beleg dafür, dass die Kontrollreihen geholfen haben; ein besserer Backtest ist es.</li>
+<li>Legen Sie das Berichtsfenster fest, bevor Sie eine Zahl sehen. Am Gipfel der kumulierten Kurve zu stoppen hat die Antwort für das volle Fenster um 38% überschätzt.</li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Kopiert");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Kopiert");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/marketing-science-in-python\.com\/de\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../part3/sec3.3-quasi-experiments.html" class="pagination-link" aria-label="3.3 Quasi-Experimente">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">3.3 Quasi-Experimente</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../part3/sec3.5-meta-learners.html" class="pagination-link" aria-label="3.5 Meta-Learner für Treatment-Effekte">
+        <span class="nav-page-text"><span class="chapter-title">3.5 Meta-Learner für Treatment-Effekte</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

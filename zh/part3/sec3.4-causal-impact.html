@@ -1,0 +1,1363 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-Hans" xml:lang="zh-Hans"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="在没有对照组的情况下测量一次营销活动。构建时间序列反事实，先验证再测量，并了解何时不该相信估计值。">
+
+<title>Python 因果影响分析 – Marketing Science in Python</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../part3/sec3.5-meta-learners.html" rel="next">
+<link href="../part3/sec3.3-quasi-experiments.html" rel="prev">
+<link href="../assets/favicon.png" rel="icon" type="image/png">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-491b769ea73b1ce4946cf8743b832a60.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-ec576e9d6a0f00bdcb4dbec60768df31.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-491b769ea73b1ce4946cf8743b832a60.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "没有结果",
+    "search-matching-documents-text": "匹配的文档",
+    "search-copy-link-title": "复制搜索链接",
+    "search-hide-matches-text": "隐藏其它匹配结果",
+    "search-more-match-text": "更多匹配结果",
+    "search-more-matches-text": "更多匹配结果",
+    "search-clear-button-title": "清除",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "取消",
+    "search-submit-button-title": "提交",
+    "search-label": "搜索"
+  }
+}</script>
+<script async="" src="https://www.googletagmanager.com/gtag/js?id=G-YY0LCGYER5"></script>
+
+<script type="text/javascript">
+
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
+</script>
+
+
+<link rel="stylesheet" href="../custom.css">
+<meta property="og:title" content="Python 因果影响分析">
+<meta property="og:description" content="在没有对照组的情况下测量一次营销活动。构建时间序列反事实，先验证再测量，并了解何时不该相信估计值。">
+<meta property="og:image" content="https://marketing-science-in-python.com/images/common/book_cover_online.png">
+<meta property="og:site_name" content="Marketing Science in Python">
+<meta property="og:image:alt" content="抽象数据流汇聚成几何网络的封面">
+<meta name="twitter:title" content="Python 因果影响分析">
+<meta name="twitter:description" content="在没有对照组的情况下测量一次营销活动。构建时间序列反事实，先验证再测量，并了解何时不该相信估计值。">
+<meta name="twitter:image" content="https://marketing-science-in-python.com/images/common/book_cover_online.png">
+<meta name="twitter:image:alt" content="抽象数据流汇聚成几何网络的封面">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://marketing-science-in-python.com/zh/part3/sec3.4-causal-impact.html">
+<!-- msbook-i18n-head:start -->
+<link rel="alternate" hreflang="en" href="https://marketing-science-in-python.com/part3/sec3.4-causal-impact.html">
+<link rel="alternate" hreflang="ja" href="https://marketing-science-in-python.com/ja/part3/sec3.4-causal-impact.html">
+<link rel="alternate" hreflang="fr" href="https://marketing-science-in-python.com/fr/part3/sec3.4-causal-impact.html">
+<link rel="alternate" hreflang="de" href="https://marketing-science-in-python.com/de/part3/sec3.4-causal-impact.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://marketing-science-in-python.com/zh/part3/sec3.4-causal-impact.html">
+<link rel="alternate" hreflang="x-default" href="https://marketing-science-in-python.com/part3/sec3.4-causal-impact.html">
+<!-- msbook-i18n-head:end -->
+</head>
+
+<body class="nav-sidebar floating quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part3/_part3.html">第 3 部分：面向营销的因果推断</a></li><li class="breadcrumb-item"><a href="../part3/sec3.4-causal-impact.html"><span class="chapter-title">3.4 基于时间序列的因果影响分析</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <!-- msbook-language-switch-mobile:start -->
+<div class="msbook-language-switch-mobile" aria-label="Language"><a lang="en" hreflang="en" href="../../part3/sec3.4-causal-impact.html" onclick="this.hash=window.location.hash">EN</a><span aria-hidden="true"> | </span><a lang="ja" hreflang="ja" href="../../ja/part3/sec3.4-causal-impact.html" onclick="this.hash=window.location.hash">日本語</a><span aria-hidden="true"> | </span><a lang="fr" hreflang="fr" href="../../fr/part3/sec3.4-causal-impact.html" onclick="this.hash=window.location.hash">FR</a><span aria-hidden="true"> | </span><a lang="de" hreflang="de" href="../../de/part3/sec3.4-causal-impact.html" onclick="this.hash=window.location.hash">DE</a><span aria-hidden="true"> | </span><span lang="zh-Hans" aria-current="page">中文</span></div>
+<!-- msbook-language-switch-mobile:end -->
+<button type="button" class="btn quarto-search-button" aria-label="搜索" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">Marketing Science in Python</a> 
+        <div class="sidebar-tools-main tools-wide">
+    <a href="https://github.com/takechanman1228/marketing-science-in-python" title="源代码" class="quarto-navigation-tool px-1" aria-label="源代码"><i class="bi bi-github"></i></a>
+    <div class="dropdown">
+      <a href="" title="Share" id="quarto-navigation-tool-dropdown-0" class="quarto-navigation-tool dropdown-toggle px-1" data-bs-toggle="dropdown" aria-expanded="false" role="link" aria-label="Share"><i class="bi bi-share"></i></a>
+      <ul class="dropdown-menu" aria-labelledby="quarto-navigation-tool-dropdown-0">
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://twitter.com/intent/tweet?url=|url|">
+              <i class="bi bi-twitter pe-1"></i>
+            Twitter
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://www.linkedin.com/sharing/share-offsite/?url=|url|">
+              <i class="bi bi-linkedin pe-1"></i>
+            LinkedIn
+            </a>
+          </li>
+      </ul>
+    </div>
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="切换深色模式"><i class="bi"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="搜索"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">前言</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part1/_part1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">第 1 部分：引言</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1/sec1.1-what-is-marketing-science.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">1.1 什么是营销科学？</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1/sec1.2-data-landscape.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">1.2 理解营销数据</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part2/_part2.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">第 2 部分：为更好的决策而分析</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.1-right-question.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.1 界定正确的问题</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.2-kpi-design.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.2 为诊断而设计 KPI</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.3-storytelling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.3 把数据变成故事</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part3/_part3.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">第 3 部分：面向营销的因果推断</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.1-thinking-causally.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.1 因果思维</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.2-ab-testing.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.2 A/B 测试设计</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.3-quasi-experiments.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.3 准实验</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.4-causal-impact.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">3.4 基于时间序列的因果影响分析</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.5-meta-learners.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.5 估计处理效应的元学习器</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.6-uplift-modeling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.6 用于定向投放的增益建模</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part4/_part4.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">第 4 部分：客户分析</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part4/sec4.1-segmentation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">4.1 客户细分</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part4/sec4.2-clv-modeling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">4.2 客户终身价值建模</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part5/_part5.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">第 5 部分：商业分析</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.1-price-elasticity.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.1 价格弹性与定价决策</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.2-assortment-optimization.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.2 产品品类组合优化</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.3-sales-forecasting.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.3 销售预测与情景规划</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part6/_part6.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">第 6 部分：媒体投资与优化</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.1-media-measurement-problem.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.1 媒体测量问题</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.2-mmm-fundamentals.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.2 构建并优化一个 MMM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.3-incrementality-experiments.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.3 增量效应实验</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.4-mmm-calibration.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.4 用实验校准 MMM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.5-when-tools-disagree.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.5 当测量工具意见不一时如何决策</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendix/further-reading.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">参考文献与延伸阅读</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendix/notebooks.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Notebook 与代码</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../marketing-analytics-in-python.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">用 Python 做营销分析</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+<!-- msbook-language-switch:start -->
+<div class="msbook-language-switch" aria-label="Language"><a lang="en" hreflang="en" href="../../part3/sec3.4-causal-impact.html" onclick="this.hash=window.location.hash">English</a><span aria-hidden="true"> | </span><a lang="ja" hreflang="ja" href="../../ja/part3/sec3.4-causal-impact.html" onclick="this.hash=window.location.hash">日本語</a><span aria-hidden="true"> | </span><a lang="fr" hreflang="fr" href="../../fr/part3/sec3.4-causal-impact.html" onclick="this.hash=window.location.hash">Français</a><span aria-hidden="true"> | </span><a lang="de" hreflang="de" href="../../de/part3/sec3.4-causal-impact.html" onclick="this.hash=window.location.hash">Deutsch</a><span aria-hidden="true"> | </span><span lang="zh-Hans" aria-current="page">中文</span></div>
+<!-- msbook-language-switch:end -->
+
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">目录</h2>
+   
+  <ul>
+  <li><a href="#sec-counterfactual-recipe" id="toc-sec-counterfactual-recipe" class="nav-link active" data-scroll-target="#sec-counterfactual-recipe">构建反事实</a></li>
+  <li><a href="#sec-preperiod-validation" id="toc-sec-preperiod-validation" class="nav-link" data-scroll-target="#sec-preperiod-validation">测量之前先验证反事实</a>
+  <ul class="collapse">
+  <li><a href="#backtesting-the-forecast" id="toc-backtesting-the-forecast" class="nav-link" data-scroll-target="#backtesting-the-forecast">对预测做回测</a></li>
+  <li><a href="#placebo-interventions" id="toc-placebo-interventions" class="nav-link" data-scroll-target="#placebo-interventions">安慰剂干预</a></li>
+  <li><a href="#checking-that-the-controls-help" id="toc-checking-that-the-controls-help" class="nav-link" data-scroll-target="#checking-that-the-controls-help">检查对照序列是否有帮助</a></li>
+  </ul></li>
+  <li><a href="#sec-reading-the-campaign" id="toc-sec-reading-the-campaign" class="nav-link" data-scroll-target="#sec-reading-the-campaign">估计活动效果</a>
+  <ul class="collapse">
+  <li><a href="#choosing-the-reporting-window" id="toc-choosing-the-reporting-window" class="nav-link" data-scroll-target="#choosing-the-reporting-window">选择报告窗口</a></li>
+  <li><a href="#sec-two-uncertainties" id="toc-sec-two-uncertainties" class="nav-link" data-scroll-target="#sec-two-uncertainties">对区间应当相信到什么程度</a></li>
+  </ul></li>
+  <li><a href="#sec-failure-modes" id="toc-sec-failure-modes" class="nav-link" data-scroll-target="#sec-failure-modes">何时不该相信估计值</a>
+  <ul class="collapse">
+  <li><a href="#the-campaign-touched-a-control" id="toc-the-campaign-touched-a-control" class="nav-link" data-scroll-target="#the-campaign-touched-a-control">活动触及了某条对照序列</a></li>
+  <li><a href="#the-pre-period-relationship-broke" id="toc-the-pre-period-relationship-broke" class="nav-link" data-scroll-target="#the-pre-period-relationship-broke">活动前期间的关系断裂了</a></li>
+  <li><a href="#sec-real-data-check" id="toc-sec-real-data-check" class="nav-link" data-scroll-target="#sec-real-data-check">预测从来就不够好</a></li>
+  </ul></li>
+  <li><a href="#sec-intervention-checklist" id="toc-sec-intervention-checklist" class="nav-link" data-scroll-target="#sec-intervention-checklist">一套实用的工作流程</a></li>
+  <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways">要点</a></li>
+  </ul>
+<div class="quarto-code-links"><h2>代码链接</h2><ul><li><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.4_causal_impact.ipynb"><i class="bi bi-github"></i>sec3.4_causal_impact.ipynb</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part3/_part3.html">第 3 部分：面向营销的因果推断</a></li><li class="breadcrumb-item"><a href="../part3/sec3.4-causal-impact.html"><span class="chapter-title">3.4 基于时间序列的因果影响分析</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span id="sec-intervention-measurement" class="quarto-section-identifier"><span class="chapter-title">3.4 基于时间序列的因果影响分析</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="translation-notice">
+<p><strong>关于中文版</strong><br>
+本页是英文版 <em>Marketing Science in Python</em> 的AI翻译。英文版为正式版本，如有出入，以英文版为准。代码、Notebook 和图片中的文字保持英文。 <a href="../../part3/sec3.4-causal-impact.html" class="translation-source-link">阅读英文版</a></p>
+</div>
+<p><a href="sec3.3-quasi-experiments.html">上一章</a>的每一种设计都有对照组。有些门店摆了陈列，有些没有。一个市场投放了活动，其他市场没有。本章要处理的，是完全没有对照组的情形。</p>
+<p>一次全国性电视广告活动投放了 8 周。销售额上升了。但每个市场都接触到了活动，没有任何未处理的市场可以用来比较。如果没有这次活动，销售额会是多少？</p>
+<p>本章只有一件事要做：构建那条缺失的“无活动”路径，并判断它是否可信到足以作为衡量活动效果的基准。构建只需要 15 行代码。判断它是否可信，占了本章余下的全部篇幅。</p>
+<section id="sec-counterfactual-recipe" class="level2">
+<h2 class="anchored" data-anchor-id="sec-counterfactual-recipe">构建反事实</h2>
+<p><strong>核心思想：</strong>预测没有活动时你本会看到的销售额。效果就是观测到的销售额减去这个预测值。</p>
+<p>没有对照组，比较只能来自时间。用活动<em>之前</em>的销售额拟合一个时间序列模型，这样活动的影响就不可能渗入其中。把模型沿着活动窗口向前外推。这个外推值就是反事实，而它与实际发生情况之间的差距就是估计的效果。</p>
+<p>预测仍然可以使用<strong>对照序列</strong>，但有必要说清楚：对照序列不是对照组。对照组是同类的未处理单位，比如没有摆陈列的门店。对照序列则是一个预测变量：任何活动不可能触及的序列，例如某个品类需求指数，或者一条没有投放媒体的同门产品线。它不与品牌本身作比较。它告诉预测模型，活动进行期间市场在发生什么。</p>
+<p>最知名的实现是 <strong>CausalImpact</strong>，由 Google 以 R 包的形式发布，Brodersen 及其同事在 2015 年的一篇论文中做了描述。在因果推断文献中，同一种设计被称为中断时间序列。 Python 移植版也已存在（<code>tfp-causalimpact</code>，以及 <code>CausalPy</code> 中的 <code>InterruptedTimeSeries</code>）。本章用 <code>statsmodels</code> 直接搭建同样的逻辑，让每一个假设都保持可见。</p>
+<p>这是上一章那架梯子的最后一级，下表展示了一路向上时发生了什么变化：</p>
+<table class="caption-top table">
+<caption>构建你未曾观测到的销售额的三种方式。</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">设计特征</th>
+<th style="text-align: left;">DiD</th>
+<th style="text-align: left;">合成控制</th>
+<th style="text-align: left;">CausalImpact</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">需要的未处理单位</td>
+<td style="text-align: left;">一个对照组</td>
+<td style="text-align: left;">一个供体池</td>
+<td style="text-align: left;">无；对照序列是预测变量，不是比较对象</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">比较来自于</td>
+<td style="text-align: left;">对照组随时间的变化</td>
+<td style="text-align: left;">供体池的加权组合</td>
+<td style="text-align: left;">由该序列自身历史得到的预测</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">无法检验的假设</td>
+<td style="text-align: left;">平行趋势</td>
+<td style="text-align: left;">活动前期间的拟合关系持续成立</td>
+<td style="text-align: left;">对照序列未受活动触及</td>
+</tr>
+</tbody>
+</table>
+<p>实操示例是一个全国性快消品牌：四年的周度营收，一次为期 8 周的电视加公关活动，以及活动之后 20 周的观测。两条对照序列：一个子品类需求指数，以及一条没有投放任何媒体的同门产品线。数据是合成的，因此真实的无活动路径是已知的。在写任何代码之前，先看分析简报：</p>
+<div class="callout callout-style-default callout-note callout-titled" title="分析简报">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">注记</span>分析简报
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li><strong>业务问题：</strong>这次活动带来了多少增量营收？</li>
+<li><strong>结果变量：</strong>全国周度营收。</li>
+<li><strong>处理：</strong>为期 8 周的电视加公关活动，作为一次合并干预来测量。</li>
+<li><strong>估计目标：</strong>上线后 28 周内的累计增量营收，包括延续效应以及之后的任何回吐。</li>
+</ul>
+</div>
+</div>
+<p>最后一行是一个决定，而且是现在、在任何人看到数字之前就做出的。这就是下面的预测跑 28 周的原因，也是本章后面关于报告窗口的一节是一次核对而非一次选择的原因。</p>
+<div id="fig-panel" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="四年的品牌营收，标出真实的未处理路径，下方是子品类需求指数和同门产品线，8 周投放期以阴影标出。">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-panel-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part3/sec3.4/01_panel_overview.png" class="fig-lg img-fluid figure-img" alt="四年的品牌营收，标出真实的未处理路径，下方是子品类需求指数和同门产品线，8 周投放期以阴影标出。">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-panel-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;1: 受处理品牌及其两条对照序列
+</figcaption>
+</figure>
+</div>
+<p>下面是构建反事实的代码：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> statsmodels.tsa.statespace.structural <span class="im">import</span> UnobservedComponents</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Fit on the PRE-period only. The campaign is deliberately absent.</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> UnobservedComponents(</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    np.log(y_pre),</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    level<span class="op">=</span><span class="st">"lltrend"</span>,                                   <span class="co"># level and slope</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    freq_seasonal<span class="op">=</span>[{<span class="st">"period"</span>: <span class="dv">52</span>, <span class="st">"harmonics"</span>: <span class="dv">2</span>}],    <span class="co"># annual shape</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    exog<span class="op">=</span>np.log(x_pre),                                <span class="co"># untouched controls</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>res <span class="op">=</span> model.fit(disp<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Simulate 1,000 no-campaign paths across the 28 post-period weeks</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>horizon, draws <span class="op">=</span> <span class="bu">len</span>(y_post), <span class="dv">1000</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>paths <span class="op">=</span> np.exp(</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    np.asarray(res.simulate(horizon, repetitions<span class="op">=</span>draws, anchor<span class="op">=</span><span class="st">"end"</span>,</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>                            exog<span class="op">=</span>np.log(x_post))).reshape(horizon, draws)</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Effect = observed minus counterfactual. The point estimate and the</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="co">#    interval come from the same draws, so both summarize one distribution.</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>counterfactual <span class="op">=</span> paths.mean(axis<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>weekly_effect <span class="op">=</span> y_post <span class="op">-</span> counterfactual</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>cumulative <span class="op">=</span> weekly_effect.<span class="bu">sum</span>()</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>lo, hi <span class="op">=</span> np.percentile((y_post[:, <span class="va">None</span>] <span class="op">-</span> paths).<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">0</span>), [<span class="fl">2.5</span>, <span class="fl">97.5</span>])</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<p>这段代码里有三个选择很重要。模型只在活动前期间上拟合，这样活动就不可能污染它自己的基线。销售额以对数建模，因为活动带来的提升和季节性都是乘性的，而模拟路径在求和之前会先换算回美元。对照序列作为回归变量进入模型，这样预测就知道活动期间市场发生了什么。模型是否还需要趋势项，或者到底需不需要对照序列，都不是口味问题。下一节用测量来定夺。</p>
+</section>
+<section id="sec-preperiod-validation" class="level2">
+<h2 class="anchored" data-anchor-id="sec-preperiod-validation">测量之前先验证反事实</h2>
+<p>这一步不是可选项。你将要报告的效果等于观测值减去预测值，所以每一美元的预测误差都会变成一美元的虚假效果。在用预测去测量活动之前，你必须证明它能预测一个什么都没发生的时期。三项检查可以做到这一点，而且三项都只在活动前期间上运行。</p>
+<section id="backtesting-the-forecast" class="level3">
+<h3 class="anchored" data-anchor-id="backtesting-the-forecast">对预测做回测</h3>
+<p>模型能预测未处理的世界吗？假装活动在活动前期间内的某个更早日期开始。用该日期之前的数据拟合，预测接下来的 28 周，再与实际发生的情况比较。从几个不同日期重复这一过程。之所以是 28 周，是因为简报中的估计目标就是 28 周，而一个在 8 周上看起来不错的模型，到了 28 周可能会崩掉。</p>
+<table class="caption-top table">
+<caption>在什么都没发生的九个活动前窗口上做的滚动起点验证。</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">模型设定</th>
+<th style="text-align: right;">预测误差</th>
+<th style="text-align: right;">偏差</th>
+<th style="text-align: right;">区间覆盖率</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">季节性朴素预测</td>
+<td style="text-align: right;">7.96%</td>
+<td style="text-align: right;">-5.83%</td>
+<td style="text-align: right;">不适用</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">水平项，无对照</td>
+<td style="text-align: right;">5.54%</td>
+<td style="text-align: right;">-1.32%</td>
+<td style="text-align: right;">99.6%</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">水平项 + 对照</td>
+<td style="text-align: right;">2.62%</td>
+<td style="text-align: right;">-0.60%</td>
+<td style="text-align: right;">96.8%</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">趋势项 + 对照</td>
+<td style="text-align: right;">2.43%</td>
+<td style="text-align: right;">+0.48%</td>
+<td style="text-align: right;">87.7%</td>
+</tr>
+</tbody>
+</table>
+<p>这张表做出了决定。趋势项加对照的误差最低、偏差最小，所以我们采用这个设定。一路上有两个细节值得注意。对照序列把误差减半，所以在这份数据上它们配得上自己的位置。而且在这个预测期长度下趋势项很重要：该品牌的增长快于其子品类，一个没有斜率的模型会把这段差距记到活动头上。</p>
+</section>
+<section id="placebo-interventions" class="level3">
+<h3 class="anchored" data-anchor-id="placebo-interventions">安慰剂干预</h3>
+<p>这种设计会不会在什么都没发生时凭空造出效果？在活动前期间里挑一个日期，比如第 120 周，当时并没有活动。假装那一周开始了一次活动，然后跑完整个分析。正确答案是零，所以无论返回什么，都是这种设计从噪声中生成的东西。这就是<strong>安慰剂干预</strong>，上面九个回测窗口同时也是九个安慰剂。这里最大的安慰剂效应是 $636k，九个当中有一个返回了不包含零的区间。把这两个数字都记住。活动的估计值必须超过它们。</p>
+<div id="fig-validation" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="左图为活动前各窗口上按模型设定划分的预测误差；右图为该设计在什么都没发生的日期上返回的累计效应分布。">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-validation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part3/sec3.4/02_validation_and_placebo.png" class="fig-lg img-fluid figure-img" alt="左图为活动前各窗口上按模型设定划分的预测误差；右图为该设计在什么都没发生的日期上返回的累计效应分布。">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-validation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;2: 活动之前的验证与安慰剂检查
+</figcaption>
+</figure>
+</div>
+</section>
+<section id="checking-that-the-controls-help" class="level3">
+<h3 class="anchored" data-anchor-id="checking-that-the-controls-help">检查对照序列是否有帮助</h3>
+<p>对照序列真的能改善预测吗？回测已经在这份数据上给出了肯定的回答，值得看看这换来了什么。在一个平静的世界里，对照序列把区间收窄到十二分之一。当一次波及整个品类的下滑撞上活动中的三周时，带对照的估计值落在真值的 1.3% 以内，因为反事实会跟着市场一起下滑。没有对照，同样的下滑被记到活动头上，估计值比真值低 21%。这就是一条好的对照序列的作用：它吸收所有人都受到的冲击，让模型不会把这些冲击误认为是活动的效果。</p>
+<p>这只在活动没有触及对照序列时才成立。这是无法从数据中检验的假设，它有自己的一节：<a href="#sec-failure-modes">何时不该相信估计值</a>。</p>
+</section>
+</section>
+<section id="sec-reading-the-campaign" class="level2">
+<h2 class="anchored" data-anchor-id="sec-reading-the-campaign">估计活动效果</h2>
+<p>直到现在，活动窗口才被用上。把选定的设定在完整的活动前期间上拟合，再向前外推。结果就是那张已经成为一次性活动标准呈现方式的三联图：观测值对反事实、每周差距，以及累计总额。</p>
+<div id="fig-impact-panels" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="三个纵向堆叠的面板，显示观测序列与其反事实的对比、每周效应，以及一条先攀升再回吐部分增幅的累计曲线。">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-impact-panels-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part3/sec3.4/03_impact_three_panel.png" class="fig-lg img-fluid figure-img" alt="三个纵向堆叠的面板，显示观测序列与其反事实的对比、每周效应，以及一条先攀升再回吐部分增幅的累计曲线。">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-impact-panels-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;3: 观测值、每周效应与累计效应
+</figcaption>
+</figure>
+</div>
+<section id="choosing-the-reporting-window" class="level3">
+<h3 class="anchored" data-anchor-id="choosing-the-reporting-window">选择报告窗口</h3>
+<p>简报把估计目标定在 28 周。这里说明它为什么重要。看累计面板：曲线在 8 周投放期内攀升，之后随着延续效应发挥作用又继续爬升了几周，然后随着被提前透支的需求得到回补而掉头向下。三个听起来都合理的窗口，给出三个不同的数字。</p>
+<table class="caption-top table">
+<caption>同一个模型、同一次活动，在三个窗口下读出的结果。</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">报告窗口</th>
+<th style="text-align: right;">估计值</th>
+<th style="text-align: center;">95% 区间</th>
+<th style="text-align: right;">真值</th>
+<th style="text-align: right;">误差</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">仅投放期，8 周</td>
+<td style="text-align: right;">$1,157k</td>
+<td style="text-align: center;">$844k 至 $1,446k</td>
+<td style="text-align: right;">$1,291k</td>
+<td style="text-align: right;">-10.4%</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">投放期加延续效应，12 周</td>
+<td style="text-align: right;">$1,603k</td>
+<td style="text-align: center;">$1,174k 至 $1,996k</td>
+<td style="text-align: right;">$1,574k</td>
+<td style="text-align: right;">+1.8%</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">完整活动后窗口，28 周</td>
+<td style="text-align: right;">$1,164k</td>
+<td style="text-align: center;">$411k 至 $1,890k</td>
+<td style="text-align: right;">$1,124k</td>
+<td style="text-align: right;">+3.6%</td>
+</tr>
+</tbody>
+</table>
+<p>三个估计值对各自覆盖的窗口而言都是准确的。只有最后一个回答了简报的问题，因为只有它计入了回吐。停在第 12 周，也就是曲线的峰值，会把完整答案高估 38%。模型没有错。错的是窗口。这就是为什么窗口要写进简报，在任何人看到曲线之前。</p>
+</section>
+<section id="sec-two-uncertainties" class="level3">
+<h3 class="anchored" data-anchor-id="sec-two-uncertainties">对区间应当相信到什么程度</h3>
+<p>图上的置信带把拟合好的模型固定不动，只把它的噪声向前传播。这使它成为真实不确定性的下限，而不是全部。有两点可以帮你读它。第一，安慰剂结果：$1,164k 的估计值大于这种设计产生过的每一个安慰剂效应，其中最大的是 $636k。这比 p 值更有用，因为它与决策使用同样的单位。第二，下面的审计。</p>
+<div class="callout callout-style-default callout-note callout-titled" title="深入探讨：这种设计到底有多好？">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">注记</span>深入探讨：这种设计到底有多好？
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Notebook 在两百份新生成的合成数据集上重新运行选定的设定，每次都对照真值打分。名义上的 95% 区间有 90% 的时候覆盖了真值。一个真实存在的效应有 60% 的时候被判定为显著。当真实效应为零时，有 9% 的时候被判定为显著。这不是一个弱模型。这是一种弱的测量处境：只有一条受处理序列，没有随机化，效应相对噪声而言又很小。如果决策需要的不止于此，下次就做一次地理实验（<a href="../part6/sec6.3-incrementality-experiments.html">第 6.3 章</a>）。</p>
+</div>
+</div>
+</section>
+</section>
+<section id="sec-failure-modes" class="level2">
+<h2 class="anchored" data-anchor-id="sec-failure-modes">何时不该相信估计值</h2>
+<p>有三样东西会破坏这项分析。其中两样在数据里不留任何痕迹。</p>
+<div id="fig-scenarios" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="六种情景下带区间的估计值与已知真值的对比，从干净的对照序列，到市场冲击、被污染的对照序列，以及断裂的关系。">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-scenarios-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part3/sec3.4/04_scenarios.png" class="fig-lg img-fluid figure-img" alt="六种情景下带区间的估计值与已知真值的对比，从干净的对照序列，到市场冲击、被污染的对照序列，以及断裂的关系。">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-scenarios-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;4: 对照序列带来什么，又会被什么破坏
+</figcaption>
+</figure>
+</div>
+<section id="the-campaign-touched-a-control" class="level3">
+<h3 class="anchored" data-anchor-id="the-campaign-touched-a-control">活动触及了某条对照序列</h3>
+<p>一条对照序列的预测力越强，活动触及它的可能性就越大。子品类指数承载了模型的大部分解释力，这正是为什么一个该子品类中大品牌的全国性活动会对它构成威胁。让品牌提升的 35% 泄漏进指数，估计值就只保留真实效应的 65%，而且区间不再排除零。一次奏效的活动现在读起来变成了结论不明。而且每一项诊断都通过了：活动前期间的拟合干净，区间紧凑，回测看起来没有变化。被违反的假设存在于数据之外。检查它的唯一办法，是去问执行活动的人，活动可能触及了什么。</p>
+</section>
+<section id="the-pre-period-relationship-broke" class="level3">
+<h3 class="anchored" data-anchor-id="the-pre-period-relationship-broke">活动前期间的关系断裂了</h3>
+<p>一段维持了四年的关系仍然可能中止。假设一个竞争者进入市场，在活动后期间把子品类做大了 5%，而这个品牌没有分到一杯羹。对照序列现在说市场变好了，反事实随之上升，估计值回来是负 $460k，而真实效应是正 $1,124k。这是本章中唯一一个真值落在区间之外的情景，而且从构造上讲，它无法用活动前期间的数据来检验。这与 DiD 要求的是同一种纪律：输出的可信度，取决于“对照序列一直像以前那样表现”这一主张的可信度。</p>
+</section>
+<section id="sec-real-data-check" class="level3">
+<h3 class="anchored" data-anchor-id="sec-real-data-check">预测从来就不够好</h3>
+<p>第三种失败确实会留下痕迹，只要你去看。把同一套机制用在真实的 Dunnhumby 门店数据上：取一家门店的周销量，把最后 12 周乘以 1.15，然后以另外四家门店作为对照，试着找回这个人为植入的提升。</p>
+<p>提升找回来了。植入的 1,775 个单位被还原为 1,833，而且区间排除了零。把它写成一次成功的对照分析会很容易。</p>
+<div id="fig-reality-check" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="剔除入组爬坡期后相关性崩塌，有无对照序列的回测几乎持平，以及一个回测并不支持的更窄区间。">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-reality-check-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part3/sec3.4/05_dunnhumby_reality_check.png" class="fig-lg img-fluid figure-img" alt="剔除入组爬坡期后相关性崩塌，有无对照序列的回测几乎持平，以及一个回测并不支持的更窄区间。">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-reality-check-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;5: 不携带任何信息的真实对照序列
+</figcaption>
+</figure>
+</div>
+<p>它不是。为对照序列提供依据的跨门店相关性是 0.45，但 Dunnhumby 面板一开始很小、随后不断扩大，所以所有门店会因为与需求毫无关系的原因一起上升。剔除这段入组爬坡期，相关性就跌到 0.01。回测一锤定音：加入四家对照门店把预测误差从 13.7% 变成 13.8%，也就是说毫无变化。更窄的区间是个陷阱。额外的回归变量会吸收样本内的波动并收紧置信带，哪怕预测并没有改善。更窄的区间不是对照序列有帮助的证据。更好的回测才是。产生那个数字的，是对这家门店自身近期水平的外推，而 13.7% 的预测误差太弱，撑不起一个因果结论。把这一点说出来，就是这次分析的发现。</p>
+</section>
+</section>
+<section id="sec-intervention-checklist" class="level2">
+<h2 class="anchored" data-anchor-id="sec-intervention-checklist">一套实用的工作流程</h2>
+<p>本章可以压缩成八个步骤。按顺序执行。</p>
+<ol type="1">
+<li><strong>写简报。</strong>业务问题、结果变量、处理，以及带报告窗口的估计目标。在看到数字之前就把它定下来。</li>
+<li><strong>选择对照序列。</strong>它们必须是活动不可能触及的序列。去问执行活动的人。</li>
+<li><strong>只在活动前期间上拟合。</strong></li>
+<li><strong>在你将要报告的预测期长度上回测反事实。</strong>根据回测选择模型设定，而不是凭口味。</li>
+<li><strong>运行安慰剂干预。</strong>在读真实数字之前，先知道这种设计从噪声中会返回什么。</li>
+<li><strong>估计活动后期间的效果</strong>，使用你在第 1 步固定下来的窗口。</li>
+<li><strong>对对照序列做压力测试。</strong>活动有没有可能触及它们？活动前期间的关系有没有可能断裂？</li>
+<li><strong>如果反事实很弱，就不要报告因果数字。</strong>13.7% 的回测误差是一个预测，不是一次测量。</li>
+</ol>
+<p>CausalImpact 不会把观测数据变成一场实验。它给你一种结构化的方式，去追问一条时间序列能否支撑一个可信的反事实。当它不能时，答案不是一个更好的模型，而是下一次做一场更好的实验（<a href="../part6/sec6.3-incrementality-experiments.html">第 6.3 章</a>）。</p>
+<p><strong>配套 Notebook：</strong><code>sec3.4_causal_impact.ipynb</code> 构建反事实，在安慰剂日期上验证它，在两百次抽样中审计它的区间，然后有意把它弄坏。<br>
+<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.4_causal_impact.ipynb">在 GitHub 上查看</a></p>
+</section>
+<section id="key-takeaways" class="level2">
+<h2 class="anchored" data-anchor-id="key-takeaways">要点</h2>
+<ul>
+<li>没有对照组时，用活动前期间和活动不可能触及的序列来预测无活动路径，然后在你将要报告的预测期长度上用回测为这个预测赢得信任。</li>
+<li>有两种失败在数据里不留痕迹：被活动触及的对照序列，以及断裂的活动前期间关系。更窄的区间不是对照序列有帮助的证据；更好的回测才是。</li>
+<li>在看到数字之前先固定报告窗口。停在累计曲线的峰值，把完整窗口的答案高估了 38%。</li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "已复制");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "已复制");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/marketing-science-in-python\.com\/zh\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../part3/sec3.3-quasi-experiments.html" class="pagination-link" aria-label="3.3 准实验">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">3.3 准实验</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../part3/sec3.5-meta-learners.html" class="pagination-link" aria-label="3.5 估计处理效应的元学习器">
+        <span class="nav-page-text"><span class="chapter-title">3.5 估计处理效应的元学习器</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-Hans" xml:lang="zh-Hans"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="解释 ATE、CATE 和 ITE，然后把 S-Learner、T-Learner 以及更高级的元学习器应用于异质性的邮件处理效应。">
+
+<title>Python 元学习器与 CATE – Marketing Science in Python</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../part3/sec3.6-uplift-modeling.html" rel="next">
+<link href="../part3/sec3.4-causal-impact.html" rel="prev">
+<link href="../assets/favicon.png" rel="icon" type="image/png">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-491b769ea73b1ce4946cf8743b832a60.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-ec576e9d6a0f00bdcb4dbec60768df31.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-491b769ea73b1ce4946cf8743b832a60.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "没有结果",
+    "search-matching-documents-text": "匹配的文档",
+    "search-copy-link-title": "复制搜索链接",
+    "search-hide-matches-text": "隐藏其它匹配结果",
+    "search-more-match-text": "更多匹配结果",
+    "search-more-matches-text": "更多匹配结果",
+    "search-clear-button-title": "清除",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "取消",
+    "search-submit-button-title": "提交",
+    "search-label": "搜索"
+  }
+}</script>
+<script async="" src="https://www.googletagmanager.com/gtag/js?id=G-YY0LCGYER5"></script>
+
+<script type="text/javascript">
+
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
+</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../custom.css">
+<meta property="og:title" content="Python 元学习器与 CATE">
+<meta property="og:description" content="解释 ATE、CATE 和 ITE，然后把 S-Learner、T-Learner 以及更高级的元学习器应用于异质性的邮件处理效应。">
+<meta property="og:image" content="https://marketing-science-in-python.com/images/common/book_cover_online.png">
+<meta property="og:site_name" content="Marketing Science in Python">
+<meta property="og:image:alt" content="抽象数据流汇聚成几何网络的封面">
+<meta name="twitter:title" content="Python 元学习器与 CATE">
+<meta name="twitter:description" content="解释 ATE、CATE 和 ITE，然后把 S-Learner、T-Learner 以及更高级的元学习器应用于异质性的邮件处理效应。">
+<meta name="twitter:image" content="https://marketing-science-in-python.com/images/common/book_cover_online.png">
+<meta name="twitter:image:alt" content="抽象数据流汇聚成几何网络的封面">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://marketing-science-in-python.com/zh/part3/sec3.5-meta-learners.html">
+<!-- msbook-i18n-head:start -->
+<link rel="alternate" hreflang="en" href="https://marketing-science-in-python.com/part3/sec3.5-meta-learners.html">
+<link rel="alternate" hreflang="ja" href="https://marketing-science-in-python.com/ja/part3/sec3.5-meta-learners.html">
+<link rel="alternate" hreflang="fr" href="https://marketing-science-in-python.com/fr/part3/sec3.5-meta-learners.html">
+<link rel="alternate" hreflang="de" href="https://marketing-science-in-python.com/de/part3/sec3.5-meta-learners.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://marketing-science-in-python.com/zh/part3/sec3.5-meta-learners.html">
+<link rel="alternate" hreflang="x-default" href="https://marketing-science-in-python.com/part3/sec3.5-meta-learners.html">
+<!-- msbook-i18n-head:end -->
+</head>
+
+<body class="nav-sidebar floating quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part3/_part3.html">第 3 部分：面向营销的因果推断</a></li><li class="breadcrumb-item"><a href="../part3/sec3.5-meta-learners.html"><span class="chapter-title">3.5 估计处理效应的元学习器</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <!-- msbook-language-switch-mobile:start -->
+<div class="msbook-language-switch-mobile" aria-label="Language"><a lang="en" hreflang="en" href="../../part3/sec3.5-meta-learners.html" onclick="this.hash=window.location.hash">EN</a><span aria-hidden="true"> | </span><a lang="ja" hreflang="ja" href="../../ja/part3/sec3.5-meta-learners.html" onclick="this.hash=window.location.hash">日本語</a><span aria-hidden="true"> | </span><a lang="fr" hreflang="fr" href="../../fr/part3/sec3.5-meta-learners.html" onclick="this.hash=window.location.hash">FR</a><span aria-hidden="true"> | </span><a lang="de" hreflang="de" href="../../de/part3/sec3.5-meta-learners.html" onclick="this.hash=window.location.hash">DE</a><span aria-hidden="true"> | </span><span lang="zh-Hans" aria-current="page">中文</span></div>
+<!-- msbook-language-switch-mobile:end -->
+<button type="button" class="btn quarto-search-button" aria-label="搜索" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">Marketing Science in Python</a> 
+        <div class="sidebar-tools-main tools-wide">
+    <a href="https://github.com/takechanman1228/marketing-science-in-python" title="源代码" class="quarto-navigation-tool px-1" aria-label="源代码"><i class="bi bi-github"></i></a>
+    <div class="dropdown">
+      <a href="" title="Share" id="quarto-navigation-tool-dropdown-0" class="quarto-navigation-tool dropdown-toggle px-1" data-bs-toggle="dropdown" aria-expanded="false" role="link" aria-label="Share"><i class="bi bi-share"></i></a>
+      <ul class="dropdown-menu" aria-labelledby="quarto-navigation-tool-dropdown-0">
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://twitter.com/intent/tweet?url=|url|">
+              <i class="bi bi-twitter pe-1"></i>
+            Twitter
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://www.linkedin.com/sharing/share-offsite/?url=|url|">
+              <i class="bi bi-linkedin pe-1"></i>
+            LinkedIn
+            </a>
+          </li>
+      </ul>
+    </div>
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="切换深色模式"><i class="bi"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="搜索"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">前言</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part1/_part1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">第 1 部分：引言</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1/sec1.1-what-is-marketing-science.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">1.1 什么是营销科学？</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1/sec1.2-data-landscape.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">1.2 理解营销数据</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part2/_part2.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">第 2 部分：为更好的决策而分析</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.1-right-question.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.1 界定正确的问题</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.2-kpi-design.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.2 为诊断而设计 KPI</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.3-storytelling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.3 把数据变成故事</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part3/_part3.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">第 3 部分：面向营销的因果推断</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.1-thinking-causally.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.1 因果思维</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.2-ab-testing.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.2 A/B 测试设计</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.3-quasi-experiments.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.3 准实验</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.4-causal-impact.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.4 基于时间序列的因果影响分析</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.5-meta-learners.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">3.5 估计处理效应的元学习器</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.6-uplift-modeling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.6 用于定向投放的增益建模</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part4/_part4.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">第 4 部分：客户分析</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part4/sec4.1-segmentation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">4.1 客户细分</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part4/sec4.2-clv-modeling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">4.2 客户终身价值建模</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part5/_part5.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">第 5 部分：商业分析</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.1-price-elasticity.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.1 价格弹性与定价决策</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.2-assortment-optimization.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.2 产品品类组合优化</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.3-sales-forecasting.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.3 销售预测与情景规划</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part6/_part6.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">第 6 部分：媒体投资与优化</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.1-media-measurement-problem.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.1 媒体测量问题</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.2-mmm-fundamentals.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.2 构建并优化一个 MMM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.3-incrementality-experiments.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.3 增量效应实验</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.4-mmm-calibration.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.4 用实验校准 MMM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.5-when-tools-disagree.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.5 当测量工具意见不一时如何决策</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendix/further-reading.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">参考文献与延伸阅读</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendix/notebooks.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Notebook 与代码</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../marketing-analytics-in-python.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">用 Python 做营销分析</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+<!-- msbook-language-switch:start -->
+<div class="msbook-language-switch" aria-label="Language"><a lang="en" hreflang="en" href="../../part3/sec3.5-meta-learners.html" onclick="this.hash=window.location.hash">English</a><span aria-hidden="true"> | </span><a lang="ja" hreflang="ja" href="../../ja/part3/sec3.5-meta-learners.html" onclick="this.hash=window.location.hash">日本語</a><span aria-hidden="true"> | </span><a lang="fr" hreflang="fr" href="../../fr/part3/sec3.5-meta-learners.html" onclick="this.hash=window.location.hash">Français</a><span aria-hidden="true"> | </span><a lang="de" hreflang="de" href="../../de/part3/sec3.5-meta-learners.html" onclick="this.hash=window.location.hash">Deutsch</a><span aria-hidden="true"> | </span><span lang="zh-Hans" aria-current="page">中文</span></div>
+<!-- msbook-language-switch:end -->
+
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">目录</h2>
+   
+  <ul>
+  <li><a href="#treatment-effects-ate-cate-ite" id="toc-treatment-effects-ate-cate-ite" class="nav-link active" data-scroll-target="#treatment-effects-ate-cate-ite">处理效应：ATE、CATE、ITE</a></li>
+  <li><a href="#why-we-need-meta-learners" id="toc-why-we-need-meta-learners" class="nav-link" data-scroll-target="#why-we-need-meta-learners">为什么需要元学习器</a></li>
+  <li><a href="#s-learner-start-with-a-single-model" id="toc-s-learner-start-with-a-single-model" class="nav-link" data-scroll-target="#s-learner-start-with-a-single-model">S-Learner：从单个模型开始</a></li>
+  <li><a href="#t-learner-two-separate-models" id="toc-t-learner-two-separate-models" class="nav-link" data-scroll-target="#t-learner-two-separate-models">T-Learner：两个独立的模型</a></li>
+  <li><a href="#advanced-meta-learners" id="toc-advanced-meta-learners" class="nav-link" data-scroll-target="#advanced-meta-learners">更高级的元学习器</a></li>
+  <li><a href="#example-estimating-heterogeneous-email-effects" id="toc-example-estimating-heterogeneous-email-effects" class="nav-link" data-scroll-target="#example-estimating-heterogeneous-email-effects">示例：估计异质性的邮件效应</a></li>
+  <li><a href="#what-to-check-before-trusting-cate" id="toc-what-to-check-before-trusting-cate" class="nav-link" data-scroll-target="#what-to-check-before-trusting-cate">信任 CATE 之前要检查什么</a></li>
+  <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways">要点</a></li>
+  </ul>
+<div class="quarto-code-links"><h2>代码链接</h2><ul><li><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.5_meta_learners.ipynb"><i class="bi bi-github"></i>sec3.5_meta_learners.ipynb</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part3/_part3.html">第 3 部分：面向营销的因果推断</a></li><li class="breadcrumb-item"><a href="../part3/sec3.5-meta-learners.html"><span class="chapter-title">3.5 估计处理效应的元学习器</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span id="sec-meta-learners" class="quarto-section-identifier"><span class="chapter-title">3.5 估计处理效应的元学习器</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="translation-notice">
+<p><strong>关于中文版</strong><br>
+本页是英文版 <em>Marketing Science in Python</em> 的AI翻译。英文版为正式版本，如有出入，以英文版为准。代码、Notebook 和图片中的文字保持英文。 <a href="../../part3/sec3.5-meta-learners.html" class="translation-source-link">阅读英文版</a></p>
+</div>
+<p>前几章的方法为整个群体估计一个数字：平均处理效应（ATE），也就是一项处理（treatment）对它触及的所有人的平均影响。但在营销中，平均值可能会误导人。例如，一张优惠券平均可能让购买增加 5%，但这个数字掩盖了真实的故事。有些客户的提升可能高达 20%，另一些客户则毫无反应，甚至出现下降。如果你能识别出哪些客户真正会响应，你的预算就能花得高效得多。</p>
+<p>元学习器（meta-learner）试图为每一位客户单独估计处理效应。但这在实践中究竟是什么样子？</p>
+<section id="treatment-effects-ate-cate-ite" class="level2">
+<h2 class="anchored" data-anchor-id="treatment-effects-ate-cate-ite">处理效应：ATE、CATE、ITE</h2>
+<p>要定义处理效应，我们求助于潜在结果框架。处理效应是由处理引起的结果差异：形式上写作 <span class="math inline">\(\tau = Y(1) - Y(0)\)</span>，其中 <span class="math inline">\(Y(1)\)</span> 是接受处理时的结果，<span class="math inline">\(Y(0)\)</span> 是对照条件下的结果。例如，如果有优惠券时的潜在购买率是 20%，没有优惠券时是 10%，那么处理效应就是 10%。</p>
+<div id="fig-treatment-effect-def" class="fig-sm quarto-float quarto-figure quarto-figure-center anchored" alt="一位客户的处理效应，是他在有优惠券和没有优惠券两种情况下潜在购买率的差。">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-treatment-effect-def-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part3/sec3.5/treatment_effect_definition.png" class="fig-sm img-fluid figure-img" alt="一位客户的处理效应，是他在有优惠券和没有优惠券两种情况下潜在购买率的差。">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-treatment-effect-def-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;1: 处理效应即潜在结果之差。
+</figcaption>
+</figure>
+</div>
+<p>接下来，有三个粒度层级：</p>
+<ul>
+<li>ATE（平均处理效应）：对所有客户取平均的效应。“优惠券提高销售了吗？”</li>
+<li>CATE（条件平均处理效应）：具有特定特征的客户的平均效应。“优惠券对 30 岁以下的城市客户效果更好吗？”</li>
+<li>ITE（个体处理效应）：某一个具体个体的效应。在实践中无法观测，但 CATE 提供了我们所能得到的最佳估计。</li>
+</ul>
+<p>这为什么重要？因为并非所有客户的行为方式都一样。一位对价格敏感的客户可能会扑向折扣，而一位品牌忠诚的客户反正也会按全价购买。如果你知道谁是谁，就可以把折扣定向投放到真正能带来额外销售的地方，而不是把利润白白让给无论如何都会购买的客户。</p>
+</section>
+<section id="why-we-need-meta-learners" class="level2">
+<h2 class="anchored" data-anchor-id="why-we-need-meta-learners">为什么需要元学习器</h2>
+<p>考虑这个问题：优惠券提高销售了吗？为了回答它，我们查看各类客户的数据，包括他们的属性（年龄、性别、地区）、处理（有优惠券或没有优惠券）以及结果（购买或未购买）。</p>
+<p><span class="math inline">\(Y(1)\)</span> 这一列代表使用优惠券时的结果，而 <span class="math inline">\(Y(0)\)</span> 代表没有优惠券时的结果。如果同一个人的这两列我们都有，计算处理效应就像两者相减一样简单。但难点在于，对每个个体我们只能观测到一个结果。</p>
+<div id="fig-missing-counterfactual" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="一张客户表格，每个人的两列潜在结果 Y(1) 或 Y(0) 只填了一列，因此个体处理效应未知。">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-missing-counterfactual-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part3/sec3.5/missing_counterfactual.png" class="fig-lg img-fluid figure-img" alt="一张客户表格，每个人的两列潜在结果 Y(1) 或 Y(0) 只填了一列，因此个体处理效应未知。">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-missing-counterfactual-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;2: 缺失的反事实：每位客户只能观测到一个结果。
+</figcaption>
+</figure>
+</div>
+<p>为了解决这个问题，我们使用元学习器。它们是一类机器学习框架，预测如果客户接受的是另一种处理会发生什么。通过填补这些缺失的反事实，我们可以为每个人估计处理效应。</p>
+</section>
+<section id="s-learner-start-with-a-single-model" class="level2">
+<h2 class="anchored" data-anchor-id="s-learner-start-with-a-single-model">S-Learner：从单个模型开始</h2>
+<p>S-Learner 中的“S”代表“Single”（单个），因为它依赖单个机器学习模型。我们用全部数据训练它，把处理指示变量当作一个普通特征放进去。要估计特征为 <span class="math inline">\(x\)</span> 的客户的效应，我们向这一个模型索取两个预测：</p>
+<p><span class="math display">\[\hat{Y}(1 \mid X=x) = \text{predicted outcome if treated}\]</span></p>
+<p><span class="math display">\[\hat{Y}(0 \mid X=x) = \text{predicted outcome if not treated}\]</span></p>
+<p>估计的处理效应是两者之差：</p>
+<p><span class="math display">\[\hat{\tau}(x) = \hat{Y}(1 \mid X=x) - \hat{Y}(0 \mid X=x)\]</span></p>
+<p>在代码中，S-Learner 从同一个模型得到这两个预测：一次把处理设为 1，一次把处理设为 0。</p>
+<div id="fig-s-learner" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="用全部数据训练的单个模型被查询两次以填满 Y(1) 和 Y(0) 两列，两者之差就是每位客户的处理效应。">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-s-learner-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part3/sec3.5/s_learner.png" class="fig-lg img-fluid figure-img" alt="用全部数据训练的单个模型被查询两次以填满 Y(1) 和 Y(0) 两列，两者之差就是每位客户的处理效应。">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-s-learner-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;3: S-Learner：一个模型预测两个潜在结果。
+</figcaption>
+</figure>
+</div>
+<p>伪代码：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Train a single model with treatment as a feature</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>X <span class="op">=</span> df[[<span class="st">'age'</span>, <span class="st">'gender'</span>, <span class="st">'location'</span>, <span class="st">'treatment'</span>]]</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> df[<span class="st">'sales'</span>]</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> xgb.XGBRegressor()</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>model.fit(X, y)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'sales_treated'</span>] <span class="op">=</span> model.predict(X.assign(treatment<span class="op">=</span><span class="dv">1</span>))</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'sales_control'</span>] <span class="op">=</span> model.predict(X.assign(treatment<span class="op">=</span><span class="dv">0</span>))</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'treatment_effect'</span>] <span class="op">=</span> df[<span class="st">'sales_treated'</span>] <span class="op">-</span> df[<span class="st">'sales_control'</span>]</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>ATE <span class="op">=</span> df[<span class="st">'treatment_effect'</span>].mean()</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<p>S-Learner 是最简单的起点，也常常是一个合理的基线。但它有一个关键弱点：如果处理效应相对其他特征而言很小，模型最终可能会忽略处理变量，尤其是在使用正则化的时候。这意味着你的 CATE 估计可能会偏向零。</p>
+</section>
+<section id="t-learner-two-separate-models" class="level2">
+<h2 class="anchored" data-anchor-id="t-learner-two-separate-models">T-Learner：两个独立的模型</h2>
+<p>T-Learner 中的“T”代表“Two”（两个）。我们不是训练一个模型，而是训练两个独立的模型：一个用实验组训练，一个用对照组训练。我们从实验组模型得到 <span class="math inline">\(\hat{Y}(1 \mid X=x)\)</span>，从对照组模型得到 <span class="math inline">\(\hat{Y}(0 \mid X=x)\)</span>，然后取差：</p>
+<p><span class="math display">\[\hat{\tau}(x) = \hat{Y}(1 \mid X=x) - \hat{Y}(0 \mid X=x)\]</span></p>
+<div id="fig-t-learner" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="实验组模型预测 Y(1) 列，另一个独立的对照组模型预测 Y(0) 列；相减得到每位客户的处理效应。">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-t-learner-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part3/sec3.5/t_learner.png" class="fig-lg img-fluid figure-img" alt="实验组模型预测 Y(1) 列，另一个独立的对照组模型预测 Y(0) 列；相减得到每位客户的处理效应。">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-t-learner-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;4: T-Learner：各自独立的模型填补每一列潜在结果。
+</figcaption>
+</figure>
+</div>
+<p>伪代码：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>df_treated <span class="op">=</span> df[df[<span class="st">'treatment'</span>] <span class="op">==</span> <span class="dv">1</span>]</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>df_control <span class="op">=</span> df[df[<span class="st">'treatment'</span>] <span class="op">==</span> <span class="dv">0</span>]</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Train separate models, one per arm</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>model_treated <span class="op">=</span> xgb.XGBRegressor()</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>model_treated.fit(df_treated[[<span class="st">'age'</span>, <span class="st">'gender'</span>, <span class="st">'location'</span>]], df_treated[<span class="st">'sales'</span>])</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>model_control <span class="op">=</span> xgb.XGBRegressor()</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>model_control.fit(df_control[[<span class="st">'age'</span>, <span class="st">'gender'</span>, <span class="st">'location'</span>]], df_control[<span class="st">'sales'</span>])</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'sales_treated'</span>] <span class="op">=</span> model_treated.predict(df[[<span class="st">'age'</span>, <span class="st">'gender'</span>, <span class="st">'location'</span>]])</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'sales_control'</span>] <span class="op">=</span> model_control.predict(df[[<span class="st">'age'</span>, <span class="st">'gender'</span>, <span class="st">'location'</span>]])</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'treatment_effect'</span>] <span class="op">=</span> df[<span class="st">'sales_treated'</span>] <span class="op">-</span> df[<span class="st">'sales_control'</span>]</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>ATE <span class="op">=</span> df[<span class="st">'treatment_effect'</span>].mean()</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<p>T-Learner 更灵活，因为每个模型可以为实验组和对照组学到不同的模式。但这有代价：它的方差可能很高，尤其是当实验组和对照组不平衡时。当你把两个预测相减时，两个模型的误差可能会叠加。</p>
+<p>因此，S-Learner 简单，但倾向于低估效应。T-Learner 避开了这一特定的失败，代价是估计更嘈杂。接下来我们还能做什么？</p>
+</section>
+<section id="advanced-meta-learners" class="level2">
+<h2 class="anchored" data-anchor-id="advanced-meta-learners">更高级的元学习器</h2>
+<p>在 S 和 T 之外，还有几种更精细的方法针对它们的局限：</p>
+<ul>
+<li>X-Learner：T-Learner 的一种扩展，为不平衡的处理组而设计。它先填补缺失的反事实，再用倾向得分加权将其合并。当一个组远大于另一个组时效果很好。</li>
+<li>DR-Learner（双重稳健）：将结果建模与倾向得分估计结合起来。只要两个模型中任一个设定正确，估计就是一致的，故称“双重稳健”。</li>
+<li>DML（双重机器学习）：使用交叉拟合来避免过拟合偏差，并有很强的理论保证。计算成本更高，在配套 Notebook 中大约比 S-Learner 慢一个数量级，但能给出正规的置信区间。</li>
+</ul>
+<div id="fig-method-comparison" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="元学习器从单模型的 S-Learner 逐步演进到更复杂的双重稳健和双重机器学习方法。">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-method-comparison-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part3/sec3.5/method_comparison.png" class="fig-lg img-fluid figure-img" alt="元学习器从单模型的 S-Learner 逐步演进到更复杂的双重稳健和双重机器学习方法。">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-method-comparison-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;5: 元学习器方法，从简单到复杂。
+</figcaption>
+</figure>
+</div>
+<p>理论告诉我们每种方法本应优化什么。但真正的检验，是看它们在同一个数据集上的表现，在那里你能看到实际的差异。</p>
+</section>
+<section id="example-estimating-heterogeneous-email-effects" class="level2">
+<h2 class="anchored" data-anchor-id="example-estimating-heterogeneous-email-effects">示例：估计异质性的邮件效应</h2>
+<p>要观察这些方法的表现，我们需要一个能核对它们答案的数据集。这比听起来更难。在真实数据中，我们永远观测不到一位客户的真实处理效应，因此无法判断一个元学习器是找回了正确的模式，还是只是生成了看似合理的噪声。</p>
+<p>我们用一个建立在 Kevin Hillstrom 的 MineThatData 邮件实验之上的半合成示例来解决这个问题。这是一个经典的营销数据集，64,000 名客户被随机分配到男装邮件、女装邮件或不发邮件三组。我们保留真实的客户特征（最近购买时间、购买历史、渠道等等），也保留“男装邮件对比不发邮件”这一二元对照的真实随机分配。只有结果是模拟的：我们定义一个基线购买概率，以及一个处理效应 <span class="math inline">\(\tau(x)\)</span>，它对男装购买者、近期活跃客户和多渠道购物者更大。因为 <span class="math inline">\(\tau(x)\)</span> 是我们自己写的，我们知道每位客户的真实 CATE，可以据此给每个学习器打分。</p>
+<p>这是一个教学装置。目的不是比实验本身更好地估计平均效应，而是检验元学习器能否找回我们植入的异质性。</p>
+<p><strong>配套 Notebook：</strong><code>sec3.5_meta_learners.ipynb</code> 在半合成的 MineThatData 实验上，将 S-、T-、X-、DR-Learner 以及 CausalForestDML 与已知的真实 CATE 进行比较。<br>
+<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.5_meta_learners.ipynb">在 GitHub 上查看</a></p>
+<p>五个学习器全都找回了平均效应，更有用的是，也找回了细分群体层面的模式。下面的散点图把一个有代表性的学习器估计的 CATE 与真实效应进行比较。估计值聚集在 45 度线附近，因此客户被排在了大致正确的顺序上，纵向的离散则反映了二元结果的噪声。</p>
+<div id="fig-true-vs-est" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="估计 CATE 对真实模拟效应的散点图，点聚集在 45 度线附近。">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-true-vs-est-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part3/sec3.5/true_vs_estimated_cate.png" class="fig-md img-fluid figure-img" alt="估计 CATE 对真实模拟效应的散点图，点聚集在 45 度线附近。">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-true-vs-est-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;6: 估计 CATE 与真实 CATE。
+</figcaption>
+</figure>
+</div>
+<p>在细分群体内取平均会让这种还原更清楚：按是否为男装购买者、最近购买时间、购买历史和渠道拆分后，估计效应紧贴真值，重现了我们植入在男装购买者、近期客户和多渠道购物者身上的更高响应。</p>
+<div id="fig-cate-by-segment" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="分组柱状图，比较男装购买者、最近购买时间、购买历史和渠道各细分群体中真实与估计的平均 CATE。">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-cate-by-segment-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part3/sec3.5/cate_by_segment.png" class="fig-lg img-fluid figure-img" alt="分组柱状图，比较男装购买者、最近购买时间、购买历史和渠道各细分群体中真实与估计的平均 CATE。">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-cate-by-segment-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;7: 按细分群体划分的估计 CATE 与真实 CATE。
+</figcaption>
+</figure>
+</div>
+<p>哪个学习器对客户排序最好，取决于数据。在保留集（holdout）上对照真实 CATE 打分，这个干净、平衡的实验偏爱简单的学习器：</p>
+<div id="tbl-cate-recovery" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-cate-recovery-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+表&nbsp;1: 各学习器在保留集上对真实 CATE 的还原情况。
+</figcaption>
+<div aria-describedby="tbl-cate-recovery-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">方法</th>
+<th style="text-align: right;">Corr(估计, 真实)</th>
+<th style="text-align: right;">MAE</th>
+<th style="text-align: right;">平均估计 CATE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">S-Learner</td>
+<td style="text-align: right;">0.77</td>
+<td style="text-align: right;">0.030</td>
+<td style="text-align: right;">0.108</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">X-Learner</td>
+<td style="text-align: right;">0.69</td>
+<td style="text-align: right;">0.038</td>
+<td style="text-align: right;">0.109</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">CausalForestDML</td>
+<td style="text-align: right;">0.60</td>
+<td style="text-align: right;">0.051</td>
+<td style="text-align: right;">0.109</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">T-Learner</td>
+<td style="text-align: right;">0.59</td>
+<td style="text-align: right;">0.050</td>
+<td style="text-align: right;">0.109</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">DR-Learner</td>
+<td style="text-align: right;">0.58</td>
+<td style="text-align: right;">0.049</td>
+<td style="text-align: right;">0.109</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<p>五个学习器都找回了我们植入的约 11 个百分点的平均效应；把它们区分开的是与真实 CATE 的相关性，而这正是决定排序质量的东西。S-Learner 和 X-Learner 领先，而双模型和交叉拟合的学习器付出了方差的代价。在噪声更大或不平衡的数据上，排名可能会变，这正是为什么你要检查还原情况，而不是凭名声信任某一种方法。</p>
+</section>
+<section id="what-to-check-before-trusting-cate" class="level2">
+<h2 class="anchored" data-anchor-id="what-to-check-before-trusting-cate">信任 CATE 之前要检查什么</h2>
+<p>这个示例在设计上就很宽容：随机化的处理、完美的重叠，以及已知的答案。真实项目很少如此。在依据 CATE 估计采取行动之前：</p>
+<ul>
+<li>元学习器不会创造因果比较。它只是在你已经拥有的一个比较内部为效应的变化建模，因此在观测数据上，CATE 会继承底层比较所携带的每一个混杂问题。</li>
+<li>个体处理效应在真实数据中永远观测不到。我们在这里能给学习器打分，只是因为我们模拟了真值。</li>
+<li>CATE 是模型估计，不是测量。在群体或细分群体层面读它，不要把它当成某一位客户的字面数字。</li>
+<li>核对平均值是否合理。如果平均估计 CATE 与实验上简单的均值之差相距很远，那就有问题。</li>
+<li>检查跨学习器的稳定性。如果 S、T、X 和因果森林在排序上意见不一，那么暂时一个都别信。</li>
+<li>留意重叠。在实验组和对照组客户不共存的地方，CATE 是外推，而不是估计。</li>
+</ul>
+</section>
+<section id="key-takeaways" class="level2">
+<h2 class="anchored" data-anchor-id="key-takeaways">要点</h2>
+<ul>
+<li>ATE 问的是处理是否有效；CATE 问的是对谁有效。元学习器在你已经拥有的因果比较内部估计这种差异，它们当中没有一个能修复你没有测量的混杂。</li>
+<li>CATE 是群体层面的模型估计，真实效应在真实数据中永远观测不到，所以没有哪个学习器能凭名声赢得信任。要对照实验核对平均值、检查跨学习器的稳定性，并检查重叠。</li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "已复制");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "已复制");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/marketing-science-in-python\.com\/zh\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../part3/sec3.4-causal-impact.html" class="pagination-link" aria-label="3.4 基于时间序列的因果影响分析">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">3.4 基于时间序列的因果影响分析</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../part3/sec3.6-uplift-modeling.html" class="pagination-link" aria-label="3.6 用于定向投放的增益建模">
+        <span class="nav-page-text"><span class="chapter-title">3.6 用于定向投放的增益建模</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

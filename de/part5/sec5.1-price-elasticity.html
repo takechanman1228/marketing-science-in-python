@@ -1,0 +1,1319 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="de" xml:lang="de"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="Schätzen Sie eine Nachfragekurve aus Transaktionsdaten, optimieren Sie den Preis für den Deckungsbeitrag und vermeiden Sie die Fallstricke, die Elastizitätsschätzungen verfälschen.">
+
+<title>Preiselastizität in Python – Marketing Science in Python</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../part5/sec5.2-assortment-optimization.html" rel="next">
+<link href="../part5/_part5.html" rel="prev">
+<link href="../assets/favicon.png" rel="icon" type="image/png">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-491b769ea73b1ce4946cf8743b832a60.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-ec576e9d6a0f00bdcb4dbec60768df31.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-491b769ea73b1ce4946cf8743b832a60.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "Keine Treffer",
+    "search-matching-documents-text": "Treffer",
+    "search-copy-link-title": "Link in die Suche kopieren",
+    "search-hide-matches-text": "Zusätzliche Treffer verbergen",
+    "search-more-match-text": "weitere Treffer in diesem Dokument",
+    "search-more-matches-text": "weitere Treffer in diesem Dokument",
+    "search-clear-button-title": "Zurücksetzen",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Abbrechen",
+    "search-submit-button-title": "Abschicken",
+    "search-label": "Suchen"
+  }
+}</script>
+<script async="" src="https://www.googletagmanager.com/gtag/js?id=G-YY0LCGYER5"></script>
+
+<script type="text/javascript">
+
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
+</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../custom.css">
+<meta property="og:title" content="Preiselastizität in Python">
+<meta property="og:description" content="Schätzen Sie eine Nachfragekurve aus Transaktionsdaten, optimieren Sie den Preis für den Deckungsbeitrag und vermeiden Sie die Fallstricke, die Elastizitätsschätzungen verfälschen.">
+<meta property="og:image" content="https://marketing-science-in-python.com/images/common/book_cover_online.png">
+<meta property="og:site_name" content="Marketing Science in Python">
+<meta property="og:image:alt" content="Buchcover mit abstrakten Datenströmen, die in ein geometrisches Netz münden">
+<meta name="twitter:title" content="Preiselastizität in Python">
+<meta name="twitter:description" content="Schätzen Sie eine Nachfragekurve aus Transaktionsdaten, optimieren Sie den Preis für den Deckungsbeitrag und vermeiden Sie die Fallstricke, die Elastizitätsschätzungen verfälschen.">
+<meta name="twitter:image" content="https://marketing-science-in-python.com/images/common/book_cover_online.png">
+<meta name="twitter:image:alt" content="Buchcover mit abstrakten Datenströmen, die in ein geometrisches Netz münden">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://marketing-science-in-python.com/de/part5/sec5.1-price-elasticity.html">
+<!-- msbook-i18n-head:start -->
+<link rel="alternate" hreflang="en" href="https://marketing-science-in-python.com/part5/sec5.1-price-elasticity.html">
+<link rel="alternate" hreflang="ja" href="https://marketing-science-in-python.com/ja/part5/sec5.1-price-elasticity.html">
+<link rel="alternate" hreflang="fr" href="https://marketing-science-in-python.com/fr/part5/sec5.1-price-elasticity.html">
+<link rel="alternate" hreflang="de" href="https://marketing-science-in-python.com/de/part5/sec5.1-price-elasticity.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://marketing-science-in-python.com/zh/part5/sec5.1-price-elasticity.html">
+<link rel="alternate" hreflang="x-default" href="https://marketing-science-in-python.com/part5/sec5.1-price-elasticity.html">
+<!-- msbook-i18n-head:end -->
+</head>
+
+<body class="nav-sidebar floating quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Seitenleiste umschalten" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part5/_part5.html">Teil 5. Kommerzielle Analytik</a></li><li class="breadcrumb-item"><a href="../part5/sec5.1-price-elasticity.html"><span class="chapter-title">5.1 Preiselastizität und Preisentscheidungen</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Seitenleiste umschalten" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <!-- msbook-language-switch-mobile:start -->
+<div class="msbook-language-switch-mobile" aria-label="Language"><a lang="en" hreflang="en" href="../../part5/sec5.1-price-elasticity.html" onclick="this.hash=window.location.hash">EN</a><span aria-hidden="true"> | </span><a lang="ja" hreflang="ja" href="../../ja/part5/sec5.1-price-elasticity.html" onclick="this.hash=window.location.hash">日本語</a><span aria-hidden="true"> | </span><a lang="fr" hreflang="fr" href="../../fr/part5/sec5.1-price-elasticity.html" onclick="this.hash=window.location.hash">FR</a><span aria-hidden="true"> | </span><span lang="de" aria-current="page">DE</span><span aria-hidden="true"> | </span><a lang="zh-Hans" hreflang="zh-Hans" href="../../zh/part5/sec5.1-price-elasticity.html" onclick="this.hash=window.location.hash">中文</a></div>
+<!-- msbook-language-switch-mobile:end -->
+<button type="button" class="btn quarto-search-button" aria-label="Suchen" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">Marketing Science in Python</a> 
+        <div class="sidebar-tools-main tools-wide">
+    <a href="https://github.com/takechanman1228/marketing-science-in-python" title="Quellcode" class="quarto-navigation-tool px-1" aria-label="Quellcode"><i class="bi bi-github"></i></a>
+    <div class="dropdown">
+      <a href="" title="Share" id="quarto-navigation-tool-dropdown-0" class="quarto-navigation-tool dropdown-toggle px-1" data-bs-toggle="dropdown" aria-expanded="false" role="link" aria-label="Share"><i class="bi bi-share"></i></a>
+      <ul class="dropdown-menu" aria-labelledby="quarto-navigation-tool-dropdown-0">
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://twitter.com/intent/tweet?url=|url|">
+              <i class="bi bi-twitter pe-1"></i>
+            Twitter
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://www.linkedin.com/sharing/share-offsite/?url=|url|">
+              <i class="bi bi-linkedin pe-1"></i>
+            LinkedIn
+            </a>
+          </li>
+      </ul>
+    </div>
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Dunkelmodus umschalten"><i class="bi"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Suchen"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Vorwort</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part1/_part1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Teil 1. Einführung</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Abschnitt umschalten">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1/sec1.1-what-is-marketing-science.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">1.1 Was ist Marketing Science?</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1/sec1.2-data-landscape.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">1.2 Marketingdaten verstehen</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part2/_part2.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Teil 2. Analysieren, um besser zu entscheiden</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Abschnitt umschalten">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.1-right-question.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.1 Die richtige Frage formulieren</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.2-kpi-design.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.2 KPIs für die Diagnose entwerfen</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.3-storytelling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.3 Aus Daten eine Story machen</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part3/_part3.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Teil 3. Kausalinferenz für das Marketing</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Abschnitt umschalten">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.1-thinking-causally.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.1 Kausales Denken</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.2-ab-testing.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.2 A/B-Test-Design</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.3-quasi-experiments.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.3 Quasi-Experimente</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.4-causal-impact.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.4 Causal Impact mit Zeitreihen</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.5-meta-learners.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.5 Meta-Learner für Treatment-Effekte</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.6-uplift-modeling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.6 Uplift-Modeling für das Targeting</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part4/_part4.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Teil 4. Kundenanalyse</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Abschnitt umschalten">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part4/sec4.1-segmentation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">4.1 Kundensegmentierung</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part4/sec4.2-clv-modeling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">4.2 Modellierung des Customer Lifetime Value</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part5/_part5.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Teil 5. Kommerzielle Analytik</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Abschnitt umschalten">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.1-price-elasticity.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">5.1 Preiselastizität und Preisentscheidungen</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.2-assortment-optimization.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.2 Sortimentsoptimierung</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.3-sales-forecasting.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.3 Umsatzprognose und Szenarioplanung</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part6/_part6.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Teil 6. Medieninvestition und Optimierung</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Abschnitt umschalten">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.1-media-measurement-problem.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.1 Das Problem der Medienmessung</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.2-mmm-fundamentals.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.2 Ein MMM aufbauen und optimieren</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.3-incrementality-experiments.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.3 Inkrementalitätsexperimente</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.4-mmm-calibration.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.4 MMM mit Experimenten kalibrieren</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.5-when-tools-disagree.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.5 Entscheiden, wenn Messwerkzeuge sich widersprechen</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendix/further-reading.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Quellen und weiterführende Literatur</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendix/notebooks.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Notebooks und Code</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../marketing-analytics-in-python.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Marketing-Analytics mit Python</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+<!-- msbook-language-switch:start -->
+<div class="msbook-language-switch" aria-label="Language"><a lang="en" hreflang="en" href="../../part5/sec5.1-price-elasticity.html" onclick="this.hash=window.location.hash">English</a><span aria-hidden="true"> | </span><a lang="ja" hreflang="ja" href="../../ja/part5/sec5.1-price-elasticity.html" onclick="this.hash=window.location.hash">日本語</a><span aria-hidden="true"> | </span><a lang="fr" hreflang="fr" href="../../fr/part5/sec5.1-price-elasticity.html" onclick="this.hash=window.location.hash">Français</a><span aria-hidden="true"> | </span><span lang="de" aria-current="page">Deutsch</span><span aria-hidden="true"> | </span><a lang="zh-Hans" hreflang="zh-Hans" href="../../zh/part5/sec5.1-price-elasticity.html" onclick="this.hash=window.location.hash">中文</a></div>
+<!-- msbook-language-switch:end -->
+
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Inhaltsverzeichnis</h2>
+   
+  <ul>
+  <li><a href="#sec-price-elasticity-definition" id="toc-sec-price-elasticity-definition" class="nav-link active" data-scroll-target="#sec-price-elasticity-definition">Was ist Preiselastizität?</a></li>
+  <li><a href="#sec-elasticity-data-requirements" id="toc-sec-elasticity-data-requirements" class="nav-link" data-scroll-target="#sec-elasticity-data-requirements">Datenanforderungen für die Preiselastizität</a></li>
+  <li><a href="#sec-demand-curve-estimation" id="toc-sec-demand-curve-estimation" class="nav-link" data-scroll-target="#sec-demand-curve-estimation">Schätzung der Nachfragekurve</a></li>
+  <li><a href="#sec-margin-maximizing-price" id="toc-sec-margin-maximizing-price" class="nav-link" data-scroll-target="#sec-margin-maximizing-price">Optimierung auf den Deckungsbeitrag</a>
+  <ul class="collapse">
+  <li><a href="#worked-example-a-private-label-cereal" id="toc-worked-example-a-private-label-cereal" class="nav-link" data-scroll-target="#worked-example-a-private-label-cereal">Rechenbeispiel: ein Eigenmarken-Müsli</a></li>
+  </ul></li>
+  <li><a href="#sec-segment-elasticity" id="toc-sec-segment-elasticity" class="nav-link" data-scroll-target="#sec-segment-elasticity">Die Elastizität variiert mit der Produktrolle</a></li>
+  <li><a href="#sec-elasticity-pitfalls" id="toc-sec-elasticity-pitfalls" class="nav-link" data-scroll-target="#sec-elasticity-pitfalls">Häufige Fallstricke bei der Preiselastizität</a></li>
+  <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways">Das Wichtigste in Kürze</a></li>
+  </ul>
+<div class="quarto-code-links"><h2>Code-Links</h2><ul><li><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part5-commercial-analytics/sec5.1_price_elasticity.ipynb"><i class="bi bi-github"></i>sec5.1_price_elasticity.ipynb</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part5/_part5.html">Teil 5. Kommerzielle Analytik</a></li><li class="breadcrumb-item"><a href="../part5/sec5.1-price-elasticity.html"><span class="chapter-title">5.1 Preiselastizität und Preisentscheidungen</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span id="sec-price-elasticity" class="quarto-section-identifier"><span class="chapter-title">5.1 Preiselastizität und Preisentscheidungen</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="translation-notice">
+<p><strong>Über die deutsche Ausgabe</strong><br>
+Diese Seite ist eine KI-Übersetzung der englischen Ausgabe von <em>Marketing Science in Python</em>. Die englische Ausgabe ist maßgeblich und hat bei Abweichungen Vorrang. Code, Notebooks und Text in Abbildungen bleiben auf Englisch. <a href="../../part5/sec5.1-price-elasticity.html" class="translation-source-link">Englische Ausgabe lesen</a></p>
+</div>
+<p>Was ist der richtige Preis?</p>
+<p>Der Vertrieb will einen niedrigeren Preis. Er ist am nächsten am Kunden und sieht den offensichtlichen Effekt: Sinkt der Preis, gehen die Stückzahlen hoch.</p>
+<p>Die Finanzabteilung will eine höhere Marge. Sie betrachtet denselben Zielkonflikt von der anderen Seite und sieht, dass der Umsatz steigen kann, während der Gewinn verschwindet, wenn das zusätzliche Volumen zu billig erkauft wird.</p>
+<p>Das Marketing steht zwischen diesen Sichtweisen, aber nicht, indem es sie mittelt. Seine Aufgabe ist es, Kundenreaktion, Markenposition und kommerzielle Ziele zu verbinden: wann Stückzahlen oder Umsatz gejagt werden, wann die Marge geschützt wird und wann der Preis selbst ein Positionierungssignal sendet.</p>
+<p>Beide Seiten haben teilweise recht. Der Preis beeinflusst das Volumen, aber das Volumen ist nicht immer das Hauptziel. Manchmal will das Unternehmen Umsatz, manchmal Marge, manchmal Frequenz oder Marktanteil, oder auch nur den Lagerbestand abbauen oder eine Preisposition verteidigen. Was wirklich fehlt, ist nicht das Ziel. Es ist das Verständnis, wie stark sich das Volumen tatsächlich ändert, wenn sich der Preis bewegt.</p>
+<p>Genau das liefert die Preiselastizität. Sie entscheidet nicht über das Geschäftsziel. Sie liefert die Reaktionskurve, mit der wir Preisentscheidungen am Ziel messen können, ob dieses Ziel nun Stückzahlen, Umsatz, Marge oder Positionierung heißt.</p>
+<section id="sec-price-elasticity-definition" class="level2">
+<h2 class="anchored" data-anchor-id="sec-price-elasticity-definition">Was ist Preiselastizität?</h2>
+<p>Stellen Sie sich vor, Sie überlegen, den Preis eines Bestseller-Müslis um 10% zu erhöhen. Verlieren Sie 5% der Stückzahlen oder 20%? Dieser Unterschied entscheidet, ob die Preisänderung Absatz, Umsatz oder Marge verbessert oder ob sie die Käufer schlicht vertreibt.</p>
+<p>Die Preiselastizität der Nachfrage misst, wie empfindlich die verkaufte Menge auf eine Preisänderung reagiert:</p>
+<p><span class="math display">\[
+\varepsilon = \frac{\% \Delta \text{Quantity}}{\% \Delta \text{Price}}
+\]</span></p>
+<p>Bei normalen Gütern ist die Elastizität negativ: Preis erhöhen, weniger Stück verkaufen. Der Einfachheit halber sprechen wir meist vom Absolutwert.</p>
+<ul>
+<li><span class="math inline">\(|\varepsilon| = 1.6\)</span>: Eine Preiserhöhung um 10% kostet rund 16% der Stückzahlen. Die Nachfrage ist <strong>elastisch</strong>. Preiserhöhungen sind riskant, weil das Volumen schneller fällt, als der Preis steigt.</li>
+<li><span class="math inline">\(|\varepsilon| = 0.5\)</span>: Eine Preiserhöhung um 10% kostet nur etwa 5% der Stückzahlen. Die Nachfrage ist <strong>unelastisch</strong>. Das Produkt hat Preissetzungsmacht, und eine Preiserhöhung kann den Umsatz steigern. Sind die Stückkosten stabil und bekannt, kann sie auch den Deckungsbeitrag verbessern.</li>
+</ul>
+<p>Dieselbe Elastizitätsschätzung kann verschiedene Preisfragen stützen:</p>
+<ul>
+<li><strong>Sollen wir den Preis bewegen?</strong> Elastische Nachfrage macht Preiserhöhungen riskant. Unelastische Nachfrage macht sie attraktiver.</li>
+<li><strong>Welche Zielgröße sollen wir optimieren?</strong> Elastizität plus Preis und Volumen erlaubt den Vergleich von Stückzahlen und Umsatz. Kommen die variablen Kosten hinzu, lässt sich mit derselben Kurve der Deckungsbeitrag vergleichen.</li>
+</ul>
+</section>
+<section id="sec-elasticity-data-requirements" class="level2">
+<h2 class="anchored" data-anchor-id="sec-elasticity-data-requirements">Datenanforderungen für die Preiselastizität</h2>
+<p>Um die Preiselastizität zu schätzen, brauchen Sie Verkaufsdaten mit echter Preisvariation. Typische Quellen sind POS-Scannerdaten, Paneldaten oder interne Daten aus dem Onlinehandel. Verwenden Sie den effektiven Preis (Umsatz geteilt durch verkaufte Stück) statt des Regalpreises:</p>
+<p><span class="math display">\[
+\text{Price}_{\text{effective}} = \frac{\text{Revenue}}{\text{Units}}
+\]</span></p>
+<p>Der effektive Preis erfasst Rabatte, Mengenangebote und Preisänderungen mitten in der Woche zuverlässiger als der Listenpreis.</p>
+<p>Zwei Designentscheidungen legen das Fundament: die zeitliche Granularität und die Produktgranularität. Die Woche ist meist die beste zeitliche Granularität, weil Tagesdaten oft verrauscht sind, während Monatsdaten Preisänderungen innerhalb des Monats verbergen können. Auf der Produktseite beginnen Sie auf SKU-Ebene. Eine einzelne SKU hat eine Packungsgröße, einen Basispreis und eine Nachfragereaktion, sodass das Preissignal leichter zu lesen ist.</p>
+<p>Drei Dinge sind zu prüfen, bevor Sie irgendetwas anpassen:</p>
+<ol type="1">
+<li><strong>Analyseeinheit.</strong> Verwenden Sie standardmäßig SKU × Woche. Ist SKU × Woche zu dünn besetzt, gibt es zwei vertretbare Wege zu aggregieren. Wechseln Sie zu SKU × Monat, wenn Preisänderungen nicht zu häufig sind und die monatliche Variation noch sichtbar bleibt. Oder wechseln Sie zu SKU-Gruppe × Woche, indem Sie wirklich vergleichbare SKUs zusammenfassen, etwa Farbvarianten, Geschmacksvarianten oder gleichpreisige Artikel mit derselben Rolle für den Käufer. Aggregieren Sie nicht nur deshalb, weil Produkte dieselbe Marke tragen.</li>
+<li><strong>Preisvariation.</strong> Sie brauchen mehrere unterschiedliche Preispunkte, keinen einzelnen Preis, der die Historie dominiert, und genug Zeit, um die Preisreaktion vom Rauschen zu trennen. Als grobe Regel: mindestens drei Preispunkte, eine Preisspanne von 10% und 26 Wochen Historie.</li>
+<li><strong>Verzerrte Nachfragesignale.</strong> Fehlbestände, ungewöhnliche Promotions, Feiertage und einmalige Ereignisse können das Volumen aus Gründen bewegen, die nichts mit dem Preis zu tun haben. Markieren oder entfernen Sie diese Beobachtungen, bevor Sie die Beziehung als normale Preisreaktion behandeln.</li>
+</ol>
+</section>
+<section id="sec-demand-curve-estimation" class="level2">
+<h2 class="anchored" data-anchor-id="sec-demand-curve-estimation">Schätzung der Nachfragekurve</h2>
+<p>Das Arbeitspferd ist das Modell mit konstanter Elastizität, auch Potenzgesetz-Modell genannt:</p>
+<p><span class="math display">\[
+Q = b_0 \times P^{b_1}
+\]</span></p>
+<p>wobei <span class="math inline">\(Q\)</span> die Menge ist, <span class="math inline">\(P\)</span> der Preis, <span class="math inline">\(b_0\)</span> ein Skalenparameter und <span class="math inline">\(b_1\)</span> die Elastizität. Bei normalen Gütern ist <span class="math inline">\(b_1\)</span> negativ. Logarithmieren ergibt eine lineare Beziehung, <span class="math inline">\(\log Q = \log b_0 + b_1 \log P\)</span>, sodass <span class="math inline">\(b_1\)</span> die Steigung im Log-Log-Raum ist. Das Modell nimmt an, dass die Elastizität über die gesamte Preisspanne konstant ist. Das ist eine starke Annahme, aber für viele Konsumgüter ein vernünftiger Ausgangspunkt.</p>
+<p>Passen Sie die Kurve im ursprünglichen, nicht logarithmierten Raum mit <code>scipy.optimize.curve_fit</code> an, um die Rücktransformationsverzerrung zu vermeiden, die entsteht, wenn man im Log-Raum anpasst und zurückrechnet.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> scipy.optimize <span class="im">import</span> curve_fit</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> power_model(price, b0, b1):</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Q = b0 * Price^b1"""</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> b0 <span class="op">*</span> np.power(price, b1)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>p0 <span class="op">=</span> [df[<span class="st">"units"</span>].mean(), <span class="op">-</span><span class="fl">1.5</span>]</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>popt, pcov <span class="op">=</span> curve_fit(</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    power_model,</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    df[<span class="st">"price"</span>].values,</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    df[<span class="st">"units"</span>].values,</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    p0<span class="op">=</span>p0,</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    maxfev<span class="op">=</span><span class="dv">10000</span>,</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>b0, b1 <span class="op">=</span> popt</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Scale (b0): </span><span class="sc">{</span>b0<span class="sc">:.1f}</span><span class="ss">"</span>)</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Elasticity (b1): </span><span class="sc">{</span>b1<span class="sc">:.2f}</span><span class="ss">"</span>)</span></code></pre></div><button title="In die Zwischenablage kopieren" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Das Begleit-Notebook führt außerdem eine Schätzung in zwei Durchgängen aus: einmal auf allen Daten anpassen, Beobachtungen markieren, bei denen tatsächliche geteilt durch vorhergesagte Stückzahlen außerhalb eines sinnvollen Bandes liegen, etwa 0.3 bis 3.0, und ohne sie neu anpassen.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Pass 1: fit on all data</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>popt_1, _ <span class="op">=</span> curve_fit(power_model, prices, units, p0<span class="op">=</span>p0, maxfev<span class="op">=</span><span class="dv">10000</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Identify outliers</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>predicted <span class="op">=</span> power_model(prices, <span class="op">*</span>popt_1)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>ratio <span class="op">=</span> units <span class="op">/</span> predicted</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>mask <span class="op">=</span> (ratio <span class="op">&gt;</span> <span class="fl">0.3</span>) <span class="op">&amp;</span> (ratio <span class="op">&lt;</span> <span class="fl">3.0</span>)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Pass 2: refit on clean data</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>popt_2, pcov_2 <span class="op">=</span> curve_fit(</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    power_model, prices[mask], units[mask], p0<span class="op">=</span>popt_1, maxfev<span class="op">=</span><span class="dv">10000</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="In die Zwischenablage kopieren" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Promotionsspitzen sind der übliche Übeltäter. Nimmt man sie blind mit auf, behandelt das Modell Promotionsvolumen als normale Preisreaktion und verzerrt die Elastizität weg von ihrem wahren Wert.</p>
+<div id="fig-elasticity-deep-dive" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Preis-Mengen-Streudiagramm mit angepasster Potenzkurve und 95%-Band für ein Top-Produkt der Kategorie Fluid Milk; die steile Steigung zeigt elastische Nachfrage.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-elasticity-deep-dive-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part5/sec5.1/elasticity_deep_dive.png" class="fig-lg img-fluid figure-img" alt="Preis-Mengen-Streudiagramm mit angepasster Potenzkurve und 95%-Band für ein Top-Produkt der Kategorie Fluid Milk; die steile Steigung zeigt elastische Nachfrage.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-elasticity-deep-dive-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Abbildung&nbsp;1: Preis-Mengen-Streudiagramm mit angepasster Potenzkurve.
+</figcaption>
+</figure>
+</div>
+<p>Über die acht meistverkauften Artikel der Kategorie Fluid Milk reichen die Elastizitäten von <span class="math inline">\(-1.2\)</span> für Gallonenkanister, ein Grundformat mit geringerer Elastizität, bis <span class="math inline">\(-3.9\)</span> für kleinere Formate, die leichter zu ersetzen sind. <a href="#fig-elasticity-grid" class="quarto-xref">Abbildung&nbsp;<span>2</span></a> zeigt die angepassten Kurven nebeneinander.</p>
+<div id="fig-elasticity-grid" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Angepasste Potenzgesetz-Nachfragekurven für acht Top-Produkte der Kategorie Fluid Milk; Artikel mit höherem R² passen sauber, solche mit niedrigerem R² sind verrauschter.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-elasticity-grid-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part5/sec5.1/elasticity_grid.png" class="fig-lg img-fluid figure-img" alt="Angepasste Potenzgesetz-Nachfragekurven für acht Top-Produkte der Kategorie Fluid Milk; Artikel mit höherem R² passen sauber, solche mit niedrigerem R² sind verrauschter.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-elasticity-grid-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Abbildung&nbsp;2: Angepasste Potenzgesetz-Nachfragekurven für acht Produkte.
+</figcaption>
+</figure>
+</div>
+<p>In der Praxis ist eine Elastizität im Bereich <span class="math inline">\(-0.5\)</span> bis <span class="math inline">\(-5\)</span> mit <span class="math inline">\(R^2 &gt; 0.4\)</span> und mehreren unterschiedlichen Preispunkten für Preisentscheidungen brauchbar. Schätzungen außerhalb dieses Bereichs sind oft Datenprobleme: zu wenige Preise, ein einzelner Aktionsrabatt, der die Anpassung dominiert, oder ein zu kurzes Zeitfenster. Ist die Elastizität nicht glaubwürdig, ist es auch keine darauf aufgebaute Preisempfehlung.</p>
+</section>
+<section id="sec-margin-maximizing-price" class="level2">
+<h2 class="anchored" data-anchor-id="sec-margin-maximizing-price">Optimierung auf den Deckungsbeitrag</h2>
+<p>Sobald wir eine Nachfragekurve haben, können wir verschiedene Preisfragen stellen.</p>
+<p>Die erste lautet, welcher Preis den Umsatz maximiert:</p>
+<p><span class="math display">\[
+\text{Revenue}(P) = P \times Q(P)
+\]</span></p>
+<p>Das ist oft der intuitivste Ausgangspunkt, weil er nur Preis und Stückzahlen erfordert. Aber unter einer Kurve mit konstanter Elastizität ist die Umsatzmaximierung degeneriert: Ist die Nachfrage elastisch (<span class="math inline">\(|b_1| &gt; 1\)</span>, wie bei jedem Produkt in diesem Kapitel), steigt der Umsatz weiter, während der Preis fällt, sodass der umsatzmaximierende Preis schlicht der niedrigste ist, den Sie zu setzen bereit sind. Sind keine verlässlichen variablen Kosten verfügbar, kann der Umsatz weiterhin als Kennzahl für einen ersten Durchgang dienen, aber behandeln Sie ihn als Richtung (senken), nicht als inneres Optimum.</p>
+<p>Aber Umsatz ist nicht Gewinn. Sind die variablen Kosten verfügbar, können wir die stärkere Frage stellen: Welcher Preis maximiert den Deckungsbeitrag?</p>
+<p><span class="math display">\[
+\text{Contribution Margin}(P) = (P - C) \times Q(P)
+\]</span></p>
+<p>wobei <span class="math inline">\(C\)</span> die variablen Kosten pro Stück sind und <span class="math inline">\(Q(P) = b_0 \times P^{b_1}\)</span>.</p>
+<p>Die beiden Antworten können sich unterscheiden. Ein niedrigerer Preis kann mehr Stück verkaufen und den Umsatz steigern, während er die Gesamtmarge senkt. Ein höherer Preis kann den Umsatz senken, aber die Marge verbessern, wenn die verbleibenden Stück profitabel genug sind. Der Punkt ist nicht, dass die Marge immer das einzige Ziel ist. Der Punkt ist, dass das Ziel explizit sein muss, bevor der Preis gewählt wird.</p>
+<section id="worked-example-a-private-label-cereal" class="level3">
+<h3 class="anchored" data-anchor-id="worked-example-a-private-label-cereal">Rechenbeispiel: ein Eigenmarken-Müsli</h3>
+<p>Nehmen wir ein Eigenmarken-Müsli mit diesen Parametern:</p>
+<ol type="1">
+<li>Aktueller Preis: $3.99</li>
+<li>Variable Kosten: $2.20</li>
+<li>Aktuelle Stückzahl: 1,500 pro Woche</li>
+<li>Geschätzte Elastizität: <span class="math inline">\(b_1 = -1.6\)</span></li>
+</ol>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Preis</th>
+<th>Stück</th>
+<th>Umsatz</th>
+<th>Marge pro Stück</th>
+<th>Gesamtmarge</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>$3.59 (10% niedriger)</td>
+<td>1,776</td>
+<td>$6,376</td>
+<td>$1.39</td>
+<td>$2,469</td>
+</tr>
+<tr class="even">
+<td><strong>$3.99 (aktuell)</strong></td>
+<td><strong>1,500</strong></td>
+<td><strong>$5,985</strong></td>
+<td><strong>$1.79</strong></td>
+<td><strong>$2,685</strong></td>
+</tr>
+<tr class="odd">
+<td>$4.39 (10% höher)</td>
+<td>1,288</td>
+<td>$5,654</td>
+<td>$2.19</td>
+<td>$2,821</td>
+</tr>
+<tr class="even">
+<td>$4.79 (20% höher)</td>
+<td>1,121</td>
+<td>$5,369</td>
+<td>$2.59</td>
+<td>$2,903</td>
+</tr>
+</tbody>
+</table>
+<p>Die Tabelle zeigt den zentralen Zielkonflikt. Innerhalb dieser Spanne ist der Umsatz beim niedrigsten Preis am höchsten, und unter konstanter Elastizität würde er mit jeder weiteren Senkung weiter klettern. Die Marge verhält sich anders: Sie hat ein inneres Optimum bei <span class="math inline">\(P^* = C \cdot |b_1| / (|b_1| - 1)\)</span>, für diese Parameter etwa $5.87, weshalb die Gesamtmarge am oberen Ende der Tabelle mit $2,903 noch steigt. Bei 10% höherem Preis fällt der Umsatz um 5.5%, während die Marge um 5.1% steigt. Umsatz und Marge zeigen in entgegengesetzte Richtungen. Das ist die Rabattfalle: Der Rabatt steigert den Umsatz und höhlt zugleich den gesamten Deckungsbeitrag aus.</p>
+<p><a href="#fig-margin-curves" class="quarto-xref">Abbildung&nbsp;<span>3</span></a> veranschaulicht dieselbe Logik für fünf reale Dunnhumby-Produkte. In jedem Panel steigt der Umsatz weiter, während der Preis fällt, wohingegen der Deckungsbeitrag bei einem inneren Preis kippt, sodass die beiden Ziele tatsächlich auf verschiedene Entscheidungen zeigen. Für diese hochelastischen Eigenmarken-Molkereiartikel liegt der margenmaximierende Preis durchweg unter dem aktuellen Preis, weil das zusätzliche Volumen aus einer Preissenkung groß genug ist, um die Gesamtmarge zu heben. Dieselbe Formel, entgegengesetzte Richtung: Was den Ausschlag gibt, ist, ob dieses innere Optimum über oder unter dem heutigen Preis landet, und das entscheiden Elastizität und Kostenverhältnis gemeinsam.</p>
+<div id="fig-margin-curves" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Umsatz- vs. Deckungsbeitragskurven für fünf Produkte mit Markierung des aktuellen und des margenmaximierenden Preises.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-margin-curves-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part5/sec5.1/margin_optimization_curves.png" class="fig-lg img-fluid figure-img" alt="Umsatz- vs. Deckungsbeitragskurven für fünf Produkte mit Markierung des aktuellen und des margenmaximierenden Preises.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-margin-curves-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Abbildung&nbsp;3: Umsatz- vs.&nbsp;Deckungsbeitragskurven.
+</figcaption>
+</figure>
+</div>
+<p>Die Optimierung selbst ist eine eindimensionale Suche. <code>scipy.optimize.minimize_scalar</code> über die negative Margenfunktion erledigt das in wenigen Zeilen, und das Begleit-Notebook geht Schritt für Schritt hindurch.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> scipy.optimize <span class="im">import</span> minimize_scalar</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> neg_margin(price, b0, b1, variable_cost):</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Negative contribution margin (for minimization)."""</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    quantity <span class="op">=</span> b0 <span class="op">*</span> price <span class="op">**</span> b1</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">-</span>(price <span class="op">-</span> variable_cost) <span class="op">*</span> quantity</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>result <span class="op">=</span> minimize_scalar(</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    neg_margin,</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    bounds<span class="op">=</span>(<span class="fl">2.50</span>, <span class="fl">6.00</span>),</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    method<span class="op">=</span><span class="st">"bounded"</span>,</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    args<span class="op">=</span>(b0_fitted, b1_fitted, <span class="fl">2.20</span>),</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>optimal_price <span class="op">=</span> result.x</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>optimal_margin <span class="op">=</span> <span class="op">-</span>result.fun</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Optimal price: $</span><span class="sc">{</span>optimal_price<span class="sc">:.2f}</span><span class="ss">"</span>)</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Max weekly margin: $</span><span class="sc">{</span>optimal_margin<span class="sc">:,.0f}</span><span class="ss">"</span>)</span></code></pre></div><button title="In die Zwischenablage kopieren" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Ein Vorbehalt überträgt sich aus der Annahme konstanter Elastizität: Die Margenkurve hat dieses innere Optimum nur, wenn die Nachfrage elastisch ist (<span class="math inline">\(|b_1| &gt; 1\)</span>). Für einen unelastischen Artikel impliziert das Modell, dass die Marge mit dem Preis immer weiter steigt, sodass ein beschränkter Optimierer einfach die Obergrenze zurückgibt: ein Signal, die Anpassung noch einmal zu prüfen, kein Preis, den man setzen sollte. Das Begleit-Notebook optimiert daher nur Artikel mit dem Urteil “Usable” und <span class="math inline">\(b_1 &lt; -1\)</span>.</p>
+<p><strong>Begleit-Notebook:</strong> <code>sec5.1_price_elasticity.ipynb</code> behandelt das Laden der Daten, Qualitätsprüfungen, die Elastizitätsschätzung in zwei Durchgängen und die Sensitivitätstabelle.<br>
+<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part5-commercial-analytics/sec5.1_price_elasticity.ipynb">Auf GitHub ansehen</a></p>
+</section>
+</section>
+<section id="sec-segment-elasticity" class="level2">
+<h2 class="anchored" data-anchor-id="sec-segment-elasticity">Die Elastizität variiert mit der Produktrolle</h2>
+<p>Dieselbe Kategorie kann Produkte mit sehr unterschiedlichen Rollen für den Käufer enthalten. In der Kategorie Fluid Milk Products sind eine Gallone Vollmilch, eine Einzelportion Schokomilch und ein Quart Kaffeesahne keine austauschbaren Preisentscheidungen. Sie mögen in derselben groben Warengruppe sitzen, aber Käufer kaufen sie zu unterschiedlichen Anlässen und vergleichen sie mit unterschiedlichen Alternativen.</p>
+<p>Deshalb sollten Schätzungen auf SKU-Ebene nur zu vergleichbaren SKU-Gruppen aggregiert werden, etwa derselben Unterwarengruppe. Das Ziel ist nicht, so viele Segmente wie möglich zu schaffen. Das Ziel ist, nicht Produkte zusammenzumitteln, deren Preisreaktion unterschiedlich sein sollte.</p>
+<div id="fig-product-role-elasticity" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Stückgewichtete mittlere Preiselastizität nach Produktrolle innerhalb der Kategorie Fluid Milk, von hochelastisch bis nahezu unelastisch.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-product-role-elasticity-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part5/sec5.1/product_role_elasticity.png" class="fig-lg img-fluid figure-img" alt="Stückgewichtete mittlere Preiselastizität nach Produktrolle innerhalb der Kategorie Fluid Milk, von hochelastisch bis nahezu unelastisch.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-product-role-elasticity-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Abbildung&nbsp;4: Mittlere Preiselastizität nach Produktrolle.
+</figcaption>
+</figure>
+</div>
+<p>Bevor Sie eine Preisregel auf eine ganze Kategorie anwenden, prüfen Sie, ob die wichtigsten Produktrollen unterschiedlich reagieren. Tun sie das, ist die durchschnittliche Elastizität keine Preisregel. Sie ist eine Warnung, dass die Kategorie sorgfältiger aufgeteilt werden muss.</p>
+</section>
+<section id="sec-elasticity-pitfalls" class="level2">
+<h2 class="anchored" data-anchor-id="sec-elasticity-pitfalls">Häufige Fallstricke bei der Preiselastizität</h2>
+<p><strong>Endogenität.</strong> Preise werden nicht zufällig gesetzt. Erhöht ein Händler die Preise in Phasen hoher Nachfrage wie zum Schulanfang, ist die beobachtete Elastizität in Richtung null verzerrt, weil hohe Preise und hohe Nachfrage aus Gründen zusammenfallen, die nichts mit der Preissetzung zu tun haben. Das ist dasselbe Selektionsverzerrungsproblem wie in Teil 3. Begegnen Sie ihm mit Instrumentvariablen, randomisierten Preisexperimenten oder quasi-experimentellen Designs.</p>
+<p><strong>Gemeinsame Zeitstruktur.</strong> Preis und Stückzahlen tragen beide Saisonalität, Promotionskalender und Trend in sich, sodass eine Regression auf rohen Wochenreihen diese gemeinsame Struktur statt einer Preisreaktion aufgreifen kann. Zwei Reihen, die lediglich einen Kalender teilen, können stark genug korrelieren, um wie eine Nachfragekurve auszusehen. Holen Sie den Kalender ins Modell: Wochen- oder Monatsindikatoren, Promotionsflags und einen Trendterm, damit der Preiskoeffizient gegen sie geschätzt wird und nicht durch sie hindurch. Die Anpassung mit zwei Variablen in diesem Kapitel tut nichts davon; behandeln Sie ihre Elastizitäten also als dieser Verzerrung ausgesetzt, bis eine Spezifikation mit Kalender sie bestätigt.</p>
+<p><strong>Referenzpreiseffekte.</strong> Kunden erinnern sich daran, was sie zuvor bezahlt haben. Eine Preiserhöhung verursacht meist einen größeren Volumenrückgang, als eine Preissenkung neue Käufer bringt. Der Fall “Fair and Square” von JCPenney ist das berühmte Beispiel: Der Wechsel von Promotions zu dauerhaft niedrigen Preisen auf demselben Durchschnittsniveau führte zu einem Absatzeinbruch, weil die Kunden ihren Preisanker verloren hatten.</p>
+<p><strong>Reaktion der Wettbewerber.</strong> Eine Preissenkung funktioniert nur, wenn die Wettbewerber stillhalten. In konzentrierten Kategorien ziehen die Wettbewerber typischerweise nach. Alle verkaufen etwa dasselbe Volumen, aber mit niedrigeren Margen. Dort zählt Spieltheorie mehr als Nachfragekurven.</p>
+</section>
+<section id="key-takeaways" class="level2">
+<h2 class="anchored" data-anchor-id="key-takeaways">Das Wichtigste in Kürze</h2>
+<ul>
+<li>Die Elastizität liefert die Reaktionskurve; sie wählt nicht das Ziel. Entscheiden Sie, ob Sie Stückzahlen, Umsatz oder Deckungsbeitrag optimieren. Unter einer Anpassung mit konstanter Elastizität gibt nur elastische Nachfrage der Marge ein inneres Optimum.</li>
+<li>Passen Sie auf der Granularität an, die die Entscheidung verwendet, standardmäßig SKU pro Woche, und prüfen Sie, ob Produktrollen unterschiedlich reagieren, bevor Sie überall eine einzige Preisregel anwenden.</li>
+<li>Eine geschätzte Elastizität ist ein Beobachtungsergebnis, keine universelle Eigenschaft des Produkts. Endogenität, Promotions und Fehlbestände können eine Preisreaktionskurve verlässlicher aussehen lassen, als sie ist.</li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Kopiert");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Kopiert");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/marketing-science-in-python\.com\/de\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../part5/_part5.html" class="pagination-link" aria-label="Teil 5. Kommerzielle Analytik">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Teil 5. Kommerzielle Analytik</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../part5/sec5.2-assortment-optimization.html" class="pagination-link" aria-label="5.2 Sortimentsoptimierung">
+        <span class="nav-page-text"><span class="chapter-title">5.2 Sortimentsoptimierung</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

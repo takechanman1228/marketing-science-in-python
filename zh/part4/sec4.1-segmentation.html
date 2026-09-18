@@ -1,0 +1,1375 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-Hans" xml:lang="zh-Hans"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="能够落地的客户细分：十分位与 RFM、K-Means 行为聚类、BERTopic 嵌入向量，以及如何判断一套细分是否足够好。">
+
+<title>用 Python 进行客户细分 – Marketing Science in Python</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../part4/sec4.2-clv-modeling.html" rel="next">
+<link href="../part4/_part4.html" rel="prev">
+<link href="../assets/favicon.png" rel="icon" type="image/png">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-491b769ea73b1ce4946cf8743b832a60.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-ec576e9d6a0f00bdcb4dbec60768df31.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-491b769ea73b1ce4946cf8743b832a60.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "没有结果",
+    "search-matching-documents-text": "匹配的文档",
+    "search-copy-link-title": "复制搜索链接",
+    "search-hide-matches-text": "隐藏其它匹配结果",
+    "search-more-match-text": "更多匹配结果",
+    "search-more-matches-text": "更多匹配结果",
+    "search-clear-button-title": "清除",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "取消",
+    "search-submit-button-title": "提交",
+    "search-label": "搜索"
+  }
+}</script>
+<script async="" src="https://www.googletagmanager.com/gtag/js?id=G-YY0LCGYER5"></script>
+
+<script type="text/javascript">
+
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
+</script>
+
+
+<link rel="stylesheet" href="../custom.css">
+<meta property="og:title" content="用 Python 进行客户细分">
+<meta property="og:description" content="能够落地的客户细分：十分位与 RFM、K-Means 行为聚类、BERTopic 嵌入向量，以及如何判断一套细分是否足够好。">
+<meta property="og:image" content="https://marketing-science-in-python.com/images/common/book_cover_online.png">
+<meta property="og:site_name" content="Marketing Science in Python">
+<meta property="og:image:alt" content="抽象数据流汇聚成几何网络的封面">
+<meta name="twitter:title" content="用 Python 进行客户细分">
+<meta name="twitter:description" content="能够落地的客户细分：十分位与 RFM、K-Means 行为聚类、BERTopic 嵌入向量，以及如何判断一套细分是否足够好。">
+<meta name="twitter:image" content="https://marketing-science-in-python.com/images/common/book_cover_online.png">
+<meta name="twitter:image:alt" content="抽象数据流汇聚成几何网络的封面">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://marketing-science-in-python.com/zh/part4/sec4.1-segmentation.html">
+<!-- msbook-i18n-head:start -->
+<link rel="alternate" hreflang="en" href="https://marketing-science-in-python.com/part4/sec4.1-segmentation.html">
+<link rel="alternate" hreflang="ja" href="https://marketing-science-in-python.com/ja/part4/sec4.1-segmentation.html">
+<link rel="alternate" hreflang="fr" href="https://marketing-science-in-python.com/fr/part4/sec4.1-segmentation.html">
+<link rel="alternate" hreflang="de" href="https://marketing-science-in-python.com/de/part4/sec4.1-segmentation.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://marketing-science-in-python.com/zh/part4/sec4.1-segmentation.html">
+<link rel="alternate" hreflang="x-default" href="https://marketing-science-in-python.com/part4/sec4.1-segmentation.html">
+<!-- msbook-i18n-head:end -->
+</head>
+
+<body class="nav-sidebar floating quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part4/_part4.html">第 4 部分：客户分析</a></li><li class="breadcrumb-item"><a href="../part4/sec4.1-segmentation.html"><span class="chapter-title">4.1 客户细分</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <!-- msbook-language-switch-mobile:start -->
+<div class="msbook-language-switch-mobile" aria-label="Language"><a lang="en" hreflang="en" href="../../part4/sec4.1-segmentation.html" onclick="this.hash=window.location.hash">EN</a><span aria-hidden="true"> | </span><a lang="ja" hreflang="ja" href="../../ja/part4/sec4.1-segmentation.html" onclick="this.hash=window.location.hash">日本語</a><span aria-hidden="true"> | </span><a lang="fr" hreflang="fr" href="../../fr/part4/sec4.1-segmentation.html" onclick="this.hash=window.location.hash">FR</a><span aria-hidden="true"> | </span><a lang="de" hreflang="de" href="../../de/part4/sec4.1-segmentation.html" onclick="this.hash=window.location.hash">DE</a><span aria-hidden="true"> | </span><span lang="zh-Hans" aria-current="page">中文</span></div>
+<!-- msbook-language-switch-mobile:end -->
+<button type="button" class="btn quarto-search-button" aria-label="搜索" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">Marketing Science in Python</a> 
+        <div class="sidebar-tools-main tools-wide">
+    <a href="https://github.com/takechanman1228/marketing-science-in-python" title="源代码" class="quarto-navigation-tool px-1" aria-label="源代码"><i class="bi bi-github"></i></a>
+    <div class="dropdown">
+      <a href="" title="Share" id="quarto-navigation-tool-dropdown-0" class="quarto-navigation-tool dropdown-toggle px-1" data-bs-toggle="dropdown" aria-expanded="false" role="link" aria-label="Share"><i class="bi bi-share"></i></a>
+      <ul class="dropdown-menu" aria-labelledby="quarto-navigation-tool-dropdown-0">
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://twitter.com/intent/tweet?url=|url|">
+              <i class="bi bi-twitter pe-1"></i>
+            Twitter
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://www.linkedin.com/sharing/share-offsite/?url=|url|">
+              <i class="bi bi-linkedin pe-1"></i>
+            LinkedIn
+            </a>
+          </li>
+      </ul>
+    </div>
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="切换深色模式"><i class="bi"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="搜索"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">前言</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part1/_part1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">第 1 部分：引言</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1/sec1.1-what-is-marketing-science.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">1.1 什么是营销科学？</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1/sec1.2-data-landscape.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">1.2 理解营销数据</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part2/_part2.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">第 2 部分：为更好的决策而分析</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.1-right-question.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.1 界定正确的问题</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.2-kpi-design.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.2 为诊断而设计 KPI</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.3-storytelling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.3 把数据变成故事</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part3/_part3.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">第 3 部分：面向营销的因果推断</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.1-thinking-causally.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.1 因果思维</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.2-ab-testing.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.2 A/B 测试设计</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.3-quasi-experiments.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.3 准实验</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.4-causal-impact.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.4 基于时间序列的因果影响分析</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.5-meta-learners.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.5 估计处理效应的元学习器</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.6-uplift-modeling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.6 用于定向投放的增益建模</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part4/_part4.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">第 4 部分：客户分析</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part4/sec4.1-segmentation.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">4.1 客户细分</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part4/sec4.2-clv-modeling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">4.2 客户终身价值建模</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part5/_part5.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">第 5 部分：商业分析</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.1-price-elasticity.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.1 价格弹性与定价决策</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.2-assortment-optimization.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.2 产品品类组合优化</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.3-sales-forecasting.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.3 销售预测与情景规划</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part6/_part6.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">第 6 部分：媒体投资与优化</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.1-media-measurement-problem.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.1 媒体测量问题</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.2-mmm-fundamentals.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.2 构建并优化一个 MMM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.3-incrementality-experiments.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.3 增量效应实验</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.4-mmm-calibration.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.4 用实验校准 MMM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.5-when-tools-disagree.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.5 当测量工具意见不一时如何决策</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendix/further-reading.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">参考文献与延伸阅读</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendix/notebooks.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Notebook 与代码</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../marketing-analytics-in-python.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">用 Python 做营销分析</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+<!-- msbook-language-switch:start -->
+<div class="msbook-language-switch" aria-label="Language"><a lang="en" hreflang="en" href="../../part4/sec4.1-segmentation.html" onclick="this.hash=window.location.hash">English</a><span aria-hidden="true"> | </span><a lang="ja" hreflang="ja" href="../../ja/part4/sec4.1-segmentation.html" onclick="this.hash=window.location.hash">日本語</a><span aria-hidden="true"> | </span><a lang="fr" hreflang="fr" href="../../fr/part4/sec4.1-segmentation.html" onclick="this.hash=window.location.hash">Français</a><span aria-hidden="true"> | </span><a lang="de" hreflang="de" href="../../de/part4/sec4.1-segmentation.html" onclick="this.hash=window.location.hash">Deutsch</a><span aria-hidden="true"> | </span><span lang="zh-Hans" aria-current="page">中文</span></div>
+<!-- msbook-language-switch:end -->
+
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">目录</h2>
+   
+  <ul>
+  <li><a href="#sec-behavioral-vs-profile" id="toc-sec-behavioral-vs-profile" class="nav-link active" data-scroll-target="#sec-behavioral-vs-profile">行为变量与画像变量</a></li>
+  <li><a href="#sec-value-tiers" id="toc-sec-value-tiers" class="nav-link" data-scroll-target="#sec-value-tiers">从简单开始：十分位与 RFM</a>
+  <ul class="collapse">
+  <li><a href="#decile-analysis" id="toc-decile-analysis" class="nav-link" data-scroll-target="#decile-analysis">十分位分析</a></li>
+  <li><a href="#rfm-analysis" id="toc-rfm-analysis" class="nav-link" data-scroll-target="#rfm-analysis">RFM 分析</a></li>
+  </ul></li>
+  <li><a href="#sec-kmeans" id="toc-sec-kmeans" class="nav-link" data-scroll-target="#sec-kmeans">使用 K-Means 进行行为聚类</a></li>
+  <li><a href="#sec-embedding" id="toc-sec-embedding" class="nav-link" data-scroll-target="#sec-embedding">使用 BERTopic 的基于嵌入向量的细分</a>
+  <ul class="collapse">
+  <li><a href="#why-bertopic" id="toc-why-bertopic" class="nav-link" data-scroll-target="#why-bertopic">为什么选 BERTopic？</a></li>
+  <li><a href="#constructing-the-customer-document" id="toc-constructing-the-customer-document" class="nav-link" data-scroll-target="#constructing-the-customer-document">构建客户文档</a></li>
+  <li><a href="#reading-the-output" id="toc-reading-the-output" class="nav-link" data-scroll-target="#reading-the-output">解读输出</a></li>
+  <li><a href="#when-one-theme-dominates" id="toc-when-one-theme-dominates" class="nav-link" data-scroll-target="#when-one-theme-dominates">当一个主题占据主导</a></li>
+  <li><a href="#the-llm-naming-trap" id="toc-the-llm-naming-trap" class="nav-link" data-scroll-target="#the-llm-naming-trap">LLM 命名陷阱</a></li>
+  </ul></li>
+  <li><a href="#sec-segment-validation" id="toc-sec-segment-validation" class="nav-link" data-scroll-target="#sec-segment-validation">你的细分够好吗？</a></li>
+  <li><a href="#sec-method-cheat-sheet" id="toc-sec-method-cheat-sheet" class="nav-link" data-scroll-target="#sec-method-cheat-sheet">方法速查表</a></li>
+  <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways">要点</a></li>
+  </ul>
+<div class="quarto-code-links"><h2>代码链接</h2><ul><li><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_traditional_segmentation.ipynb"><i class="bi bi-github"></i>sec4.1_traditional_segmentation.ipynb</a></li><li><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_semantic_segmentation.ipynb"><i class="bi bi-github"></i>sec4.1_semantic_segmentation.ipynb</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part4/_part4.html">第 4 部分：客户分析</a></li><li class="breadcrumb-item"><a href="../part4/sec4.1-segmentation.html"><span class="chapter-title">4.1 客户细分</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span id="sec-segmentation" class="quarto-section-identifier"><span class="chapter-title">4.1 客户细分</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="translation-notice">
+<p><strong>关于中文版</strong><br>
+本页是英文版 <em>Marketing Science in Python</em> 的AI翻译。英文版为正式版本，如有出入，以英文版为准。代码、Notebook 和图片中的文字保持英文。 <a href="../../part4/sec4.1-segmentation.html" class="translation-source-link">阅读英文版</a></p>
+</div>
+<p>一个客户细分项目应该产出你的团队真正能用的东西，而不只是一份演示文稿。真正的交付物是一个可以直接接入你的 CRM 和广告平台的 <code>segment_id</code>，外加每个细分群体的一份简明简报：他们是谁、为什么重要，以及你的团队应该采取什么行动。</p>
+<p>本章分三步讲解如何构建这样的成果：</p>
+<ol type="1">
+<li>首先，按当前价值给客户排序。十分位分析和 RFM（最近购买时间 Recency、购买频率 Frequency、消费金额 Monetary）提供了一种按价值快速细分的方法。</li>
+<li>其次，按行为给客户分组。行为聚类能发现仅靠价值层级无法捕捉的模式。</li>
+<li>最后，加入购买的含义。基于嵌入向量的细分展示客户实际购买的是什么，而不只是花了多少钱。</li>
+</ol>
+<section id="sec-behavioral-vs-profile" class="level2">
+<h2 class="anchored" data-anchor-id="sec-behavioral-vs-profile">行为变量与画像变量</h2>
+<p>构建客户细分时，变量大致分为两类。行为变量描述客户做了什么：最近购买时间、购买频率、消费金额、购买过的品类、产品广度、退货以及对折扣的依赖程度。画像变量描述他们是谁，或者你能在哪里触达他们：年龄、收入、家庭构成、地理位置、会员等级和渠道偏好。</p>
+<p>对营销细分而言，行为变量是更牢靠的基础。一个人浏览过什么、买过什么，或者相似客户选择了什么，通常比人口统计特征更能预测其下一步行动。仅依赖人口统计特征，比如“这款产品卖给 30 多岁的男性”或“这个优惠给高收入人群”，其信号远弱于客户真实的购买历史。</p>
+<p>画像变量仍然有其作用。在构建好细分群体之后使用它们，来理解每个群体里都是谁、在哪里触达他们，以及如何调整沟通方式。</p>
+</section>
+<section id="sec-value-tiers" class="level2">
+<h2 class="anchored" data-anchor-id="sec-value-tiers">从简单开始：十分位与 RFM</h2>
+<p>最简单的方法是基于规则的：由你来定义切分点，而不是依赖算法。十分位分析和 RFM 是最常见的例子。</p>
+<section id="decile-analysis" class="level3">
+<h3 class="anchored" data-anchor-id="decile-analysis">十分位分析</h3>
+<p>十分位分析按营收把客户切成十个人数相等的组。其分布往往符合帕累托法则：一小群客户贡献了大部分营收。最高的十分位获得留存和 VIP 待遇。接下来的三个十分位是增长型营销活动的主要目标。中间三个十分位接受低成本的自动化培育，最低的三个则被排除在高成本优惠之外。你可以很快搭建起这套方案，并给团队一份清晰的行动计划。</p>
+<div id="fig-decile-distribution" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="客户价值集中在最高的几个十分位，排名前 20% 的客户贡献了超过一半的营收。">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-decile-distribution-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.1/decile_distribution.png" class="fig-md img-fluid figure-img" alt="客户价值集中在最高的几个十分位，排名前 20% 的客户贡献了超过一半的营收。">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-decile-distribution-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;1: 典型的客户价值十分位分布。
+</figcaption>
+</figure>
+</div>
+</section>
+<section id="rfm-analysis" class="level3">
+<h3 class="anchored" data-anchor-id="rfm-analysis">RFM 分析</h3>
+<p>RFM 提供了更细致的视角。它是直复营销中使用最广泛的细分框架，因为团队本来就习惯用这些术语思考：已休眠的高消费客户、新的高频买家，以及类似的模式。</p>
+<div id="tbl-rfm-variables" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-rfm-variables-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+表&nbsp;1: RFM 变量及其解释。
+</figcaption>
+<div aria-describedby="tbl-rfm-variables-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>变量</th>
+<th>定义</th>
+<th>理想方向</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>最近购买时间（R）</td>
+<td>距客户上次购买的天数</td>
+<td>越低越好</td>
+</tr>
+<tr class="even">
+<td>购买频率（F）</td>
+<td>观察期内的购买次数</td>
+<td>越高越好</td>
+</tr>
+<tr class="odd">
+<td>消费金额（M）</td>
+<td>观察期内的总消费</td>
+<td>越高越好</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<p>独立排序法把每个变量分别切成五分位，生成一个三位数的得分（R=5，F=4，M=3），最多可得 125 个组。顺序排序法则把切分嵌套起来：先按最近购买时间切分，再在每个最近购买时间组内按购买频率切分，最后按消费金额切分，因此最近购买时间的权重最大。</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">提示</span>一次调用完成 RFM 打分
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>PyMC-Marketing 是<a href="sec4.2-clv-modeling.html">第 4.2 节</a>中用于 CLV 建模的库，它自带一个基于四分位的 <code>rfm_segments()</code> 工具，可以直接从交易表中为 R、F、M 打分并分配带名称的细分群体。它不如 K-Means 灵活，但在实践中表现良好，而且在非常大的客户群上依然很快。</p>
+</div>
+</div>
+<p>十分位和 RFM 搭建快、用起来容易。但它们只能建立价值层级，而不是完整的客户画像。两个 RFM 得分相近的客户，行为可能大相径庭：一个可能跨许多品类购买全价商品，另一个可能只在单一品类里买打折商品。要看清这些差异，你需要从价值层级走向更丰富的行为变量。</p>
+</section>
+</section>
+<section id="sec-kmeans" class="level2">
+<h2 class="anchored" data-anchor-id="sec-kmeans">使用 K-Means 进行行为聚类</h2>
+<p>K-Means 是一种经典的聚类算法，在营销细分中依然好用。用 StandardScaler 对特征做标准化，以免消费金额主导一切，并从 6 到 10 个行为变量开始。除了 RFM 之外，有用的补充包括平均订单金额、购物篮大小和退货率。</p>
+<p>在缩放之前先对偏态变量做对数变换。消费金额、购买频率、最近购买时间和购物篮大小通常都严重右偏：少数客户的购买量远超其他所有人。StandardScaler 只做中心化和重新缩放，所以这些长尾会保留下来。如果直接喂入原始值，K-Means 会把最初几次切分花在区分高消费者和低消费者上，基本上只是重新发现了价值层级，而它额外找到的任何一个簇都只是一小撮离群点，小到无法据此行动。对偏态特征应用 <code>log1p</code>（一条简单规则：凡是偏度大于约 1 的都做变换）能压缩长尾，这样簇反映的是行为的<em>形态</em>而非消费规模，均衡且可行动的细分群体就会浮现出来。在配套数据集上，这正是 K-Means 坍缩成三个价值层级，与把客户群拆成五个均衡、规模相当的行为群体之间的区别。</p>
+<p>选择 K 一半靠统计，一半靠判断。肘部法则有助于缩小范围，但很少能确定具体数字。在客户数据上，最明显的拐点往往出现在 K=3，而这通常只是重新找回了十分位和 RFM 已经捕捉到的价值层级（重度、一般、休眠）。要按行为而不是按价值细分，就要推进到实用的范围（通常是 4 到 8 个细分群体），并让可行动性来决定：保留那个其细分群体你的营销团队真的会区别对待的 K。如果他们无法为每个细分群体描述一种不同的行动，说明你的细分群体太多了。</p>
+<div id="fig-elbow" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="簇内变异在大约五个簇之前迅速下降，之后随着簇的增加改善得更为平缓。">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-elbow-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.1/elbow.png" class="fig-md img-fluid figure-img" alt="簇内变异在大约五个簇之前迅速下降，之后随着簇的增加改善得更为平缓。">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-elbow-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;2: 用于选择 K 的肘部图。
+</figcaption>
+</figure>
+</div>
+<p>在配套数据集上，K=5 是细分群体不再只是价值层级、开始成为简报的地方。<a href="#tbl-kmeans-segments" class="quarto-xref">表&nbsp;<span>2</span></a> 就是这次拟合的结果。占比和画像均值来自 notebook（消费、到店次数和部门数是两年总计在细分群体内的平均值）；名称和最后两项行动则是分析师对其画像热力图的解读，这一步 notebook 留给了你。</p>
+<div id="tbl-kmeans-segments" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-kmeans-segments-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+表&nbsp;2: 配套 Notebook 得出的食品杂货数据上的 K=5 细分群体。
+</figcaption>
+<div aria-describedby="tbl-kmeans-segments-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">细分群体</th>
+<th style="text-align: right;">占比</th>
+<th style="text-align: left;">画像</th>
+<th style="text-align: left;">行动</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">重度忠诚客户</td>
+<td style="text-align: right;">25%</td>
+<td style="text-align: left;">消费 $7,300，到店 209 次，17 个部门</td>
+<td style="text-align: left;">VIP 留存</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">高频小篮客户</td>
+<td style="text-align: right;">23%</td>
+<td style="text-align: left;">消费 $3,228，到店 157 次，订单 $24</td>
+<td style="text-align: left;">做大购物篮</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">偶发大篮客户</td>
+<td style="text-align: right;">22%</td>
+<td style="text-align: left;">消费 $1,938，到店 56 次，订单 $38</td>
+<td style="text-align: left;">低成本培育</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">折扣倾向客户</td>
+<td style="text-align: right;">19%</td>
+<td style="text-align: left;">消费 $1,087，折扣占比 19%，品类范围窄</td>
+<td style="text-align: left;">仅在有利润率护栏时提供优惠</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">休眠客户</td>
+<td style="text-align: right;">11%</td>
+<td style="text-align: left;">消费 $334，上次购买在 17 周前</td>
+<td style="text-align: left;">做一次低成本再激活，然后停止</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<p>名称只是速记；简报是整行。这就是要交给营销团队做下文可行动性检查的表：如果两行会收到同一个营销活动，就把它们合并。</p>
+<p>数值聚类依然会抹平产品的含义。以购买频率、消费金额、最近购买时间、品类广度和折扣依赖度作为输入，两个客户即使购买的产品截然不同，看起来也可能很相似。要捕捉这种含义，就把产品文本直接带进细分。</p>
+</section>
+<section id="sec-embedding" class="level2">
+<h2 class="anchored" data-anchor-id="sec-embedding">使用 BERTopic 的基于嵌入向量的细分</h2>
+<p>要捕捉客户实际购买的是什么，把每位客户的购买历史当作文本来处理：把他们购买过的产品描述拼接成一个字符串（客户文档），然后用嵌入模型把这个字符串转换成一个稠密向量。在这个嵌入空间里，生日蜡烛和派对餐盘靠得很近，而一把古董茶壶则离得很远，因此对向量做聚类会按购买含义而不只是购买量来划分客户。</p>
+<p>这些示例使用 UCI Online Retail II 数据集，它包含一家英国礼品零售商约一百万条交易，其自由文本的产品描述正是嵌入模型要读取的内容。我们用 BERTopic 运行整条流水线。</p>
+<div id="fig-umap-clusters" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="客户文档嵌入向量的 UMAP 投影，每个点是一位客户，颜色表示 BERTopic 发现的细分群体。">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-umap-clusters-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.1/umap_clusters.png" class="fig-md img-fluid figure-img" alt="客户文档嵌入向量的 UMAP 投影，每个点是一位客户，颜色表示 BERTopic 发现的细分群体。">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-umap-clusters-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;3: 嵌入空间中的客户文档。
+</figcaption>
+</figure>
+</div>
+<section id="why-bertopic" class="level3">
+<h3 class="anchored" data-anchor-id="why-bertopic">为什么选 BERTopic？</h3>
+<p>手工完成这条流水线意味着串联四个库：用 SentenceTransformers 嵌入文档，用 UMAP 降维，用 HDBSCAN 聚类，再用自定义代码解读结果。BERTopic 把这四者封装在一个 API 之后，并加入了让输出可用的部分：用 c-TF-IDF 提取每个细分群体的区分性关键词，用 <code>reduce_outliers()</code> 处理 HDBSCAN 未分配的客户，用 <code>transform()</code> 为新客户打分而无需重新拟合，以及一个可选的用 LLM 命名的步骤。本节余下部分就沿着这条流水线展开。</p>
+</section>
+<section id="constructing-the-customer-document" class="level3">
+<h3 class="anchored" data-anchor-id="constructing-the-customer-document">构建客户文档</h3>
+<p>例如，一位客户的文档可能长这样：</p>
+<p><code>red retrospot cake stand, party bunting, paper cups, birthday candles, cake cases</code></p>
+<p>数值模型可能只把这位客户看作高频或高消费。嵌入模型看到的是产品含义：派对用品和与庆祝相关的购买。</p>
+<p>构建客户文档就是对交易日志做一次分组加拼接：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Keep each customer's top-N products by revenue, then join the descriptions</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>prod_rev <span class="op">=</span> (</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    df.groupby([<span class="st">"CustomerID"</span>, <span class="st">"Description"</span>])[<span class="st">"Revenue"</span>].<span class="bu">sum</span>()</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    .reset_index()</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    .sort_values([<span class="st">"CustomerID"</span>, <span class="st">"Revenue"</span>], ascending<span class="op">=</span>[<span class="va">True</span>, <span class="va">False</span>])</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>top_products <span class="op">=</span> prod_rev.groupby(<span class="st">"CustomerID"</span>).head(TOP_N)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>customer_docs <span class="op">=</span> (</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    top_products.groupby(<span class="st">"CustomerID"</span>)[<span class="st">"Description"</span>]</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    .<span class="bu">apply</span>(<span class="kw">lambda</span> d: <span class="st">", "</span>.join(d))</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    .reset_index(name<span class="op">=</span><span class="st">"doc"</span>)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<p>三个实际决策对细分群体质量的影响超过其他一切。</p>
+<p>哪些产品放进去。按购买频率或营收取前 N 个商品，通常比完整购买历史效果更好。完整列表会带来一次性购买的噪声；头部商品捕捉的是客户的真实模式。</p>
+<p>是否按营收加权。高价商品出现一次与低价商品出现一次，可能会错误反映客户真正在意什么。按营收加权（按消费比例重复提及产品）能让购物篮混杂的客户的细分群体更清晰。当产品间价格差异很大时，给权重设上限或使用对数消费加权；否则一次奢侈品购买就可能主导整个文档。</p>
+<p>过滤通用产品。像“礼品卡”、“邮费”这类商品或通用 SKU 都是噪声：它们出现在所有细分群体中，稀释了关键词。通过 StockCode 的模式把它们过滤掉，或维护一个小型排除清单。仅这一步，往往就决定了细分群体是有意义还是毫无意义。</p>
+<p>对大多数零售目录来说，一个轻量的句子嵌入模型就够了。细分群体的质量更多取决于你如何设计和验证客户文档，而不是选哪个嵌入模型。该 notebook 出于可复现性使用本地的 SentenceTransformers 模型，但同样的工作流也可以使用基于 API 的嵌入模型，例如 OpenAI 的嵌入。</p>
+</section>
+<section id="reading-the-output" class="level3">
+<h3 class="anchored" data-anchor-id="reading-the-output">解读输出</h3>
+<p>那张图背后的拟合只需一次调用。本地嵌入模型把每个文档转换成向量，BERTopic 负责聚类和关键词提取：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> bertopic <span class="im">import</span> BERTopic</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sentence_transformers <span class="im">import</span> SentenceTransformer</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>embedding_model <span class="op">=</span> SentenceTransformer(<span class="st">"all-MiniLM-L6-v2"</span>)   <span class="co"># local, lightweight</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>embeddings <span class="op">=</span> embedding_model.encode(customer_docs[<span class="st">"doc"</span>].tolist())</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>topic_model <span class="op">=</span> BERTopic(embedding_model<span class="op">=</span>embedding_model)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>topics, probs <span class="op">=</span> topic_model.fit_transform(</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    customer_docs[<span class="st">"doc"</span>].tolist(), embeddings<span class="op">=</span>embeddings</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<p>配套 Notebook 显式配置了 UMAP、HDBSCAN 和 c-TF-IDF 子模型；这里是同一条流水线使用默认参数的版本。回报是每个细分群体的一份关键词指纹：</p>
+<div id="fig-bertopic-barchart" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="来自产品描述嵌入向量的每个细分群体的头部区分性关键词，这是数值型 RFM 聚类无法揭示的。">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-bertopic-barchart-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.1/bertopic_barchart.png" class="fig-md img-fluid figure-img" alt="来自产品描述嵌入向量的每个细分群体的头部区分性关键词，这是数值型 RFM 聚类无法揭示的。">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-bertopic-barchart-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;4: 每个细分群体的头部区分性关键词。
+</figcaption>
+</figure>
+</div>
+<p>把这些面板交给营销人员，他们应该能很快看出哪些品类、营销活动和创意适合每个群体。</p>
+</section>
+<section id="when-one-theme-dominates" class="level3">
+<h3 class="anchored" data-anchor-id="when-one-theme-dominates">当一个主题占据主导</h3>
+<p>真实的产品目录常常有一个覆盖大多数客户的宽泛主题，边缘则是一串界限分明的小众主题。HDBSCAN 两者都能发现，但在离群点归并之后，宽泛主题会膨胀成一个单一的巨型主题，大到无法作为一个细分群体来行动。修复方法是外科手术式的：<strong>只对巨型主题的嵌入向量</strong>运行 K-Means，把它拆成适合投放规模的子细分群体，同时把小众主题保留为探索发现。这是把“HDBSCAN 用于发现，K-Means 用于运营”的模式应用在主导簇的内部，而不是整个客户群上。当任一主题超过客户群的 50% 时，配套 Notebook 会自动执行这一步。</p>
+</section>
+<section id="the-llm-naming-trap" class="level3">
+<h3 class="anchored" data-anchor-id="the-llm-naming-trap">LLM 命名陷阱</h3>
+<p>LLM 辅助命名会让细分群体显得比实际更可信。把任何一个簇，哪怕是随机的簇，喂给 LLM 并要求它给出名称和人物画像，你都会得到一段精致而有说服力的描述。无论这个簇有没有意义，叙事听起来都很合理。</p>
+<p>两道防线：</p>
+<ul>
+<li>在阅读 LLM 的叙事之前先验证关键词证据。如果你自己在头部关键词里看不出清晰的主题，那 LLM 给的名称就是虚构。</li>
+<li>拿名称去营销团队那里检验。如果他们会为两个名称不同的细分群体写出同一份营销活动简报，那这些名称只是装饰，并无信息量。</li>
+</ul>
+<p><strong>配套 Notebook</strong>：完整可运行的代码分在两个 notebook 里，各自使用适合其方法的数据集。</p>
+<ul>
+<li><code>sec4.1_traditional_segmentation.ipynb</code>：在 Dunnhumby 的“The Complete Journey”数据集上运行十分位、RFM 和 K-Means，这也是 CLV 那一章使用的数据集，因此细分群体归属可以延续下去。<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_traditional_segmentation.ipynb">在 GitHub 上查看</a></li>
+<li><code>sec4.1_semantic_segmentation.ipynb</code>：在 UCI Online Retail II 数据集上运行嵌入流水线（客户文档构建、通用产品过滤、嵌入、BERTopic 聚类、关键词提取和 LLM 辅助命名），该数据集拥有这一方法所需的丰富产品描述。其可选的 LLM 命名步骤目前配置为使用 Anthropic，需要 <code>litellm</code> 包和一个 <code>ANTHROPIC_API_KEY</code>；没有它时该单元会跳过，其余部分照常运行。<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_semantic_segmentation.ipynb">在 GitHub 上查看</a></li>
+</ul>
+</section>
+</section>
+<section id="sec-segment-validation" class="level2">
+<h2 class="anchored" data-anchor-id="sec-segment-validation">你的细分够好吗？</h2>
+<p>三项检查，按优先级排列。</p>
+<p>可行动性最重要。把细分群体画像展示给你的营销团队。对每一对细分群体问：“你会使用不同的信息、渠道、优惠或频率吗？”如果回答是“我对两者会做同样的事”，那么无论数学上看起来多么干净，这套细分都不可行动。常见的元凶是一个在所有方面都很平均的细分群体；把它与相邻群体合并，或重新审视你的变量选择。</p>
+<p>稳定性。在两个不重叠的时间段上重新运行聚类，检查客户是否大多落在相同的细分群体中。调整兰德指数（ARI）为此给出了一个数字；如果两个时间段之间换组的客户太多，你就不能依赖它们来做营销活动。配套 Notebook 展示了这两项检查：语义 notebook 中的 ARI 计算，以及传统 notebook 中的迁移矩阵视图。</p>
+<p>在食品杂货数据上，迁移矩阵是按每年的营收五分位给客户排名，而不是重新聚类：最高五分位中有 70%、最低五分位中有 61% 的客户从一年到下一年保持不变，而中间三个五分位只有约 40% 保持不变。客户群的中部是细分归属最不可靠的地方，因此基于这些归属构建的营销活动在那里需要留出最多的余地。</p>
+<div id="fig-segment-heatmap" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="细分群体画像热力图：行是细分群体，列是基础变量，颜色表示相对总体均值的偏离。">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-segment-heatmap-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.1/bertopic_segment_heatmap.png" class="fig-md img-fluid figure-img" alt="细分群体画像热力图：行是细分群体，列是基础变量，颜色表示相对总体均值的偏离。">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-segment-heatmap-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;5: 细分群体画像热力图。
+</figcaption>
+</figure>
+</div>
+<p>规模。每个细分群体都应大到足以据此行动，但合适的下限取决于业务和营销活动：不存在通用的底线。作为粗略的指引，避免小到无法对其开展有意义营销活动的细分群体；对于宽泛的定向，这通常意味着客户群的 10% 左右，而一个真正高价值的小众群体可以是有意为之的例外。在实践中，少数几个细分群体，通常是 4 到 8 个，就足够了。</p>
+<p>细分群体建立在行为差异之上，但分配给这些细分群体的营销活动仍然需要测试。在宣布胜利之前，请回看 <a href="../part3/sec3.2-ab-testing.html">A/B 测试设计</a>。</p>
+</section>
+<section id="sec-method-cheat-sheet" class="level2">
+<h2 class="anchored" data-anchor-id="sec-method-cheat-sheet">方法速查表</h2>
+<div id="tbl-method-cheat-sheet" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-method-cheat-sheet-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+表&nbsp;3: 按方法所回答的问题来选择方法，而不是按其复杂程度。
+</figcaption>
+<div aria-describedby="tbl-method-cheat-sheet-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">问题</th>
+<th style="text-align: left;">方法</th>
+<th style="text-align: left;">输入</th>
+<th style="text-align: left;">输出</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">哪些客户现在值得更多关注？</td>
+<td style="text-align: left;">十分位 / RFM</td>
+<td style="text-align: left;">交易日志</td>
+<td style="text-align: left;">价值层级或 R/F/M 得分</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">价值层级之外还存在哪些行为模式？</td>
+<td style="text-align: left;">K-Means</td>
+<td style="text-align: left;">数值型行为特征</td>
+<td style="text-align: left;">行为细分群体标签</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">客户实际购买的是什么？</td>
+<td style="text-align: left;">基于嵌入向量的聚类</td>
+<td style="text-align: left;">由产品描述构成的客户文档</td>
+<td style="text-align: left;">带关键词指纹的基于含义的细分群体</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+</section>
+<section id="key-takeaways" class="level2">
+<h2 class="anchored" data-anchor-id="key-takeaways">要点</h2>
+<ul>
+<li>从行为出发构建细分群体，之后再引入人口统计特征来描述和触达每个群体。交付物是你的 CRM 和广告平台能用的 <code>segment_id</code>，而不是一份幻灯片。</li>
+<li>先验证可行动性，再验证稳定性和规模。如果两个细分群体会收到同一个营销活动，就把它们合并。</li>
+<li>一个有说服力的细分群体名称不是证据。LLM 会为任何簇生成一个名称，包括随机的簇，所以在信任标签之前先自己读一读头部关键词。</li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "已复制");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "已复制");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/marketing-science-in-python\.com\/zh\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../part4/_part4.html" class="pagination-link" aria-label="第 4 部分：客户分析">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">第 4 部分：客户分析</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../part4/sec4.2-clv-modeling.html" class="pagination-link" aria-label="4.2 客户终身价值建模">
+        <span class="nav-page-text"><span class="chapter-title">4.2 客户终身价值建模</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

@@ -1,0 +1,1536 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-Hans" xml:lang="zh-Hans"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="使用 PyMC-Marketing 中的 BG/NBD 与 Gamma-Gamma 框架进行 CLV 建模：传统公式为何不够用，以及如何让 CLV 发挥作用。">
+
+<title>用 Python 建模客户终身价值 – Marketing Science in Python</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../part5/_part5.html" rel="next">
+<link href="../part4/sec4.1-segmentation.html" rel="prev">
+<link href="../assets/favicon.png" rel="icon" type="image/png">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-491b769ea73b1ce4946cf8743b832a60.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-ec576e9d6a0f00bdcb4dbec60768df31.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-491b769ea73b1ce4946cf8743b832a60.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "没有结果",
+    "search-matching-documents-text": "匹配的文档",
+    "search-copy-link-title": "复制搜索链接",
+    "search-hide-matches-text": "隐藏其它匹配结果",
+    "search-more-match-text": "更多匹配结果",
+    "search-more-matches-text": "更多匹配结果",
+    "search-clear-button-title": "清除",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "取消",
+    "search-submit-button-title": "提交",
+    "search-label": "搜索"
+  }
+}</script>
+<script async="" src="https://www.googletagmanager.com/gtag/js?id=G-YY0LCGYER5"></script>
+
+<script type="text/javascript">
+
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
+</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../custom.css">
+<meta property="og:title" content="用 Python 建模客户终身价值">
+<meta property="og:description" content="使用 PyMC-Marketing 中的 BG/NBD 与 Gamma-Gamma 框架进行 CLV 建模：传统公式为何不够用，以及如何让 CLV 发挥作用。">
+<meta property="og:image" content="https://marketing-science-in-python.com/images/common/book_cover_online.png">
+<meta property="og:site_name" content="Marketing Science in Python">
+<meta property="og:image:alt" content="抽象数据流汇聚成几何网络的封面">
+<meta name="twitter:title" content="用 Python 建模客户终身价值">
+<meta name="twitter:description" content="使用 PyMC-Marketing 中的 BG/NBD 与 Gamma-Gamma 框架进行 CLV 建模：传统公式为何不够用，以及如何让 CLV 发挥作用。">
+<meta name="twitter:image" content="https://marketing-science-in-python.com/images/common/book_cover_online.png">
+<meta name="twitter:image:alt" content="抽象数据流汇聚成几何网络的封面">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://marketing-science-in-python.com/zh/part4/sec4.2-clv-modeling.html">
+<!-- msbook-i18n-head:start -->
+<link rel="alternate" hreflang="en" href="https://marketing-science-in-python.com/part4/sec4.2-clv-modeling.html">
+<link rel="alternate" hreflang="ja" href="https://marketing-science-in-python.com/ja/part4/sec4.2-clv-modeling.html">
+<link rel="alternate" hreflang="fr" href="https://marketing-science-in-python.com/fr/part4/sec4.2-clv-modeling.html">
+<link rel="alternate" hreflang="de" href="https://marketing-science-in-python.com/de/part4/sec4.2-clv-modeling.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://marketing-science-in-python.com/zh/part4/sec4.2-clv-modeling.html">
+<link rel="alternate" hreflang="x-default" href="https://marketing-science-in-python.com/part4/sec4.2-clv-modeling.html">
+<!-- msbook-i18n-head:end -->
+</head>
+
+<body class="nav-sidebar floating quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part4/_part4.html">第 4 部分：客户分析</a></li><li class="breadcrumb-item"><a href="../part4/sec4.2-clv-modeling.html"><span class="chapter-title">4.2 客户终身价值建模</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <!-- msbook-language-switch-mobile:start -->
+<div class="msbook-language-switch-mobile" aria-label="Language"><a lang="en" hreflang="en" href="../../part4/sec4.2-clv-modeling.html" onclick="this.hash=window.location.hash">EN</a><span aria-hidden="true"> | </span><a lang="ja" hreflang="ja" href="../../ja/part4/sec4.2-clv-modeling.html" onclick="this.hash=window.location.hash">日本語</a><span aria-hidden="true"> | </span><a lang="fr" hreflang="fr" href="../../fr/part4/sec4.2-clv-modeling.html" onclick="this.hash=window.location.hash">FR</a><span aria-hidden="true"> | </span><a lang="de" hreflang="de" href="../../de/part4/sec4.2-clv-modeling.html" onclick="this.hash=window.location.hash">DE</a><span aria-hidden="true"> | </span><span lang="zh-Hans" aria-current="page">中文</span></div>
+<!-- msbook-language-switch-mobile:end -->
+<button type="button" class="btn quarto-search-button" aria-label="搜索" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">Marketing Science in Python</a> 
+        <div class="sidebar-tools-main tools-wide">
+    <a href="https://github.com/takechanman1228/marketing-science-in-python" title="源代码" class="quarto-navigation-tool px-1" aria-label="源代码"><i class="bi bi-github"></i></a>
+    <div class="dropdown">
+      <a href="" title="Share" id="quarto-navigation-tool-dropdown-0" class="quarto-navigation-tool dropdown-toggle px-1" data-bs-toggle="dropdown" aria-expanded="false" role="link" aria-label="Share"><i class="bi bi-share"></i></a>
+      <ul class="dropdown-menu" aria-labelledby="quarto-navigation-tool-dropdown-0">
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://twitter.com/intent/tweet?url=|url|">
+              <i class="bi bi-twitter pe-1"></i>
+            Twitter
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://www.linkedin.com/sharing/share-offsite/?url=|url|">
+              <i class="bi bi-linkedin pe-1"></i>
+            LinkedIn
+            </a>
+          </li>
+      </ul>
+    </div>
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="切换深色模式"><i class="bi"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="搜索"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">前言</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part1/_part1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">第 1 部分：引言</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1/sec1.1-what-is-marketing-science.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">1.1 什么是营销科学？</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1/sec1.2-data-landscape.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">1.2 理解营销数据</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part2/_part2.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">第 2 部分：为更好的决策而分析</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.1-right-question.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.1 界定正确的问题</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.2-kpi-design.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.2 为诊断而设计 KPI</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.3-storytelling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.3 把数据变成故事</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part3/_part3.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">第 3 部分：面向营销的因果推断</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.1-thinking-causally.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.1 因果思维</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.2-ab-testing.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.2 A/B 测试设计</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.3-quasi-experiments.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.3 准实验</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.4-causal-impact.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.4 基于时间序列的因果影响分析</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.5-meta-learners.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.5 估计处理效应的元学习器</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.6-uplift-modeling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.6 用于定向投放的增益建模</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part4/_part4.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">第 4 部分：客户分析</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part4/sec4.1-segmentation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">4.1 客户细分</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part4/sec4.2-clv-modeling.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">4.2 客户终身价值建模</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part5/_part5.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">第 5 部分：商业分析</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.1-price-elasticity.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.1 价格弹性与定价决策</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.2-assortment-optimization.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.2 产品品类组合优化</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.3-sales-forecasting.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.3 销售预测与情景规划</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part6/_part6.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">第 6 部分：媒体投资与优化</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.1-media-measurement-problem.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.1 媒体测量问题</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.2-mmm-fundamentals.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.2 构建并优化一个 MMM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.3-incrementality-experiments.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.3 增量效应实验</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.4-mmm-calibration.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.4 用实验校准 MMM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.5-when-tools-disagree.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.5 当测量工具意见不一时如何决策</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendix/further-reading.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">参考文献与延伸阅读</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendix/notebooks.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Notebook 与代码</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../marketing-analytics-in-python.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">用 Python 做营销分析</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+<!-- msbook-language-switch:start -->
+<div class="msbook-language-switch" aria-label="Language"><a lang="en" hreflang="en" href="../../part4/sec4.2-clv-modeling.html" onclick="this.hash=window.location.hash">English</a><span aria-hidden="true"> | </span><a lang="ja" hreflang="ja" href="../../ja/part4/sec4.2-clv-modeling.html" onclick="this.hash=window.location.hash">日本語</a><span aria-hidden="true"> | </span><a lang="fr" hreflang="fr" href="../../fr/part4/sec4.2-clv-modeling.html" onclick="this.hash=window.location.hash">Français</a><span aria-hidden="true"> | </span><a lang="de" hreflang="de" href="../../de/part4/sec4.2-clv-modeling.html" onclick="this.hash=window.location.hash">Deutsch</a><span aria-hidden="true"> | </span><span lang="zh-Hans" aria-current="page">中文</span></div>
+<!-- msbook-language-switch:end -->
+
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">目录</h2>
+   
+  <ul>
+  <li><a href="#why-clv-changes-the-decision" id="toc-why-clv-changes-the-decision" class="nav-link active" data-scroll-target="#why-clv-changes-the-decision">CLV 为何改变决策</a></li>
+  <li><a href="#sec-limitations" id="toc-sec-limitations" class="nav-link" data-scroll-target="#sec-limitations">传统公式为何不够用</a></li>
+  <li><a href="#sec-btyd" id="toc-sec-btyd" class="nav-link" data-scroll-target="#sec-btyd">BTYD：BG/NBD + Gamma-Gamma 框架</a>
+  <ul class="collapse">
+  <li><a href="#bgnbd-model" id="toc-bgnbd-model" class="nav-link" data-scroll-target="#bgnbd-model">BG/NBD 模型</a></li>
+  <li><a href="#gamma-gamma-model" id="toc-gamma-gamma-model" class="nav-link" data-scroll-target="#gamma-gamma-model">Gamma-Gamma 模型</a></li>
+  </ul></li>
+  <li><a href="#sec-implementation" id="toc-sec-implementation" class="nav-link" data-scroll-target="#sec-implementation">使用 PyMC-Marketing 实现</a>
+  <ul class="collapse">
+  <li><a href="#data-and-rfm-t-summary" id="toc-data-and-rfm-t-summary" class="nav-link" data-scroll-target="#data-and-rfm-t-summary">数据与 RFM-T 汇总</a></li>
+  <li><a href="#fitting-and-estimating-clv" id="toc-fitting-and-estimating-clv" class="nav-link" data-scroll-target="#fitting-and-estimating-clv">拟合与估计 CLV</a></li>
+  <li><a href="#probability-alive-matrix" id="toc-probability-alive-matrix" class="nav-link" data-scroll-target="#probability-alive-matrix">存活概率矩阵</a></li>
+  <li><a href="#revenue-clv-profit-clv" id="toc-revenue-clv-profit-clv" class="nav-link" data-scroll-target="#revenue-clv-profit-clv">营收 CLV → 利润 CLV</a></li>
+  <li><a href="#combining-segments-and-clv" id="toc-combining-segments-and-clv" class="nav-link" data-scroll-target="#combining-segments-and-clv">结合细分群体与 CLV</a></li>
+  </ul></li>
+  <li><a href="#sec-using-clv" id="toc-sec-using-clv" class="nav-link" data-scroll-target="#sec-using-clv">让 CLV 发挥作用</a></li>
+  <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways">要点</a></li>
+  </ul>
+<div class="quarto-code-links"><h2>代码链接</h2><ul><li><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.2_clv_pymc_marketing.ipynb"><i class="bi bi-github"></i>sec4.2_clv_pymc_marketing.ipynb</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part4/_part4.html">第 4 部分：客户分析</a></li><li class="breadcrumb-item"><a href="../part4/sec4.2-clv-modeling.html"><span class="chapter-title">4.2 客户终身价值建模</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span id="sec-clv-modeling" class="quarto-section-identifier"><span class="chapter-title">4.2 客户终身价值建模</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="translation-notice">
+<p><strong>关于中文版</strong><br>
+本页是英文版 <em>Marketing Science in Python</em> 的AI翻译。英文版为正式版本，如有出入，以英文版为准。代码、Notebook 和图片中的文字保持英文。 <a href="../../part4/sec4.2-clv-modeling.html" class="translation-source-link">阅读英文版</a></p>
+</div>
+<p>大多数营销团队关注的是单次获客成本（CPA），它常与 CAC（客户获取成本）混用：CPA 越低，营销活动越好。客户终身价值（CLV），在分析和 SaaS 语境中常称为 LTV，重新框定了这个问题。它不问你能以多低的成本获取一位客户，而是问每位客户在长期内值多少钱，并用这个答案来设定 CPA 上限。</p>
+<p>本章展示如何使用概率型 BTYD 模型（在 PyMC-Marketing 中用 BG/NBD + Gamma-Gamma）在个体层面预测 CLV，以及如何把这些预测转化为预算决策。</p>
+<section id="why-clv-changes-the-decision" class="level2">
+<h2 class="anchored" data-anchor-id="why-clv-changes-the-decision">CLV 为何改变决策</h2>
+<p>设想一个通过广告和优惠券获客的时尚电商品牌。假设漏斗中有两个细分群体占主导：大学生和职场人士。首次购买的情况如下：</p>
+<ul>
+<li>大学生：获客成本 $10，购买 $100 → ROAS 10×。</li>
+<li>职场人士：获客成本 $20，购买 $100 → ROAS 5×。</li>
+</ul>
+<div id="fig-first-purchase" class="fig-sm quarto-float quarto-figure quarto-figure-center anchored" alt="学生的获客成本低于职场人士，且产生相同的首购价值，因此首单 ROAS 偏向学生。">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-first-purchase-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.2/first_purchase.png" class="fig-sm img-fluid figure-img" alt="学生的获客成本低于职场人士，且产生相同的首购价值，因此首单 ROAS 偏向学生。">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-first-purchase-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;1: 首次购买比较：学生与职场人士。
+</figcaption>
+</figure>
+</div>
+<p>只看首日 ROAS，选择似乎显而易见：把更多预算投向学生。但长期图景把结论翻转了过来。大学生在第一笔交易后就流失，因此其终身消费停留在 $100 附近。职场人士会回头并随时间花得更多，平均终身消费为 $400。突然之间，那个“昂贵”的细分群体反而成了划算的选择。</p>
+<div id="fig-long-term-comparison" class="fig-sm quarto-float quarto-figure quarto-figure-center anchored" alt="计入复购后，职场人士带来两倍的广告支出回报，而学生客户则流失了。">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-long-term-comparison-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.2/long_term_comparison.png" class="fig-sm img-fluid figure-img" alt="计入复购后，职场人士带来两倍的广告支出回报，而学生客户则流失了。">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-long-term-comparison-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;2: 计入复购之后的盈利能力。
+</figcaption>
+</figure>
+</div>
+<p>这正是 CLV 建模填补的缺口。没有它，每位客户都得到同样的 CPA 上限，也就是说为低价值客户付得太多，为高价值客户付得太少。有了它，上限随预测价值而伸缩，同样的预算就能获取更多合适的客户。</p>
+<div id="fig-cpa-adjustment" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="没有 CLV 时，固定的 CPA 会过度投资于低价值客户；有了 CLV，CPA 会随每位客户的终身价值而伸缩。">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-cpa-adjustment-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.2/cpa_adjustment.png" class="fig-md img-fluid figure-img" alt="没有 CLV 时，固定的 CPA 会过度投资于低价值客户；有了 CLV，CPA 会随每位客户的终身价值而伸缩。">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-cpa-adjustment-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;3: 固定 CPA（左）与按 CLV 伸缩的 CPA（右）。
+</figcaption>
+</figure>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">注记</span>贯穿客户生命周期的 CLV
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>CLV 在每个阶段都有用：在获客阶段，对高价值细分群体投入更多；在增长阶段，优先为高价值客户提供服务和专属优惠；在留存阶段，把挽留客户的营销活动集中在算得过账的地方。</p>
+</div>
+</div>
+<p>CLV 模型的三个目标由此直接得出：（1）在个体层面预测未来价值，（2）识别高 CLV 客户的不同之处，（3）把两者都输入到营销预算决策中。</p>
+</section>
+<section id="sec-limitations" class="level2">
+<h2 class="anchored" data-anchor-id="sec-limitations">传统公式为何不够用</h2>
+<p>教科书上的 CLV 公式有三个组成部分：</p>
+<p><span class="math display">\[
+\text{CLV} = \text{Average Order Value} \times \text{Purchase Frequency} \times \text{Customer Lifespan}
+\]</span></p>
+<p>对于一个客户每单消费 $100、每年购物 4 次、保持忠诚 3 年的时尚品牌：<span class="math inline">\(\text{CLV} = 100 \times 4 \times 3 = \$1{,}200\)</span>。简单、直观，对粗略估算业务规模很有用，但对客户层面的决策来说太粗糙了。它在三点上失效。</p>
+<div id="fig-limitations" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="传统 CLV 公式的三个局限：客户异质性、首次购买时间的差异，以及“死或活”的模糊性。">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-limitations-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.2/limitations.png" class="fig-md img-fluid figure-img" alt="传统 CLV 公式的三个局限：客户异质性、首次购买时间的差异，以及“死或活”的模糊性。">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-limitations-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;4: 传统 CLV 公式的三个局限。
+</figcaption>
+</figure>
+</div>
+<p>局限 1：客户并非人人相同。对整个客户群取平均，会同时歪曲分布的两端：</p>
+<div id="tbl-heterogeneity" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-heterogeneity-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+表&nbsp;1: $1,090 的平均 CLV 对两个群体都是歪曲。
+</figcaption>
+<div aria-describedby="tbl-heterogeneity-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">客户群体</th>
+<th style="text-align: center;">客户数</th>
+<th style="text-align: center;">平均 CLV</th>
+<th style="text-align: center;">总销售额</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">普通客户</td>
+<td style="text-align: center;">90</td>
+<td style="text-align: center;">$100</td>
+<td style="text-align: center;">$9,000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">大额购买客户</td>
+<td style="text-align: center;">10</td>
+<td style="text-align: center;">$10,000</td>
+<td style="text-align: center;">$100,000</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>合计</strong></td>
+<td style="text-align: center;"><strong>100</strong></td>
+<td style="text-align: center;"><strong>$1,090</strong></td>
+<td style="text-align: center;"><strong>$109,000</strong></td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<p>$1,090 这个平均值存在于数据中，却不描述任何人。你需要个体层面的 CLV。</p>
+<p>局限 2：首次购买时间不同。一年前开始购买的客户有整整一年的可观测数据；三个月前开始的客户则少得多。除非按在册时长做调整，否则原始的频率计数会把“参与度低”和“新来的”混为一谈。</p>
+<div id="fig-tenure" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="在不同时间开始购买的客户拥有不同的可观测窗口，使得原始频率计数具有误导性。">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-tenure-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.2/tenure.png" class="fig-md img-fluid figure-img" alt="在不同时间开始购买的客户拥有不同的可观测窗口，使得原始频率计数具有误导性。">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-tenure-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;5: 可观测客户窗口中的在册时长偏差。
+</figcaption>
+</figure>
+</div>
+<p>局限 3：死了还是活着？在订阅业务中，流失是可观测的：客户取消订阅。在零售和电商中则不然。一位客户是否算“活着”，取决于他自己的模式。每月购买的人沉默三个月是危险信号；每半年购买一次的人跳过三个月则很正常。</p>
+<div id="fig-dead-or-alive" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="距客户上次购买的同样间隔，既可能表示暂时不活跃，也可能表示永久离开，而这无法直接观测到。">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-dead-or-alive-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.2/dead_or_alive.png" class="fig-md img-fluid figure-img" alt="距客户上次购买的同样间隔，既可能表示暂时不活跃，也可能表示永久离开，而这无法直接观测到。">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-dead-or-alive-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;6: 购买模式中的死或活模糊性。
+</figcaption>
+</figure>
+</div>
+<p>这三个问题有同一个根源：单一的平均值无法代表异质的客户群。解决办法是在个体层面对 CLV 建模，而这正是 BTYD 所做的。</p>
+</section>
+<section id="sec-btyd" class="level2">
+<h2 class="anchored" data-anchor-id="sec-btyd">BTYD：BG/NBD + Gamma-Gamma 框架</h2>
+<p>Buy-Till-You-Die（BTYD）建模是两个概率模型的拼接：</p>
+<ol type="1">
+<li>BG/NBD 预测客户仍然活跃的概率及其未来交易次数。</li>
+<li>Gamma-Gamma 估计其平均订单金额。</li>
+</ol>
+<p>两者相乘，再按时间折现，你就得到了个体层面的 CLV，且每个估计值都带有可信区间。</p>
+<div id="fig-btyd-overview" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="BTYD 框架：BG/NBD 预测 P(alive) 和未来交易，Gamma-Gamma 预测订单金额；两者合起来给出 CLV。">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-btyd-overview-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.2/btyd_overview.png" class="fig-md img-fluid figure-img" alt="BTYD 框架：BG/NBD 预测 P(alive) 和未来交易，Gamma-Gamma 预测订单金额；两者合起来给出 CLV。">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-btyd-overview-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;7: BTYD 框架：BG/NBD 加 Gamma-Gamma。
+</figcaption>
+</figure>
+</div>
+<section id="bgnbd-model" class="level3">
+<h3 class="anchored" data-anchor-id="bgnbd-model">BG/NBD 模型</h3>
+<p>BG/NBD 模型假设客户生命周期中存在两个潜在过程：</p>
+<ul>
+<li>购买过程。客户活跃期间，购买遵循速率为 <span class="math inline">\(\lambda\)</span> 的泊松过程。</li>
+<li>退出过程。每次购买之后，客户有概率 <span class="math inline">\(p\)</span> 永久转为不活跃。</li>
+</ul>
+<div id="fig-bgnbd-assumptions" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="BG/NBD 把观测到的购买建模为一个持续进行的交易过程，直到一个不可观测的退出过程使客户转为不活跃。">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-bgnbd-assumptions-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.2/bgnbd_assumptions.png" class="fig-md img-fluid figure-img" alt="BG/NBD 把观测到的购买建模为一个持续进行的交易过程，直到一个不可观测的退出过程使客户转为不活跃。">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-bgnbd-assumptions-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;8: BG/NBD：带退出的购买过程。
+</figcaption>
+</figure>
+</div>
+<p><span class="math inline">\(\lambda\)</span> 和 <span class="math inline">\(p\)</span> 都因客户而异。贝叶斯层次结构处理了这一点：<span class="math inline">\(\lambda\)</span> 的值在整个客户群上服从 Gamma 分布，<span class="math inline">\(p\)</span> 的值服从 Beta 分布。模型学习总体层面的模式，同时仍然给出个体估计。</p>
+<p>一个有用的推论：客户活着的概率会随时间演变。距上次购买的间隔越长，它就越低；而新购买一到来，它又立刻跳回去。</p>
+<div id="fig-prob-alive-time" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="客户活跃的概率随无购买时间的推移而下降，然后在再次购买时急剧上升。">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-prob-alive-time-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.2/prob_alive_time.png" class="fig-md img-fluid figure-img" alt="客户活跃的概率随无购买时间的推移而下降，然后在再次购买时急剧上升。">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-prob-alive-time-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;9: P(alive) 在两次购买之间衰减并重置。
+</figcaption>
+</figure>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">提示</span>延伸阅读（BG/NBD）
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>关于包括图模型和似然函数在内的完整推导，参见 <span class="citation" data-cites="fader2005counting">Fader 等 (<a href="../appendix/further-reading.html#ref-fader2005counting" role="doc-biblioref">2005年</a>)</span>。</p>
+</div>
+</div>
+</section>
+<section id="gamma-gamma-model" class="level3">
+<h3 class="anchored" data-anchor-id="gamma-gamma-model">Gamma-Gamma 模型</h3>
+<p>Gamma-Gamma 模型估计平均订单金额。它使用两层贝叶斯层次结构：每位客户一个 Gamma 分布（其自身的消费模式），再在整个客户群上套一个 Gamma 分布（客户之间的差异）。</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">提示</span>延伸阅读（Gamma-Gamma）
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>完整推导参见 <span class="citation" data-cites="fader2013gammagamma">Fader 和 Hardie (<a href="../appendix/further-reading.html#ref-fader2013gammagamma" role="doc-biblioref">2013年</a>)</span>。</p>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">提示</span>何时 BTYD 不是合适的工具
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>BTYD 假设的是非契约型场景：流失从未被观测到，因此模型从购买间隔中推断它。在 SaaS 和订阅这类契约型场景中，流失是一个明确的取消事件，偏移 Beta-几何（sBG）模型直接使用这一信号；PyMC-Marketing 以 <code>ShiftedBetaGeoModel</code> 的形式提供了它（参见 <a href="https://www.pymc-marketing.io/en/latest/notebooks/clv/sbg.html">sBG notebook</a>）。若要用随时间变化的协变量解释流失驱动因素，请使用生存分析（Cox 比例风险模型）。最后，如果你拥有丰富的行为特征和生产级 ML 流水线，在固定预测期目标上做 ML 回归（例如 LightGBM）在准确性上可能胜过 BTYD；在切换之前，权衡它所需的数据量、重新训练与部署的工作量、特征流水线的维护、可解释性以及不确定性输出。一种实用的混合方案是把 BTYD 的输出（P(alive)、预期购买次数）作为特征喂给 ML 模型；<a href="https://github.com/takechanman1228/marketing-science-in-python/tree/main/notebooks/part4-customer-analytics/lightgbm-companion/"><code>lightgbm-companion/</code></a> 下的配套脚本展示了一个端到端的 LightGBM 实现。</p>
+</div>
+</div>
+</section>
+</section>
+<section id="sec-implementation" class="level2">
+<h2 class="anchored" data-anchor-id="sec-implementation">使用 PyMC-Marketing 实现</h2>
+<p><a href="https://github.com/pymc-labs/pymc-marketing">PyMC-Marketing</a> 构建在 <a href="https://www.pymc.io/">PyMC</a> 之上，取代了 <code>lifetimes</code> 库（现已进入维护模式）。其标志性特性是内置的不确定性量化：每个 CLV 估计值都附带 HDI 区间，因此你可以看到模型对每位客户有多大把握。</p>
+<p>CLV 模型只需要销售交易数据：客户 ID、交易日期、交易金额。两到三年的历史通常就足够了。</p>
+<div id="fig-required-data" class="fig-sm quarto-float quarto-figure quarto-figure-center anchored" alt="CLV 建模始于包含客户标识、交易日期和交易金额的交易级记录。">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-required-data-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.2/required_data.png" class="fig-sm img-fluid figure-img" alt="CLV 建模始于包含客户标识、交易日期和交易金额的交易级记录。">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-required-data-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;10: CLV 建模所需的输入数据。
+</figcaption>
+</figure>
+</div>
+<section id="data-and-rfm-t-summary" class="level3">
+<h3 class="anchored" data-anchor-id="data-and-rfm-t-summary">数据与 RFM-T 汇总</h3>
+<p>我们使用 <a href="https://www.kaggle.com/datasets/frtgnn/dunnhumby-the-complete-journey">Dunnhumby “The Complete Journey”</a> 食品杂货零售数据集，也就是传统细分 notebook（<code>sec4.1_traditional_segmentation.ipynb</code>）所用的同一数据集。这让你可以把传统细分流水线中的大约 2,500 个家庭原样带入 CLV；在标准清洗（去除负值交易和数量为零的行）和 RFM-T 构建之后，配套 Notebook 在全部 2,500 个家庭上拟合 BG/NBD，而 Gamma-Gamma 消费模型使用其中至少有一次复购的 2,497 个家庭。</p>
+<div id="tbl-rfmt" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-rfmt-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+表&nbsp;2: BTYD 模型使用的 RFM-T 指标。
+</figcaption>
+<div aria-describedby="tbl-rfmt-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: center;">指标</th>
+<th style="text-align: left;">定义</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;">最近购买时间</td>
+<td style="text-align: left;">客户首次购买与最近一次购买之间的时长</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">购买频率</td>
+<td style="text-align: left;">复购次数（总购买次数减一）</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">消费金额</td>
+<td style="text-align: left;">客户复购的平均金额（不含首次购买）</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">在册时长</td>
+<td style="text-align: left;">客户首次购买与研究期结束之间的时长</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">注记</span>这里的最近购买时间不是 RFM 的最近购买时间
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>在<a href="sec4.1-segmentation.html">第 4.1 节</a>中，最近购买时间指距上次购买的天数。在 BTYD 惯例下（PyMC-Marketing 的 <code>rfm_summary</code> 遵循这一惯例），它是客户首次购买到最近一次购买之间的时间跨度，因此这个值<em>越高</em>，意味着客户越近期仍在活跃。</p>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> datetime <span class="im">import</span> datetime, timedelta</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pymc_marketing <span class="im">import</span> clv</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Load Dunnhumby transactions and convert DAY counter to datetime</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co"># (see companion notebook for the full pipeline)</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>BASE_DATE <span class="op">=</span> datetime(<span class="dv">2012</span>, <span class="dv">1</span>, <span class="dv">1</span>)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>data[<span class="st">"date"</span>] <span class="op">=</span> data[<span class="st">"DAY"</span>].<span class="bu">apply</span>(<span class="kw">lambda</span> d: BASE_DATE <span class="op">+</span> timedelta(days<span class="op">=</span><span class="bu">int</span>(d) <span class="op">-</span> <span class="dv">1</span>))</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>data_summary <span class="op">=</span> clv.utils.rfm_summary(</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    data, <span class="st">"CustomerID"</span>, <span class="st">"date"</span>, <span class="st">"TotalSales"</span>, time_unit<span class="op">=</span><span class="st">"D"</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>data_summary.index <span class="op">=</span> data_summary[<span class="st">"customer_id"</span>]</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>配套 Notebook</strong>：<code>sec4.2_clv_pymc_marketing.ipynb</code> 在 Dunnhumby 数据集上拟合 BG/NBD 和 Gamma-Gamma 模型，估计 CLV，并分析人口统计细分群体。<br>
+<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.2_clv_pymc_marketing.ipynb">在 GitHub 上查看</a></p>
+</section>
+<section id="fitting-and-estimating-clv" class="level3">
+<h3 class="anchored" data-anchor-id="fitting-and-estimating-clv">拟合与估计 CLV</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># --- BG/NBD: purchase frequency + P(alive) ---</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>bgm <span class="op">=</span> clv.BetaGeoModel()</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>bgm.fit(data<span class="op">=</span>data_summary)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co"># --- Gamma-Gamma: average order value ---</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>nonzero <span class="op">=</span> data_summary.query(<span class="st">"frequency &gt; 0 and monetary_value &gt; 0"</span>)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>gg_data <span class="op">=</span> nonzero[[<span class="st">"customer_id"</span>, <span class="st">"frequency"</span>, <span class="st">"monetary_value"</span>]]</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>gg <span class="op">=</span> clv.GammaGammaModel()</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>gg.fit(data<span class="op">=</span>gg_data)</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co"># --- Combined CLV estimate (DCF with 1% monthly discount) ---</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>clv_estimate <span class="op">=</span> gg.expected_customer_lifetime_value(</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    transaction_model<span class="op">=</span>bgm,</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    data<span class="op">=</span>data_summary[[</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>        <span class="st">"customer_id"</span>, <span class="st">"frequency"</span>, <span class="st">"recency"</span>, <span class="st">"T"</span>, <span class="st">"monetary_value"</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    ]],</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    future_t<span class="op">=</span><span class="dv">120</span>,       <span class="co"># 120 months = 10 years</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    discount_rate<span class="op">=</span><span class="fl">0.01</span>,</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    time_unit<span class="op">=</span><span class="st">"D"</span>,</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<p>输出不仅包含点估计，还包含 HDI（最高密度区间）的上下界。在这个 API 中，<code>future_t</code> 以月为单位，而 <code>time_unit="D"</code> 告诉模型 RFM-T 输入是以天为单位的。模型会告诉你它对每位客户有多大把握，不过仅限于购买时间方面：消费的后验分布在折现之前被汇总为其均值，因此请把这些区间视为真实不确定性的下界。</p>
+<p>预测期（horizon）是一个决策，而不是默认值。这个数据集覆盖大约 23 个月，因此 120 个月的预测大约延伸到观测窗口的五倍之外。估计值不会失控，因为 BG/NBD 把客户退出内置进了预测，但这个退出率本身又是从这 23 个月中估计出来的。配套 Notebook 对同一个后验分别按 3 年、5 年和 10 年重新折现。在这个数据集上，客户排名在三者之间几乎不动，因此基于排名的定向对这些测试过的预测期不敏感；10 年估计值的中位数约为 3 年估计值的 2.23 倍，因此任何把 CLV 转化为美元上限的做法都必须说明所用的预测期。</p>
+</section>
+<section id="probability-alive-matrix" class="level3">
+<h3 class="anchored" data-anchor-id="probability-alive-matrix">存活概率矩阵</h3>
+<p>要快速了解 BG/NBD 模型学到了什么，可以看存活概率矩阵。一个轴是最近购买时间，另一个轴是购买频率，颜色表示 P(alive)。记住这里的最近购买时间是上表中的 BTYD 定义，即首次购买到最后一次购买的时间跨度，所以最近购买时间值高意味着客户直到最近还在购买，与营销 RFM 中该词的用法正好相反。四个角落讲述四个故事：忠诚回头客（高频率、高最近购买时间，购买频繁且仍然活跃）、有流失风险的忠诚客户（高频率、低最近购买时间，他们曾经买得很多，然后沉寂了）、一次性过客（低频率、低最近购买时间，获客后立即买了一两次，然后就没了动静），以及历史稀薄的客户（低频率、高最近购买时间，购买次数太少而无法确定，但最近一次购买很新，所以模型姑且往好处判断；图中把这个角落标为新客户）。</p>
+<div id="fig-prob-alive-matrix" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="按购买频率（x）和最近购买时间（y）绘制的存活概率矩阵；颜色表示每个客户位置的 P(alive)。">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-prob-alive-matrix-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.2/prob_alive_matrix.png" class="fig-lg img-fluid figure-img" alt="按购买频率（x）和最近购买时间（y）绘制的存活概率矩阵；颜色表示每个客户位置的 P(alive)。">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-prob-alive-matrix-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;11: 存活概率矩阵。
+</figcaption>
+</figure>
+</div>
+</section>
+<section id="revenue-clv-profit-clv" class="level3">
+<h3 class="anchored" data-anchor-id="revenue-clv-profit-clv">营收 CLV → 利润 CLV</h3>
+<p>Gamma-Gamma 模型估计的是每笔交易的营收。要让 CLV 对预算决策有用，需要把营收换算成利润：</p>
+<p><span class="math display">\[
+\text{CLV}_{\text{profit}} = \text{CLV}_{\text{revenue}} \times \text{Gross Margin}
+\]</span></p>
+<p>如果各产品品类的利润率差异很大，就根据购买历史计算客户专属的利润率，而不是使用一个统一的比率。</p>
+</section>
+<section id="combining-segments-and-clv" class="level3">
+<h3 class="anchored" data-anchor-id="combining-segments-and-clv">结合细分群体与 CLV</h3>
+<p>把细分那一章（第 4.1 章）的 <code>segment_id</code> 与每位客户的 CLV 估计值关联起来。这样你就得到了本部分一直在构建的运营表：这是什么样的客户、他们值多少钱，以及企业应该为他们做什么。</p>
+<p>人口统计特征仍然有助于描述或触达一个细分群体，但主要的决策层是行为细分群体 × 预测价值。配套 Notebook 把 CLV 估计值与 Dunnhumby 的 <code>hh_demographic.csv</code> 关联起来，让你可以沿着收入等人口统计维度刻画每个细分群体：这对挑选创意和渠道有用，对设定预算则用处不大。</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">提示</span>细分群体专属的消费模型
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>PyMC Labs 报告的一种生产实践：当各细分群体的消费分布差异显著时，测试细分群体专属的 Gamma-Gamma 模型，同时让交易模型在全体客户上保持合并。只在校准期上构建细分群体，并在样本外与合并模型比较；否则，由消费金额派生的细分群体会与它们所输入的消费模型共享信息。</p>
+</div>
+</div>
+</section>
+</section>
+<section id="sec-using-clv" class="level2">
+<h2 class="anchored" data-anchor-id="sec-using-clv">让 CLV 发挥作用</h2>
+<p>一旦你有了每位客户的 <code>clv_estimate</code>，三个应用几乎是白送的。这些模式适用于任何 CLV 得分：下游系统只需要一个客户 ID 和一个数字。</p>
+<ol type="1">
+<li>用于广告出价的 CPA 上限</li>
+</ol>
+<p>把最大 CPA 设为预测利润 CLV 的一个比例：</p>
+<p><span class="math display">\[
+\text{Allowable CPA} = \text{CLV}_{\text{profit}} \times \text{Target acquisition ratio}
+\]</span></p>
+<p>如果一个细分群体的预测利润 CLV 为 $200，而你的目标获客比率是 33%，那么最大 CPA 就是 $66。在不确定性下出价时，使用预测利润 CLV 的保守下界而不是均值。许多广告平台可以接收价值信号用于基于价值的出价或受众规则，但具体实现取决于平台。</p>
+<ol start="2" type="1">
+<li>用于 CRM 的流失预警</li>
+</ol>
+<p>标记那些 P(alive) 在 30 天内下降超过 30 个百分点的客户。信号在于变化速率，而不是绝对水平。一位 P(alive) 在一个月内从 0.85 跌到 0.40 的客户，比一位六个月来稳定在 0.35 的客户紧急得多。前者正在脱离；后者只是一位低频买家。</p>
+<ol start="3" type="1">
+<li>用于财务部门的群组预测</li>
+</ol>
+<p>财务部门按预算周期而不是按客户生命周期做规划，因此要按获客群组（cohort）汇总个体 CLV 估计值，并预测 12、24 和 36 个月的营收。附上 HDI 区间，让财务部门知道这些是概率性估计，而不是固定目标。这就是你回答“我们 Q3 获客支出的预期回报是多少？”的方式，而不必让 CFO 去学 BG/NBD。</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">提示</span>监控
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>按群组比较 3、6 和 12 个月时的预测营收与实际营收。如果比率偏离超过 ±20%，就重新训练。同时检查 CLV 预测是否对受保护群体存在偏差：在服务不足的细分群体上训练出的模型会通过预测更低的 CLV、设定更低的获客出价而延续这种偏差。</p>
+</div>
+</div>
+</section>
+<section id="key-takeaways" class="level2">
+<h2 class="anchored" data-anchor-id="key-takeaways">要点</h2>
+<ul>
+<li>CLV 用与每位客户价值成比例的支出取代了统一的 CPA 目标。平均值存在于数据中，却不描述任何人。</li>
+<li>在非契约型场景中，BG/NBD 仅凭交易数据对未来购买建模，Gamma-Gamma 对消费建模。每位客户都得到一个可信区间，因此出价时要依据保守的下界而不是均值。</li>
+<li>在 CLV 用于设定 CPA 上限之前，先把营收 CLV 换算成利润 CLV，并说明预测期：十年估计值的中位数约为三年估计值的 2.23 倍，尽管排名几乎不动。</li>
+</ul>
+
+
+<div id="refs" class="references csl-bib-body hanging-indent" role="list" style="display: none">
+<div id="ref-fader2013gammagamma" class="csl-entry" role="listitem">
+Fader, Peter S, 和 Bruce GS Hardie. 2013年. <em>The Gamma-Gamma Model of Monetary Value</em>. Wharton School, University of Pennsylvania. <a href="https://www.brucehardie.com/notes/025/gamma_gamma.pdf">https://www.brucehardie.com/notes/025/gamma_gamma.pdf</a>.
+</div>
+<div id="ref-fader2005counting" class="csl-entry" role="listitem">
+Fader, Peter S, Bruce GS Hardie, 和 Ka Lok Lee. 2005年. <span>《Counting Your Customers the Easy Way: An Alternative to the Pareto/NBD Model》</span>. <em>Marketing Science</em> 24 (2): 275～84.
+</div>
+</div>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "已复制");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "已复制");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/marketing-science-in-python\.com\/zh\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../part4/sec4.1-segmentation.html" class="pagination-link" aria-label="4.1 客户细分">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">4.1 客户细分</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../part5/_part5.html" class="pagination-link" aria-label="第 5 部分：商业分析">
+        <span class="nav-page-text">第 5 部分：商业分析</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

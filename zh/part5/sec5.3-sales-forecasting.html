@@ -1,0 +1,1480 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-Hans" xml:lang="zh-Hans"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="构建基线预测，用滚动起点回测验证它，并把它变成各营销情景下达成目标的概率。">
+
+<title>用 Python 进行销售预测 – Marketing Science in Python</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../part6/_part6.html" rel="next">
+<link href="../part5/sec5.2-assortment-optimization.html" rel="prev">
+<link href="../assets/favicon.png" rel="icon" type="image/png">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-491b769ea73b1ce4946cf8743b832a60.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-ec576e9d6a0f00bdcb4dbec60768df31.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-491b769ea73b1ce4946cf8743b832a60.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "没有结果",
+    "search-matching-documents-text": "匹配的文档",
+    "search-copy-link-title": "复制搜索链接",
+    "search-hide-matches-text": "隐藏其它匹配结果",
+    "search-more-match-text": "更多匹配结果",
+    "search-more-matches-text": "更多匹配结果",
+    "search-clear-button-title": "清除",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "取消",
+    "search-submit-button-title": "提交",
+    "search-label": "搜索"
+  }
+}</script>
+<script async="" src="https://www.googletagmanager.com/gtag/js?id=G-YY0LCGYER5"></script>
+
+<script type="text/javascript">
+
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
+</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../custom.css">
+<meta property="og:title" content="用 Python 进行销售预测">
+<meta property="og:description" content="构建基线预测，用滚动起点回测验证它，并把它变成各营销情景下达成目标的概率。">
+<meta property="og:image" content="https://marketing-science-in-python.com/images/common/book_cover_online.png">
+<meta property="og:site_name" content="Marketing Science in Python">
+<meta property="og:image:alt" content="抽象数据流汇聚成几何网络的封面">
+<meta name="twitter:title" content="用 Python 进行销售预测">
+<meta name="twitter:description" content="构建基线预测，用滚动起点回测验证它，并把它变成各营销情景下达成目标的概率。">
+<meta name="twitter:image" content="https://marketing-science-in-python.com/images/common/book_cover_online.png">
+<meta name="twitter:image:alt" content="抽象数据流汇聚成几何网络的封面">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://marketing-science-in-python.com/zh/part5/sec5.3-sales-forecasting.html">
+<!-- msbook-i18n-head:start -->
+<link rel="alternate" hreflang="en" href="https://marketing-science-in-python.com/part5/sec5.3-sales-forecasting.html">
+<link rel="alternate" hreflang="ja" href="https://marketing-science-in-python.com/ja/part5/sec5.3-sales-forecasting.html">
+<link rel="alternate" hreflang="fr" href="https://marketing-science-in-python.com/fr/part5/sec5.3-sales-forecasting.html">
+<link rel="alternate" hreflang="de" href="https://marketing-science-in-python.com/de/part5/sec5.3-sales-forecasting.html">
+<link rel="alternate" hreflang="zh-Hans" href="https://marketing-science-in-python.com/zh/part5/sec5.3-sales-forecasting.html">
+<link rel="alternate" hreflang="x-default" href="https://marketing-science-in-python.com/part5/sec5.3-sales-forecasting.html">
+<!-- msbook-i18n-head:end -->
+</head>
+
+<body class="nav-sidebar floating quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part5/_part5.html">第 5 部分：商业分析</a></li><li class="breadcrumb-item"><a href="../part5/sec5.3-sales-forecasting.html"><span class="chapter-title">5.3 销售预测与情景规划</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <!-- msbook-language-switch-mobile:start -->
+<div class="msbook-language-switch-mobile" aria-label="Language"><a lang="en" hreflang="en" href="../../part5/sec5.3-sales-forecasting.html" onclick="this.hash=window.location.hash">EN</a><span aria-hidden="true"> | </span><a lang="ja" hreflang="ja" href="../../ja/part5/sec5.3-sales-forecasting.html" onclick="this.hash=window.location.hash">日本語</a><span aria-hidden="true"> | </span><a lang="fr" hreflang="fr" href="../../fr/part5/sec5.3-sales-forecasting.html" onclick="this.hash=window.location.hash">FR</a><span aria-hidden="true"> | </span><a lang="de" hreflang="de" href="../../de/part5/sec5.3-sales-forecasting.html" onclick="this.hash=window.location.hash">DE</a><span aria-hidden="true"> | </span><span lang="zh-Hans" aria-current="page">中文</span></div>
+<!-- msbook-language-switch-mobile:end -->
+<button type="button" class="btn quarto-search-button" aria-label="搜索" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">Marketing Science in Python</a> 
+        <div class="sidebar-tools-main tools-wide">
+    <a href="https://github.com/takechanman1228/marketing-science-in-python" title="源代码" class="quarto-navigation-tool px-1" aria-label="源代码"><i class="bi bi-github"></i></a>
+    <div class="dropdown">
+      <a href="" title="Share" id="quarto-navigation-tool-dropdown-0" class="quarto-navigation-tool dropdown-toggle px-1" data-bs-toggle="dropdown" aria-expanded="false" role="link" aria-label="Share"><i class="bi bi-share"></i></a>
+      <ul class="dropdown-menu" aria-labelledby="quarto-navigation-tool-dropdown-0">
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://twitter.com/intent/tweet?url=|url|">
+              <i class="bi bi-twitter pe-1"></i>
+            Twitter
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://www.linkedin.com/sharing/share-offsite/?url=|url|">
+              <i class="bi bi-linkedin pe-1"></i>
+            LinkedIn
+            </a>
+          </li>
+      </ul>
+    </div>
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="切换深色模式"><i class="bi"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="搜索"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">前言</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part1/_part1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">第 1 部分：引言</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1/sec1.1-what-is-marketing-science.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">1.1 什么是营销科学？</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1/sec1.2-data-landscape.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">1.2 理解营销数据</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part2/_part2.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">第 2 部分：为更好的决策而分析</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.1-right-question.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.1 界定正确的问题</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.2-kpi-design.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.2 为诊断而设计 KPI</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2/sec2.3-storytelling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.3 把数据变成故事</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part3/_part3.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">第 3 部分：面向营销的因果推断</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.1-thinking-causally.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.1 因果思维</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.2-ab-testing.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.2 A/B 测试设计</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.3-quasi-experiments.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.3 准实验</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.4-causal-impact.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.4 基于时间序列的因果影响分析</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.5-meta-learners.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.5 估计处理效应的元学习器</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3/sec3.6-uplift-modeling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.6 用于定向投放的增益建模</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part4/_part4.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">第 4 部分：客户分析</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part4/sec4.1-segmentation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">4.1 客户细分</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part4/sec4.2-clv-modeling.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">4.2 客户终身价值建模</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part5/_part5.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">第 5 部分：商业分析</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.1-price-elasticity.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.1 价格弹性与定价决策</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.2-assortment-optimization.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.2 产品品类组合优化</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part5/sec5.3-sales-forecasting.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">5.3 销售预测与情景规划</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../part6/_part6.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">第 6 部分：媒体投资与优化</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.1-media-measurement-problem.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.1 媒体测量问题</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.2-mmm-fundamentals.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.2 构建并优化一个 MMM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.3-incrementality-experiments.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.3 增量效应实验</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.4-mmm-calibration.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.4 用实验校准 MMM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part6/sec6.5-when-tools-disagree.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.5 当测量工具意见不一时如何决策</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendix/further-reading.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">参考文献与延伸阅读</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendix/notebooks.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Notebook 与代码</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../marketing-analytics-in-python.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">用 Python 做营销分析</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+<!-- msbook-language-switch:start -->
+<div class="msbook-language-switch" aria-label="Language"><a lang="en" hreflang="en" href="../../part5/sec5.3-sales-forecasting.html" onclick="this.hash=window.location.hash">English</a><span aria-hidden="true"> | </span><a lang="ja" hreflang="ja" href="../../ja/part5/sec5.3-sales-forecasting.html" onclick="this.hash=window.location.hash">日本語</a><span aria-hidden="true"> | </span><a lang="fr" hreflang="fr" href="../../fr/part5/sec5.3-sales-forecasting.html" onclick="this.hash=window.location.hash">Français</a><span aria-hidden="true"> | </span><a lang="de" hreflang="de" href="../../de/part5/sec5.3-sales-forecasting.html" onclick="this.hash=window.location.hash">Deutsch</a><span aria-hidden="true"> | </span><span lang="zh-Hans" aria-current="page">中文</span></div>
+<!-- msbook-language-switch:end -->
+
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">目录</h2>
+   
+  <ul>
+  <li><a href="#sec-baseline-forecast" id="toc-sec-baseline-forecast" class="nav-link active" data-scroll-target="#sec-baseline-forecast">构建并验证基线</a>
+  <ul class="collapse">
+  <li><a href="#sec-rolling-backtest" id="toc-sec-rolling-backtest" class="nav-link" data-scroll-target="#sec-rolling-backtest">用滚动起点回测验证</a></li>
+  </ul></li>
+  <li><a href="#sec-target-probability" id="toc-sec-target-probability" class="nav-link" data-scroll-target="#sec-target-probability">达成目标的概率</a></li>
+  <li><a href="#sec-marketing-scenarios" id="toc-sec-marketing-scenarios" class="nav-link" data-scroll-target="#sec-marketing-scenarios">营销情景需要经过测量的增量</a></li>
+  <li><a href="#sec-forecast-to-decision" id="toc-sec-forecast-to-decision" class="nav-link" data-scroll-target="#sec-forecast-to-decision">从预测到决策</a></li>
+  <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways">要点</a></li>
+  </ul>
+<div class="quarto-code-links"><h2>代码链接</h2><ul><li><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part5-commercial-analytics/sec5.3_sales_forecasting.ipynb"><i class="bi bi-github"></i>sec5.3_sales_forecasting.ipynb</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part5/_part5.html">第 5 部分：商业分析</a></li><li class="breadcrumb-item"><a href="../part5/sec5.3-sales-forecasting.html"><span class="chapter-title">5.3 销售预测与情景规划</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span id="sec-sales-forecasting" class="quarto-section-identifier"><span class="chapter-title">5.3 销售预测与情景规划</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="translation-notice">
+<p><strong>关于中文版</strong><br>
+本页是英文版 <em>Marketing Science in Python</em> 的AI翻译。英文版为正式版本，如有出入，以英文版为准。代码、Notebook 和图片中的文字保持英文。 <a href="../../part5/sec5.3-sales-forecasting.html" class="translation-source-link">阅读英文版</a></p>
+</div>
+<p>现在是 9 月下旬。销售额年初至今增长了 7.3%，但年度目标要求 8.0%。还剩十三周，其中包括从黑色星期五到圣诞节这一段，这家企业全年销售中不成比例的一大块就在这段时间完成。规划团队需要决定，当前的计划够不够，还是需要额外的行动。</p>
+<div id="tbl-where-we-stand" class="quarto-float quarto-figure quarto-figure-center anchored" data-tbl-colwidths="[62,38]">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-where-we-stand-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+表&nbsp;1: 财年第 39 周末的年度进度（FY2019）
+</figcaption>
+<div aria-describedby="tbl-where-we-stand-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<colgroup>
+<col style="width: 62%">
+<col style="width: 38%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>目标与销售状况</th>
+<th>数值</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>至今销售额（39 周）</td>
+<td>$8.02M</td>
+</tr>
+<tr class="even">
+<td>年初至今同比</td>
+<td>+7.3%</td>
+</tr>
+<tr class="odd">
+<td>剩余周数</td>
+<td>13</td>
+</tr>
+<tr class="even">
+<td>去年结果</td>
+<td>$10.30M</td>
+</tr>
+<tr class="odd">
+<td>年度目标</td>
+<td>$11.12M</td>
+</tr>
+<tr class="even">
+<td>目标同比</td>
+<td>+8.0%</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<p>要做这个决定，我们需要两样东西：在当前计划下销售额可能落在哪里，以及一次额外的营销行动能把这个结果推动多少。第一个是预测问题。第二个是因果问题，它的答案来自本书的测量章节，而不是来自预测。</p>
+<p>三个术语贯穿本章。<strong>目标</strong>是业务选定的固定阈值。<strong>基线</strong>是对剩余几周的预测，前提是当前计划继续执行，塑造了历史的那些经常性促销、价格和媒体投放仍然到位。<strong>增量</strong>是一次额外的营销行动在基线之上增加的部分。对于情景 <span class="math inline">\(s\)</span>，年末结果为</p>
+<p><span class="math display">\[
+Y^{(s)}_{\text{year-end}} = Y_{\text{so far}} + R_{\text{baseline}} + \Delta_s
+\]</span></p>
+<p>即至今销售额，加上剩余几周的基线预测，加上该情景引起的增量。</p>
+<div id="fig-three-numbers" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="至今的累计销售额、一条带中位数路径的基线预测区间带、其上方一条虚线的情景路径，以及一条年度目标线。">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-three-numbers-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part5/sec5.3/three_numbers.png" class="fig-lg img-fluid figure-img" alt="至今的累计销售额、一条带中位数路径的基线预测区间带、其上方一条虚线的情景路径，以及一条年度目标线。">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-three-numbers-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;1: 目标、基线和增量放在同一张图上
+</figcaption>
+</figure>
+</div>
+<p>这个序列由作者生成：在真实的 2014 到 2019 年日历上，六个 52 周财年的每周电商收入。节假日高峰的强度逐年不同，而活动效应有一个已知的真实大小。</p>
+<p><strong>配套 Notebook：</strong> <code>sec5.3_sales_forecasting.ipynb</code> 复现了本章的每一个数字和图表（两张概念图来自 <code>regenerate_sec5_3_figures.py</code>）。<br>
+<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part5-commercial-analytics/sec5.3_sales_forecasting.ipynb">在 GitHub 上查看</a></p>
+<section id="sec-baseline-forecast" class="level2">
+<h2 class="anchored" data-anchor-id="sec-baseline-forecast">构建并验证基线</h2>
+<p>销售额同比增长 7.3%，人们很容易把这个增长率套在去年的总额上，然后称之为预测。这条捷径只有在趋势延续、并且最后一个季度与去年相似时才成立。节假日季度正是这两个假设都站不住的地方：高峰很大，而且它的大小逐年不同。季度也不是在高峰上结束的。一旦过了发货截止日，圣诞周会大幅回落，而这一周有些年份落在财年第 51 周，有些年份落在第 52 周。</p>
+<div id="fig-where-we-stand" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="六年的每周销售额，每年有一个节假日高峰，在 9 月下旬的起点处有一个标记，最后 13 周加了阴影。">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-where-we-stand-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part5/sec5.3/where_we_stand.png" class="fig-lg img-fluid figure-img" alt="六年的每周销售额，每年有一个节假日高峰，在 9 月下旬的起点处有一个标记，最后 13 周加了阴影。">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-where-we-stand-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;2: 六个财年的每周销售额
+</figcaption>
+</figure>
+</div>
+<p>所以我们需要一个针对剩余几周的模型。两个基准设定了下限，四个候选在同一段历史上与它们竞争。</p>
+<ul>
+<li><strong>朴素法。</strong> 重复最后一个观测周。它对即将开始的季节视而不见。</li>
+<li><strong>季节性朴素法。</strong> 重复去年的同一个财年周。这是把“套用去年的模式”说明白了。</li>
+<li><strong>ETS（指数平滑）。</strong> 把水平、趋势和季节性作为显式成分，有两个版本，带和不带 52 周的季节项。</li>
+<li><strong>Prophet。</strong> 一条会变化的趋势、一个年度季节和日历效应，作为独立的加法成分拟合。</li>
+<li><strong>LightGBM</strong>，基于滞后特征，以财年周以及节假日和促销日历作为输入。一个固定的、轻度正则化的对照模型，而不是调参过的生产模型。</li>
+<li><strong>TimesFM 2.5。</strong> 一个预训练的基础模型，以零样本方式使用：不做拟合，除了销售历史什么都不给。</li>
+</ul>
+<div id="fig-naive-vs-seasonal" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="到 9 月下旬起点为止的每周销售额，然后是七条 13 周的预测路径，它们在节假日高峰上分歧很大。">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-naive-vs-seasonal-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part5/sec5.3/naive_vs_seasonal.png" class="fig-lg img-fluid figure-img" alt="到 9 月下旬起点为止的每周销售额，然后是七条 13 周的预测路径，它们在节假日高峰上分歧很大。">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-naive-vs-seasonal-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;3: 每个模型对同样 13 周的预测
+</figcaption>
+</figure>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> statsmodels.tsa.exponential_smoothing.ets <span class="im">import</span> ETSModel</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> fit_ets(train, seasonal<span class="op">=</span><span class="va">None</span>):</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    model <span class="op">=</span> ETSModel(</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>        pd.Series(np.log(train)),</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>        error<span class="op">=</span><span class="st">"add"</span>, trend<span class="op">=</span><span class="st">"add"</span>, damped_trend<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>        seasonal<span class="op">=</span>seasonal, seasonal_periods<span class="op">=</span><span class="dv">52</span> <span class="cf">if</span> seasonal <span class="cf">else</span> <span class="va">None</span>,</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> model.fit(disp<span class="op">=</span><span class="va">False</span>)</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<p>七条路径在高峰上分歧很大，而图上没有任何东西告诉你该相信哪一条。在回测中打败基准的候选才成为基线。流行或新近都不能让一个模型合格。</p>
+<section id="sec-rolling-backtest" class="level3">
+<h3 class="anchored" data-anchor-id="sec-rolling-backtest">用滚动起点回测验证</h3>
+<p>通常的做法是随机的训练/测试集划分。在这份数据上，那会给 LightGBM 一个 4.5% 的 WAPE。这个数字有两个原因是误导性的。打乱顺序让模型可以在它要预测的那些周之后的周上训练，而有了滞后特征，大多数测试行在训练集里都有相邻的周。而且随机划分打分的是逐行的插值：它甚至产生不了决策所需要的那个对象，即从一个固定起点出发的 13 周路径。</p>
+<p>规则是，每个模型只使用预测起点时可获得的信息，而用于评估的每一个历史预测都遵循同样的规则。滚动起点回测强制执行了这条规则，而财年日历让它在这里干净利落。每一年都有同样的 52 周形状，所以我们现在面对的决策，也就是从 9 月下旬预测年末，可以在 FY2016、FY2017 和 FY2018 的同一个时点重演。FY2015 之前的历史太短，不足以估计 52 周的季节。这就给出了这个问题的三个复本。</p>
+<div id="fig-split-vs-rolling" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="上方是一条打乱了训练和测试的时间线，下方是三行锚定在各自起点的时间线，每行训练到其起点为止，并对接下来的 13 周打分。">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-split-vs-rolling-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part5/sec5.3/split_vs_rolling_origin.png" class="fig-lg img-fluid figure-img" alt="上方是一条打乱了训练和测试的时间线，下方是三行锚定在各自起点的时间线，每行训练到其起点为止，并对接下来的 13 周打分。">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-split-vs-rolling-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;4: 随机划分与滚动起点的对比
+</figcaption>
+</figure>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>HORIZON <span class="op">=</span> <span class="dv">13</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>SEPT_ORIGINS <span class="op">=</span> [<span class="dv">143</span>, <span class="dv">195</span>, <span class="dv">247</span>]      <span class="co"># end of fiscal week 39, FY2016..FY2018</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> origin <span class="kw">in</span> SEPT_ORIGINS:</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    train <span class="op">=</span> y[:origin]              <span class="co"># nothing after the origin, for any model</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    actual <span class="op">=</span> y[origin:origin <span class="op">+</span> HORIZON]</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> name, forecast <span class="kw">in</span> fit_all_models(train, HORIZON).items():</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>        score(name, origin, actual, forecast)</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<p>两个点指标就足以比较这些模型。每周 WAPE，即 <span class="math inline">\(\sum_t |y_t - \hat y_t| / \sum_t |y_t|\)</span>，是规划人员熟悉的那种误差。年末问题取决于 13 周总额的带符号误差，因为每周的偏差会在一个季度的总和里部分抵消。看表之前有一条注意事项。Prophet 和 LightGBM 得到了节假日和促销日历，而 TimesFM 只得到了销售历史。这个序列也是在 52 周周期上合成的，正是季节性 ETS 天生就适合拟合的形状。</p>
+<div id="tbl-backtest" class="quarto-float quarto-figure quarto-figure-center anchored" data-tbl-colwidths="[34,22,22,22]">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-backtest-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+表&nbsp;2: 在三个 9 月复本上的滚动起点回测（总额误差：平均绝对值；偏差：带符号平均值）
+</figcaption>
+<div aria-describedby="tbl-backtest-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<colgroup>
+<col style="width: 34%">
+<col style="width: 22%">
+<col style="width: 22%">
+<col style="width: 22%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>模型</th>
+<th>每周 WAPE</th>
+<th>13 周总额误差</th>
+<th>偏差</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>朴素法</td>
+<td>13.2%</td>
+<td>6.8%</td>
+<td>-6.8%</td>
+</tr>
+<tr class="even">
+<td>季节性朴素法</td>
+<td>8.6%</td>
+<td>5.5%</td>
+<td>-5.5%</td>
+</tr>
+<tr class="odd">
+<td>ETS，水平 + 趋势</td>
+<td>13.3%</td>
+<td>4.7%</td>
+<td>-4.7%</td>
+</tr>
+<tr class="even">
+<td>ETS，水平 + 趋势 + 季节</td>
+<td>7.4%</td>
+<td>2.6%</td>
+<td>-1.3%</td>
+</tr>
+<tr class="odd">
+<td>LightGBM，滞后 + 日历</td>
+<td>12.3%</td>
+<td>5.7%</td>
+<td>-5.7%</td>
+</tr>
+<tr class="even">
+<td>Prophet，日历回归量</td>
+<td>10.5%</td>
+<td>5.3%</td>
+<td>+1.8%</td>
+</tr>
+<tr class="odd">
+<td>TimesFM 2.5，零样本</td>
+<td>10.8%</td>
+<td>2.6%</td>
+<td>-1.5%</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<p>季节性主导了这个季度。季节性 ETS 在两列中误差都最低，成为基线。它也是这里唯一一个拟合后的模型能带着不确定性模拟许多条 13 周路径的候选，而下一步正需要这一点。TimesFM 只用原始序列就在 13 周总额上与它打平。Prophet 在 13 周总额上几乎没有比季节性朴素法好多少，因为它的年度季节是一个 365.25 天的周期，而这家企业是按固定的 52 周年份做规划的。在一条合成序列上，这两个结果都不能给方法排名。LightGBM 那一行承载着验证的教训：滚动起点的 12.3% 对比随机划分的 4.5%，就是泄漏的大小。</p>
+</section>
+</section>
+<section id="sec-target-probability" class="level2">
+<h2 class="anchored" data-anchor-id="sec-target-probability">达成目标的概率</h2>
+<p>现在来看回测刚刚验证过的那套流程的实时版本。在 9 月下旬之前的全部数据上拟合季节性 ETS，模拟 5,000 条完整的 13 周路径，并把每条路径的总额加到至今 $8.02M 的销售额上。</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>result <span class="op">=</span> fit_ets(y[:LIVE_ORIGIN], seasonal<span class="op">=</span><span class="st">"add"</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>paths <span class="op">=</span> simulate_paths(result, h<span class="op">=</span><span class="dv">13</span>, repetitions<span class="op">=</span><span class="dv">5000</span>)   <span class="co"># centered residual bootstrap</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>year_end <span class="op">=</span> sales_so_far <span class="op">+</span> paths.<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">0</span>)              <span class="co"># one total per path</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>p10, p50, p90 <span class="op">=</span> np.percentile(year_end, [<span class="dv">10</span>, <span class="dv">50</span>, <span class="dv">90</span>])</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>p_hit <span class="op">=</span> (year_end <span class="op">&gt;=</span> target).mean()</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<p>每周的预测误差在整个预测期内是相关的，而分位数不能相加，这就是为什么代码模拟完整路径并对每一条求和，而不是把每周的分位数叠起来。</p>
+<div id="fig-year-end-pacing" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="到第 39 周的累计销售额，然后是一条逐渐变宽的区间带和中位数路径直到第 52 周，年度目标刚好在区间带上方。">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-year-end-pacing-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part5/sec5.3/year_end_pacing.png" class="fig-lg img-fluid figure-img" alt="到第 39 周的累计销售额，然后是一条逐渐变宽的区间带和中位数路径直到第 52 周，年度目标刚好在区间带上方。">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-year-end-pacing-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;5: 当前计划下的年末进度
+</figcaption>
+</figure>
+</div>
+<p>年末预测的中位数是 $10.91M，80% 区间从 $10.79M 到 $11.05M。中位数是通常出现在演示文稿里的那个数，但它不是一个承诺。$11.12M 的目标刚好在 P90 上方，所以在当前计划下达成它的概率是 4%。这不是不可能，但显然不太可能，而团队现在有了一个数字来说明有多不可能。</p>
+<p>这个 4% 来自一个模拟出的分布，所以这个分布本身需要一次检查，就检查我们据以决策的那个量：13 周总额。检查的方法是在过去的起点重演同一套流程，问已实现的总额是否落在 80% 区间带内。在 15 个不重叠的 13 周窗口中，它有 12 次落在带内，接近名义上的 80%，而三个 9 月复本覆盖了 3 个中的 2 个。这支持的是区间带的宽度，而不是它的尾部：目标位于 P90 之外，在那里 15 个窗口不足以认证一个像 4% 这么小的数字。把答案读作个位数的低百分比，并按“显然不太可能”而不是 4.0% 来做规划。</p>
+</section>
+<section id="sec-marketing-scenarios" class="level2">
+<h2 class="anchored" data-anchor-id="sec-marketing-scenarios">营销情景需要经过测量的增量</h2>
+<p>基线分布说的是当前计划可能落在哪里。每次规划会议上的下一个问题是，一次额外的活动会不会改变答案。</p>
+<p>去年节假日促销周的销售比周围几周高出约 22%，所以人们很容易给一次额外活动填上 +22%。这个差距不是活动效应。促销安排在最强的几周，所以这 22% 中有一部分是季节性。基线已经带有经常性促销的平均效应，所以其余部分大多已经在预测里了。剩下的是促销和模型漏掉的其他一切的混合。预测说的是可能发生什么，而不是因为营销发生了什么。所以 <span class="math inline">\(\Delta_s\)</span> 来自预测之外，而且在进入模拟之前它需要两样东西：一个参照条件，即它是相对于什么的增量，以及一个不确定性分布。</p>
+<div id="tbl-scenarios" class="quarto-float quarto-figure quarto-figure-center anchored" data-tbl-colwidths="[24,38,38]">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-scenarios-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+表&nbsp;3: 情景增量及其来源
+</figcaption>
+<div aria-describedby="tbl-scenarios-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<colgroup>
+<col style="width: 24%">
+<col style="width: 38%">
+<col style="width: 38%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>情景</th>
+<th>增量</th>
+<th>数字来自哪里</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>当前计划（基线）</td>
+<td>0</td>
+<td>基线预测</td>
+</tr>
+<tr class="even">
+<td>额外的节假日活动</td>
+<td>四个活动周各 +8%（标准误 2.5 个百分点）</td>
+<td>对去年活动做的一次地理实验（<a href="../part6/sec6.3-incrementality-experiments.html">第 6.3 节</a>）或一次因果影响分析（<a href="../part3/sec3.4-causal-impact.html">第 3.4 节</a>）</td>
+</tr>
+<tr class="odd">
+<td>额外的媒体投资</td>
+<td>整个季度 +$60k（标准误 $25k）</td>
+<td>一条经校准的 MMM 响应曲线（<a href="../part6/sec6.2-mmm-fundamentals.html">第 6.2 节</a>、<a href="../part6/sec6.4-mmm-calibration.html">第 6.4 节</a>）</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<p>这些增量是形状像真实测量值的占位符。从相关章节填上每一行，或者把它去掉；像经校准的 MMM 这样的贝叶斯来源可以直接提供后验抽样。</p>
+<p>增量进入模拟时，单位很重要。活动效应是<em>相对的</em>：它乘以每条路径自己的活动周销售额，所以一个强劲的节假日季会带来按比例更大的美元提升。媒体效应以美元到达，直接相加。</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>beta <span class="op">=</span> rng.normal(<span class="fl">0.08</span>, <span class="fl">0.025</span>, size<span class="op">=</span>n_paths)        <span class="co"># campaign lift per path</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>campaign_base <span class="op">=</span> paths[CAMPAIGN_STEPS, :].<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>year_end_campaign <span class="op">=</span> sales_so_far <span class="op">+</span> paths.<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">0</span>) <span class="op">+</span> beta <span class="op">*</span> campaign_base</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>media <span class="op">=</span> rng.normal(<span class="dv">60_000</span>, <span class="dv">25_000</span>, size<span class="op">=</span>n_paths)    <span class="co"># dollars over the quarter</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>year_end_media <span class="op">=</span> sales_so_far <span class="op">+</span> paths.<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">0</span>) <span class="op">+</span> media</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="tbl-outcomes" class="quarto-float quarto-figure quarto-figure-center anchored" data-tbl-colwidths="[26,12,12,12,16,22]">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-outcomes-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+表&nbsp;4: 对照 $11.12M 目标的模拟年末结果
+</figcaption>
+<div aria-describedby="tbl-outcomes-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<colgroup>
+<col style="width: 26%">
+<col style="width: 12%">
+<col style="width: 12%">
+<col style="width: 12%">
+<col style="width: 16%">
+<col style="width: 22%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>情景</th>
+<th>P10</th>
+<th>P50</th>
+<th>P90</th>
+<th>P(达成目标)</th>
+<th>解读</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>当前计划（基线）</td>
+<td>$10.79M</td>
+<td>$10.91M</td>
+<td>$11.05M</td>
+<td>4%</td>
+<td>不太可能</td>
+</tr>
+<tr class="even">
+<td>额外的节假日活动</td>
+<td>$10.87M</td>
+<td>$11.00M</td>
+<td>$11.14M</td>
+<td>13%</td>
+<td>胜算更大，仍不太可能</td>
+</tr>
+<tr class="odd">
+<td>额外的媒体投资</td>
+<td>$10.85M</td>
+<td>$10.97M</td>
+<td>$11.11M</td>
+<td>8%</td>
+<td>有帮助，单靠它不够</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<div id="fig-year-end" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="三个相互重叠的模拟年末销售额分布，每个情景一个，年度目标处有一条垂直虚线。">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-year-end-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part5/sec5.3/year_end_scenarios.png" class="fig-md img-fluid figure-img" alt="三个相互重叠的模拟年末销售额分布，每个情景一个，年度目标处有一条垂直虚线。">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-year-end-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;6: 各情景下的模拟年末销售额
+</figcaption>
+</figure>
+</div>
+<p>活动把中位数从 $10.91M 推到 $11.00M。这张表同时呈现了改善后的胜算和仍然存在的差距，这是点预测做不到的。</p>
+</section>
+<section id="sec-forecast-to-decision" class="level2">
+<h2 class="anchored" data-anchor-id="sec-forecast-to-decision">从预测到决策</h2>
+<p>同一个模拟也回答了反向的问题：这个季度需要比基线中位数高出多少，而以前有没有发生过类似的事？</p>
+<div id="tbl-reverse" class="quarto-float quarto-figure quarto-figure-center anchored" data-tbl-colwidths="[62,38]">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-reverse-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+表&nbsp;5: 需要什么，对照发生过什么
+</figcaption>
+<div aria-describedby="tbl-reverse-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<colgroup>
+<col style="width: 62%">
+<col style="width: 38%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>比较</th>
+<th>相对基线季度的增幅</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>达成目标所需</td>
+<td>+7.2%</td>
+</tr>
+<tr class="even">
+<td>9 月最大的向上偏离</td>
+<td>+6.0%</td>
+</tr>
+<tr class="odd">
+<td>活动增量（中位数）</td>
+<td>+3.0%</td>
+</tr>
+<tr class="even">
+<td>媒体增量（中位数）</td>
+<td>+2.1%</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<p>达成目标需要一个比基线中位数高 7.2% 的季度。三个 9 月复本没有一个接近这个水平；最大的向上偏离是 6.0%，而即使两个增量加在一起也只增加约 5%。活动把胜算从 4% 提高到 13%，但目标仍然不太可能达成。</p>
+<p>团队现在有一个选择：加大投入、改变经营计划，或者修正预期。无论选哪个，这个差距都是一个可以在 9 月就据以规划的数字。它建立在一条在决策所用预测期上验证过的基线之上，也建立在预测之外测量得到的增量之上。</p>
+</section>
+<section id="key-takeaways" class="level2">
+<h2 class="anchored" data-anchor-id="key-takeaways">要点</h2>
+<ul>
+<li>在决策所用的预测期和日历时点上验证基线，只使用每个起点时可获得的信息。随机划分回答的是另一个问题。</li>
+<li>根据分布而不是点来决策。在整个预测期上模拟完整路径，把一个中位数预测变成 4% 的达标概率，它应读作个位数的低百分比，而不是一个精确的频率。</li>
+<li>情景等于基线加上一个单独测量的增量，两者各有一个参照条件和一个不确定性。促销周的销售额不是增量。</li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "已复制");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "已复制");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/marketing-science-in-python\.com\/zh\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../part5/sec5.2-assortment-optimization.html" class="pagination-link" aria-label="5.2 产品品类组合优化">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">5.2 产品品类组合优化</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../part6/_part6.html" class="pagination-link" aria-label="第 6 部分：媒体投资与优化">
+        <span class="nav-page-text">第 6 部分：媒体投资与优化</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
