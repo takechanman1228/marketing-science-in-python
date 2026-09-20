@@ -673,7 +673,7 @@ window.Quarto = {
 <p><strong>日本語版について</strong><br>
 このページは英語版 <em>Marketing Science in Python</em> のAI翻訳です。英語版を正本とし、差異がある場合は英語版を優先してください。コード、Notebook、画像内の文字は英語のままです。 <a href="../../part4/sec4.2-clv-modeling.html" class="translation-source-link">英語版を読む</a></p>
 </div>
-<p>多くのマーケティングチームは顧客獲得単価（CPA）へ注目します。CPAは顧客獲得コスト（CAC）と同じ意味で使われることが多く、CPAが低ければキャンペーンが優れていると考えます。分析やSaaSの文脈ではLTVとも呼ばれる顧客生涯価値（CLV）は、問いを捉え直します。顧客をどれだけ安く獲得できるかではなく、各顧客が時間を通じてどれだけの価値を持つかを問い、その答えでCPAの上限を設定します。</p>
+<p>多くのマーケティングチームは顧客獲得単価（CPA）へ注目します。CPAは顧客獲得コスト（CAC）と同じ意味で使われることが多く、CPAが低ければキャンペーンが優れていると考えます。分析やSaaSの文脈ではLTVとも呼ばれる顧客生涯価値（CLV）は、問いを捉え直します。各顧客が時間を通じてどれだけの価値を持つかを推定し、その推定値でセグメントごとのCPA上限を設定します。</p>
 <p>この章では、確率的BTYDモデル（PyMC-MarketingによるBG/NBD＋Gamma-Gamma）を使って個人単位のCLVを予測し、その予測を予算の意思決定へ変える方法を示します。</p>
 <section id="why-clv-changes-the-decision" class="level2">
 <h2 class="anchored" data-anchor-id="why-clv-changes-the-decision">CLVが意思決定を変える理由</h2>
@@ -692,7 +692,7 @@ window.Quarto = {
 </figcaption>
 </figure>
 </div>
-<p>初日のROASだけを見れば、大学生へより多くの予算を配分するのが明らかに思えます。しかし、長期的には結果が逆転します。大学生は初回取引後に離脱するため、生涯支出は$100付近にとどまります。社会人は再訪し、時間を通じてより多く支出し、平均生涯支出は$400です。「高価な」セグメントの方が、実際には割安だったのです。</p>
+<p>初日のROASでは大学生が優位ですが、生涯支出では順位が逆になります。大学生は初回取引後に離脱するため、生涯支出は$100付近にとどまります。社会人は再訪し、時間を通じてより多く支出し、平均生涯支出は$400です。</p>
 <div id="fig-long-term-comparison" class="fig-sm quarto-float quarto-figure quarto-figure-center anchored" alt="リピート購入を含めると、大学生顧客は離脱する一方、社会人は広告費用に対して2倍のリターンを生む">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-long-term-comparison-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -735,7 +735,7 @@ window.Quarto = {
 <p><span class="math display">\[
 \text{CLV} = \text{Average Order Value} \times \text{Purchase Frequency} \times \text{Customer Lifespan}
 \]</span></p>
-<p>1注文当たり$100を支出し、年4回購入し、3年間ロイヤル顧客であり続けるファッションブランドでは、<span class="math inline">\(\text{CLV} = 100 \times 4 \times 3 = \$1{,}200\)</span> です。単純で直感的であり、ビジネス規模の概算には役立ちますが、顧客単位の意思決定には粗すぎます。3つの点で破綻します。</p>
+<p>1注文当たり$100を支出し、年4回購入し、3年間ロイヤル顧客であり続けるファッションブランドでは、<span class="math inline">\(\text{CLV} = 100 \times 4 \times 3 = \$1{,}200\)</span> です。ビジネス規模の概算には役立ちますが、顧客単位の意思決定には粗すぎます。理由は3つあります。</p>
 <div id="fig-limitations" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="従来のCLV式が持つ3つの限界：顧客の不均一性、初回購入時期の違い、『離脱したか活動中か』の曖昧さ">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-limitations-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -786,7 +786,7 @@ window.Quarto = {
 </div>
 </figure>
 </div>
-<p>$1,090という平均はデータ内に存在しますが、誰も表していません。個人単位のCLVが必要です。</p>
+<p>全体平均の$1,090は、2つの群の違いを隠してしまいます。個人単位のCLVが必要です。</p>
 <p>限界2：初回購入時期が異なる。1年前に購入を始めた顧客には1年分の観察可能なデータがありますが、3カ月前に始めた顧客には、はるかに少ないデータしかありません。顧客期間を調整しない生の頻度は、「関与度が低い」と「新しく来た」を混同します。</p>
 <div id="fig-tenure" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="購入開始時期が異なる顧客は観察可能な期間が異なるため、生の頻度が誤解を招く">
 <figure class="quarto-float quarto-float-fig figure">
@@ -798,18 +798,18 @@ window.Quarto = {
 </figcaption>
 </figure>
 </div>
-<p>限界3：離脱したか活動中か？サブスクリプションでは、顧客が解約するため、チャーンを観察できます。小売やEコマースでは観察できません。顧客を「活動中」とみなすかどうかは、その顧客自身のパターンに依存します。毎月購入する人が3カ月沈黙すれば危険信号ですが、6カ月ごとに購入する人が3カ月空くのは正常です。</p>
+<p>限界3：チャーンが観察できない。サブスクリプションでは、顧客が解約するため、チャーンを観察できます。小売やEコマースでは観察できません。顧客を「活動中」とみなすかどうかは、その顧客自身のパターンに依存します。毎月購入する人が3カ月沈黙すれば危険信号ですが、6カ月ごとに購入する人が3カ月空くのは正常です。</p>
 <div id="fig-dead-or-alive" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="顧客の最終購入から同じ期間が空いていても、一時的な非活動または永続的な離脱を意味し、直接は観察できない">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-dead-or-alive-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="../images/part4/sec4.2/dead_or_alive.png" class="fig-md img-fluid figure-img" alt="顧客の最終購入から同じ期間が空いていても、一時的な非活動または永続的な離脱を意味し、直接は観察できない">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-dead-or-alive-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-図&nbsp;6: 購入パターンにおける、離脱したか活動中かの曖昧さ。
+図&nbsp;6: 購入パターンにおける、観察できないチャーン。
 </figcaption>
 </figure>
 </div>
-<p>3つの問題の根は同じです。一つの平均では、不均一な顧客基盤を表せません。解決策は個人単位でCLVをモデル化することであり、BTYDがまさにそれを行います。</p>
+<p>モデルは、顧客ごとの購買行動の違い、各顧客の初回購入からの経過時間、そして顧客がすでに購入をやめている可能性を考慮しなければなりません。BTYDはこの3つを一つの個人単位のモデルに組み込みます。</p>
 </section>
 <section id="sec-btyd" class="level2">
 <h2 class="anchored" data-anchor-id="sec-btyd">BTYD：BG/NBD＋Gamma-Gammaの枠組み</h2>
@@ -905,7 +905,7 @@ window.Quarto = {
 </section>
 <section id="sec-implementation" class="level2">
 <h2 class="anchored" data-anchor-id="sec-implementation">PyMC-Marketingによる実装</h2>
-<p><a href="https://github.com/pymc-labs/pymc-marketing">PyMC-Marketing</a>は<a href="https://www.pymc.io/">PyMC</a>を基盤とし、現在メンテナンスモードの <code>lifetimes</code> ライブラリを置き換えます。主な特徴は、不確実性の定量化が組み込まれていることです。すべてのCLV推定値にHDI境界が付くため、顧客ごとのモデルの確信度を確認できます。</p>
+<p><a href="https://github.com/pymc-labs/pymc-marketing">PyMC-Marketing</a>は<a href="https://www.pymc.io/">PyMC</a>を基盤とし、現在メンテナンスモードの <code>lifetimes</code> ライブラリを置き換えます。主な特徴は、不確実性の定量化が組み込まれていることです。すべてのCLV推定値にHDI境界が付くため、各顧客の推定値にどれだけの不確実性があるかを確認できます。</p>
 <p>CLVモデルに必要なのは、顧客ID、取引日、取引金額からなる売上取引だけです。通常は2〜3年分の履歴で十分です。</p>
 <div id="fig-required-data" class="fig-sm quarto-float quarto-figure quarto-figure-center anchored" alt="CLVモデリングは、顧客識別子、取引日、取引金額を含む取引単位の記録から始まる">
 <figure class="quarto-float quarto-float-fig figure">
@@ -1006,12 +1006,12 @@ window.Quarto = {
 <span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    discount_rate<span class="op">=</span><span class="fl">0.01</span>,</span>
 <span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    time_unit<span class="op">=</span><span class="st">"D"</span>,</span>
 <span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
-<p>出力には点推定値だけでなく、HDI（最高密度区間）の境界も含まれます。このAPIでは <code>future_t</code> を月単位で測定し、<code>time_unit="D"</code> によってRFM-Tの入力が日単位であることをモデルへ伝えます。各顧客についてモデルの確信度が分かりますが、対象は購入時期だけです。支出の事後分布は割引前に平均値へ要約されるため、この境界は実際の不確実性の幅に対する下限として扱います。</p>
-<p>予測期間は意思決定であり、デフォルトではありません。このデータセットは約23カ月を対象とするため、120カ月の予測は観察期間のおよそ5倍先まで進みます。BG/NBDは顧客の離脱を予測へ組み込むため推定値が際限なく増えることはありませんが、その離脱率自体も23カ月から推定されています。付属Notebookでは、同じ事後分布を3年、5年、10年で再度割り引きます。このデータセットでは3つの期間で顧客順位がほとんど変わらないため、順位に基づくターゲティングは、テストした予測期間の影響を受けません。一方、10年推定値の中央値は3年推定値の約2.23倍です。そのため、CLVを金額上限へ変える場合は、使用した予測期間を明示する必要があります。</p>
+<p>出力には点推定値だけでなく、HDI（最高密度区間）の境界も含まれます。このAPIでは <code>future_t</code> を月単位で測定し、<code>time_unit="D"</code> によってRFM-Tの入力が日単位であることをモデルへ伝えます。この境界が定量化しているのは購入時期の不確実性だけです。支出の事後分布は割引前に平均値へ要約されるため、この境界は実際の不確実性の幅に対する下限として扱います。</p>
+<p>予測期間は明示的に選びます。<code>future_t=120</code> は、そのまま受け入れてよい既定値ではありません。このデータセットは約23カ月を対象とするため、120カ月の予測は観察期間のおよそ5倍先まで進みます。BG/NBDは顧客の離脱を予測へ組み込むため推定値は有界にとどまりますが、その離脱率自体も23カ月から推定されています。付属Notebookでは、同じ事後分布を3年、5年、10年で再度割り引きます。このデータセットでは3つの期間で顧客順位がほとんど変わらないため、順位に基づくターゲティングは、テストした予測期間の影響を受けません。一方、10年推定値の中央値は3年推定値の約2.23倍です。そのため、CLVを金額上限へ変える場合は、使用した予測期間を明示する必要があります。</p>
 </section>
 <section id="probability-alive-matrix" class="level3">
 <h3 class="anchored" data-anchor-id="probability-alive-matrix">Probability Alive行列</h3>
-<p>BG/NBDモデルが学習した内容をすばやく確認する方法が、Probability Alive行列です。 一方の軸がRecency、もう一方がFrequencyで、色がP(alive)を示します。ここでのRecencyは上表のBTYD定義、すなわち初回購入から直近購入までの期間であることを思い出してください。Recencyが高いほど、顧客が最近まで購入していたことを意味し、マーケティングRFMにおける用法とは反対です。4つの隅は、4つの物語を示します。ロイヤルなリピーター（高Frequency、高Recencyで、頻繁に購入し、今も活動中）、リスクのあるロイヤル顧客（高Frequency、低Recencyで、以前は多く購入していたが沈黙した）、一度限りの通過顧客（低Frequency、低Recencyで、獲得直後に1〜2回購入し、その後沈黙した）、履歴の少ない顧客（低Frequency、高Recencyで、確信するには購入回数が少ないものの、直近の購入が新しいため、モデルは活動中の可能性を高く見る。図ではこの隅を新規顧客と表記）です。</p>
+<p>BG/NBDモデルが学習した内容をすばやく確認する方法が、Probability Alive行列です。 一方の軸がRecency、もう一方がFrequencyで、色がP(alive)を示します。ここでのRecencyは上表のBTYD定義、すなわち初回購入から直近購入までの期間であることを思い出してください。Recencyが高いほど、顧客が最近まで購入していたことを意味し、マーケティングRFMにおける用法とは反対です。4つの隅は別々に読みます。ロイヤルなリピーター（高Frequency、高Recency）は、頻繁に購入し、今も活動中です。リスクのあるロイヤル顧客（高Frequency、低Recency）は、以前は多く購入していましたが、その後沈黙しました。一度限りの通過顧客（低Frequency、低Recency）は、獲得直後に1〜2回購入し、その後止まりました。履歴の少ない顧客（低Frequency、高Recency）は、確信するには購入回数が少ないものの、直近の購入が新しいため、P(alive)は高く出ます。図ではこの隅を新規顧客と表記しています。</p>
 <div id="fig-prob-alive-matrix" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="購入頻度（x）とRecency（y）上のProbability Alive行列。色は各顧客位置のP(alive)を示す">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-prob-alive-matrix-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -1033,7 +1033,7 @@ window.Quarto = {
 </section>
 <section id="combining-segments-and-clv" class="level3">
 <h3 class="anchored" data-anchor-id="combining-segments-and-clv">セグメントとCLVを組み合わせる</h3>
-<p>セグメンテーションの章（Chapter 4.1）の <code>segment_id</code> と、各顧客のCLV推定値を結合します。 これにより、このPartで目指してきた運用表が得られます。どのような顧客か、どれだけの価値があるか、ビジネスとして何をすべきかを示します。</p>
+<p><a href="sec4.1-segmentation.html">Section 4.1</a>の <code>segment_id</code> と、各顧客のCLV推定値を結合します。 これにより、このPartで目指してきた運用表が得られます。どのような顧客か、どれだけの価値があるか、ビジネスとして何をすべきかを示します。</p>
 <p>人口統計はセグメントの説明や接触に役立ちますが、主な意思決定層は、行動セグメント×予測価値です。付属Notebookでは、CLV推定値とDunnhumbyの <code>hh_demographic.csv</code> を結合し、所得などの人口統計軸で各セグメントを説明できるようにします。クリエイティブやチャネルの選択には役立ちますが、予算設定にはあまり適しません。</p>
 <div class="callout callout-style-default callout-tip callout-titled">
 <div class="callout-header d-flex align-content-center">
@@ -1052,7 +1052,7 @@ window.Quarto = {
 </section>
 <section id="sec-using-clv" class="level2">
 <h2 class="anchored" data-anchor-id="sec-using-clv">CLVを実務で使う</h2>
-<p>顧客ごとの <code>clv_estimate</code> が得られると、ほとんど追加の労力なしで3つの用途へ使えます。下流システムに必要なのは顧客IDと数値だけなので、どのCLVスコアでも同じパターンを利用できます。</p>
+<p>顧客ごとの <code>clv_estimate</code> が得られると、次の3つの用途は追加のモデリングなしで実行できます。ただし、それぞれスコア以外のものが必要です。CPA上限には、上で述べた利益率への換算と、明示した予測期間が必要です。チャーン警告には、顧客IDでのCRMとの結合と、閾値が必要です。コホート予測には、各顧客の獲得日と、財務が計画に使う期間が必要です。このパターンはどのCLVスコアでも使えます。</p>
 <ol type="1">
 <li>広告入札のCPA上限</li>
 </ol>
@@ -1064,11 +1064,11 @@ window.Quarto = {
 <ol start="2" type="1">
 <li>CRM向けチャーン警告</li>
 </ol>
-<p>30日間でP(alive)が30ポイントを超えて低下した顧客へフラグをつけます。シグナルは絶対水準ではなく、変化率です。P(alive)が1カ月で0.85から0.40へ低下した顧客は、6カ月間0.35で安定している顧客よりはるかに緊急です。前者は離れつつあり、後者は単に購入頻度が低い顧客です。</p>
+<p>30日間でP(alive)が30ポイントを超えて低下した顧客へフラグをつけます。シグナルは絶対水準ではなく、変化率です。P(alive)が1カ月で0.85から0.40へ低下した顧客は、6カ月間0.35で安定している顧客よりはるかに緊急です。前者は高かった関与度が下がっている顧客で、後者はもともと購入頻度が低い顧客です。</p>
 <ol start="3" type="1">
 <li>財務向けコホート予測</li>
 </ol>
-<p>財務は生涯ではなく予算サイクルで計画するため、個人CLV推定値を獲得コホート別に集約し、12、24、36カ月時点の売上を予測します。固定目標ではなく確率的な推定値であることを財務が理解できるよう、HDI境界を含めます。CFOにBG/NBDを学んでもらわなくても、「第3四半期の顧客獲得支出に対する期待リターンは？」へ答えられます。</p>
+<p>財務は生涯ではなく予算サイクルで計画するため、個人CLV推定値を獲得コホート別に集約し、12、24、36カ月時点の売上を予測します。固定目標ではなく確率的な推定値であることを財務が理解できるよう、HDI境界を含めます。これにより、四半期の顧客獲得支出に対する期待リターンという財務の問いへ、財務が計画に使う単位と期間で答えられます。</p>
 <div class="callout callout-style-default callout-tip callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -1086,8 +1086,8 @@ window.Quarto = {
 <section id="key-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="key-takeaways">要点</h2>
 <ul>
-<li>CLVは一律のCPA目標を、各顧客の価値に比例した支出へ置き換える。平均値はデータ内に存在するが、誰も表していない。</li>
-<li>非契約型の状況では、BG/NBDが将来の購買を、Gamma-Gammaが支出を、取引データだけからモデル化する。全顧客に信用区間が得られるため、平均ではなく保守的な下限に対して入札する。</li>
+<li>CLVは一律のCPA目標を、各顧客の価値に比例した支出へ置き換える。単一の上限では、低価値顧客には払いすぎ、高価値顧客には払い足りない。</li>
+<li>非契約型の状況では、BG/NBDが将来の購買を、Gamma-Gammaが支出を、取引データだけからモデル化する。全顧客に信用区間が得られるため、区間の保守的な下限から入札額を決める。</li>
 <li>CPA上限を設定する前に売上CLVを利益CLVへ変換し、期間を明示する。10年間の推定中央値は3年間のおよそ2.23倍だが、順位はほとんど動かない。</li>
 </ul>
 

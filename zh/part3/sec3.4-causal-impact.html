@@ -628,16 +628,15 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 <p><strong>关于中文版</strong><br>
 本页是英文版 <em>Marketing Science in Python</em> 的AI翻译。英文版为正式版本，如有出入，以英文版为准。代码、Notebook 和图片中的文字保持英文。 <a href="../../part3/sec3.4-causal-impact.html" class="translation-source-link">阅读英文版</a></p>
 </div>
-<p><a href="sec3.3-quasi-experiments.html">上一章</a>的每一种设计都有对照组。有些门店摆了陈列，有些没有。一个市场投放了活动，其他市场没有。本章要处理的，是完全没有对照组的情形。</p>
-<p>一次全国性电视广告活动投放了 8 周。销售额上升了。但每个市场都接触到了活动，没有任何未处理的市场可以用来比较。如果没有这次活动，销售额会是多少？</p>
-<p>本章只有一件事要做：构建那条缺失的“无活动”路径，并判断它是否可信到足以作为衡量活动效果的基准。构建只需要 15 行代码。判断它是否可信，占了本章余下的全部篇幅。</p>
+<p>一次全国性电视广告活动在每个市场投放了 8 周，销售额上升了。由于每个市场都接触到了活动，没有任何未处理的市场可以用来比较，而<a href="sec3.3-quasi-experiments.html">上一章</a>的每一种准实验设计都需要这样一个市场。如果没有这次活动，销售额会是多少？</p>
+<p>本章只有一件事要做：构建那条缺失的“无活动”路径，并判断它是否可信到足以作为衡量活动效果的基准。构建它大约需要 15 行代码；验证它占了本章余下的全部篇幅。</p>
 <section id="sec-counterfactual-recipe" class="level2">
 <h2 class="anchored" data-anchor-id="sec-counterfactual-recipe">构建反事实</h2>
 <p><strong>核心思想：</strong>预测没有活动时你本会看到的销售额。效果就是观测到的销售额减去这个预测值。</p>
-<p>没有对照组，比较只能来自时间。用活动<em>之前</em>的销售额拟合一个时间序列模型，这样活动的影响就不可能渗入其中。把模型沿着活动窗口向前外推。这个外推值就是反事实，而它与实际发生情况之间的差距就是估计的效果。</p>
-<p>预测仍然可以使用<strong>对照序列</strong>，但有必要说清楚：对照序列不是对照组。对照组是同类的未处理单位，比如没有摆陈列的门店。对照序列则是一个预测变量：任何活动不可能触及的序列，例如某个品类需求指数，或者一条没有投放媒体的同门产品线。它不与品牌本身作比较。它告诉预测模型，活动进行期间市场在发生什么。</p>
+<p>没有对照组，比较只能从序列自身的历史中构建。用活动<em>之前</em>的销售额拟合一个时间序列模型，这样活动的影响就不可能渗入其中。把模型沿着活动窗口向前外推。这个外推值就是反事实，而它与实际发生情况之间的差距就是估计的效果。</p>
+<p>预测仍然可以使用<strong>对照序列</strong>，但有必要说清楚：对照序列不是对照组。对照组是同类的未处理单位，比如没有摆陈列的门店。对照序列则是一个预测变量：任何活动不可能触及的序列，例如某个品类需求指数，或者一条没有投放媒体的同门产品线。对照序列不与品牌本身作比较；它作为回归变量进入模型，携带着活动进行期间市场的走势。</p>
 <p>最知名的实现是 <strong>CausalImpact</strong>，由 Google 以 R 包的形式发布，Brodersen 及其同事在 2015 年的一篇论文中做了描述。在因果推断文献中，同一种设计被称为中断时间序列。 Python 移植版也已存在（<code>tfp-causalimpact</code>，以及 <code>CausalPy</code> 中的 <code>InterruptedTimeSeries</code>）。本章用 <code>statsmodels</code> 直接搭建同样的逻辑，让每一个假设都保持可见。</p>
-<p>这是上一章那架梯子的最后一级，下表展示了一路向上时发生了什么变化：</p>
+<p>下表按各自的要求，把这种设计与 DiD 和合成控制进行比较：</p>
 <table class="caption-top table">
 <caption>构建你未曾观测到的销售额的三种方式。</caption>
 <thead>
@@ -669,7 +668,7 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 </tr>
 </tbody>
 </table>
-<p>实操示例是一个全国性快消品牌：四年的周度营收，一次为期 8 周的电视加公关活动，以及活动之后 20 周的观测。两条对照序列：一个子品类需求指数，以及一条没有投放任何媒体的同门产品线。数据是合成的，因此真实的无活动路径是已知的。在写任何代码之前，先看分析简报：</p>
+<p>实操示例是一个全国性快消品牌：四年的周度营收，一次为期 8 周的电视加公关活动，以及活动之后 20 周的观测。两条对照序列：一个子品类需求指数，以及一条没有投放任何媒体的同门产品线。数据是合成的，因此真实的无活动路径是已知的。在写任何代码之前，先定下分析简报：</p>
 <div class="callout callout-style-default callout-note callout-titled" title="分析简报">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -688,14 +687,14 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 </ul>
 </div>
 </div>
-<p>最后一行是一个决定，而且是现在、在任何人看到数字之前就做出的。这就是下面的预测跑 28 周的原因，也是本章后面关于报告窗口的一节是一次核对而非一次选择的原因。</p>
+<p>估计目标是一个决定，而且是在这里定下的，而不是等结果出来之后。这就是下面的预测跑 28 周的原因，也是本章后面关于报告窗口的一节是一次核对而非一次选择的原因。</p>
 <div id="fig-panel" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="四年的品牌营收，标出真实的未处理路径，下方是子品类需求指数和同门产品线，8 周投放期以阴影标出。">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-panel-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="../images/part3/sec3.4/01_panel_overview.png" class="fig-lg img-fluid figure-img" alt="四年的品牌营收，标出真实的未处理路径，下方是子品类需求指数和同门产品线，8 周投放期以阴影标出。">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-panel-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-图&nbsp;1: 受处理品牌及其两条对照序列
+图&nbsp;1: 受处理品牌及其两条对照序列。
 </figcaption>
 </figure>
 </div>
@@ -725,14 +724,14 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 <span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>weekly_effect <span class="op">=</span> y_post <span class="op">-</span> counterfactual</span>
 <span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>cumulative <span class="op">=</span> weekly_effect.<span class="bu">sum</span>()</span>
 <span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>lo, hi <span class="op">=</span> np.percentile((y_post[:, <span class="va">None</span>] <span class="op">-</span> paths).<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">0</span>), [<span class="fl">2.5</span>, <span class="fl">97.5</span>])</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
-<p>这段代码里有三个选择很重要。模型只在活动前期间上拟合，这样活动就不可能污染它自己的基线。销售额以对数建模，因为活动带来的提升和季节性都是乘性的，而模拟路径在求和之前会先换算回美元。对照序列作为回归变量进入模型，这样预测就知道活动期间市场发生了什么。模型是否还需要趋势项，或者到底需不需要对照序列，都不是口味问题。下一节用测量来定夺。</p>
+<p>这段代码里有三个选择很重要。模型只在活动前期间上拟合，这样活动就不可能污染它自己的基线。销售额以对数建模，因为活动带来的提升和季节性都是乘性的，而模拟路径在求和之前会先换算回美元。对照序列作为回归变量进入模型，这样预测就知道活动期间市场发生了什么。模型是否还需要趋势项，或者到底需不需要对照序列，由下一节的回测来定夺。</p>
 </section>
 <section id="sec-preperiod-validation" class="level2">
 <h2 class="anchored" data-anchor-id="sec-preperiod-validation">测量之前先验证反事实</h2>
-<p>这一步不是可选项。你将要报告的效果等于观测值减去预测值，所以每一美元的预测误差都会变成一美元的虚假效果。在用预测去测量活动之前，你必须证明它能预测一个什么都没发生的时期。三项检查可以做到这一点，而且三项都只在活动前期间上运行。</p>
+<p>你将要报告的效果等于观测值减去预测值，所以预测误差会一比一地传导到估计的效果中。这使得这一步成为必做项。在用预测去测量活动之前，你必须证明它能预测一个什么都没发生的时期。三项检查可以做到这一点，而且三项都只在活动前期间上运行。</p>
 <section id="backtesting-the-forecast" class="level3">
 <h3 class="anchored" data-anchor-id="backtesting-the-forecast">对预测做回测</h3>
-<p>模型能预测未处理的世界吗？假装活动在活动前期间内的某个更早日期开始。用该日期之前的数据拟合，预测接下来的 28 周，再与实际发生的情况比较。从几个不同日期重复这一过程。之所以是 28 周，是因为简报中的估计目标就是 28 周，而一个在 8 周上看起来不错的模型，到了 28 周可能会崩掉。</p>
+<p>第一项检查是模型能否预测一个什么都没发生的时期。假装活动在活动前期间内的某个更早日期开始。用该日期之前的数据拟合，预测接下来的 28 周，再与实际发生的情况比较。从几个不同日期重复这一过程。预测期长度之所以是 28 周，是因为简报中的估计目标就是 28 周，而一个在 8 周上看起来不错的模型，到了 28 周可能会崩掉。下面的结果决定了模型设定。</p>
 <table class="caption-top table">
 <caption>在什么都没发生的九个活动前窗口上做的滚动起点验证。</caption>
 <thead>
@@ -770,44 +769,44 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 </tr>
 </tbody>
 </table>
-<p>这张表做出了决定。趋势项加对照的误差最低、偏差最小，所以我们采用这个设定。一路上有两个细节值得注意。对照序列把误差减半，所以在这份数据上它们配得上自己的位置。而且在这个预测期长度下趋势项很重要：该品牌的增长快于其子品类，一个没有斜率的模型会把这段差距记到活动头上。</p>
+<p>趋势项加对照的误差最低、偏差最小，所以我们采用这个设定，其中有两个细节值得注意。对照序列把误差减半，所以在这份数据上它们配得上自己的位置。而且在这个预测期长度下趋势项很重要：该品牌的增长快于其子品类，一个没有斜率的模型会把这段差距归因于活动。</p>
 </section>
 <section id="placebo-interventions" class="level3">
 <h3 class="anchored" data-anchor-id="placebo-interventions">安慰剂干预</h3>
-<p>这种设计会不会在什么都没发生时凭空造出效果？在活动前期间里挑一个日期，比如第 120 周，当时并没有活动。假装那一周开始了一次活动，然后跑完整个分析。正确答案是零，所以无论返回什么，都是这种设计从噪声中生成的东西。这就是<strong>安慰剂干预</strong>，上面九个回测窗口同时也是九个安慰剂。这里最大的安慰剂效应是 $636k，九个当中有一个返回了不包含零的区间。把这两个数字都记住。活动的估计值必须超过它们。</p>
+<p>第二项检查是这种设计在什么都没发生时会返回什么。在活动前期间里挑一个日期，比如第 120 周，当时并没有活动。假装那一周开始了一次活动，然后跑完整个分析。正确答案是零，所以任何非零的结果衡量的都是这种设计仅从噪声中返回的东西。这就是<strong>安慰剂干预</strong>，上面九个回测窗口同时也是九个安慰剂。这里最大的安慰剂效应是 $636k，九个当中有一个返回了不包含零的区间。把这两个数字记录下来，并要求活动的估计值超过它们。</p>
 <div id="fig-validation" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="左图为活动前各窗口上按模型设定划分的预测误差；右图为该设计在什么都没发生的日期上返回的累计效应分布。">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-validation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="../images/part3/sec3.4/02_validation_and_placebo.png" class="fig-lg img-fluid figure-img" alt="左图为活动前各窗口上按模型设定划分的预测误差；右图为该设计在什么都没发生的日期上返回的累计效应分布。">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-validation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-图&nbsp;2: 活动之前的验证与安慰剂检查
+图&nbsp;2: 活动之前的验证与安慰剂检查。
 </figcaption>
 </figure>
 </div>
 </section>
 <section id="checking-that-the-controls-help" class="level3">
 <h3 class="anchored" data-anchor-id="checking-that-the-controls-help">检查对照序列是否有帮助</h3>
-<p>对照序列真的能改善预测吗？回测已经在这份数据上给出了肯定的回答，值得看看这换来了什么。在一个平静的世界里，对照序列把区间收窄到十二分之一。当一次波及整个品类的下滑撞上活动中的三周时，带对照的估计值落在真值的 1.3% 以内，因为反事实会跟着市场一起下滑。没有对照，同样的下滑被记到活动头上，估计值比真值低 21%。这就是一条好的对照序列的作用：它吸收所有人都受到的冲击，让模型不会把这些冲击误认为是活动的效果。</p>
+<p>对照序列真的能改善预测吗？回测已经在这份数据上给出了肯定的回答，值得看看这换来了什么。在一个平静的世界里，对照序列把区间收窄到十二分之一。当一次波及整个品类的下滑撞上活动中的三周时，带对照的估计值落在真值的 1.3% 以内，因为反事实会跟着市场一起下滑。没有对照，同样的下滑被归因于活动，估计值比真值低 21%。一条有用的对照序列携带着冲击整个市场的那些冲击，使反事实随之一起变动，而不是把它们留在估计的效果里。</p>
 <p>这只在活动没有触及对照序列时才成立。这是无法从数据中检验的假设，它有自己的一节：<a href="#sec-failure-modes">何时不该相信估计值</a>。</p>
 </section>
 </section>
 <section id="sec-reading-the-campaign" class="level2">
 <h2 class="anchored" data-anchor-id="sec-reading-the-campaign">估计活动效果</h2>
-<p>直到现在，活动窗口才被用上。把选定的设定在完整的活动前期间上拟合，再向前外推。结果就是那张已经成为一次性活动标准呈现方式的三联图：观测值对反事实、每周差距，以及累计总额。</p>
+<p>活动窗口只在这一步才被用上。把选定的设定在完整的活动前期间上拟合，再向前外推。结果就是那张已经成为一次性活动标准呈现方式的三联图：观测值对反事实、每周差距，以及累计总额。</p>
 <div id="fig-impact-panels" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="三个纵向堆叠的面板，显示观测序列与其反事实的对比、每周效应，以及一条先攀升再回吐部分增幅的累计曲线。">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-impact-panels-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="../images/part3/sec3.4/03_impact_three_panel.png" class="fig-lg img-fluid figure-img" alt="三个纵向堆叠的面板，显示观测序列与其反事实的对比、每周效应，以及一条先攀升再回吐部分增幅的累计曲线。">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-impact-panels-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-图&nbsp;3: 观测值、每周效应与累计效应
+图&nbsp;3: 观测值、每周效应与累计效应。
 </figcaption>
 </figure>
 </div>
 <section id="choosing-the-reporting-window" class="level3">
 <h3 class="anchored" data-anchor-id="choosing-the-reporting-window">选择报告窗口</h3>
-<p>简报把估计目标定在 28 周。这里说明它为什么重要。看累计面板：曲线在 8 周投放期内攀升，之后随着延续效应发挥作用又继续爬升了几周，然后随着被提前透支的需求得到回补而掉头向下。三个听起来都合理的窗口，给出三个不同的数字。</p>
+<p>简报把估计目标定在 28 周。看累计面板：曲线在 8 周投放期内攀升，之后随着延续效应发挥作用又继续爬升了几周，然后随着被提前透支的需求得到回补而掉头向下。三个听起来都合理的窗口，给出三个不同的数字。</p>
 <table class="caption-top table">
 <caption>同一个模型、同一次活动，在三个窗口下读出的结果。</caption>
 <thead>
@@ -843,11 +842,11 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 </tr>
 </tbody>
 </table>
-<p>三个估计值对各自覆盖的窗口而言都是准确的。只有最后一个回答了简报的问题，因为只有它计入了回吐。停在第 12 周，也就是曲线的峰值，会把完整答案高估 38%。模型没有错。错的是窗口。这就是为什么窗口要写进简报，在任何人看到曲线之前。</p>
+<p>三个估计值对各自覆盖的窗口而言都是准确的。只有最后一个回答了简报的问题，因为只有它计入了回吐。停在第 12 周，也就是曲线的峰值，会把完整答案高估 38%。这三个数字来自同一个模型，只在报告窗口上不同，这就是为什么窗口要在简报中固定下来，而不是等曲线画出来之后再选。</p>
 </section>
 <section id="sec-two-uncertainties" class="level3">
 <h3 class="anchored" data-anchor-id="sec-two-uncertainties">对区间应当相信到什么程度</h3>
-<p>图上的置信带把拟合好的模型固定不动，只把它的噪声向前传播。这使它成为真实不确定性的下限，而不是全部。有两点可以帮你读它。第一，安慰剂结果：$1,164k 的估计值大于这种设计产生过的每一个安慰剂效应，其中最大的是 $636k。这比 p 值更有用，因为它与决策使用同样的单位。第二，下面的审计。</p>
+<p>图上的置信带把拟合好的模型固定不动，只把它的噪声向前传播。这使它成为真实不确定性的下限，而不是全部。有两点可以帮你读它：安慰剂结果，以及下面的审计。$1,164k 的估计值大于这种设计产生过的每一个安慰剂效应，其中最大的是 $636k。以美元表示，它可以直接与决策相比较，而 p 值做不到这一点。</p>
 <div class="callout callout-style-default callout-note callout-titled" title="深入探讨：这种设计到底有多好？">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -858,52 +857,52 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>Notebook 在两百份新生成的合成数据集上重新运行选定的设定，每次都对照真值打分。名义上的 95% 区间有 90% 的时候覆盖了真值。一个真实存在的效应有 60% 的时候被判定为显著。当真实效应为零时，有 9% 的时候被判定为显著。这不是一个弱模型。这是一种弱的测量处境：只有一条受处理序列，没有随机化，效应相对噪声而言又很小。如果决策需要的不止于此，下次就做一次地理实验（<a href="../part6/sec6.3-incrementality-experiments.html">第 6.3 章</a>）。</p>
+<p>Notebook 在两百份新生成的合成数据集上重新运行选定的设定，每次都对照真值核对。名义上的 95% 区间有 90% 的时候覆盖了真值。一个真实存在的效应有 60% 的时候被判定为显著。当真实效应为零时，有 9% 的时候被判定为显著。这些数字反映的是测量处境，而不是模型：只有一条受处理序列，没有随机化，而且效应相对噪声而言很小。如果决策需要的不止于此，下次就做一次地理实验（<a href="../part6/sec6.3-incrementality-experiments.html">第 6.3 节</a>）。</p>
 </div>
 </div>
 </section>
 </section>
 <section id="sec-failure-modes" class="level2">
 <h2 class="anchored" data-anchor-id="sec-failure-modes">何时不该相信估计值</h2>
-<p>有三样东西会破坏这项分析。其中两样在数据里不留任何痕迹。</p>
+<p>有三样东西会破坏这项分析，其中两样在数据里不留任何痕迹。</p>
 <div id="fig-scenarios" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="六种情景下带区间的估计值与已知真值的对比，从干净的对照序列，到市场冲击、被污染的对照序列，以及断裂的关系。">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-scenarios-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="../images/part3/sec3.4/04_scenarios.png" class="fig-lg img-fluid figure-img" alt="六种情景下带区间的估计值与已知真值的对比，从干净的对照序列，到市场冲击、被污染的对照序列，以及断裂的关系。">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-scenarios-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-图&nbsp;4: 对照序列带来什么，又会被什么破坏
+图&nbsp;4: 六种对照序列情景下的估计值。
 </figcaption>
 </figure>
 </div>
 <section id="the-campaign-touched-a-control" class="level3">
 <h3 class="anchored" data-anchor-id="the-campaign-touched-a-control">活动触及了某条对照序列</h3>
-<p>一条对照序列的预测力越强，活动触及它的可能性就越大。子品类指数承载了模型的大部分解释力，这正是为什么一个该子品类中大品牌的全国性活动会对它构成威胁。让品牌提升的 35% 泄漏进指数，估计值就只保留真实效应的 65%，而且区间不再排除零。一次奏效的活动现在读起来变成了结论不明。而且每一项诊断都通过了：活动前期间的拟合干净，区间紧凑，回测看起来没有变化。被违反的假设存在于数据之外。检查它的唯一办法，是去问执行活动的人，活动可能触及了什么。</p>
+<p>一条对照序列之所以有预测力，是因为它随着品牌所面向的同一需求一起变动，而这也正是活动很可能触及它的原因。子品类指数承载了模型的大部分解释力，所以一个该子品类中大品牌的全国性活动会对它构成威胁。让品牌提升的 35% 泄漏进指数，估计值就只保留真实效应的 65%，而且区间不再排除零。一次奏效的活动于是被报告为结论不明，而且没有任何诊断能抓住这一点：活动前期间的拟合、区间宽度和回测全都没有变化。这个假设是在数据之外被违反的，所以任何数据检查都无法发现它。检查它的唯一办法，是去问执行活动的人，活动可能触及了什么。</p>
 </section>
 <section id="the-pre-period-relationship-broke" class="level3">
 <h3 class="anchored" data-anchor-id="the-pre-period-relationship-broke">活动前期间的关系断裂了</h3>
-<p>一段维持了四年的关系仍然可能中止。假设一个竞争者进入市场，在活动后期间把子品类做大了 5%，而这个品牌没有分到一杯羹。对照序列现在说市场变好了，反事实随之上升，估计值回来是负 $460k，而真实效应是正 $1,124k。这是本章中唯一一个真值落在区间之外的情景，而且从构造上讲，它无法用活动前期间的数据来检验。这与 DiD 要求的是同一种纪律：输出的可信度，取决于“对照序列一直像以前那样表现”这一主张的可信度。</p>
+<p>一段在四年活动前期间里维持的关系，在活动后期间可能发生变化。假设一个竞争者进入市场，在活动后期间把子品类做大了 5%，而这个品牌没有分到一杯羹。对照序列现在说市场变好了，反事实随之上升，估计值回来是负 $460k，而真实效应是正 $1,124k。这是本章中唯一一个真值落在区间之外的情景，而且从构造上讲，它无法用活动前期间的数据来检验。这与 DiD 要求的是同一种纪律：估计值完全取决于“对照序列与品牌之间保持了和以前相同的关系”这一主张。</p>
 </section>
 <section id="sec-real-data-check" class="level3">
 <h3 class="anchored" data-anchor-id="sec-real-data-check">预测从来就不够好</h3>
-<p>第三种失败确实会留下痕迹，只要你去看。把同一套机制用在真实的 Dunnhumby 门店数据上：取一家门店的周销量，把最后 12 周乘以 1.15，然后以另外四家门店作为对照，试着找回这个人为植入的提升。</p>
-<p>提升找回来了。植入的 1,775 个单位被还原为 1,833，而且区间排除了零。把它写成一次成功的对照分析会很容易。</p>
+<p>第三种失败确实会在数据里留下痕迹。把同一套机制用在真实的 Dunnhumby 门店数据上：取一家门店的周销量，把最后 12 周乘以 1.15，然后以另外四家门店作为对照，试着找回这个人为植入的提升。</p>
+<p>提升找回来了。植入的 1,775 个单位被还原为 1,833，而且区间排除了零。这可以被写成一次成功的对照分析，但对照序列并没有携带任何信息。</p>
 <div id="fig-reality-check" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="剔除入组爬坡期后相关性崩塌，有无对照序列的回测几乎持平，以及一个回测并不支持的更窄区间。">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-reality-check-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="../images/part3/sec3.4/05_dunnhumby_reality_check.png" class="fig-lg img-fluid figure-img" alt="剔除入组爬坡期后相关性崩塌，有无对照序列的回测几乎持平，以及一个回测并不支持的更窄区间。">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-reality-check-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-图&nbsp;5: 不携带任何信息的真实对照序列
+图&nbsp;5: 真实门店数据上的对照序列检查。
 </figcaption>
 </figure>
 </div>
-<p>它不是。为对照序列提供依据的跨门店相关性是 0.45，但 Dunnhumby 面板一开始很小、随后不断扩大，所以所有门店会因为与需求毫无关系的原因一起上升。剔除这段入组爬坡期，相关性就跌到 0.01。回测一锤定音：加入四家对照门店把预测误差从 13.7% 变成 13.8%，也就是说毫无变化。更窄的区间是个陷阱。额外的回归变量会吸收样本内的波动并收紧置信带，哪怕预测并没有改善。更窄的区间不是对照序列有帮助的证据。更好的回测才是。产生那个数字的，是对这家门店自身近期水平的外推，而 13.7% 的预测误差太弱，撑不起一个因果结论。把这一点说出来，就是这次分析的发现。</p>
+<p>为对照序列提供依据的跨门店相关性是 0.45，但 Dunnhumby 面板一开始很小、随后不断扩大，所以所有门店会因为与需求毫无关系的原因一起上升。剔除这段入组爬坡期，相关性就跌到 0.01。回测一锤定音：加入四家对照门店把预测误差从 13.7% 变成 13.8%，也就是说毫无变化。额外的回归变量会吸收样本内的波动并收紧置信带，哪怕预测并没有改善，所以区间宽度不能用来检验对照序列是否有帮助；回测才可以。产生那个数字的，是对这家门店自身近期水平的外推。13.7% 的预测误差太弱，撑不起一个因果结论，而报告这一点就是这次分析的结果。</p>
 </section>
 </section>
 <section id="sec-intervention-checklist" class="level2">
 <h2 class="anchored" data-anchor-id="sec-intervention-checklist">一套实用的工作流程</h2>
-<p>本章可以压缩成八个步骤。按顺序执行。</p>
+<p>这套工作流程有八个步骤，按顺序执行。</p>
 <ol type="1">
 <li><strong>写简报。</strong>业务问题、结果变量、处理，以及带报告窗口的估计目标。在看到数字之前就把它定下来。</li>
 <li><strong>选择对照序列。</strong>它们必须是活动不可能触及的序列。去问执行活动的人。</li>
@@ -912,9 +911,9 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 <li><strong>运行安慰剂干预。</strong>在读真实数字之前，先知道这种设计从噪声中会返回什么。</li>
 <li><strong>估计活动后期间的效果</strong>，使用你在第 1 步固定下来的窗口。</li>
 <li><strong>对对照序列做压力测试。</strong>活动有没有可能触及它们？活动前期间的关系有没有可能断裂？</li>
-<li><strong>如果反事实很弱，就不要报告因果数字。</strong>13.7% 的回测误差是一个预测，不是一次测量。</li>
+<li><strong>如果反事实很弱，就不要报告因果数字。</strong>在 13.7% 的回测误差下，输出只是一个撑不起因果结论的预测。</li>
 </ol>
-<p>CausalImpact 不会把观测数据变成一场实验。它给你一种结构化的方式，去追问一条时间序列能否支撑一个可信的反事实。当它不能时，答案不是一个更好的模型，而是下一次做一场更好的实验（<a href="../part6/sec6.3-incrementality-experiments.html">第 6.3 章</a>）。</p>
+<p>CausalImpact 不会把观测数据变成一场实验。它给你一种结构化的方式，去追问一条时间序列能否支撑一个可信的反事实。当它不能时，更好的模型也无济于事；转而规划一场地理实验（<a href="../part6/sec6.3-incrementality-experiments.html">第 6.3 节</a>）。</p>
 <p><strong>配套 Notebook：</strong><code>sec3.4_causal_impact.ipynb</code> 构建反事实，在安慰剂日期上验证它，在两百次抽样中审计它的区间，然后有意把它弄坏。<br>
 <a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.4_causal_impact.ipynb">在 GitHub 上查看</a></p>
 </section>
@@ -922,7 +921,7 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 <h2 class="anchored" data-anchor-id="key-takeaways">要点</h2>
 <ul>
 <li>没有对照组时，用活动前期间和活动不可能触及的序列来预测无活动路径，然后在你将要报告的预测期长度上用回测为这个预测赢得信任。</li>
-<li>有两种失败在数据里不留痕迹：被活动触及的对照序列，以及断裂的活动前期间关系。更窄的区间不是对照序列有帮助的证据；更好的回测才是。</li>
+<li>有两种失败在数据里不留痕迹：被活动触及的对照序列，以及断裂的活动前期间关系。更窄的区间不是对照序列有帮助的证据；要根据回测中的预测误差来判断。</li>
 <li>在看到数字之前先固定报告窗口。停在累计曲线的峰值，把完整窗口的答案高估了 38%。</li>
 </ul>
 

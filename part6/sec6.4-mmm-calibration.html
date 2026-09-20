@@ -610,7 +610,7 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 
 
 <p>Before the geo experiment ran, the MMM had predicted what a 30% cut to Google Search would cost: $2.95 of revenue per dollar removed, with a 90% credible interval from 0.34 to 8.48. The experiment in <a href="sec6.3-incrementality-experiments.html">Section 6.3</a> measured 1.500, with a 95% confidence interval from 0.892 to 2.109. The model had the channel’s overall value roughly right and the cost of the cut about twice too high, and its interval was too wide to act on either way. Neither is surprising. Search spend had barely moved in three years of history, so the model’s Search estimate was mostly the prior it started with, and the experiment is the first causal evidence about the channel.</p>
-<p>Calibration puts that evidence into the model. The experiment measured one channel at one operating point over one window; the model in <a href="sec6.2-mmm-fundamentals.html">Section 6.2</a> still has to set budgets across five channels. So we translate the result into a prior, refit, and check whether the recommendation changes. The goal is not to make the model agree with the experiment. It is to find out whether better evidence changes the decision, and if it doesn’t, why not. Because the outcome here is revenue, Meridian’s ROI is numerically a revenue ROAS; the prose says ROAS and the code keeps Meridian’s names.</p>
+<p>Calibration puts that evidence into the model. The experiment measured one channel at one operating point over one window; the model in <a href="sec6.2-mmm-fundamentals.html">Section 6.2</a> still has to set budgets across five channels. So we translate the result into a prior, refit, and compare. Calibration is judged on three things: where the estimate moved, how much the uncertainty shrank, and whether the allocation changed. A recommendation that stays the same is not a failure. Because the outcome here is revenue, Meridian’s ROI is numerically a revenue ROAS; the prose says ROAS and the code keeps Meridian’s names.</p>
 <div id="fig-calibration-workflow" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Five steps: geo test, DiD estimate, translate to a prior, refit the MMM, and the budget decision under the guardrail, looping back to the next test.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-calibration-workflow-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -625,7 +625,33 @@ Figure&nbsp;1: The MMM calibration workflow.
 <a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part6-media-optimization/sec6.2_6.4_mmm_meridian.ipynb">View on GitHub</a></p>
 <section id="match-the-evidence-to-the-model-quantity" class="level2">
 <h2 class="anchored" data-anchor-id="match-the-evidence-to-the-model-quantity">Match the Evidence to the Model Quantity</h2>
-<p>The experiment measured the return on one block of spend: what the business lost per dollar when Search fell from 100% to 70% of its budget for eight weeks. The model reports two other returns for the same channel. <strong>Average ROAS</strong> divides Search’s total incremental revenue by its total spend, the return averaged from zero. <strong>Marginal ROAS</strong> is the slope of the response curve at today’s spend, the return on the next dollar. On a saturating curve the early dollars work harder than the later ones, so average ROAS sits above marginal ROAS wherever the curve has begun to bend (<a href="#fig-marginal-vs-average" class="quarto-xref">Figure&nbsp;<span>2</span></a>). The tested cut averages the curve over the top 30% of spend, so it lands close to the marginal return and well below the average.</p>
+<p>The experiment measured the return on one block of spend: what the business lost per dollar when Search fell from 100% to 70% of its budget for eight weeks. The model reports two other returns for the same channel, <strong>average ROAS</strong> and <strong>marginal ROAS</strong>, and the three are not interchangeable. On a saturating curve the early dollars work harder than the later ones, so the average sits above the marginal return wherever the curve has begun to bend (<a href="#fig-marginal-vs-average" class="quarto-xref">Figure&nbsp;<span>2</span></a>), and the tested cut, which averages the top 30% of spend, lands close to the marginal return.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Quantity</th>
+<th>What it measures</th>
+<th>Where it comes from</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Average ROAS</td>
+<td>Return averaged from zero spend</td>
+<td>Model</td>
+</tr>
+<tr class="even">
+<td>Marginal ROAS</td>
+<td>Slope of the response curve at today’s spend</td>
+<td>Model</td>
+</tr>
+<tr class="odd">
+<td>Return on the tested cut</td>
+<td>Average return over the top 30% of spend</td>
+<td>Experiment</td>
+</tr>
+</tbody>
+</table>
 <div id="fig-marginal-vs-average" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Marginal ROAS is the tangent slope at the current spend level, while average ROAS is the slope from the origin to that point on a saturation curve.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-marginal-vs-average-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -636,13 +662,13 @@ Figure&nbsp;2: Marginal vs.&nbsp;average ROAS on a saturation curve.
 </figcaption>
 </figure>
 </div>
-<p>Meridian’s default prior, <code>roi_m</code>, is on average ROAS. Place the duration-adjusted estimate, 1.71, on that prior and the model obeys: the notebook tries it, and posterior average ROAS lands at 1.96, against a planted 3.30. The model is now forced to explain Search with a curve whose return from zero is 40% too low. Here the marginal return and the prediction for the tested cut still land near the truth, 1.59 and 1.44, because the curve is nearly straight across the top of Search’s range, so the average is the quantity that goes wrong; on a more curved channel the local readings would go with it. On TikTok, whose marginal return is about a quarter of its average, the same substitution would be wrong by a factor of nearly four. A measurement belongs on the parameter that matches it.</p>
+<p>Meridian’s default prior, <code>roi_m</code>, is on average ROAS. Place the duration-adjusted estimate, 1.71, on that prior and the posterior follows it: the notebook tries it, and posterior average ROAS lands at 1.96, against a planted 3.30. The model is now forced to explain Search with a curve whose return from zero is 40% too low. Here the marginal return and the prediction for the tested cut still land near the truth, 1.59 and 1.44, because the curve is nearly straight across the top of Search’s range, so the average is the quantity that goes wrong; on a more curved channel the local readings would go with it. On TikTok, whose marginal return is about a quarter of its average, the same substitution would be wrong by a factor of nearly four. A measurement belongs on the parameter that matches it.</p>
 </section>
 <section id="turn-the-experiment-into-a-prior" class="level2">
 <h2 class="anchored" data-anchor-id="turn-the-experiment-into-a-prior">Turn the Experiment into a Prior</h2>
 <p>Meridian can put the prior on marginal ROI instead, with <code>media_prior_type="mroi"</code>. That parameter is the return on a 1% increase in spend. The experiment measured a 30% cut over eight weeks, so it informs the prior through an approximate translation rather than observing the parameter: assumptions about the curve’s shape, about carryover, and about how eight markets transfer to the country stay part of the result. For Search the block and the slope sit close, 1.50 against a planted 1.57; for a slow channel like TV/CTV they would not, as <a href="sec6.5-when-tools-disagree.html">Section 6.5</a> shows.</p>
 <p>The translation has three parts. <strong>Duration</strong> corrects the center for carryover the test window missed. A cut made in week eight still costs revenue in weeks nine and ten, so even with Search’s one-week half-life about 12% of a sustained eight-week cut’s effect lands after the window, and the center moves from 1.50 to 1.71. That share is an approximation, from equal weekly changes and linear carryover weights; saturation and the actual spend path can change it. For a slow channel like TV/CTV the correction would be several times larger. <strong>Spend scale</strong> widens the prior. The eight test markets ran at about a fifth of the national spend rate, and the further a test sits from the channel’s scale, the less its result can be assumed to carry over. That term takes the standard error from 0.257 to 0.64, and the translation uncertainty below takes it to 0.69. The experiment’s own precision was fine; what widened the prior is that eight markets are a fifth of the channel. The notebook prints each term, plus two smaller ones that add almost nothing here.</p>
-<p><strong>Translation uncertainty</strong> is the third part, and it is ours rather than Google’s: the gap between a 30% block and a 1% slope is a modeling assumption, so a stated share of the center, 15% here, is added to the width so that a very precise experiment cannot produce a prior that claims to know the slope exactly. The other four channels keep a weak marginal-ROI prior, <code>LogNormal(-0.49, 0.90)</code>, Section 6.2’s weak ROAS prior restated on the marginal scale. Don’t make it flatter: on a saturating curve a diffuse prior on marginal ROI leaves average ROI unbounded, and the uncalibrated channels come back with useless intervals.</p>
+<p><strong>Translation uncertainty</strong> is the third part. It is not in Meridian’s guidance; this book adds it. The gap between a 30% block and a 1% slope is a modeling assumption, so a stated share of the center, 15% here, is added to the width so that a very precise experiment cannot produce a prior that claims to know the slope exactly. The other four channels keep a weak marginal-ROI prior, <code>LogNormal(-0.49, 0.90)</code>, Section 6.2’s weak ROAS prior restated on the marginal scale. Don’t make it flatter: on a saturating curve a diffuse prior on marginal ROI leaves average ROI unbounded, and the uncalibrated channels’ intervals become too wide to mean anything.</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> tensorflow <span class="im">as</span> tf</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> tensorflow_probability <span class="im">as</span> tfp</span>
@@ -723,7 +749,7 @@ Figure&nbsp;2: Marginal vs.&nbsp;average ROAS on a saturation curve.
 </tr>
 </tbody>
 </table>
-<p>What changed is the width. Against the control, calibration moved Search’s marginal return from 1.95 to 2.00, against a planted 1.57, and cut its relative half-width from 1.76 to 0.67. The model’s prediction for the tested cut moved from 1.75 to 1.82 against a measured 1.50. Neither point estimate is the story; the interval is. <a href="#fig-response-curve-calibrated" class="quarto-xref">Figure&nbsp;<span>3</span></a> shows it along the curve: the reference fit reads near 3 with a band that spans an order of magnitude, the control fit under 2 with the same band, and the calibrated curve runs through the experimental interval with a band a third as wide. The larger gap between the reference and the calibrated fit is mostly the change of prior specification, not the experiment, which is why the control column is there.</p>
+<p>Calibration changed the width far more than the point estimates. Against the control, it moved Search’s marginal return from 1.95 to 2.00, against a planted 1.57, and cut its relative half-width from 1.76 to 0.67. The model’s prediction for the tested cut moved from 1.75 to 1.82 against a measured 1.50. <a href="#fig-response-curve-calibrated" class="quarto-xref">Figure&nbsp;<span>3</span></a> shows the change along the curve: the reference fit reads near 3 with a band that spans an order of magnitude, the control fit under 2 with the same band, and the calibrated curve runs through the experimental interval with a band a third as wide. The larger gap between the reference and the calibrated fit is mostly the change of prior specification, not the experiment, which is why the control column is there.</p>
 <div id="fig-response-curve-calibrated" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Return on moving Google Search spend away from today's level, across spend multiples, for the Section 6.2 reference, the control fit, and the calibrated fit; the calibrated curve has a much narrower band than the control and runs through the experimental interval at 70 percent of spend.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-response-curve-calibrated-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -734,7 +760,7 @@ Figure&nbsp;3: Google Search’s response curve for all three fits (90% credible
 </figcaption>
 </figure>
 </div>
-<p>What stays unknown is also worth naming. The average ROAS row lands at 2.82 against a planted 3.30, with an interval that reaches 5.3: the experiment never measured the return from zero, so that row is the model’s extrapolation, not evidence. The width rule from Section 6.2 now passes, but that rule checks precision, not profitability; the cut itself was settled by Section 6.3’s hurdle, and the released budget goes to OOH and Meta because their marginal intervals start at 2.6 and 3.6, above Search’s estimate of 2.0, though not above the top of its interval. Search stays at the −30% floor in every column (<a href="#fig-allocation-before-after" class="quarto-xref">Figure&nbsp;<span>4</span></a>), while TV/CTV and TikTok shift modestly, mostly between the reference and the control fit, which is the prior specification rather than the experiment. Run the same calibration at the narrower market-clustered width and the marginal estimate is 1.85 with a half-width of 0.48; the allocation does not move either. So the experiment supports the tested cut under the stated margin and window, calibration carries that evidence into the allocation model, and the reallocation it proposes remains conditional on the response curves, the transfer from eight markets to the country, and the business constraints the optimizer does not see.</p>
+<p>Two things remain unknown after calibration. The average ROAS row lands at 2.82 against a planted 3.30, with an interval that reaches 5.3: the experiment never measured the return from zero, so that row is the model’s extrapolation, not evidence. The width rule from Section 6.2 now passes, but that rule checks precision, not profitability; the cut itself was settled by Section 6.3’s hurdle, and the released budget goes to OOH and Meta because their marginal intervals start at 2.6 and 3.6, above Search’s estimate of 2.0, though not above the top of its interval. Search stays at the −30% floor in every column (<a href="#fig-allocation-before-after" class="quarto-xref">Figure&nbsp;<span>4</span></a>), while TV/CTV and TikTok shift modestly, mostly between the reference and the control fit, which is the prior specification rather than the experiment. Run the same calibration at the narrower market-clustered width and the marginal estimate is 1.85 with a half-width of 0.48; the allocation does not move either. So the experiment supports the tested cut under the stated margin and window, calibration carries that evidence into the allocation model, and the reallocation it proposes remains conditional on the response curves, the transfer from eight markets to the country, and the business constraints the optimizer does not see.</p>
 <div id="fig-allocation-before-after" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Optimizer spend change by channel for the reference, control, and calibrated fits; Google Search sits at the minus 30 percent constraint floor in all three, while TV/CTV and TikTok move between the reference and control fits.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-allocation-before-after-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -756,14 +782,14 @@ Figure&nbsp;4: Optimizer allocation for all three fits.
 <li><strong>Decision stability.</strong> Across defensible translation widths, does the recommended action hold? If it reverses between them, the evidence has not resolved the decision, whatever the point estimate says.</li>
 </ol>
 <p>Data quality and general model validation belong to <a href="sec6.2-mmm-fundamentals.html#sec-mmm-data-requirements">Section 6.2</a> and don’t need repeating here.</p>
-<p>You don’t need an experiment for every channel. Test where spend is material, where the model’s interval is wide, and where a result could change the action. Record the model’s prediction before each test, as Section 6.2’s decision card did. Refresh the model before the next allocation, and let the next disagreement choose the next test.</p>
+<p>You don’t need an experiment for every channel. Test where spend is material, where the model’s interval is wide, and where a result could change the action. Record the model’s prediction before each test, as Section 6.2’s decision card did. Refresh the model before the next allocation, and pick the next test by the same three conditions.</p>
 </section>
 <section id="key-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="key-takeaways">Key Takeaways</h2>
 <ul>
 <li>Match the estimand before you calibrate. A measurement of one spend block informs a marginal parameter through an approximate translation, and the assumptions in that translation travel with it as width.</li>
 <li>Refit the whole model and keep a control fit, so the evidence is separated from the change of prior specification. Here the evidence barely moved Search’s estimate and cut its interval by two thirds.</li>
-<li>Judge calibration by what it lets you support. The experiment settled the cut; calibration carried it into the allocation model, whose reallocation still rests on the curves, the transfer assumptions, and the business constraints.</li>
+<li>Judge calibration by how much of the allocation it lets you support. The experiment settled the cut; calibration carried it into the allocation model, whose reallocation still rests on the curves, the transfer assumptions, and the business constraints.</li>
 </ul>
 
 

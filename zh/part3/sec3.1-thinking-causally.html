@@ -610,7 +610,7 @@ window.Quarto = {
 <p><strong>关于中文版</strong><br>
 本页是英文版 <em>Marketing Science in Python</em> 的AI翻译。英文版为正式版本，如有出入，以英文版为准。代码、Notebook 和图片中的文字保持英文。 <a href="../../part3/sec3.1-thinking-causally.html" class="translation-source-link">阅读英文版</a></p>
 </div>
-<p>让我们来看一个许多数据科学家在商业中都会遇到的典型情境。想象你正在协助营销团队的一位同事，对方说：</p>
+<p>营销团队经常报告这样的结果：</p>
 <p>“营销团队给一部分用户发了优惠券，他们的购买率是未收到优惠券用户的两倍。所以，优惠券一定让购买率翻了一番！”</p>
 <div id="fig-coupon-results" class="fig-sm quarto-float quarto-figure quarto-figure-center anchored" alt="优惠券组 1,000 名客户中有 200 人购买，而无优惠券组 1,000 人中只有 100 人购买。">
 <figure class="quarto-float quarto-float-fig figure">
@@ -622,12 +622,11 @@ window.Quarto = {
 </figcaption>
 </figure>
 </div>
-<p>你会同意这个结论吗？乍一看，你可能倾向于同意。但等一下，如果你知道下面这个补充细节呢？</p>
+<p>这个结论看起来合理，直到你了解到关于优惠券是如何发送的另一个细节：</p>
 <p>“我们只给过去 12 个月内购买过的客户发了优惠券。”</p>
-<p>这就亮起了红灯。那么，这里潜在的问题是什么？</p>
 <section id="selection-bias" class="level2">
 <h2 class="anchored" data-anchor-id="selection-bias">选择偏差</h2>
-<p>关键问题是：优惠券的<em>真实</em>影响是什么？如果我们按照刻意设定的标准发放优惠券，就无法公平地比较购买率。收到优惠券的客户即便没有优惠券也可能会购买。他们本来就更活跃，还可能受到了新闻通讯或社交媒体等其他因素的影响。这些因素带来了所谓的<strong>选择偏差</strong>：当接受处理与未接受处理的两组从一开始就不可比时产生的扭曲。</p>
+<p>问题在于优惠券究竟造成了什么。如果我们按照刻意设定的标准发放优惠券，就无法公平地比较购买率。收到优惠券的客户即便没有优惠券也可能会购买。他们本来就更活跃，还可能受到了新闻通讯或社交媒体等其他因素的影响。这些因素带来了所谓的<strong>选择偏差</strong>：当接受处理与未接受处理的两组从一开始就不可比时产生的扭曲。</p>
 <div id="fig-selection-bias" class="fig-sm quarto-float quarto-figure quarto-figure-center anchored" alt="观察到的 10 个百分点购买率差距中，既包含选择偏差，也包含一个更小的真实优惠券效应。">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-selection-bias-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -639,13 +638,12 @@ window.Quarto = {
 </figure>
 </div>
 <p>两组之间 10 个百分点的差距看起来令人印象深刻，但其中大部分在优惠券发出之前就已经存在了。优惠券带来的真实提升（即没有优惠券就不会发生的那部分）可能只有几个百分点。其余部分是选择偏差：优惠券发给了本来就很可能购买的人。</p>
-<p>这种模式在营销中随处可见。再营销活动显示出很高的转化率，但那是因为它们触达的是已经访问过你网站的人。邮件营销活动的每收件人收入看起来很亮眼，但这些邮件发给的是你最活跃的订阅者。在这两种情况下，处理与结果之所以相关，是因为客户的意愿，而不是因为处理导致了结果。</p>
+<p>这种模式在营销中随处可见。再营销活动显示出很高的转化率，但那是因为它们触达的是已经访问过你网站的人。邮件营销活动的每收件人收入看起来很亮眼，但这些邮件发给的是你最活跃的订阅者。在这两种情况下，处理与结果之间的关联来自客户的意愿：同一种意愿既决定了谁会被触达，也决定了谁会购买。</p>
 </section>
 <section id="what-is-causal-inference" class="level2">
 <h2 class="anchored" data-anchor-id="what-is-causal-inference">什么是因果推断？</h2>
-<p>那么，我们如何跨过这些陷阱？这正是因果推断的用武之地。</p>
-<p>因果推断关注的是，某个特定行动（即“处理”，treatment）与其产生的结果（即“结果”，outcome）之间是否存在因果关系。传统上，它一直是医疗等领域的基石。例如，一个常见的用例是评估一种新药是否能有效治疗某种疾病。在这种情境下，给药是“处理”，患者的康复是“结果”。</p>
-<p>但因果推断不只是医疗领域的工具。在电商和营销中，“处理”包括发放优惠券、投放广告或寄送直邮等行动，而“结果”则是购买、注册或收入之类的东西。</p>
+<p>因果推断是一套把效应与选择区分开来的方法：它关注的是，某个特定行动（即“处理”，treatment）与其产生的结果（即“结果”，outcome）之间是否存在因果关系。传统上，它一直是医疗等领域的基石。例如，一个常见的用例是评估一种新药是否能有效治疗某种疾病。在这种情境下，给药是“处理”，患者的康复是“结果”。</p>
+<p>电商和营销使用同样的框架。“处理”包括发放优惠券、投放广告或寄送直邮等行动，而“结果”则是购买、注册或收入之类的东西。</p>
 <div id="fig-treatment-outcome" class="fig-sm quarto-float quarto-figure quarto-figure-center anchored" alt="处理与结果示意图：在医疗中，药物带来康复；在营销中，优惠券带来购买。">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-treatment-outcome-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -659,8 +657,8 @@ window.Quarto = {
 </section>
 <section id="the-counterfactual" class="level2">
 <h2 class="anchored" data-anchor-id="the-counterfactual">反事实</h2>
-<p>因果推断的主要挑战在于，对每个个体我们只能观察到一种结果。如果我们有时光机，可以先给一位客户发优惠券，然后倒回时间，看看不发优惠券会发生什么。在现实世界中我们做不到：对每位客户，我们永远只能看到故事的一个版本。</p>
-<p>这正是因果推断介入的地方：它让我们能够估计那个没有发生的结果，也就是所谓的<strong>反事实</strong>。</p>
+<p>因果推断的主要挑战在于，对每个个体我们只能观察到一种结果。一位客户要么收到了优惠券，要么没有。我们观察到的是实际发生的那种条件下的结果，永远看不到另一种。</p>
+<p>因果推断估计的是那个没有发生的结果，也就是所谓的<strong>反事实</strong>。</p>
 <div id="fig-counterfactual" class="fig-sm quarto-float quarto-figure quarto-figure-center anchored" alt="因果推断的根本问题：我们能看到有优惠券时的结果，却永远看不到同一位客户没有优惠券时的结果。">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-counterfactual-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -677,8 +675,7 @@ window.Quarto = {
 </section>
 <section id="why-not-just-run-an-ab-test" class="level2">
 <h2 class="anchored" data-anchor-id="why-not-just-run-an-ab-test">为什么不直接做 A/B 测试？</h2>
-<p>你可能会想：“为什么不直接做 A/B 测试呢？”</p>
-<p>在营销中，这种方法称为 <strong>A/B 测试</strong>，在更广泛的因果推断文献中，它也被称为<strong>随机对照试验（RCT）</strong>。它通常被视为回答因果问题的“黄金标准”。其工作方式如下。</p>
+<p>最直接的解决办法是随机决定谁接受处理。在营销中，这种方法称为 <strong>A/B 测试</strong>，在更广泛的因果推断文献中，它也被称为<strong>随机对照试验（RCT）</strong>。它通常被视为回答因果问题的“黄金标准”。其工作方式如下。</p>
 <p>你把客户随机分成两组：“实验组”和“对照组”。实验组收到优惠券，对照组没有。假设实验组的购买率最终为 40%，对照组为 20%。二者之差 20 个百分点，就是优惠券的效应。</p>
 <div id="fig-rct" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="随机划分后，实验组收到优惠券而对照组没有；购买率为 40% 对 20%，提升了 20 个百分点。">
 <figure class="quarto-float quarto-float-fig figure">
@@ -694,7 +691,7 @@ window.Quarto = {
 </section>
 <section id="limitations-of-ab-testing" class="level2">
 <h2 class="anchored" data-anchor-id="limitations-of-ab-testing">A/B 测试的局限</h2>
-<p>那么，理解了 A/B 测试，是否意味着它永远是完美的解决方案？遗憾的是，并非如此。虽然 A/B 测试提供了现有最强的证据，但在许多情况下它根本不可行：</p>
+<p>A/B 测试提供了现有最强的证据，但在许多情况下它并不可行：</p>
 <ol type="1">
 <li><p><strong>机会损失。</strong>如果你做 A/B 测试，一半的客户不会收到新产品或新优惠。这可能意味着错失销售和增长，这种“机会损失”企业并非总能承受。</p></li>
 <li><p><strong>时间限制。</strong>A/B 测试可能很耗时。它们往往需要数周甚至数月才能收集到足够的数据来得出可靠的结论。这种延迟可能意味着错过市场窗口或失去竞争优势。</p></li>
@@ -706,8 +703,8 @@ window.Quarto = {
 <h2 class="anchored" data-anchor-id="simpsons-paradox-challenges-of-observed-data">辛普森悖论：观察数据的挑战</h2>
 <p>即便模式看起来很明显，观察性的营销数据也可能具有误导性。</p>
 <p>假设我们想了解邮件发送频率与退订风险之间的关系。我们按每位订阅者收到的营销邮件数量及其退订的可能性绘图。在汇总数据中，模式看起来令人意外：收到更多邮件的订阅者似乎<em>更不</em>容易退订。</p>
-<p>乍一看，这似乎表明发送更多邮件会降低退订风险。但这个结论应该让我们感到不安。对于同一类型的订阅者，发送过多邮件通常应该增加而不是降低其退订的可能性。</p>
-<p>那么缺了什么？此前的邮件互动。</p>
+<p>按字面理解，这是说发送更多邮件会降低退订风险，这与我们对发送频率的认识相矛盾。对于同一类型的订阅者，发送过多邮件通常应该增加而不是降低其退订的可能性。</p>
+<p>缺失的变量是此前的邮件互动。</p>
 <p>营销团队很少随机发送邮件。经常打开和点击邮件的订阅者通常会收到更多的营销活动邮件，因为他们活跃且响应积极。很少互动的订阅者往往收到的更少，或者被排除在某些发送之外。这些群体的基线退订风险差异很大。</p>
 <p>一旦按此前的邮件互动对订阅者进行分组，模式就反转了：在每一个互动组内部，更高的邮件频率都与更高的退订风险相关。（低互动的订阅者总体上更可能退订，但在每个组内部，发送更多邮件仍然会提高这一风险。）</p>
 <p>这就是<strong>辛普森悖论</strong>：汇总趋势说的是一回事，而可比群体内部的模式说的却是相反的另一回事。</p>
@@ -735,11 +732,11 @@ window.Quarto = {
 </figcaption>
 </figure>
 </div>
-<p>教训是：面对观察性数据，永远要问一问数字背后是否隐藏着混杂因素。</p>
+<p>面对观察性数据，在把一个差异解读为效应之前，先检查是否存在混杂因素。</p>
 </section>
 <section id="road-map-for-part-3" class="level2">
 <h2 class="anchored" data-anchor-id="road-map-for-part-3">第 3 部分路线图</h2>
-<p>计划如下。第一项任务是得到一个你可以相信的比较。如果你能随机化，A/B 测试给出最可靠的答案。如果不能，准实验设计会从处理是如何分配的这一点出发重建比较，这也包括在某个已知日期触达了所有人的行动，其中缺失的无处理路径要根据序列自身的历史来预测。第二项任务在你得到一个可信的效应之后开始，它要问的是这个效应在客户之间如何变化，这样你就可以不再把钱花在那些本来就会转化的人身上。这正是元学习器（meta-learner）和增益建模（uplift modeling）所做的事。</p>
+<p>第一项任务是得到一个你可以相信的比较。如果你能随机化，A/B 测试给出最可靠的答案。如果不能，准实验设计会从处理是如何分配的这一点出发重建比较，这也包括在某个已知日期触达了所有人的行动，其中缺失的无处理路径要根据序列自身的历史来预测。第二项任务在你得到一个可信的效应之后开始，它要问的是这个效应在客户之间如何变化，这样你就可以不再把钱花在那些本来就会转化的人身上。这正是元学习器（meta-learner）和增益建模（uplift modeling）所做的事。</p>
 
 
 </section>

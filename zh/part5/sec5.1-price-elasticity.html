@@ -647,15 +647,12 @@ window.Quarto = {
 <p><strong>关于中文版</strong><br>
 本页是英文版 <em>Marketing Science in Python</em> 的AI翻译。英文版为正式版本，如有出入，以英文版为准。代码、Notebook 和图片中的文字保持英文。 <a href="../../part5/sec5.1-price-elasticity.html" class="translation-source-link">阅读英文版</a></p>
 </div>
-<p>什么才是合适的价格？</p>
-<p>销售团队想要更低的价格。他们离客户最近，看得到最显而易见的效应：价格一降，货就动起来了。</p>
-<p>财务团队想要更高的利润率。从另一侧看同一个权衡，他们看得到：如果额外的销量是用过低的价格换来的，收入可以上升而利润消失。</p>
-<p>营销处在这两种视角之间，但不是靠取平均。它的职责是把客户反应、品牌定位和商业目标连起来：什么时候追求销量或收入，什么时候保护利润，什么时候价格本身就在传递定位信号。</p>
-<p>双方都有部分道理。价格影响销量，但销量并不总是主要目标。有时业务要的是收入，有时是利润，有时是客流或份额，甚至只是清库存或守住某个价格位置。真正缺的不是目标。缺的是理解价格变动时销量究竟变了多少。</p>
-<p>这正是价格弹性给我们的东西。它不决定业务目标。它给出一条响应曲线，让我们能对照目标去比较各种定价决策，无论那个目标是销量、收入、利润还是定位。</p>
+<p>一个定价决策必须调和两种方向相反的效应：更低的价格卖出更多销量，更高的价格每件赚到更多利润。哪一个占上风，取决于价格变动时销量究竟变了多少。</p>
+<p>营销负责的这个决策把客户反应、品牌定位和商业目标连起来：什么时候追求销量或收入，什么时候保护利润，什么时候价格本身就在传递定位信号。有时目标是客流或份额、清库存，或者守住某个价格位置。无论目标是什么，首先要估计的量都是销量对价格变动的响应有多大。</p>
+<p>价格弹性提供的就是这条响应曲线。目标仍由业务来选，无论是销量、收入、利润还是定位，而这条曲线让你能对照目标去比较各个候选价格。</p>
 <section id="sec-price-elasticity-definition" class="level2">
 <h2 class="anchored" data-anchor-id="sec-price-elasticity-definition">什么是价格弹性？</h2>
-<p>想象你正在决定是否把一款畅销麦片的价格提高 10%。你会损失 5% 的销量，还是 20%？这个差别决定了这次调价是改善销售、收入或利润，还是只是把购物者赶走。</p>
+<p>把一款畅销麦片的价格提高 10%，可能损失 5% 的销量，也可能损失 20%，而这两种情形导向相反的决策。这个损失的大小决定了这次调价是改善销售、收入或利润，还是只是把购物者赶走。</p>
 <p>需求的价格弹性衡量的是销售数量对价格变动的敏感程度：</p>
 <p><span class="math display">\[
 \varepsilon = \frac{\% \Delta \text{Quantity}}{\% \Delta \text{Price}}
@@ -693,7 +690,7 @@ window.Quarto = {
 Q = b_0 \times P^{b_1}
 \]</span></p>
 <p>其中 <span class="math inline">\(Q\)</span> 是数量，<span class="math inline">\(P\)</span> 是价格，<span class="math inline">\(b_0\)</span> 是尺度参数，<span class="math inline">\(b_1\)</span> 是弹性。对正常商品而言，<span class="math inline">\(b_1\)</span> 为负。取对数后得到线性关系 <span class="math inline">\(\log Q = \log b_0 + b_1 \log P\)</span>，所以 <span class="math inline">\(b_1\)</span> 是对数-对数空间中的斜率。该模型假设弹性在整个价格区间内恒定。这是一个很强的假设，但对许多消费品来说是合理的起点。</p>
-<p>用 <code>scipy.optimize.curve_fit</code> 在原始的、非对数的空间中拟合曲线，以避免在对数空间拟合再换算回来所带来的逆变换偏差。</p>
+<p>用 <code>scipy.optimize.curve_fit</code> 在原始的、非对数的空间中拟合曲线，以避免在对数空间拟合再换算回来所带来的逆变换偏差。该模型只用价格和销量，没有季节性、促销、竞争对手或参考价格的项，所以它返回的弹性是在这些条件下的一个初始估计。</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> scipy.optimize <span class="im">import</span> curve_fit</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -749,7 +746,7 @@ Q = b_0 \times P^{b_1}
 </figcaption>
 </figure>
 </div>
-<p>在实践中，弹性落在 <span class="math inline">\(-0.5\)</span> 到 <span class="math inline">\(-5\)</span> 之间、<span class="math inline">\(R^2 &gt; 0.4\)</span>、并且有若干个不同价格点的估计，可以用于定价决策。落在这个范围之外的估计往往是数据问题：价格点太少、单次促销折扣主导了拟合，或者时间窗口太短。如果弹性不可信，建立在它之上的任何定价建议也都不可信。</p>
+<p>在实践中，弹性落在 <span class="math inline">\(-0.5\)</span> 到 <span class="math inline">\(-5\)</span> 之间、<span class="math inline">\(R^2 &gt; 0.4\)</span>、并且有若干个不同价格点的估计，可以作为初始估计使用；本章末尾的陷阱部分会说明它在什么情况下不能用。<span class="math inline">\(R^2\)</span> 阈值是衡量拟合质量的一个经验法则，对估计是否具有因果有效性不置一词。落在这个范围之外的估计往往是数据问题：价格点太少、单次促销折扣主导了拟合，或者时间窗口太短。如果弹性不可信，建立在它之上的任何定价建议也都不可信。</p>
 </section>
 <section id="sec-margin-maximizing-price" class="level2">
 <h2 class="anchored" data-anchor-id="sec-margin-maximizing-price">以边际贡献为目标优化</h2>
@@ -759,15 +756,15 @@ Q = b_0 \times P^{b_1}
 \text{Revenue}(P) = P \times Q(P)
 \]</span></p>
 <p>这往往是最直观的起点，因为它只需要价格和销量。但在恒定弹性曲线下，收入最大化是退化的：当需求富有弹性时（<span class="math inline">\(|b_1| &gt; 1\)</span>，本章每个产品都是如此），收入随着价格下降持续上升，所以收入最大化的价格不过是你愿意设定的最低价。如果没有可靠的变动成本，收入仍可以作为初筛指标，但要把它当作一个方向（降价），而不是一个内部最优点。</p>
-<p>但收入不是利润。如果有变动成本，我们可以问一个更有力的问题：哪个价格使边际贡献最大化？</p>
+<p>收入没有考虑变动成本。如果有变动成本，我们可以问一个更有力的问题：哪个价格使边际贡献最大化？</p>
 <p><span class="math display">\[
 \text{Contribution Margin}(P) = (P - C) \times Q(P)
 \]</span></p>
 <p>其中 <span class="math inline">\(C\)</span> 是单位变动成本，<span class="math inline">\(Q(P) = b_0 \times P^{b_1}\)</span>。</p>
-<p>两个答案可能不同。更低的价格可以卖出更多销量、增加收入，同时减少总利润。更高的价格可以减少收入，但如果剩下的销量足够赚钱，就能改善利润。重点不在于利润永远是唯一目标。重点在于选价之前必须把目标说清楚。</p>
+<p>两个答案可能不同。更低的价格可以卖出更多销量、增加收入，同时减少总利润。更高的价格可以减少收入，但如果剩下的销量足够赚钱，就能改善利润。利润并不总是目标，但目标必须在选价之前说清楚，因为收入和边际贡献可能偏向不同的价格。</p>
 <section id="worked-example-a-private-label-cereal" class="level3">
 <h3 class="anchored" data-anchor-id="worked-example-a-private-label-cereal">实例：一款自有品牌麦片</h3>
-<p>取一款自有品牌麦片，参数如下：</p>
+<p>取一款自有品牌麦片，参数如下，并记住下面的每个结果都以恒定弹性需求曲线在所示价格区间内成立为前提：</p>
 <ol type="1">
 <li>当前价格：$3.99</li>
 <li>变动成本：$2.20</li>
@@ -815,8 +812,8 @@ Q = b_0 \times P^{b_1}
 </tr>
 </tbody>
 </table>
-<p>这张表展示了核心的权衡。在这个区间内，收入在最低价处最高，而在恒定弹性下，每再降一次价，收入都会继续攀升。利润的表现不同：它在 <span class="math inline">\(P^* = C \cdot |b_1| / (|b_1| - 1)\)</span> 处有一个内部最优点，对这组参数来说约为 $5.87，这就是为什么在表的最高价处总利润仍在上升，达到 $2,903。提价 10% 时，收入下降 5.5%，而利润上升 5.1%。收入和利润指向相反的方向。这就是折扣陷阱：折扣推高了收入，同时侵蚀了总边际贡献。</p>
-<p><a href="#fig-margin-curves" class="quarto-xref">图&nbsp;<span>3</span></a> 用五款真实的 Dunnhumby 产品展示了同样的逻辑。在每个面板中，收入都随着价格下降持续攀升，而边际贡献在某个内部价格处转向，所以两个目标确实指向不同的决策。对这些弹性很高的自有品牌乳制品来说，利润最大化的价格始终低于当前价格，因为降价带来的额外销量足以推高总利润。同一个公式，相反的方向：决定翻转的是那个内部最优点落在今天价格的上方还是下方，而这由弹性和成本比率共同决定。</p>
+<p>这张表展示了核心的权衡。在这个区间内，收入在最低价处最高，而在恒定弹性下，每再降一次价，收入都会继续攀升。利润的表现不同：它在 <span class="math inline">\(P^* = C \cdot |b_1| / (|b_1| - 1)\)</span> 处有一个内部最优点，对这组参数来说约为 $5.87，这就是为什么在表的最高价处总利润仍在上升，达到 $2,903。提价 10% 时，收入下降 5.5%，而利润上升 5.1%。收入和利润指向相反的方向。在这个区间内，一次折扣在推高收入的同时降低了总边际贡献。</p>
+<p><a href="#fig-margin-curves" class="quarto-xref">图&nbsp;<span>3</span></a> 用五款真实的 Dunnhumby 产品展示了同样的逻辑。在每个面板中，收入都随着价格下降持续攀升，而边际贡献在某个内部价格处转向，所以两个目标确实指向不同的决策。对这些弹性很高的自有品牌乳制品来说，利润最大化的价格始终低于当前价格，因为降价带来的额外销量足以推高总利润。两种情形下公式是同一个；建议的方向取决于内部最优点在今天价格的上方还是下方，而这由弹性和成本比率共同决定。</p>
 <div id="fig-margin-curves" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="五款产品的收入曲线与边际贡献曲线，标出当前价格和利润最大化价格。">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-margin-curves-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -846,7 +843,7 @@ Q = b_0 \times P^{b_1}
 <span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>optimal_margin <span class="op">=</span> <span class="op">-</span>result.fun</span>
 <span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Optimal price: $</span><span class="sc">{</span>optimal_price<span class="sc">:.2f}</span><span class="ss">"</span>)</span>
 <span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Max weekly margin: $</span><span class="sc">{</span>optimal_margin<span class="sc">:,.0f}</span><span class="ss">"</span>)</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
-<p>有一条注意事项来自恒定弹性假设：只有当需求富有弹性（<span class="math inline">\(|b_1| &gt; 1\)</span>）时，利润曲线才有那个内部最优点。对缺乏弹性的商品，模型意味着利润随价格持续上升，于是有界优化器只会返回上界：这是一个重新检查拟合的信号，而不是一个可以设定的价格。因此配套 Notebook 只对判定为可用且 <span class="math inline">\(b_1 &lt; -1\)</span> 的商品进行优化。</p>
+<p>有一条注意事项来自恒定弹性假设：只有当需求富有弹性（<span class="math inline">\(|b_1| &gt; 1\)</span>）时，利润曲线才有那个内部最优点。对缺乏弹性的商品，模型意味着利润随价格持续上升，于是有界优化器只会返回上界。这个值是搜索边界的产物，所以要重新检查拟合，而不是把它当作价格来用。因此配套 Notebook 只对判定为可用且 <span class="math inline">\(b_1 &lt; -1\)</span> 的商品进行优化。</p>
 <p><strong>配套 Notebook：</strong> <code>sec5.1_price_elasticity.ipynb</code> 涵盖数据加载、质量检查、两轮弹性估计和敏感性表。<br>
 <a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part5-commercial-analytics/sec5.1_price_elasticity.ipynb">在 GitHub 上查看</a></p>
 </section>
@@ -854,7 +851,7 @@ Q = b_0 \times P^{b_1}
 <section id="sec-segment-elasticity" class="level2">
 <h2 class="anchored" data-anchor-id="sec-segment-elasticity">弹性因产品角色而异</h2>
 <p>同一个品类可以包含购物者角色截然不同的产品。在液态奶产品中，一加仑白牛奶、一份单人装巧克力牛奶和一夸脱咖啡奶精并不是可以互换的定价决策。它们可能属于同一个大商品类别，但购物者为不同的场合购买它们，并拿它们与不同的替代品比较。</p>
-<p>这就是为什么 SKU 层级的估计只应聚合到可比的 SKU 组中，比如同一个子商品类别。目标不是创建尽可能多的细分群体。目标是避免把价格响应本应不同的产品平均在一起。</p>
+<p>这就是为什么 SKU 层级的估计只应聚合到可比的 SKU 组中，比如同一个子商品类别。只有当 SKU 的购物者角色相同时才把它们归为一组，这样价格响应确实不同的产品就不会被平均在一起。</p>
 <div id="fig-product-role-elasticity" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="液态奶内按产品角色划分的销量加权平均价格弹性，从高度富有弹性到近乎缺乏弹性不等。">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-product-role-elasticity-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -865,21 +862,21 @@ Q = b_0 \times P^{b_1}
 </figcaption>
 </figure>
 </div>
-<p>在对整个品类套用同一条定价规则之前，先检查主要的产品角色是否响应不同。如果不同，平均弹性就不是一条定价规则。它是一个警告：这个品类需要更仔细地拆分。</p>
+<p>在对整个品类套用同一条定价规则之前，先检查主要的产品角色是否响应不同。如果不同，品类平均值就太粗糙，不能据以定价，必须先把品类拆分成按角色划分的组。</p>
 </section>
 <section id="sec-elasticity-pitfalls" class="level2">
 <h2 class="anchored" data-anchor-id="sec-elasticity-pitfalls">价格弹性的常见陷阱</h2>
 <p><strong>内生性。</strong> 价格不是随机设定的。如果零售商在返校季这类高需求时期提价，观测到的弹性会偏向零，因为高价格和高需求出于与定价无关的原因同时出现。这与第 3 部分的选择偏差是同一个问题。用工具变量、随机化价格实验或准实验设计来应对。</p>
 <p><strong>共享的时间结构。</strong> 价格和销量都带有季节性、促销日历和趋势，所以在原始周序列上做回归可能捕捉到的是这种共享结构，而不是价格响应。两个仅仅共享同一份日历的序列，相关性就可能强到看起来像一条需求曲线。把日历放进模型：周或月指示变量、促销标记和趋势项，这样价格系数是在控制它们的情况下估计的，而不是透过它们估计的。本章的双变量拟合没有做这些，所以在带日历的设定给出一致结果之前，把它的弹性当作暴露于这种偏差之下。</p>
 <p><strong>参考价格效应。</strong> 顾客记得自己之前付过多少钱。提价引起的销量下降通常大于降价带来的新买家。JCPenney 的“Fair and Square”案例是著名的例子：在平均价格水平不变的情况下从促销转向天天低价，导致销售崩溃，因为顾客失去了价格锚点。</p>
-<p><strong>竞争对手的反应。</strong> 降价只有在竞争对手按兵不动时才有效。在集中度高的品类中，竞争对手通常会跟进。每家卖的量都差不多，但利润率更低了。在那里，博弈论比需求曲线更重要。</p>
+<p><strong>竞争对手的反应。</strong> 降价只有在竞争对手按兵不动时才有效。在集中度高的品类中，竞争对手通常会跟进。每家卖的量都差不多，但利润率更低了。在这些品类中，先对竞争对手可能的反应建模，再根据需求曲线行动。</p>
 </section>
 <section id="key-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="key-takeaways">要点</h2>
 <ul>
-<li>弹性给出响应曲线，但不选择目标。要决定你优化的是销量、收入还是边际贡献。在恒定弹性拟合下，只有富有弹性的需求才让利润有一个内部最优点。</li>
+<li>弹性给出响应曲线；由业务来决定优化的是销量、收入还是边际贡献。在恒定弹性拟合下，只有富有弹性的需求才让利润有一个内部最优点。</li>
 <li>在决策所用的粒度上拟合，默认是 SKU 按周，并在到处套用同一条定价规则之前检查产品角色是否响应不同。</li>
-<li>估计出的弹性是一个观测性结果，不是产品的普遍属性。内生性、促销和缺货都可能让价格响应曲线看起来比实际更可靠。</li>
+<li>拟合出的弹性描述的是观测到的价格与销量关系，而不是有保证的因果响应：内生性、促销和缺货都可能使它无法可靠地预示价格变动的结果。</li>
 </ul>
 
 

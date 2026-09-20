@@ -646,7 +646,7 @@ window.Quarto = {
 <p><strong>日本語版について</strong><br>
 このページは英語版 <em>Marketing Science in Python</em> のAI翻訳です。英語版を正本とし、差異がある場合は英語版を優先してください。コード、Notebook、画像内の文字は英語のままです。 <a href="../../part5/sec5.2-assortment-optimization.html" class="translation-source-link">英語版を読む</a></p>
 </div>
-<p>カテゴリーレビューの日程が決まりました。棚割りチームは棚のスペースを取り戻したいと考え、カテゴリーマネージャーは削減するSKUを選ばなければなりません。実績の悪い商品は、場所を取るだけではありません。在庫を拘束し、サプライチェーンを複雑にし、棚から商品を選びにくくします。どの商品を削減し、どれを残し、チェーン全体へ広げる前にその判断をどう検証するかを決めます。</p>
+<p>カテゴリーレビューでは、棚からどのSKUを外すかを決めます。売れないSKUには、棚のスペース以外のコストがあります。保有在庫、サプライチェーンの1ライン、買い物客が見る選択肢の増加です。どの商品を削減し、どれを残し、チェーン全体へ広げる前にその判断をどう検証するかを決めます。</p>
 <p>この章では、2年間の食料品取引を使って、その意思決定を実行します。売上でロングテールをスクリーニングし、需要が店舗内に残るかを確認し、各SKUをテストする安全性で順位づけした候補リストを返します。</p>
 <p><strong>付属Notebook：</strong> <code>sec5.2_assortment_optimization.ipynb</code> は、Dunnhumby Complete Journey食料品データセットで、売上ABCスクリーニング、代替確認、行動割り当てを再現します。<br>
 <a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part5-commercial-analytics/sec5.2_assortment_optimization.ipynb">GitHubで見る</a></p>
@@ -674,15 +674,15 @@ window.Quarto = {
 <li><strong>スクリーニング → 候補プール。</strong> 売上への貢献が小さく、ロングテールにある商品はどれか？</li>
 <li><strong>代替確認 → 安全性評価。</strong> 各候補を削除した場合、需要は自社店舗内に残るか？</li>
 </ol>
-<p>実績の高い商品に妥当な代替品がある候補は、リスクの低いテスト候補です。代替品がなければ、行動前にテストします。マッチングした店舗によるテストで検証するまで、安全と確認されたものはありません。</p>
+<p>実績の高い商品に妥当な代替品がある候補は、リスクの低いテスト候補です。代替品がなければ、より慎重な扱いが必要です。どちらの場合も、削除が安全だと確認するのはマッチドストアテストです。</p>
 <section id="step-1-screening-skus-by-revenue" class="level3">
 <h3 class="anchored" data-anchor-id="step-1-screening-skus-by-revenue">手順1：売上でSKUをスクリーニングする</h3>
 <p>削除する商品を決める前に、SKU全体を絞り込む必要があります。食料品店では何千もの商品を扱いますが、少数の商品が売上の大半を生み、ロングテールの各商品が生む売上はごくわずかです。そのロングテールから削除候補を選びます。</p>
 <p>小売チームは、<strong>ABC分析</strong>と呼ばれるパレート型の順位づけをよく使います。商品を貢献度（通常は売上金額または利益、ときには数量）で並べ、3つの階層へ分けます。</p>
 <ul>
-<li><strong>A商品</strong>（上位約20%）：重要な少数。選んだ指標の約80%を生みます。保護、監視、最適化します。</li>
-<li><strong>B商品</strong>（次の約30%）：重要な中間層。安定して貢献し、必要な注意は比較的少なくなります。</li>
-<li><strong>C商品</strong>（下位約50%）：ロングテール。個々には小さく、全体ではノイズになります。合理化の候補です。</li>
+<li><strong>A商品</strong>（上位約20%）：選んだ指標の約80%を生みます。保護、監視、最適化します。</li>
+<li><strong>B商品</strong>（次の約30%）：安定して貢献し、必要な注意は比較的少なくなります。</li>
+<li><strong>C商品</strong>（下位約50%）：ロングテールで、1SKU当たりの売上が小さく、売上系列から読み取れる情報が少なくなります。合理化の候補です。</li>
 </ul>
 <p>Cランク商品から候補プールを作り始めます。すべてのCランク商品を削除すべきではありませんが、削減を検討する商品はこの群から選びます。</p>
 <p>コードでは、SKUを累積売上構成比で順位づけし、A/B/C階層へ分け、Cランクのロングテールを候補プールとします。</p>
@@ -696,7 +696,7 @@ window.Quarto = {
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Candidate pool = C-rank by revenue (the long tail)</span></span>
 <span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>candidates <span class="op">=</span> sku_summary[sku_summary[<span class="st">"abc_revenue"</span>] <span class="op">==</span> <span class="st">"C"</span>]</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 <p>売上ゼロ／マイナスの除外と、NaNに対して安全なビニングを含む完全な関数は、付属Notebookにあります。</p>
-<p><a href="#fig-revenue-pareto" class="quarto-xref">図&nbsp;<span>1</span></a> は、売上のない38商品を除いた約39,000のDunnhumby食料品SKUについて、売上のパレート曲線を示します。売上は高度に集中しています。SKUの20%未満が売上の80%を生む一方、Cランクのプール（<code>abc_revenue == "C"</code>）はSKUの63%を含みますが、売上の5%しか生みません。このロングテールが候補プールになります。数量だけを根拠に守るのではなく、調べる価値があります。</p>
+<p><a href="#fig-revenue-pareto" class="quarto-xref">図&nbsp;<span>1</span></a> は、売上のない38商品を除いた約39,000のDunnhumby食料品SKUについて、売上のパレート曲線を示します。売上は高度に集中しています。SKUの20%未満が売上の80%を生む一方、Cランクのプール（<code>abc_revenue == "C"</code>）はSKUの63%を含みますが、売上の5%しか生みません。このロングテールが候補プールになります。数量が少ないことでこのプールへ入りますが、それだけで結論は決まりません。</p>
 <div id="fig-revenue-pareto" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="約39,000SKUの売上パレート曲線。SKUの20%未満が売上の80%を生む">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-revenue-pareto-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -712,10 +712,10 @@ window.Quarto = {
 <section id="step-2-substitution-check-will-the-demand-stay" class="level3">
 <h3 class="anchored" data-anchor-id="step-2-substitution-check-will-the-demand-stay">手順2：代替確認「需要は残るか？」</h3>
 <p>各Cランク候補について、次の問いを検討します。削除した場合、顧客は自社から別の商品を購入するか、それとも店舗を離れるか？</p>
-<p>同じサブカテゴリー内で、同じバスケットにほとんど現れない商品は代替品かもしれません。通常、買い物客は3ブランドではなく、1ブランドのヨーグルトを購入します。Liftで測定したバスケット内の低い共起を、代替の代理指標として使います。</p>
+<p>同じサブカテゴリー内で、同じバスケットにほとんど現れない商品は代替品かもしれません。買い物客は通常、1回の買い物でヨーグルトを1ブランド購入します。Liftで測定したバスケット内の低い共起を、代替の代理指標として使います。</p>
 <p><span class="math display">\[\text{Lift}(A, B) = \frac{P(A \cap B)}{P(A) \times P(B)}\]</span></p>
 <p>Lift &gt; 1なら、2商品が一緒に購入される傾向があり（補完財）、Lift &lt; 1なら、一緒に購入されることがまれであり、同じサブカテゴリー内では互いに代替することを示唆します。Lift = 0（同じバスケットに一度もない）が最も強いシグナルです。同じサブカテゴリーという制約が重要です。カテゴリーをまたいだ低い共起は、商品が異なるニーズを満たすこと（シリアル対パスタ）を意味するだけで、代替関係を意味しません。</p>
-<p>これは代理指標であり、証明ではありません。低い共起は、異なる買い物の機会や顧客セグメントを反映する場合もあります。</p>
+<p>低い共起は代替関係と矛盾しませんが、それを立証するものではありません。異なる買い物の機会や顧客セグメントを反映する場合もあります。</p>
 <p>各Cランク候補について、同じサブカテゴリーの商品を調べます。対象は、移ってきた需要を吸収できるほど大きなA/B売上ランクのSKUに限定し、Liftの低い商品へフラグをつけます。</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>co_occur <span class="op">=</span> <span class="bu">len</span>(cand_baskets <span class="op">&amp;</span> peer_baskets)</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> co_occur <span class="op">==</span> <span class="dv">0</span>:                       <span class="co"># never bought together → strongest signal</span></span>
@@ -729,7 +729,7 @@ window.Quarto = {
 </section>
 <section id="the-output-a-scored-candidate-list" class="level3">
 <h3 class="anchored" data-anchor-id="the-output-a-scored-candidate-list">出力：スコアリング済み候補リスト</h3>
-<p>ロングテール全体は大きすぎるため、NotebookではCランクSKUを150個スコアリングします。最も頻繁に購入された100商品と、同じサブカテゴリーのCランクSKUで、すべて2年間に少なくとも30バスケットへ入っています。購入が十数回だけのSKUは、どちらの方向にも代替シグナルを示せません。手順1と2によって、3つの行動のうち一つを割り当てます。<a href="#tbl-scored-candidates" class="quarto-xref">表&nbsp;<span>1</span></a> は、各行動について実際の候補を一つずつ示します（読みやすいよう、サブカテゴリーのラベルを整理しています）。</p>
+<p>ロングテール全体は大きすぎるため、NotebookではCランクSKUを150個スコアリングします。最も頻繁に購入された100商品と、同じサブカテゴリーのCランクSKUで、すべて2年間に少なくとも30バスケットへ入っています。Notebookでは、件数が少ないことによるノイズを減らすために30バスケットを足切りの基準にしています。これは経験則であり、統計的な保証ではありません。手順1と2によって、3つの行動のうち一つを割り当てます。<a href="#tbl-scored-candidates" class="quarto-xref">表&nbsp;<span>1</span></a> は、各行動について実際の候補を一つずつ示します（読みやすいよう、サブカテゴリーのラベルを整理しています）。</p>
 <div id="tbl-scored-candidates" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-scored-candidates-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -742,7 +742,7 @@ window.Quarto = {
 <th style="text-align: left;">候補（サブカテゴリー）</th>
 <th style="text-align: right;">2年間の売上</th>
 <th style="text-align: right;">バスケット</th>
-<th style="text-align: center;">明確な代替品？</th>
+<th style="text-align: center;">代替候補あり？</th>
 <th style="text-align: center;">ハロー効果？</th>
 <th style="text-align: left;">行動</th>
 </tr>
@@ -777,21 +777,21 @@ window.Quarto = {
 </div>
 </figure>
 </div>
-<p>150商品の行動は、105／28／17に分かれます。調査したロングテールの大半には、カテゴリー内の代替品があり、バスケット内で特別な役割はありません。このような商品では、共起ゼロ（Lift 0.0、取引データで最も強い代替シグナル）が一般的です。これは削除リストではありません。各候補を先にテストする安全性で並べた候補リストです。</p>
-<p>カテゴリー内に明確な代替品がある候補は、削除を最も安全にテストできます。明確な代替品がない17商品は反対です。需要を吸収できるA/B売上ランクの類似商品が5つ未満なので、需要が店舗を離れる可能性があります。当面は商品を維持し、小容量パックや仕入先との条件改善などコストを下げる方法を探すか、削除前に慎重にテストします。</p>
-<p>中央の28商品は、ハロー効果に対するガードレールです。高価値商品と一緒に現れることが多い低価格SKUは、そのバスケットを引きつけている可能性があり、削除するとほかの売上が減るかもしれません。売上だけに頼らず、削減前に調査します。密な食料品データでは、ほぼすべてのSKUが何かと共起するため、このフラグは最も明確なケースだけに使います。また、売上の低いすべてのSKUを候補プールへ入れるべきではありません。来店を促す、価格イメージの基準になる、カテゴリーの信頼性を示すなど、売上とLiftでは捉えられない役割によって棚のスペースを得ている商品もあります。</p>
+<p>150商品の行動は、105／28／17に分かれます。調査したロングテールの大半には、カテゴリー内の代替候補があり、バスケット内で特別な役割はありません。このような商品では、共起ゼロ（Lift 0.0、取引データで最も強い代替シグナル）が一般的です。出力は、先にテストする安全性で並べたテスト候補リストです。</p>
+<p>サブカテゴリー内に代替候補があるSKUは、削除を最も安全にテストできます。代替候補がない17商品は反対です。需要を吸収できるA/B売上ランクの類似商品が5つ未満なので、需要が店舗を離れる可能性があります。当面は商品を維持し、小容量パックや仕入先との条件改善などコストを下げる方法を探すか、削除前に慎重にテストします。</p>
+<p>中央の28商品は、ハロー効果に対するガードレールです。高価値商品と一緒に現れることが多い低価格SKUは、そのバスケットを引きつけている可能性があり、削除するとほかの売上が減るかもしれません。売上だけに頼らず、削減前に調査します。密な食料品データでは、ほぼすべてのSKUが何かと共起するため、このフラグは最も明確なケースだけに使います。また、売上の低いすべてのSKUを候補プールへ入れるべきではありません。来店を促す、カテゴリーの価格イメージの基準になる、カテゴリーの信頼性を示すなど、売上とLiftでは捉えられない役割を持つSKUもあります。</p>
 </section>
 </section>
 <section id="validate-before-scaling" class="level2">
 <h2 class="anchored" data-anchor-id="validate-before-scaling">展開前に検証する</h2>
-<p>スコアリング済みリストは仮説の集合であり、削除リストではありません。削除を展開する前に、小規模なマッチドストアテストを実施します。処置店舗でSKUを削除し、比較可能な対照店舗は変更せず、サブカテゴリー売上、バスケット当たり売上、バスケット数を監視します。</p>
+<p>スコアリング済みリストの各行は、テストで検証する仮説です。削除を展開する前に、小規模なマッチドストアテストを実施します。処置店舗でSKUを削除し、比較可能な対照店舗は変更せず、サブカテゴリー売上、バスケット当たり売上、バスケット数を監視します。</p>
 <p>削除したSKU自身の売上を評価してはいけません。構造上ゼロになります。問うべきなのは、需要がカテゴリーとバスケットに残るかどうかです。結果から結論が出なければ、削除を拡大しません。</p>
 </section>
 <section id="key-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="key-takeaways">要点</h2>
 <ul>
-<li>売上ABCは候補を生むが、意思決定は行わない。同じサブカテゴリー内の低い共起は代替の代理指標であって証明ではなく、価値あるバスケットを支える安価なSKUは維持する価値がある場合がある。</li>
-<li>マッチドストアテストなしに展開してはいけない。削除したSKU自身の売上ではなく、サブカテゴリー売上、バスケット当たり売上、バスケット数を測定する。結論が出ない結果は、実行してよいという意味ではない。</li>
+<li>売上ABCでSKUを候補プールへ絞り、同じサブカテゴリー内の低い共起で候補を代替リスク順に並べる。価値あるバスケットを支える安価なSKUは、それでも維持する価値がある場合がある。</li>
+<li>マッチドストアテストなしに展開してはいけない。削除したSKU自身の売上ではなく、サブカテゴリー売上、バスケット当たり売上、バスケット数を測定する。テストで結論が出なければ、削除を拡大しない。</li>
 </ul>
 
 

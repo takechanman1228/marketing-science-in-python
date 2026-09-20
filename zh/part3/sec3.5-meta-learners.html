@@ -645,8 +645,8 @@ window.Quarto = {
 <p><strong>关于中文版</strong><br>
 本页是英文版 <em>Marketing Science in Python</em> 的AI翻译。英文版为正式版本，如有出入，以英文版为准。代码、Notebook 和图片中的文字保持英文。 <a href="../../part3/sec3.5-meta-learners.html" class="translation-source-link">阅读英文版</a></p>
 </div>
-<p>前几章的方法为整个群体估计一个数字：平均处理效应（ATE），也就是一项处理（treatment）对它触及的所有人的平均影响。但在营销中，平均值可能会误导人。例如，一张优惠券平均可能让购买增加 5%，但这个数字掩盖了真实的故事。有些客户的提升可能高达 20%，另一些客户则毫无反应，甚至出现下降。如果你能识别出哪些客户真正会响应，你的预算就能花得高效得多。</p>
-<p>元学习器（meta-learner）试图为每一位客户单独估计处理效应。但这在实践中究竟是什么样子？</p>
+<p>一张平均让购买增加 5% 的优惠券，对不同客户的效应可能大不相同：有些客户的提升可能高达 20%，另一些客户则毫无反应，甚至出现下降。前几章的方法为整个群体估计一个数字，即平均处理效应（ATE），也就是一项处理（treatment）对它触及的所有人的平均影响。在营销中，这个平均值可能会误导人。如果你能识别出哪些客户真正会响应，你的预算就能花得高效得多。</p>
+<p>元学习器（meta-learner）试图为每一位客户单独估计处理效应。本章余下的部分定义它们所估计的量，并比较主要的方法。</p>
 <section id="treatment-effects-ate-cate-ite" class="level2">
 <h2 class="anchored" data-anchor-id="treatment-effects-ate-cate-ite">处理效应：ATE、CATE、ITE</h2>
 <p>要定义处理效应，我们求助于潜在结果框架。处理效应是由处理引起的结果差异：形式上写作 <span class="math inline">\(\tau = Y(1) - Y(0)\)</span>，其中 <span class="math inline">\(Y(1)\)</span> 是接受处理时的结果，<span class="math inline">\(Y(0)\)</span> 是对照条件下的结果。例如，如果有优惠券时的潜在购买率是 20%，没有优惠券时是 10%，那么处理效应就是 10%。</p>
@@ -666,7 +666,7 @@ window.Quarto = {
 <li>CATE（条件平均处理效应）：具有特定特征的客户的平均效应。“优惠券对 30 岁以下的城市客户效果更好吗？”</li>
 <li>ITE（个体处理效应）：某一个具体个体的效应。在实践中无法观测，但 CATE 提供了我们所能得到的最佳估计。</li>
 </ul>
-<p>这为什么重要？因为并非所有客户的行为方式都一样。一位对价格敏感的客户可能会扑向折扣，而一位品牌忠诚的客户反正也会按全价购买。如果你知道谁是谁，就可以把折扣定向投放到真正能带来额外销售的地方，而不是把利润白白让给无论如何都会购买的客户。</p>
+<p>这个区分之所以重要，是因为客户对同一优惠的反应并不相同。一位对价格敏感的客户可能只有在有折扣时才会购买，而一位品牌忠诚的客户反正也会按全价购买。如果你知道谁是谁，就可以把折扣定向投放到真正能带来额外销售的地方，而不是把利润白白让给无论如何都会购买的客户。</p>
 </section>
 <section id="why-we-need-meta-learners" class="level2">
 <h2 class="anchored" data-anchor-id="why-we-need-meta-learners">为什么需要元学习器</h2>
@@ -715,7 +715,7 @@ window.Quarto = {
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'treatment_effect'</span>] <span class="op">=</span> df[<span class="st">'sales_treated'</span>] <span class="op">-</span> df[<span class="st">'sales_control'</span>]</span>
 <span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>ATE <span class="op">=</span> df[<span class="st">'treatment_effect'</span>].mean()</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
-<p>S-Learner 是最简单的起点，也常常是一个合理的基线。但它有一个关键弱点：如果处理效应相对其他特征而言很小，模型最终可能会忽略处理变量，尤其是在使用正则化的时候。这意味着你的 CATE 估计可能会偏向零。</p>
+<p>S-Learner 是最简单的起点，也常常是一个合理的基线。但它有一个关键弱点：如果处理效应相对其他特征而言很小，正则化可能会把处理变量的贡献压缩到接近零。这意味着你的 CATE 估计可能会偏向零。</p>
 </section>
 <section id="t-learner-two-separate-models" class="level2">
 <h2 class="anchored" data-anchor-id="t-learner-two-separate-models">T-Learner：两个独立的模型</h2>
@@ -748,11 +748,11 @@ window.Quarto = {
 <span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'treatment_effect'</span>] <span class="op">=</span> df[<span class="st">'sales_treated'</span>] <span class="op">-</span> df[<span class="st">'sales_control'</span>]</span>
 <span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>ATE <span class="op">=</span> df[<span class="st">'treatment_effect'</span>].mean()</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
 <p>T-Learner 更灵活，因为每个模型可以为实验组和对照组学到不同的模式。但这有代价：它的方差可能很高，尤其是当实验组和对照组不平衡时。当你把两个预测相减时，两个模型的误差可能会叠加。</p>
-<p>因此，S-Learner 简单，但倾向于低估效应。T-Learner 避开了这一特定的失败，代价是估计更嘈杂。接下来我们还能做什么？</p>
+<p>S-Learner 简单，但倾向于低估效应；T-Learner 避开了这一点，代价是估计更嘈杂。下面的方法针对这两个局限。</p>
 </section>
 <section id="advanced-meta-learners" class="level2">
 <h2 class="anchored" data-anchor-id="advanced-meta-learners">更高级的元学习器</h2>
-<p>在 S 和 T 之外，还有几种更精细的方法针对它们的局限：</p>
+<p>在 S 和 T 之外，还有几种更精细的方法：</p>
 <ul>
 <li>X-Learner：T-Learner 的一种扩展，为不平衡的处理组而设计。它先填补缺失的反事实，再用倾向得分加权将其合并。当一个组远大于另一个组时效果很好。</li>
 <li>DR-Learner（双重稳健）：将结果建模与倾向得分估计结合起来。只要两个模型中任一个设定正确，估计就是一致的，故称“双重稳健”。</li>
@@ -768,13 +768,13 @@ window.Quarto = {
 </figcaption>
 </figure>
 </div>
-<p>理论告诉我们每种方法本应优化什么。但真正的检验，是看它们在同一个数据集上的表现，在那里你能看到实际的差异。</p>
+<p>这些方法中哪一种表现最好取决于数据，所以下一节把它们全部应用到同一个数据集上。</p>
 </section>
 <section id="example-estimating-heterogeneous-email-effects" class="level2">
 <h2 class="anchored" data-anchor-id="example-estimating-heterogeneous-email-effects">示例：估计异质性的邮件效应</h2>
-<p>要观察这些方法的表现，我们需要一个能核对它们答案的数据集。这比听起来更难。在真实数据中，我们永远观测不到一位客户的真实处理效应，因此无法判断一个元学习器是找回了正确的模式，还是只是生成了看似合理的噪声。</p>
-<p>我们用一个建立在 Kevin Hillstrom 的 MineThatData 邮件实验之上的半合成示例来解决这个问题。这是一个经典的营销数据集，64,000 名客户被随机分配到男装邮件、女装邮件或不发邮件三组。我们保留真实的客户特征（最近购买时间、购买历史、渠道等等），也保留“男装邮件对比不发邮件”这一二元对照的真实随机分配。只有结果是模拟的：我们定义一个基线购买概率，以及一个处理效应 <span class="math inline">\(\tau(x)\)</span>，它对男装购买者、近期活跃客户和多渠道购物者更大。因为 <span class="math inline">\(\tau(x)\)</span> 是我们自己写的，我们知道每位客户的真实 CATE，可以据此给每个学习器打分。</p>
-<p>这是一个教学装置。目的不是比实验本身更好地估计平均效应，而是检验元学习器能否找回我们植入的异质性。</p>
+<p>要观察这些方法的表现，我们需要一个能核对它们答案的数据集。在真实数据中，我们永远观测不到一位客户的真实处理效应，因此无法判断一个元学习器是找回了正确的模式，还是只是生成了看似合理的噪声。</p>
+<p>我们用一个建立在 Kevin Hillstrom 的 MineThatData 邮件实验之上的半合成示例来解决这个问题。这是一个经典的营销数据集，64,000 名客户被随机分配到男装邮件、女装邮件或不发邮件三组。我们保留真实的客户特征（最近购买时间、购买历史、渠道等等），也保留“男装邮件对比不发邮件”这一二元对照的真实随机分配。只有结果是模拟的：我们定义一个基线购买概率，以及一个处理效应 <span class="math inline">\(\tau(x)\)</span>，它对男装购买者、近期活跃客户和多渠道购物者更大。因为 <span class="math inline">\(\tau(x)\)</span> 是我们自己写的，我们知道每位客户的真实 CATE，每个学习器都可以与之比较。</p>
+<p>这个设定是为了教学：目的是检验元学习器能否找回我们植入的异质性，而不是比实验本身更好地估计平均效应。</p>
 <p><strong>配套 Notebook：</strong><code>sec3.5_meta_learners.ipynb</code> 在半合成的 MineThatData 实验上，将 S-、T-、X-、DR-Learner 以及 CausalForestDML 与已知的真实 CATE 进行比较。<br>
 <a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.5_meta_learners.ipynb">在 GitHub 上查看</a></p>
 <p>五个学习器全都找回了平均效应，更有用的是，也找回了细分群体层面的模式。下面的散点图把一个有代表性的学习器估计的 CATE 与真实效应进行比较。估计值聚集在 45 度线附近，因此客户被排在了大致正确的顺序上，纵向的离散则反映了二元结果的噪声。</p>
@@ -799,7 +799,7 @@ window.Quarto = {
 </figcaption>
 </figure>
 </div>
-<p>哪个学习器对客户排序最好，取决于数据。在保留集（holdout）上对照真实 CATE 打分，这个干净、平衡的实验偏爱简单的学习器：</p>
+<p>哪个学习器对客户排序最好，取决于数据。在保留集（holdout）上与真实 CATE 比较，这个干净、平衡的实验偏爱简单的学习器：</p>
 <div id="tbl-cate-recovery" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-cate-recovery-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -851,14 +851,14 @@ window.Quarto = {
 </div>
 </figure>
 </div>
-<p>五个学习器都找回了我们植入的约 11 个百分点的平均效应；把它们区分开的是与真实 CATE 的相关性，而这正是决定排序质量的东西。S-Learner 和 X-Learner 领先，而双模型和交叉拟合的学习器付出了方差的代价。在噪声更大或不平衡的数据上，排名可能会变，这正是为什么你要检查还原情况，而不是凭名声信任某一种方法。</p>
+<p>五个学习器都找回了我们植入的约 11 个百分点的平均效应；把它们区分开的是与真实 CATE 的相关性，而这正是决定排序质量的东西。S-Learner 和 X-Learner 领先，而双模型和交叉拟合的学习器在这份数据上方差更高。在噪声更大或不平衡的数据上，排名可能会变，所以在真实数据上，要用保留的实验结果来比较学习器，并检查它们的排序是否稳定；§3.6 会展示怎么做。</p>
 </section>
 <section id="what-to-check-before-trusting-cate" class="level2">
 <h2 class="anchored" data-anchor-id="what-to-check-before-trusting-cate">信任 CATE 之前要检查什么</h2>
-<p>这个示例在设计上就很宽容：随机化的处理、完美的重叠，以及已知的答案。真实项目很少如此。在依据 CATE 估计采取行动之前：</p>
+<p>这个示例有随机化的处理、完全的重叠，以及已知的答案，而真实项目很少具备这些。在依据 CATE 估计采取行动之前：</p>
 <ul>
 <li>元学习器不会创造因果比较。它只是在你已经拥有的一个比较内部为效应的变化建模，因此在观测数据上，CATE 会继承底层比较所携带的每一个混杂问题。</li>
-<li>个体处理效应在真实数据中永远观测不到。我们在这里能给学习器打分，只是因为我们模拟了真值。</li>
+<li>个体处理效应在真实数据中永远观测不到。我们在这里能核对学习器，只是因为我们模拟了真值。</li>
 <li>CATE 是模型估计，不是测量。在群体或细分群体层面读它，不要把它当成某一位客户的字面数字。</li>
 <li>核对平均值是否合理。如果平均估计 CATE 与实验上简单的均值之差相距很远，那就有问题。</li>
 <li>检查跨学习器的稳定性。如果 S、T、X 和因果森林在排序上意见不一，那么暂时一个都别信。</li>
@@ -869,7 +869,7 @@ window.Quarto = {
 <h2 class="anchored" data-anchor-id="key-takeaways">要点</h2>
 <ul>
 <li>ATE 问的是处理是否有效；CATE 问的是对谁有效。元学习器在你已经拥有的因果比较内部估计这种差异，它们当中没有一个能修复你没有测量的混杂。</li>
-<li>CATE 是群体层面的模型估计，真实效应在真实数据中永远观测不到，所以没有哪个学习器能凭名声赢得信任。要对照实验核对平均值、检查跨学习器的稳定性，并检查重叠。</li>
+<li>CATE 是群体层面的模型估计，真实效应在真实数据中永远观测不到，所以不应仅凭名声选择某个学习器。要对照实验核对平均值、检查跨学习器的稳定性，并检查重叠。</li>
 </ul>
 
 

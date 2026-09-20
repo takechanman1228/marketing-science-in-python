@@ -662,7 +662,7 @@ window.Quarto = {
 <p><strong>日本語版について</strong><br>
 このページは英語版 <em>Marketing Science in Python</em> のAI翻訳です。英語版を正本とし、差異がある場合は英語版を優先してください。コード、Notebook、画像内の文字は英語のままです。 <a href="../../part3/sec3.2-ab-testing.html" class="translation-source-link">英語版を読む</a></p>
 </div>
-<p>チームは新しい決済ページについて、2週間のA/Bテストを終えたところです。全員が結果を待ち望んでいます。そして、次の数値が届きました。</p>
+<p>チームは新しい決済ページについて、2週間のA/Bテストを終えたところで、結果は次のとおりでした。</p>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -695,7 +695,7 @@ window.Quarto = {
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>users <span class="op">=</span> np.array([<span class="dv">5000</span>, <span class="dv">5000</span>])</span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>stat, p_value <span class="op">=</span> proportions_ztest(conversions, users, alternative<span class="op">=</span><span class="st">"two-sided"</span>)</span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"p-value: </span><span class="sc">{</span>p_value<span class="sc">:.2f}</span><span class="ss">"</span>)     <span class="co"># 0.43</span></span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
-<p>そこでチームは「有意ではない。再設計には効果がない。次へ進もう」と言います。その結論はデータに裏づけられていません。p値が0.43であることは、効果がないという意味ではありません。テストでは、小さな効果と偶然のノイズを区別できなかったという意味です。処置群の方が本当に良い可能性はありますが、データからは判断できません。「効果がない」と「分からない」の違いは、テストに十分な検出力があったかどうかで決まります。</p>
+<p>p値だけを見たチームは、再設計に効果がないと結論づけて次へ進みます。その結論はデータに裏づけられていません。p値0.43が示しているのは、このテストでは小さな効果と偶然のノイズを区別できなかったということだけです。差の95%信頼区間は−0.36から+0.84ポイントであり、データは小さな損失とも大きな改善とも矛盾しません。処置群の方が本当に良い可能性はありますが、このサンプルサイズでは示せません。区間には導入する価値のあるリフトがまだ含まれているので、この結果は結論が出ていません。</p>
 <section id="statistical-power" class="level2">
 <h2 class="anchored" data-anchor-id="statistical-power">統計的検出力</h2>
 <p>統計的検出力とは、特定の大きさの効果が本当に存在する場合に、テストがその効果を検出する確率です。多くのチームは検出力80%を目指しますが、その大きさの効果を見逃す確率が依然として20%残ります。</p>
@@ -710,7 +710,7 @@ window.Quarto = {
 </figcaption>
 </figure>
 </div>
-<p>購入のような低コンバージョンのイベント（たとえばコンバージョン率2%）で0.5ポイントのリフトを検出するには、各群に何千人ものユーザーが必要ですが、多くのチームはそれよりはるかに少ない人数で実施します。多くのチームが過小評価するのはこの点です。小さなリフトの検出には、直感で考えるよりはるかに多くのトラフィックが必要です。</p>
+<p>購入のような低コンバージョンのイベント（たとえばコンバージョン率2%）で0.5ポイントのリフトを検出するには、各群に何千人ものユーザーが必要ですが、多くのチームはそれよりはるかに少ない人数で実施します。小さなリフトの検出には、直感で考えるよりはるかに多くのトラフィックが必要です。</p>
 </section>
 <section id="calculating-sample-size" class="level2">
 <h2 class="anchored" data-anchor-id="calculating-sample-size">サンプルサイズを計算する</h2>
@@ -745,7 +745,7 @@ window.Quarto = {
 </figcaption>
 </figure>
 </div>
-<p>この曲線から、重要な教訓が分かります。サンプルサイズは線形に増えるのではなく、対象とするリフトが小さくなるにつれて急増します。そのため、コンバージョン率の低い指標における小さな改善は、測定コストが高くなります。</p>
+<p>サンプルサイズは対象リフトに対して線形には増えません。MDEを半分にすると、必要人数はおよそ4倍になります。そのため、コンバージョン率の低い指標における小さな改善は、測定コストが高くなります。</p>
 </section>
 <section id="decide-before-you-launch" class="level2">
 <h2 class="anchored" data-anchor-id="decide-before-you-launch">開始前に決める</h2>
@@ -756,19 +756,19 @@ window.Quarto = {
 <li><strong>サンプルサイズと期間</strong>：結果を判断するまでに、どれだけのデータを収集するか？</li>
 <li><strong>ガードレール指標</strong>：何が悪化してはいけないか（ユーザー当たり売上、ページ読み込み時間、サポートチケット数）？</li>
 </ol>
-<p>事前に書き出すことで、偽陽性をひそかに増やす2つの習慣を防げます。<em>ピーキング</em>（有意に見えた瞬間にテストを止めること）と、<em>指標探し</em>（多数の指標のうち、たまたま動いたものを報告すること）です。</p>
+<p>事前に書き出すことで、偽陽性率を上げる2つの習慣を防げます。<em>ピーキング</em>（有意に見えた瞬間にテストを止めること）と、<em>指標探し</em>（多数の指標のうち、たまたま動いたものを報告すること）です。</p>
 </section>
 <section id="cuped-getting-more-precision-from-the-same-sample" class="level2">
 <h2 class="anchored" data-anchor-id="cuped-getting-more-precision-from-the-same-sample">CUPED：同じサンプルからより高い精度を得る</h2>
 <p>必要なサンプル数を確保できないとき、ユーザー、店舗、市場をいつでも追加できるわけではありません。CUPED（Controlled-experiment Using Pre-Experiment Dataの略）は、実験前の情報を利用し、同じデータからより高い精度を得られる場合があります。Microsoftの実験チームは、データを追加収集せずにオンライン実験の感度を高めるため、2013年にこの手法を導入しました<span class="citation" data-cites="deng2013cuped">(<a href="../appendix/further-reading.html#ref-deng2013cuped" role="doc-biblioref">Deng ほか 2013年</a>)</span>。その後、大規模実験における標準的な分散削減手法になりました。</p>
-<p>考え方は単純です。実験前から支出の多い顧客であれば、処置の有無にかかわらず、実験中も支出を続ける可能性が高いでしょう。CUPEDはアウトカムのうち予測可能な部分を差し引き、テスト中に実際に変わった部分へ比較の焦点を当てます。</p>
+<p>実験前から支出の多い顧客であれば、処置の有無にかかわらず、実験中も支出を続ける可能性が高いでしょう。CUPEDはアウトカムのうち予測可能な部分を差し引き、テスト中に実際に変わった部分へ比較の焦点を当てます。</p>
 <div id="fig-cuped" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="3段階の図：各顧客のキャンペーン前支出、キャンペーン中支出、予想支出を上回るCUPED調整済みリフト。調整後は平均効果を変えずに分布が狭くなる">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-cuped-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="../images/part3/sec3.2/cuped_how_it_works.png" class="fig-md img-fluid figure-img" alt="3段階の図：各顧客のキャンペーン前支出、キャンペーン中支出、予想支出を上回るCUPED調整済みリフト。調整後は平均効果を変えずに分布が狭くなる">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-cuped-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-図&nbsp;3: CUPEDが実験前の分散を取り除く仕組み。
+図&nbsp;3: CUPEDによる分散削減の手順。
 </figcaption>
 </figure>
 </div>
@@ -797,18 +797,17 @@ window.Quarto = {
 </section>
 <section id="when-a-test-is-inconclusive" class="level2">
 <h2 class="anchored" data-anchor-id="when-a-test-is-inconclusive">テストで結論が出ない場合</h2>
-<p>決済ページのテストへ戻りましょう。正しい問いは「p値が0.05未満だったか？」ではありません。「重要と考える効果を除外できるほど、テストは精密だったか？」です。</p>
-<p>信頼区間を見ます。観測されたリフトは+0.24ポイントですが、95%区間は−0.36から+0.84ポイントであり、小さな損失と大きな改善の両方を含むほど広い区間です。このテストでは結論が出ません。再設計に効果があるとは示していませんが、効果がないとも決して示していません。区間が狭く、導入する価値のあるリフトをすべて除外している場合に限り、その処置を見送ることが妥当になります。</p>
-<p>言い換えると、有意でない結果は、自動的に処置の失敗を意味しません。テストが小さすぎた、ノイズが多すぎた、または異常な時期に実施されたというだけかもしれません。</p>
+<p>決済ページのテストへ戻ります。p値が0.05を下回ったかを問う代わりに、導入する価値のある効果を除外できるほどテストが精密だったかを問います。</p>
+<p>観測されたリフトは+0.24ポイントで、95%区間は−0.36から+0.84ポイントです。このテストでは結論が出ません。区間が広すぎて、どちらの結論も支えられないからです。区間が狭く、導入する価値のあるリフトをすべて除外している場合に限り、その処置を見送ることが妥当になります。結論が出ない結果は、テストが小さすぎた、ノイズが多すぎた、または異常な時期に実施されたというだけかもしれません。</p>
 <p><strong>付属Notebook：</strong> <code>sec3.2_ab_test_figures.ipynb</code> は、サンプルサイズと検出力の図を再現し、この章のCUPEDシミュレーションを実行します。<br>
 <a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.2_ab_test_figures.ipynb">GitHubで見る</a></p>
 </section>
 <section id="key-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="key-takeaways">要点</h2>
 <ul>
-<li>検出する価値がある効果に合わせて設計する。開始前に主要指標、MDE、サンプルサイズ、ガードレールを固定する。サンプルサイズは <span class="math inline">\(1/\text{MDE}^2\)</span> に比例するため、半分のリフトには4倍のユーザーが必要になる。</li>
-<li>有意でない結果は、効果がない証拠ではない。信頼区間で判断する。導入する価値があるリフトがまだ区間内にあるなら、テストはまだ答えを出していない。</li>
-<li>トラフィックを追加購入できない場合は、代わりにCUPEDで精度を得る。実験前共変量を使い、比較から分散を取り除く。</li>
+<li>検出する価値がある効果に合わせて設計する。開始前に主要指標、MDE、サンプルサイズ、ガードレールを固定する。サンプルサイズは <span class="math inline">\(1/\text{MDE}^2\)</span> に比例するため、MDEを半分にすると必要サンプルはおよそ4倍になる。</li>
+<li>有意でない結果は、効果がない証拠ではない。信頼区間で判断する。導入する価値があるリフトがまだ区間内にあるなら、この問いは決着していない。</li>
+<li>トラフィックを追加購入できない場合はCUPEDを使う。実験前共変量で比較から分散を取り除き、区間を狭める。</li>
 </ul>
 
 

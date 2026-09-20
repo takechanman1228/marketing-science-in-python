@@ -643,12 +643,12 @@ window.Quarto = {
 <p><strong>关于中文版</strong><br>
 本页是英文版 <em>Marketing Science in Python</em> 的AI翻译。英文版为正式版本，如有出入，以英文版为准。代码、Notebook 和图片中的文字保持英文。 <a href="../../part3/sec3.6-uplift-modeling.html" class="translation-source-link">阅读英文版</a></p>
 </div>
-<p>下一次营销活动应该发给哪些客户？大多数团队用响应模型来回答：按购买可能性给客户排序，然后定向投放给名单的顶端。问题在于，许多高概率客户无论你是否触达都会转化，所以把钱花在他们身上不会改变结果。增益建模（uplift modeling）转而按“触达预计会在多大程度上改变客户行为”来排序：它瞄准的是那些因为你触达了才购买的人，而不是那些本来就会买的人。这正是它在触达有成本时的价值所在：预算应该投向能改变结果的地方，而不是搭上一笔本来就要发生的销售的顺风车。</p>
+<p>下一次营销活动应该发给哪些客户？大多数团队用响应模型来回答：按购买可能性给客户排序，然后定向投放给名单的顶端。问题在于，许多高概率客户无论你是否触达都会转化，所以把钱花在他们身上不会产生任何增量转化。增益建模（uplift modeling）转而按“触达预计会在多大程度上改变客户行为”来排序：它瞄准的是那些因为你触达了才购买的人，而不是那些本来就会买的人。只要触达有成本，预算就应该投向触达能改变结果的地方。</p>
 <ul>
 <li>响应模型预测的是：<span class="math inline">\(P(\text{purchase})\)</span></li>
 <li>增益模型预测的是：<span class="math inline">\(P(\text{purchase} \mid \text{treated}) - P(\text{purchase} \mid \text{not treated})\)</span></li>
 </ul>
-<p>第二个量就是每位客户的处理效应，即 CATE；§3.5 讲过如何估计它。这个得分只是测量步骤。下一步是把它变成一套定向策略，并在保留数据上检验按这个排序行动是否真的能带来价值。</p>
+<p>第二个量就是每位客户的处理效应，即 CATE；§3.5 讲过如何估计它。这个得分是测量步骤；下一步是把它变成一套定向策略，并在保留数据上检验按这个排序行动是否真的能带来价值。</p>
 <div id="fig-uplift-targeting" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="增益建模按预测处理效应给客户排序，使营销活动能够优先触达最有可能改变行为的人。">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-uplift-targeting-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -676,14 +676,14 @@ window.Quarto = {
 <li>可说服者（Persuadables）：只有被触达才会购买。他们是理想的目标；邮件改变了他们的行为，你的全部回报都来自他们。</li>
 <li>必然购买者（Sure Things）：无论如何都会买。触达他们只是花掉预算，却没有任何增量销售。</li>
 <li>无望者（Lost Causes）：从不购买。触达是浪费。</li>
-<li>勿扰者（Sleeping Dogs）：本来会自己购买，但触达反而把他们推开。触达他们实实在在地让你蒙受损失。</li>
+<li>勿扰者（Sleeping Dogs）：本来会自己购买，但触达反而把他们推开。触达他们会减少转化。</li>
 </ul>
-<p>追逐购买可能性的响应模型，会把名单填满必然购买者。追逐处理效应的增益模型，则瞄准可说服者并避开其余各类。这个差别就是全部要点。</p>
+<p>响应模型按购买可能性排序，所以它的名单会填满必然购买者。增益模型按处理效应排序，所以它的名单会集中在可说服者身上。</p>
 <p>增益建模有两个方法家族：§3.5 的元学习器，以及直接以增益为分裂依据构建的决策树，后者的优势是可以同时处理多个处理组（在一个模型里比较 5%、10% 和 20% 的优惠）。本章沿用元学习器的路线，像 §3.5 一样使用 EconML，再加上 scikit-uplift 来评估排序；Uber 的库 CausalML 则是树类方法的公认大本营。</p>
 </section>
 <section id="the-dataset" class="level2">
 <h2 class="anchored" data-anchor-id="the-dataset">数据集</h2>
-<p>我们重用 §3.5 的半合成 MineThatData 示例：Kevin Hillstrom 的随机化邮件实验，限定为男装邮件和不发邮件两个组（42,613 名客户，大致按 50/50 划分）。客户特征和处理分配是真实的；只有结果是模拟的，所以我们知道每位客户的真实效应，可以在每一步给模型打分。我们植入的平均效应约为 11 个百分点，对男装购买者、近期活跃客户和多渠道购物者更大。</p>
+<p>我们重用 §3.5 的半合成 MineThatData 示例：Kevin Hillstrom 的随机化邮件实验，限定为男装邮件和不发邮件两个组（42,613 名客户，大致按 50/50 划分）。客户特征和处理分配是真实的；只有结果是模拟的，所以我们知道每位客户的真实效应，可以在每一步核对模型。我们植入的平均效应约为 11 个百分点，对男装购买者、近期活跃客户和多渠道购物者更大。</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> msbook.data <span class="im">import</span> load_minethatdata</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> load_minethatdata()</span>
@@ -730,7 +730,7 @@ window.Quarto = {
 </section>
 <section id="training-the-uplift-model" class="level2">
 <h2 class="anchored" data-anchor-id="training-the-uplift-model">训练增益模型</h2>
-<p>增益得分就是 CATE。我们重新拟合 §3.5 的元学习器，保留在保留集上对真实效应还原得最好的那一个：S-Learner，它的估计与真值的相关性为 0.77（完整比较见 §3.5 的 <a href="sec3.5-meta-learners.html#tbl-cate-recovery" class="quarto-xref">表&nbsp;<span>1</span></a>）。它预测的 CATE 就是增益得分，拟合用的是与 §3.5 相同的 EconML 调用，所以没有任何新东西需要安装：</p>
+<p>增益得分就是 CATE。我们重新拟合 §3.5 的元学习器，保留在保留集上对真实效应还原得最好的那一个：S-Learner，它的估计与真值的相关性为 0.77（完整比较见 §3.5 的 <a href="sec3.5-meta-learners.html#tbl-cate-recovery" class="quarto-xref">表&nbsp;<span>1</span></a>）。这样的选择只有在数据是半合成的时候才可能；在真实数据上，真实效应永远观测不到，所以学习器要在随机化保留集上按 Qini 或按各十分位的观测增益来选择，下面的评估一节会讲到。用于选择学习器的保留集，与之后用来确认所选排序优于随机的新保留集是分开的。它预测的 CATE 就是增益得分，拟合用的是与 §3.5 相同的 EconML 调用，所以没有任何新东西需要安装：</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> econml.metalearners <span class="im">import</span> SLearner</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> lightgbm <span class="im">import</span> LGBMRegressor</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -783,7 +783,7 @@ window.Quarto = {
 </figure>
 </div>
 <p>具体各行有噪声，观测增益一列尤其如此，因为每个十分位只有大约 1,300 名客户。但排序是有效的：顶部十分位的观测增益和真实增益（约 17 个百分点，而平均值是 11 个百分点）远高于底部十分位。我们需要的正是这个顺序。我们不需要每个十分位都完美单调；关注排序的顶端，而不是尾部的单独几行。</p>
-<p>十分位表是局部视角。全局诊断是 Qini 曲线：把客户从最高增益到最低增益排序，然后画出随着你在名单中定向得越来越深、经处理组规模归一化后的累计增量转化。一个包含真实信号的排序，其曲线会高于随机触达客户时你会看到的那条对角线。（普通的增益曲线在未归一化的尺度上呈现同样的形状；Qini 曲线是比较增益模型的标准，因为当受处理比例沿排序变化时它依然可靠。）</p>
+<p>十分位表是局部视角。全局诊断是 Qini 曲线：把客户从最高增益到最低增益排序，然后画出随着你在名单中定向得越来越深、经处理组规模归一化后的累计增量转化。如果排序包含真实信号，曲线就会位于随机触达客户所产生的那条对角线之上。（普通的增益曲线在未归一化的尺度上呈现同样的形状；Qini 曲线是比较增益模型的标准，因为当受处理比例沿排序变化时它依然可靠。）</p>
 <div id="fig-qini-curve" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="增益排序的 Qini 曲线在所有保留客户上都位于随机定向对角线之上。">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-qini-curve-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -794,7 +794,7 @@ window.Quarto = {
 </figcaption>
 </figure>
 </div>
-<p>这里的曲线从一开始就远高于随机线：定向投放给排序前 30% 的客户，可以捕获约 42% 的增量转化（随机定向则是 30%），前一半则捕获约 62%。这就是这个排序值得据以行动的原因。</p>
+<p>这里的曲线从一开始就远高于随机线：定向投放给排序前 30% 的客户，可以捕获约 42% 的增量转化（随机定向则是 30%），前一半则捕获约 62%。</p>
 <p>两个汇总面积都是正的，形式上意味着该排序优于随机定向：</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklift.metrics <span class="im">import</span> uplift_auc_score, qini_auc_score</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -806,7 +806,7 @@ window.Quarto = {
 </section>
 <section id="extracting-the-target-list" class="level2">
 <h2 class="anchored" data-anchor-id="extracting-the-target-list">提取目标客户名单</h2>
-<p>只有把得分与业务指标联系起来，它才能付诸行动。假设每一次增量转化值 $30 的利润，触达一位客户的成本是 $3。那么你只应处理增益超过 10% 盈亏平衡点的客户，而每位客户的预期净价值就是其增益乘以转化价值，再减去触达成本：</p>
+<p>要依据得分采取行动，先把它换算成每位客户的预期价值。假设每一次增量转化值 $30 的利润，触达一位客户的成本是 $3。那么你只应处理增益超过 10% 盈亏平衡点的客户，而每位客户的预期净价值就是其增益乘以转化价值，再减去触达成本：</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>value_per_conversion <span class="op">=</span> <span class="fl">30.0</span>   <span class="co"># $ margin per incremental conversion</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>treatment_cost <span class="op">=</span> <span class="fl">3.0</span>          <span class="co"># $ per contacted customer (email + offer)</span></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -859,12 +859,12 @@ window.Quarto = {
 </tr>
 </tbody>
 </table>
-<p>在每次增量转化 $30 利润和 $3 触达成本的条件下，盈亏平衡增益是 10%。前五个十分位的预测增益越过了这个阈值，所以策略是定向投放名单的前一半，跳过其余部分。具体常数只是为了演示；重要的是规则：把增益换算成预期价值，减去触达成本，只在结果为正的地方投放。这就成了你的客户名单。在这次运行中，预测列和观测列并不完全一致：观测净价值在预测切点之后的两个十分位里仍然为正。这个边界地带，正是在你投入预算之前，一个新的随机化保留集最能证明自身价值的地方。</p>
+<p>在每次增量转化 $30 利润和 $3 触达成本的条件下，盈亏平衡增益是 10%。前五个十分位的预测增益越过了这个阈值，所以策略是定向投放名单的前一半，跳过其余部分。这里的常数只是示例；步骤是把增益换算成预期价值，减去触达成本，只在结果为正的地方投放。这就成了你的客户名单。在这次运行中，预测列和观测列并不完全一致：观测净价值在预测切点之后的两个十分位里仍然为正。在这个边界地带，先运行一个新的随机化保留集，再投入预算。</p>
 </section>
 <section id="key-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="key-takeaways">要点</h2>
 <ul>
-<li>增益按触达能在多大程度上改变客户行为来排序，而不是按购买可能性。这就是让预算避开必然购买者、远离勿扰者的关键。</li>
+<li>增益按触达能在多大程度上改变客户行为来排序，而不是按购买可能性。这让预算避开必然购买者、远离勿扰者。</li>
 <li>先在一个新的随机化保留集上确认排序胜过随机，再把增益换算成预期净价值：只在增益乘以转化价值超过触达成本的地方投放。</li>
 </ul>
 

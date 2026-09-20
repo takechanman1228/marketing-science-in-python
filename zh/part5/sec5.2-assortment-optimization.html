@@ -646,7 +646,7 @@ window.Quarto = {
 <p><strong>关于中文版</strong><br>
 本页是英文版 <em>Marketing Science in Python</em> 的AI翻译。英文版为正式版本，如有出入，以英文版为准。代码、Notebook 和图片中的文字保持英文。 <a href="../../part5/sec5.2-assortment-optimization.html" class="translation-source-link">阅读英文版</a></p>
 </div>
-<p>品类评审已经排上日程：货架陈列团队想要回一些货架空间，品类经理必须点名要放弃哪些 SKU。一个表现不佳的产品不只是占地方：它占用库存、让供应链更复杂，还让货架更难逛。要决定的是砍掉哪些产品、保留哪些，以及如何在全连锁推广之前验证这些判断。</p>
+<p>品类评审问的是要从货架上撤掉哪些 SKU。一个销量低的 SKU 带来的成本不止货架空间：占用的库存、供应链里多出的一条线，以及购物者需要扫视的更多选项。要决定的是砍掉哪些产品、保留哪些，以及如何在全连锁推广之前验证这些判断。</p>
 <p>本章在两年的杂货交易数据上完整走一遍这个决策：按收入筛选长尾，检查需求是否会留在店内，然后交回一份按每个 SKU 测试安全程度排序的候选短名单。</p>
 <p><strong>配套 Notebook：</strong> <code>sec5.2_assortment_optimization.ipynb</code> 在 Dunnhumby Complete Journey 杂货数据集上复现了收入 ABC 筛选、替代检查和行动分配。<br>
 <a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part5-commercial-analytics/sec5.2_assortment_optimization.ipynb">在 GitHub 上查看</a></p>
@@ -674,15 +674,15 @@ window.Quarto = {
 <li><strong>筛选 → 候选池。</strong> 哪些产品贡献的收入很少、处在长尾？</li>
 <li><strong>替代检查 → 安全性评估。</strong> 对每个候选，如果我们把它下架，需求会留在我们店里吗？</li>
 </ol>
-<p>在表现更好的产品中有合理替代品的候选，是风险较低的测试候选。没有替代品的，先测试再行动。在匹配门店测试验证之前，没有什么是确认安全的。</p>
+<p>在表现更好的产品中有合理替代品的候选，是风险较低的测试候选。没有替代品的，候选需要更多谨慎，而无论哪种情形，确认下架安全的都是匹配门店测试。</p>
 <section id="step-1-screening-skus-by-revenue" class="level3">
 <h3 class="anchored" data-anchor-id="step-1-screening-skus-by-revenue">第 1 步：按收入筛选 SKU</h3>
 <p>在决定下架什么之前，我们需要把 SKU 的范围缩小。一家杂货店可能经营数千种产品，但一小部分驱动了大部分收入，而长尾商品每一种带来的收入都很少。下架候选就来自那条长尾。</p>
 <p>零售团队常用一种帕累托式的排名，叫作 <strong>ABC 分析</strong>。产品按贡献排序，通常是销售额或利润，有时也按销量，然后分成三档。</p>
 <ul>
-<li><strong>A 类商品</strong>（前约 20%）：关键少数。它们驱动了所选指标的大约 80%。保护、监控并优化它们。</li>
-<li><strong>B 类商品</strong>（接下来约 30%）：重要的中间层。稳定的贡献者，需要的关注较少。</li>
-<li><strong>C 类商品</strong>（末尾约 50%）：长尾。单个很小，合起来很嘈杂。是精简的候选。</li>
+<li><strong>A 类商品</strong>（前约 20%）：所选指标的大约 80%。保护、监控并优化它们。</li>
+<li><strong>B 类商品</strong>（接下来约 30%）：稳定的贡献者，需要的关注较少。</li>
+<li><strong>C 类商品</strong>（末尾约 50%）：长尾，每个 SKU 都小到其销售序列几乎不带信号。是精简的候选。</li>
 </ul>
 <p>C 类产品是你开始构建候选池的地方。不是每个 C 类商品都应该下架，但任何你考虑砍掉的产品都应该来自这个组。</p>
 <p>在代码中，按累计收入份额给 SKU 排名，切分成 A/B/C 三档，并把 C 类长尾作为候选池：</p>
@@ -696,7 +696,7 @@ window.Quarto = {
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Candidate pool = C-rank by revenue (the long tail)</span></span>
 <span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>candidates <span class="op">=</span> sku_summary[sku_summary[<span class="st">"abc_revenue"</span>] <span class="op">==</span> <span class="st">"C"</span>]</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
 <p>完整的函数，包括零销售/负销售过滤和对 NaN 安全的分箱，在配套 Notebook 中。</p>
-<p><a href="#fig-revenue-pareto" class="quarto-xref">图&nbsp;<span>1</span></a> 展示了约 39,000 个 Dunnhumby 杂货 SKU（剔除 38 个无销售的之后）的收入帕累托曲线。收入高度集中：不到 20% 的 SKU 产生了 80% 的销售额，而 C 类池（<code>abc_revenue == "C"</code>）包含 63% 的 SKU，却只有 5% 的收入。这条长尾构成了候选池。单凭数量，它值得被检视，而不是被捍卫。</p>
+<p><a href="#fig-revenue-pareto" class="quarto-xref">图&nbsp;<span>1</span></a> 展示了约 39,000 个 Dunnhumby 杂货 SKU（剔除 38 个无销售的之后）的收入帕累托曲线。收入高度集中：不到 20% 的 SKU 产生了 80% 的销售额，而 C 类池（<code>abc_revenue == "C"</code>）包含 63% 的 SKU，却只有 5% 的收入。这条长尾构成了候选池。单凭低销量就能让一个 SKU 进入这个池子；但它不决定结果。</p>
 <div id="fig-revenue-pareto" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="约 39,000 个 SKU 的收入帕累托曲线：不到 20% 的 SKU 驱动了 80% 的收入。">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-revenue-pareto-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -712,10 +712,10 @@ window.Quarto = {
 <section id="step-2-substitution-check-will-the-demand-stay" class="level3">
 <h3 class="anchored" data-anchor-id="step-2-substitution-check-will-the-demand-stay">第 2 步：替代检查，“需求会留下来吗？”</h3>
 <p>对每个 C 类候选，问题是：如果我们把它下架，顾客会从我们这里买别的东西，还是离开这家店？</p>
-<p>在同一个子品类内，很少出现在同一个购物篮里的产品可能是替代品。购物者通常买一个品牌的酸奶，而不是三个。我们用购物篮共现度低（以提升度衡量）作为替代的代理指标：</p>
+<p>在同一个子品类内，很少出现在同一个购物篮里的产品可能是替代品。一位购物者每次到店通常只买一个品牌的酸奶。我们用购物篮共现度低（以提升度衡量）作为替代的代理指标：</p>
 <p><span class="math display">\[\text{Lift}(A, B) = \frac{P(A \cap B)}{P(A) \times P(B)}\]</span></p>
 <p>提升度 &gt; 1 意味着两个产品倾向于被一起购买（互补品）；提升度 &lt; 1 意味着它们很少一起被购买，在同一子品类内这暗示它们互为替代；提升度 = 0（从未出现在同一个购物篮）是最强的信号。同子品类的约束很重要：跨品类的低共现只说明产品满足不同的需求（麦片与意面），并不说明它们互为替代。</p>
-<p>这是代理指标，不是证据。低共现也可能反映不同的购物场合或客户细分群体。</p>
+<p>低共现与替代关系相符，但并不能确立它：低共现也可能反映不同的购物场合或客户细分群体。</p>
 <p>对每个 C 类候选，这项检查扫描它的同子品类同伴（限定为收入 A/B 类、体量足以吸收转移需求的 SKU），并标记其中提升度低的那些：</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>co_occur <span class="op">=</span> <span class="bu">len</span>(cand_baskets <span class="op">&amp;</span> peer_baskets)</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> co_occur <span class="op">==</span> <span class="dv">0</span>:                       <span class="co"># never bought together → strongest signal</span></span>
@@ -729,7 +729,7 @@ window.Quarto = {
 </section>
 <section id="the-output-a-scored-candidate-list" class="level3">
 <h3 class="anchored" data-anchor-id="the-output-a-scored-candidate-list">输出：一份打分后的候选清单</h3>
-<p>长尾太大，无法整体打分，所以 Notebook 对 150 个 C 类 SKU 打分：购买最频繁的 100 个，加上同一子品类中的其他 C 类 SKU，全部在两年内至少出现在 30 个购物篮中。一个只被买过十来次的 SKU，无论哪个方向都承载不了替代信号。然后第 1 步和第 2 步分配三种行动之一。<a href="#tbl-scored-candidates" class="quarto-xref">表&nbsp;<span>1</span></a> 展示了每种行动各一个真实候选（子品类标签已整理以便阅读）：</p>
+<p>长尾太大，无法整体打分，所以 Notebook 对 150 个 C 类 SKU 打分：购买最频繁的 100 个，加上同一子品类中的其他 C 类 SKU，全部在两年内至少出现在 30 个购物篮中。Notebook 用 30 个购物篮作为筛选阈值，以减少稀疏计数带来的噪声；这是一条经验法则，不是统计上的保证。然后第 1 步和第 2 步分配三种行动之一。<a href="#tbl-scored-candidates" class="quarto-xref">表&nbsp;<span>1</span></a> 展示了每种行动各一个真实候选（子品类标签已整理以便阅读）：</p>
 <div id="tbl-scored-candidates" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-scored-candidates-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -742,7 +742,7 @@ window.Quarto = {
 <th style="text-align: left;">候选（子品类）</th>
 <th style="text-align: right;">收入，2 年</th>
 <th style="text-align: right;">购物篮数</th>
-<th style="text-align: center;">有明确替代品？</th>
+<th style="text-align: center;">有候选替代品？</th>
 <th style="text-align: center;">光环效应？</th>
 <th style="text-align: left;">行动</th>
 </tr>
@@ -777,21 +777,21 @@ window.Quarto = {
 </div>
 </figure>
 </div>
-<p>在这 150 个中，行动的分布是 105 / 28 / 17。被检视的长尾大多数都有品类内替代品，也没有特殊的购物篮角色，对它们来说零共现（提升度为 0.0，交易数据中最强的替代信号）是常见情形。这不是一份下架清单。这是一份短名单，按每个候选优先测试的安全程度排序。</p>
-<p>有明确品类内替代品的候选，是最安全的下架测试对象。没有明确替代品的 17 个则是相反的情形：能吸收其需求的收入 A/B 类同伴不到五个，所以需求可能离开这家店。暂时保留该产品，寻找降低其成本的方法，比如更小的包装或更好的供应商条件，或者在下架前谨慎测试。</p>
-<p>中间的 28 个是针对光环效应的一道防线。一个经常与更高价值商品一起出现的低价 SKU，可能有助于吸引那些购物篮，所以下架它可能减少其他地方的销售。对这些情形要先调查再砍，而不是只依赖收入。在密集的杂货数据中，几乎每个 SKU 都会与某些东西共现，所以只对最清晰的情形使用这个标记。另外，不是每个低收入 SKU 都应该进入候选池。有些产品靠带动到店、锚定价格形象或彰显品类可信度来赢得货架位置，这些角色是收入和提升度都捕捉不到的。</p>
+<p>在这 150 个中，行动的分布是 105 / 28 / 17。被检视的长尾大多数都有品类内候选替代品，也没有特殊的购物篮角色，对它们来说零共现（提升度为 0.0，交易数据中最强的替代信号）是常见情形。输出是一份供测试用的短名单，按每个候选优先测试的安全程度排序。</p>
+<p>子品类中有候选替代品的 SKU，是最安全的下架测试对象。没有候选替代品的 17 个则是相反的情形：能吸收其需求的收入 A/B 类同伴不到五个，所以需求可能离开这家店。暂时保留该产品，寻找降低其成本的方法，比如更小的包装或更好的供应商条件，或者在下架前谨慎测试。</p>
+<p>中间的 28 个是针对光环效应的一道防线。一个经常与更高价值商品一起出现的低价 SKU，可能有助于吸引那些购物篮，所以下架它可能减少其他地方的销售。对这些情形要先调查再砍，而不是只依赖收入。在密集的杂货数据中，几乎每个 SKU 都会与某些东西共现，所以只对最清晰的情形使用这个标记。另外，不是每个低收入 SKU 都应该进入候选池。有些 SKU 承担着收入和提升度都捕捉不到的角色，比如带动到店、锚定品类的价格形象，或彰显品类可信度。</p>
 </section>
 </section>
 <section id="validate-before-scaling" class="level2">
 <h2 class="anchored" data-anchor-id="validate-before-scaling">推广之前先验证</h2>
-<p>打分后的清单是一组假设，不是一份下架清单。在推开一次删除之前，先做一个小规模的匹配门店测试：在实验门店下架该 SKU，保持可比的对照门店不变，并监控子品类收入、每篮收入和购物篮数。</p>
+<p>打分后的清单上的每一行都是一个有待测试的假设。在推开一次删除之前，先做一个小规模的匹配门店测试：在实验门店下架该 SKU，保持可比的对照门店不变，并监控子品类收入、每篮收入和购物篮数。</p>
 <p>不要评估被下架 SKU 自己的销售；按定义它们会是零。问题是需求是否留在了品类里、留在了购物篮里。如果结果不确定，就不要推广这次下架。</p>
 </section>
 <section id="key-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="key-takeaways">要点</h2>
 <ul>
-<li>收入 ABC 产生的是候选，不是决策。同子品类低共现是替代的代理指标，不是证据，而一个锚定了高价值购物篮的便宜 SKU 可能值得保留。</li>
-<li>没有匹配门店测试绝不推广。衡量子品类收入、每篮收入和购物篮数，而不是被下架 SKU 自己的销售。结果不确定不等于绿灯。</li>
+<li>收入 ABC 把 SKU 的范围缩小到一个候选池，同子品类低共现再按替代风险给这些候选排序；一个锚定了高价值购物篮的便宜 SKU 仍然可能值得保留。</li>
+<li>没有匹配门店测试绝不推广。衡量子品类收入、每篮收入和购物篮数，而不是被下架 SKU 自己的销售。如果测试结果不确定，就不要推广这次下架。</li>
 </ul>
 
 

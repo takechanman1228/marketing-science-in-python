@@ -6,7 +6,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="能够落地的客户细分：十分位与 RFM、K-Means 行为聚类、BERTopic 嵌入向量，以及如何判断一套细分是否足够好。">
+<meta name="description" content="能够落地的客户细分：根据要做的决策在十分位与 RFM、K-Means 或嵌入向量之间选择，验证细分群体，并把 segment_id 交给你的 CRM。">
 
 <title>用 Python 进行客户细分 – Marketing Science in Python</title>
 <style>
@@ -129,12 +129,12 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 
 <link rel="stylesheet" href="../custom.css">
 <meta property="og:title" content="用 Python 进行客户细分">
-<meta property="og:description" content="能够落地的客户细分：十分位与 RFM、K-Means 行为聚类、BERTopic 嵌入向量，以及如何判断一套细分是否足够好。">
+<meta property="og:description" content="能够落地的客户细分：根据要做的决策在十分位与 RFM、K-Means 或嵌入向量之间选择，验证细分群体，并把 segment_id 交给你的 CRM。">
 <meta property="og:image" content="https://marketing-science-in-python.com/images/common/book_cover_online.png">
 <meta property="og:site_name" content="Marketing Science in Python">
 <meta property="og:image:alt" content="抽象数据流汇聚成几何网络的封面">
 <meta name="twitter:title" content="用 Python 进行客户细分">
-<meta name="twitter:description" content="能够落地的客户细分：十分位与 RFM、K-Means 行为聚类、BERTopic 嵌入向量，以及如何判断一套细分是否足够好。">
+<meta name="twitter:description" content="能够落地的客户细分：根据要做的决策在十分位与 RFM、K-Means 或嵌入向量之间选择，验证细分群体，并把 segment_id 交给你的 CRM。">
 <meta name="twitter:image" content="https://marketing-science-in-python.com/images/common/book_cover_online.png">
 <meta name="twitter:image:alt" content="抽象数据流汇聚成几何网络的封面">
 <meta name="twitter:card" content="summary_large_image">
@@ -578,23 +578,13 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
     <h2 id="toc-title">目录</h2>
    
   <ul>
-  <li><a href="#sec-behavioral-vs-profile" id="toc-sec-behavioral-vs-profile" class="nav-link active" data-scroll-target="#sec-behavioral-vs-profile">行为变量与画像变量</a></li>
-  <li><a href="#sec-value-tiers" id="toc-sec-value-tiers" class="nav-link" data-scroll-target="#sec-value-tiers">从简单开始：十分位与 RFM</a>
-  <ul class="collapse">
-  <li><a href="#decile-analysis" id="toc-decile-analysis" class="nav-link" data-scroll-target="#decile-analysis">十分位分析</a></li>
-  <li><a href="#rfm-analysis" id="toc-rfm-analysis" class="nav-link" data-scroll-target="#rfm-analysis">RFM 分析</a></li>
-  </ul></li>
-  <li><a href="#sec-kmeans" id="toc-sec-kmeans" class="nav-link" data-scroll-target="#sec-kmeans">使用 K-Means 进行行为聚类</a></li>
-  <li><a href="#sec-embedding" id="toc-sec-embedding" class="nav-link" data-scroll-target="#sec-embedding">使用 BERTopic 的基于嵌入向量的细分</a>
-  <ul class="collapse">
-  <li><a href="#why-bertopic" id="toc-why-bertopic" class="nav-link" data-scroll-target="#why-bertopic">为什么选 BERTopic？</a></li>
-  <li><a href="#constructing-the-customer-document" id="toc-constructing-the-customer-document" class="nav-link" data-scroll-target="#constructing-the-customer-document">构建客户文档</a></li>
-  <li><a href="#reading-the-output" id="toc-reading-the-output" class="nav-link" data-scroll-target="#reading-the-output">解读输出</a></li>
-  <li><a href="#when-one-theme-dominates" id="toc-when-one-theme-dominates" class="nav-link" data-scroll-target="#when-one-theme-dominates">当一个主题占据主导</a></li>
-  <li><a href="#the-llm-naming-trap" id="toc-the-llm-naming-trap" class="nav-link" data-scroll-target="#the-llm-naming-trap">LLM 命名陷阱</a></li>
-  </ul></li>
+  <li><a href="#sec-method-cheat-sheet" id="toc-sec-method-cheat-sheet" class="nav-link active" data-scroll-target="#sec-method-cheat-sheet">按问题选择细分方法</a></li>
+  <li><a href="#sec-behavioral-vs-profile" id="toc-sec-behavioral-vs-profile" class="nav-link" data-scroll-target="#sec-behavioral-vs-profile">先看行为，再看画像</a></li>
+  <li><a href="#sec-value-tiers" id="toc-sec-value-tiers" class="nav-link" data-scroll-target="#sec-value-tiers">价值层级：十分位与 RFM</a></li>
+  <li><a href="#sec-kmeans" id="toc-sec-kmeans" class="nav-link" data-scroll-target="#sec-kmeans">使用 K-Means 的行为细分</a></li>
+  <li><a href="#sec-embedding" id="toc-sec-embedding" class="nav-link" data-scroll-target="#sec-embedding">当产品含义重要时</a></li>
   <li><a href="#sec-segment-validation" id="toc-sec-segment-validation" class="nav-link" data-scroll-target="#sec-segment-validation">你的细分够好吗？</a></li>
-  <li><a href="#sec-method-cheat-sheet" id="toc-sec-method-cheat-sheet" class="nav-link" data-scroll-target="#sec-method-cheat-sheet">方法速查表</a></li>
+  <li><a href="#sec-segment-id" id="toc-sec-segment-id" class="nav-link" data-scroll-target="#sec-segment-id">从细分群体到 segment_id</a></li>
   <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways">要点</a></li>
   </ul>
 <div class="quarto-code-links"><h2>代码链接</h2><ul><li><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_traditional_segmentation.ipynb"><i class="bi bi-github"></i>sec4.1_traditional_segmentation.ipynb</a></li><li><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_semantic_segmentation.ipynb"><i class="bi bi-github"></i>sec4.1_semantic_segmentation.ipynb</a></li></ul></div></nav>
@@ -626,25 +616,59 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 <p><strong>关于中文版</strong><br>
 本页是英文版 <em>Marketing Science in Python</em> 的AI翻译。英文版为正式版本，如有出入，以英文版为准。代码、Notebook 和图片中的文字保持英文。 <a href="../../part4/sec4.1-segmentation.html" class="translation-source-link">阅读英文版</a></p>
 </div>
-<p>一个客户细分项目应该产出你的团队真正能用的东西，而不只是一份演示文稿。真正的交付物是一个可以直接接入你的 CRM 和广告平台的 <code>segment_id</code>，外加每个细分群体的一份简明简报：他们是谁、为什么重要，以及你的团队应该采取什么行动。</p>
-<p>本章分三步讲解如何构建这样的成果：</p>
-<ol type="1">
-<li>首先，按当前价值给客户排序。十分位分析和 RFM（最近购买时间 Recency、购买频率 Frequency、消费金额 Monetary）提供了一种按价值快速细分的方法。</li>
-<li>其次，按行为给客户分组。行为聚类能发现仅靠价值层级无法捕捉的模式。</li>
-<li>最后，加入购买的含义。基于嵌入向量的细分展示客户实际购买的是什么，而不只是花了多少钱。</li>
-</ol>
+<p>一个客户细分项目应该产出团队能够投入营销活动的东西。交付物是一个可以直接接入你的 CRM 和广告平台的 <code>segment_id</code>，外加每个细分群体的一份简明简报：他们是谁、为什么重要，以及你的团队应该采取什么行动。</p>
+<p>客户细分不是单一的方法。十分位、RFM、K-Means 和基于嵌入向量的聚类各自回答一个不同的问题。这个问题来自细分群体所要支持的决策：谁获得留存预算，哪条信息发给谁，讲哪个产品故事。</p>
+<section id="sec-method-cheat-sheet" class="level2">
+<h2 class="anchored" data-anchor-id="sec-method-cheat-sheet">按问题选择细分方法</h2>
+<p>把决策对应到某一行。</p>
+<div id="tbl-method-cheat-sheet" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-method-cheat-sheet-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+表&nbsp;1: 按各自回答的问题列出的细分方法。
+</figcaption>
+<div aria-describedby="tbl-method-cheat-sheet-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">问题</th>
+<th style="text-align: left;">方法</th>
+<th style="text-align: left;">输入</th>
+<th style="text-align: left;">输出</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">哪些客户现在值得更多关注？</td>
+<td style="text-align: left;">十分位 / RFM</td>
+<td style="text-align: left;">交易日志</td>
+<td style="text-align: left;">价值层级或 R/F/M 得分</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">价值层级之外还存在哪些行为模式？</td>
+<td style="text-align: left;">K-Means</td>
+<td style="text-align: left;">数值型行为特征</td>
+<td style="text-align: left;">行为细分群体标签</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">客户实际购买的是什么？</td>
+<td style="text-align: left;">基于嵌入向量的聚类</td>
+<td style="text-align: left;">由产品描述构成的客户文档</td>
+<td style="text-align: left;">带关键词指纹的基于含义的细分群体</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<p>这是三种视角，而不是同一条流水线的三个阶段。后一行不会细化前一行的细分群体；它回答的是另一个问题，有时用的还是另一份数据。从能改变决策的最简单的那一行开始，只有当当前视角一视同仁的两位客户会得到不同对待时，才往下走。本章在同一家食品杂货零售商上构建前两行，即 Dunnhumby 的“The Complete Journey”数据集（2,500 个家庭，为期两年），第三行则构建在一家产品文本适合这种方法的礼品零售商上。</p>
+</section>
 <section id="sec-behavioral-vs-profile" class="level2">
-<h2 class="anchored" data-anchor-id="sec-behavioral-vs-profile">行为变量与画像变量</h2>
-<p>构建客户细分时，变量大致分为两类。行为变量描述客户做了什么：最近购买时间、购买频率、消费金额、购买过的品类、产品广度、退货以及对折扣的依赖程度。画像变量描述他们是谁，或者你能在哪里触达他们：年龄、收入、家庭构成、地理位置、会员等级和渠道偏好。</p>
-<p>对营销细分而言，行为变量是更牢靠的基础。一个人浏览过什么、买过什么，或者相似客户选择了什么，通常比人口统计特征更能预测其下一步行动。仅依赖人口统计特征，比如“这款产品卖给 30 多岁的男性”或“这个优惠给高收入人群”，其信号远弱于客户真实的购买历史。</p>
-<p>画像变量仍然有其作用。在构建好细分群体之后使用它们，来理解每个群体里都是谁、在哪里触达他们，以及如何调整沟通方式。</p>
+<h2 class="anchored" data-anchor-id="sec-behavioral-vs-profile">先看行为，再看画像</h2>
+<p>行为变量描述客户做了什么：最近购买时间、购买频率、消费金额、购买过的品类、产品广度、退货以及对折扣的依赖程度。画像变量描述他们是谁，或者在哪里能触达他们：年龄、收入、家庭构成、地理位置、会员等级、渠道偏好。在行为之上构建细分群体：像“30 多岁的男性”或“高收入人群”这样的标签，对下一次购买的预测能力远不如一个人实际买过什么。之后再引入画像变量，用来描述每个细分群体，并选择在哪里以及如何触达它。</p>
 </section>
 <section id="sec-value-tiers" class="level2">
-<h2 class="anchored" data-anchor-id="sec-value-tiers">从简单开始：十分位与 RFM</h2>
-<p>最简单的方法是基于规则的：由你来定义切分点，而不是依赖算法。十分位分析和 RFM 是最常见的例子。</p>
-<section id="decile-analysis" class="level3">
-<h3 class="anchored" data-anchor-id="decile-analysis">十分位分析</h3>
-<p>十分位分析按营收把客户切成十个人数相等的组。其分布往往符合帕累托法则：一小群客户贡献了大部分营收。最高的十分位获得留存和 VIP 待遇。接下来的三个十分位是增长型营销活动的主要目标。中间三个十分位接受低成本的自动化培育，最低的三个则被排除在高成本优惠之外。你可以很快搭建起这套方案，并给团队一份清晰的行动计划。</p>
+<h2 class="anchored" data-anchor-id="sec-value-tiers">价值层级：十分位与 RFM</h2>
+<p>最快的细分是一个排名。十分位分析按营收把客户切成十个人数相等的组，食品杂货数据显示出通常的集中现象：最高的两个十分位占了 53% 的营收。</p>
 <div id="fig-decile-distribution" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="客户价值集中在最高的几个十分位，排名前 20% 的客户贡献了超过一半的营收。">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-decile-distribution-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -655,14 +679,12 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 </figcaption>
 </figure>
 </div>
-</section>
-<section id="rfm-analysis" class="level3">
-<h3 class="anchored" data-anchor-id="rfm-analysis">RFM 分析</h3>
-<p>RFM 提供了更细致的视角。它是直复营销中使用最广泛的细分框架，因为团队本来就习惯用这些术语思考：已休眠的高消费客户、新的高频买家，以及类似的模式。</p>
+<p>十分位告诉你价值在哪里，当决策是给每位客户多少关注时，这正是你需要的。它对客户为何不同、哪条信息会奏效则一无所言。</p>
+<p>RFM 在价值之上加入了参与度，用的是直复营销团队本来就在用的术语：已休眠的高消费客户、新的高频买家。</p>
 <div id="tbl-rfm-variables" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-rfm-variables-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-表&nbsp;1: RFM 变量及其解释。
+表&nbsp;2: RFM 变量及其解释。
 </figcaption>
 <div aria-describedby="tbl-rfm-variables-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <table class="caption-top table">
@@ -694,28 +716,14 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 </div>
 </figure>
 </div>
-<p>独立排序法把每个变量分别切成五分位，生成一个三位数的得分（R=5，F=4，M=3），最多可得 125 个组。顺序排序法则把切分嵌套起来：先按最近购买时间切分，再在每个最近购买时间组内按购买频率切分，最后按消费金额切分，因此最近购买时间的权重最大。</p>
-<div class="callout callout-style-default callout-tip callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">提示</span>一次调用完成 RFM 打分
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>PyMC-Marketing 是<a href="sec4.2-clv-modeling.html">第 4.2 节</a>中用于 CLV 建模的库，它自带一个基于四分位的 <code>rfm_segments()</code> 工具，可以直接从交易表中为 R、F、M 打分并分配带名称的细分群体。它不如 K-Means 灵活，但在实践中表现良好，而且在非常大的客户群上依然很快。</p>
-</div>
-</div>
-<p>十分位和 RFM 搭建快、用起来容易。但它们只能建立价值层级，而不是完整的客户画像。两个 RFM 得分相近的客户，行为可能大相径庭：一个可能跨许多品类购买全价商品，另一个可能只在单一品类里买打折商品。要看清这些差异，你需要从价值层级走向更丰富的行为变量。</p>
-</section>
+<p>给每个变量按五分位打分并组合起来，昨天刚买过的高消费客户就与沉默了一年的高消费客户区分开了。组合得分最多有 125 个格子，所以要把会得到同样对待的格子合并起来。PyMC-Marketing，也就是 <a href="sec4.2-clv-modeling.html">CLV 那一章</a>使用的库，用 <code>rfm_segments()</code> 一次调用就能完成打分。</p>
+<p>十分位和 RFM 衡量的是客户买了多少、最近何时买，而不是怎么买。两个 RFM 得分相同的客户，行为可能大相径庭：一个跨许多品类购买全价商品，另一个只在单一品类里买打折商品。</p>
 </section>
 <section id="sec-kmeans" class="level2">
-<h2 class="anchored" data-anchor-id="sec-kmeans">使用 K-Means 进行行为聚类</h2>
-<p>K-Means 是一种经典的聚类算法，在营销细分中依然好用。用 StandardScaler 对特征做标准化，以免消费金额主导一切，并从 6 到 10 个行为变量开始。除了 RFM 之外，有用的补充包括平均订单金额、购物篮大小和退货率。</p>
-<p>在缩放之前先对偏态变量做对数变换。消费金额、购买频率、最近购买时间和购物篮大小通常都严重右偏：少数客户的购买量远超其他所有人。StandardScaler 只做中心化和重新缩放，所以这些长尾会保留下来。如果直接喂入原始值，K-Means 会把最初几次切分花在区分高消费者和低消费者上，基本上只是重新发现了价值层级，而它额外找到的任何一个簇都只是一小撮离群点，小到无法据此行动。对偏态特征应用 <code>log1p</code>（一条简单规则：凡是偏度大于约 1 的都做变换）能压缩长尾，这样簇反映的是行为的<em>形态</em>而非消费规模，均衡且可行动的细分群体就会浮现出来。在配套数据集上，这正是 K-Means 坍缩成三个价值层级，与把客户群拆成五个均衡、规模相当的行为群体之间的区别。</p>
-<p>选择 K 一半靠统计，一半靠判断。肘部法则有助于缩小范围，但很少能确定具体数字。在客户数据上，最明显的拐点往往出现在 K=3，而这通常只是重新找回了十分位和 RFM 已经捕捉到的价值层级（重度、一般、休眠）。要按行为而不是按价值细分，就要推进到实用的范围（通常是 4 到 8 个细分群体），并让可行动性来决定：保留那个其细分群体你的营销团队真的会区别对待的 K。如果他们无法为每个细分群体描述一种不同的行动，说明你的细分群体太多了。</p>
+<h2 class="anchored" data-anchor-id="sec-kmeans">使用 K-Means 的行为细分</h2>
+<p>要区分这两位客户，就要描述他们是怎么购物的。K-Means 是一种经典的聚类算法，对此依然好用。从 6 到 10 个行为变量开始：在最近购买时间、购买频率和消费金额之外，加入平均订单金额、购物篮大小、品类广度、折扣占比和退货率。用 StandardScaler 对它们做标准化，以免消费金额主导一切。</p>
+<p>在缩放之前先对偏态变量做对数变换。消费金额、购买频率、最近购买时间和购物篮大小都严重右偏，而 StandardScaler 只做中心化和重新缩放，所以长尾会保留下来。如果喂入原始特征，K-Means 会把最初几次切分用在区分高消费者和低消费者上，基本上只是复现了价值层级。对偏态特征应用 <code>log1p</code>（一条简单规则：凡是偏度大于约 1 的都做变换）能压缩长尾，这样各个簇就按购买模式而不是消费水平来区分客户。在食品杂货数据上，这正是 K-Means 坍缩成三个价值层级，与把客户群拆成五个均衡的行为群体之间的区别。</p>
+<p>选择 K 既要用诊断指标，也要用团队的判断。肘部法则能缩小范围，但很少能确定具体数字，而且在客户数据上，最明显的拐点往往出现在 K=3，这只是重新找回了十分位和 RFM 已经捕捉到的价值层级。推进到 4 到 8 这个实用范围，并让可行动性来决定：保留那个其细分群体你的营销团队会区别对待的 K。</p>
 <div id="fig-elbow" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="簇内变异在大约五个簇之前迅速下降，之后随着簇的增加改善得更为平缓。">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-elbow-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -726,11 +734,22 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 </figcaption>
 </figure>
 </div>
-<p>在配套数据集上，K=5 是细分群体不再只是价值层级、开始成为简报的地方。<a href="#tbl-kmeans-segments" class="quarto-xref">表&nbsp;<span>2</span></a> 就是这次拟合的结果。占比和画像均值来自 notebook（消费、到店次数和部门数是两年总计在细分群体内的平均值）；名称和最后两项行动则是分析师对其画像热力图的解读，这一步 notebook 留给了你。</p>
+<p>在食品杂货数据上，取 K=5 时，细分群体不仅在消费水平上、也在购买模式上有所区别。<a href="#fig-kmeans-heatmap" class="quarto-xref">图&nbsp;<span>3</span></a> 是这次拟合背后的画像：每个细分群体一行，每个行为特征一列，按细分群体均值相对总体的高低着色。</p>
+<div id="fig-kmeans-heatmap" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="五个 K-Means 细分群体在九个行为特征上的热力图，按相对总体均值的 z 分数着色，每个单元格中印有细分群体均值。">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-kmeans-heatmap-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.1/segment_heatmap.png" class="fig-md img-fluid figure-img" alt="五个 K-Means 细分群体在九个行为特征上的热力图，按相对总体均值的 z 分数着色，每个单元格中印有细分群体均值。">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-kmeans-heatmap-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;3: 食品杂货数据上的 K-Means 细分群体画像。
+</figcaption>
+</figure>
+</div>
+<p><a href="#tbl-kmeans-segments" class="quarto-xref">表&nbsp;<span>3</span></a> 是分析师对那张热力图的解读，这一步 notebook 留给了你。占比和画像均值来自 notebook（消费、到店次数和部门数是两年总计在细分群体内的平均值）；名称和行动则出自分析师。</p>
 <div id="tbl-kmeans-segments" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-kmeans-segments-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-表&nbsp;2: 配套 Notebook 得出的食品杂货数据上的 K=5 细分群体。
+表&nbsp;3: 配套 Notebook 得出的食品杂货数据上的 K=5 细分群体。
 </figcaption>
 <div aria-describedby="tbl-kmeans-segments-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <table class="caption-top table">
@@ -778,33 +797,14 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 </div>
 </figure>
 </div>
-<p>名称只是速记；简报是整行。这就是要交给营销团队做下文可行动性检查的表：如果两行会收到同一个营销活动，就把它们合并。</p>
-<p>数值聚类依然会抹平产品的含义。以购买频率、消费金额、最近购买时间、品类广度和折扣依赖度作为输入，两个客户即使购买的产品截然不同，看起来也可能很相似。要捕捉这种含义，就把产品文本直接带进细分。</p>
+<p>细分群体的名称只是速记；营销团队依据的是画像和行动两列。这就是要交给他们做下文可行动性检查的表。</p>
 </section>
 <section id="sec-embedding" class="level2">
-<h2 class="anchored" data-anchor-id="sec-embedding">使用 BERTopic 的基于嵌入向量的细分</h2>
-<p>要捕捉客户实际购买的是什么，把每位客户的购买历史当作文本来处理：把他们购买过的产品描述拼接成一个字符串（客户文档），然后用嵌入模型把这个字符串转换成一个稠密向量。在这个嵌入空间里，生日蜡烛和派对餐盘靠得很近，而一把古董茶壶则离得很远，因此对向量做聚类会按购买含义而不只是购买量来划分客户。</p>
-<p>这些示例使用 UCI Online Retail II 数据集，它包含一家英国礼品零售商约一百万条交易，其自由文本的产品描述正是嵌入模型要读取的内容。我们用 BERTopic 运行整条流水线。</p>
-<div id="fig-umap-clusters" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="客户文档嵌入向量的 UMAP 投影，每个点是一位客户，颜色表示 BERTopic 发现的细分群体。">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-umap-clusters-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part4/sec4.1/umap_clusters.png" class="fig-md img-fluid figure-img" alt="客户文档嵌入向量的 UMAP 投影，每个点是一位客户，颜色表示 BERTopic 发现的细分群体。">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-umap-clusters-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-图&nbsp;3: 嵌入空间中的客户文档。
-</figcaption>
-</figure>
-</div>
-<section id="why-bertopic" class="level3">
-<h3 class="anchored" data-anchor-id="why-bertopic">为什么选 BERTopic？</h3>
-<p>手工完成这条流水线意味着串联四个库：用 SentenceTransformers 嵌入文档，用 UMAP 降维，用 HDBSCAN 聚类，再用自定义代码解读结果。BERTopic 把这四者封装在一个 API 之后，并加入了让输出可用的部分：用 c-TF-IDF 提取每个细分群体的区分性关键词，用 <code>reduce_outliers()</code> 处理 HDBSCAN 未分配的客户，用 <code>transform()</code> 为新客户打分而无需重新拟合，以及一个可选的用 LLM 命名的步骤。本节余下部分就沿着这条流水线展开。</p>
-</section>
-<section id="constructing-the-customer-document" class="level3">
-<h3 class="anchored" data-anchor-id="constructing-the-customer-document">构建客户文档</h3>
-<p>例如，一位客户的文档可能长这样：</p>
+<h2 class="anchored" data-anchor-id="sec-embedding">当产品含义重要时</h2>
+<p>数值特征描述客户怎么购物，而不是买什么。当决策关乎品类营销、交叉销售或创意时，信号在产品本身之中，因此你需要产品文本。所以本节是一条独立的路线，而不是 K-Means 之后的下一步，而且它运行在不同的数据上。UCI Online Retail II 数据集包含一家英国礼品零售商约一百万条交易，拥有嵌入模型可以读取的自由文本产品描述。</p>
+<p>把每位客户的购买历史当作文本来处理：把他们购买过的产品描述拼接成一个字符串（客户文档），然后用嵌入模型把这个字符串转换成一个稠密向量。在这个嵌入空间里，生日蜡烛和派对餐盘之间距离很短，而一把古董茶壶离两者都很远，因此对向量做聚类会按客户买什么而不是花多少钱来分组。例如：</p>
 <p><code>red retrospot cake stand, party bunting, paper cups, birthday candles, cake cases</code></p>
-<p>数值模型可能只把这位客户看作高频或高消费。嵌入模型看到的是产品含义：派对用品和与庆祝相关的购买。</p>
-<p>构建客户文档就是对交易日志做一次分组加拼接：</p>
+<p>数值特征把这位客户归入高频、高消费的层级。嵌入向量则把他放在其他派对用品买家的附近。构建客户文档就是对交易日志做一次分组加拼接：</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Keep each customer's top-N products by revenue, then join the descriptions</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>prod_rev <span class="op">=</span> (</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    df.groupby([<span class="st">"CustomerID"</span>, <span class="st">"Description"</span>])[<span class="st">"Revenue"</span>].<span class="bu">sum</span>()</span>
@@ -818,15 +818,8 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    .<span class="bu">apply</span>(<span class="kw">lambda</span> d: <span class="st">", "</span>.join(d))</span>
 <span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    .reset_index(name<span class="op">=</span><span class="st">"doc"</span>)</span>
 <span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
-<p>三个实际决策对细分群体质量的影响超过其他一切。</p>
-<p>哪些产品放进去。按购买频率或营收取前 N 个商品，通常比完整购买历史效果更好。完整列表会带来一次性购买的噪声；头部商品捕捉的是客户的真实模式。</p>
-<p>是否按营收加权。高价商品出现一次与低价商品出现一次，可能会错误反映客户真正在意什么。按营收加权（按消费比例重复提及产品）能让购物篮混杂的客户的细分群体更清晰。当产品间价格差异很大时，给权重设上限或使用对数消费加权；否则一次奢侈品购买就可能主导整个文档。</p>
-<p>过滤通用产品。像“礼品卡”、“邮费”这类商品或通用 SKU 都是噪声：它们出现在所有细分群体中，稀释了关键词。通过 StockCode 的模式把它们过滤掉，或维护一个小型排除清单。仅这一步，往往就决定了细分群体是有意义还是毫无意义。</p>
-<p>对大多数零售目录来说，一个轻量的句子嵌入模型就够了。细分群体的质量更多取决于你如何设计和验证客户文档，而不是选哪个嵌入模型。该 notebook 出于可复现性使用本地的 SentenceTransformers 模型，但同样的工作流也可以使用基于 API 的嵌入模型，例如 OpenAI 的嵌入。</p>
-</section>
-<section id="reading-the-output" class="level3">
-<h3 class="anchored" data-anchor-id="reading-the-output">解读输出</h3>
-<p>那张图背后的拟合只需一次调用。本地嵌入模型把每个文档转换成向量，BERTopic 负责聚类和关键词提取：</p>
+<p>保留每位客户的头部产品而不是完整历史，过滤掉像“Postage”这样出现在每个细分群体中的通用商品，并给任何一次高价购买的权重设上限。这些选择比选哪个嵌入模型更重要。</p>
+<p>BERTopic 用一次调用运行流水线的其余部分：本地句子嵌入模型把每个文档转换成向量，BERTopic 对向量做聚类并提取每个簇的区分性关键词。</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> bertopic <span class="im">import</span> BERTopic</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sentence_transformers <span class="im">import</span> SentenceTransformer</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -837,105 +830,104 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 <span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>topics, probs <span class="op">=</span> topic_model.fit_transform(</span>
 <span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    customer_docs[<span class="st">"doc"</span>].tolist(), embeddings<span class="op">=</span>embeddings</span>
 <span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
-<p>配套 Notebook 显式配置了 UMAP、HDBSCAN 和 c-TF-IDF 子模型；这里是同一条流水线使用默认参数的版本。回报是每个细分群体的一份关键词指纹：</p>
-<div id="fig-bertopic-barchart" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="来自产品描述嵌入向量的每个细分群体的头部区分性关键词，这是数值型 RFM 聚类无法揭示的。">
+<div id="fig-umap-clusters" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="客户文档嵌入向量的 UMAP 投影，每个点是一位客户，颜色表示 BERTopic 发现的细分群体。">
 <figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-bertopic-barchart-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part4/sec4.1/bertopic_barchart.png" class="fig-md img-fluid figure-img" alt="来自产品描述嵌入向量的每个细分群体的头部区分性关键词，这是数值型 RFM 聚类无法揭示的。">
+<div aria-describedby="fig-umap-clusters-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.1/umap_clusters.png" class="fig-md img-fluid figure-img" alt="客户文档嵌入向量的 UMAP 投影，每个点是一位客户，颜色表示 BERTopic 发现的细分群体。">
 </div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-bertopic-barchart-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-图&nbsp;4: 每个细分群体的头部区分性关键词。
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-umap-clusters-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;4: 嵌入空间中的客户文档。
 </figcaption>
 </figure>
 </div>
-<p>把这些面板交给营销人员，他们应该能很快看出哪些品类、营销活动和创意适合每个群体。</p>
-</section>
-<section id="when-one-theme-dominates" class="level3">
-<h3 class="anchored" data-anchor-id="when-one-theme-dominates">当一个主题占据主导</h3>
-<p>真实的产品目录常常有一个覆盖大多数客户的宽泛主题，边缘则是一串界限分明的小众主题。HDBSCAN 两者都能发现，但在离群点归并之后，宽泛主题会膨胀成一个单一的巨型主题，大到无法作为一个细分群体来行动。修复方法是外科手术式的：<strong>只对巨型主题的嵌入向量</strong>运行 K-Means，把它拆成适合投放规模的子细分群体，同时把小众主题保留为探索发现。这是把“HDBSCAN 用于发现，K-Means 用于运营”的模式应用在主导簇的内部，而不是整个客户群上。当任一主题超过客户群的 50% 时，配套 Notebook 会自动执行这一步。</p>
-</section>
-<section id="the-llm-naming-trap" class="level3">
-<h3 class="anchored" data-anchor-id="the-llm-naming-trap">LLM 命名陷阱</h3>
-<p>LLM 辅助命名会让细分群体显得比实际更可信。把任何一个簇，哪怕是随机的簇，喂给 LLM 并要求它给出名称和人物画像，你都会得到一段精致而有说服力的描述。无论这个簇有没有意义，叙事听起来都很合理。</p>
-<p>两道防线：</p>
+<p><a href="#fig-bertopic-barchart" class="quarto-xref">图&nbsp;<span>5</span></a> 展示了 BERTopic 找到的七个主题，关键词直接点出了各个小众群体：派对蜡烛和灯笼、巧克力圆点烘焙器皿、毛毡手工套件、航空风格的包。</p>
+<div id="fig-bertopic-barchart" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="来自产品描述嵌入向量的七个主题的头部区分性关键词，每个主题一张小型条形图。">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-bertopic-barchart-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.1/bertopic_barchart.png" class="fig-md img-fluid figure-img" alt="来自产品描述嵌入向量的七个主题的头部区分性关键词，每个主题一张小型条形图。">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-bertopic-barchart-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;5: 每个主题的头部区分性关键词。
+</figcaption>
+</figure>
+</div>
+<p>关键词指纹没有展示的是客户群在这些主题之间如何分布，而在这份产品目录上，这正是发现所在。把 HDBSCAN 未分配的客户归并回来之后，宽泛主题（装饰、蜡烛、花环）占了 92% 的客户；六个小众主题合计只占约 8%。该 notebook 用 K-Means 把宽泛主题拆成六个子细分群体，但在后一个时间段上重新拟合并不能复现它们：调整兰德指数接近零，而在同一批客户上做 RFM K-Means 约为 0.14。LLM 分配的十二个名称中有九个是同一个家居装饰主题的变体。请把这套细分当作探索来解读，它描述的是这份目录把什么卖给了谁，而 CRM 的 <code>segment_id</code> 仍然放在行为细分上。</p>
+<p>关键词也是对 LLM 辅助命名的防线。把任何一个簇，哪怕是随机的簇，喂给 LLM 并要求它给出名称和人物画像，你都会得到一段精致而有说服力的描述。两道防线：</p>
 <ul>
-<li>在阅读 LLM 的叙事之前先验证关键词证据。如果你自己在头部关键词里看不出清晰的主题，那 LLM 给的名称就是虚构。</li>
-<li>拿名称去营销团队那里检验。如果他们会为两个名称不同的细分群体写出同一份营销活动简报，那这些名称只是装饰，并无信息量。</li>
+<li>先读头部关键词，再看 LLM 的描述。如果你自己看不出清晰的主题，那这个名称就没有数据支撑。</li>
+<li>拿名称去营销团队那里检验。如果两个细分群体会收到同一个营销活动，那么对这项决策来说，把它们分开几乎没有价值。</li>
 </ul>
-<p><strong>配套 Notebook</strong>：完整可运行的代码分在两个 notebook 里，各自使用适合其方法的数据集。</p>
-<ul>
-<li><code>sec4.1_traditional_segmentation.ipynb</code>：在 Dunnhumby 的“The Complete Journey”数据集上运行十分位、RFM 和 K-Means，这也是 CLV 那一章使用的数据集，因此细分群体归属可以延续下去。<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_traditional_segmentation.ipynb">在 GitHub 上查看</a></li>
-<li><code>sec4.1_semantic_segmentation.ipynb</code>：在 UCI Online Retail II 数据集上运行嵌入流水线（客户文档构建、通用产品过滤、嵌入、BERTopic 聚类、关键词提取和 LLM 辅助命名），该数据集拥有这一方法所需的丰富产品描述。其可选的 LLM 命名步骤目前配置为使用 Anthropic，需要 <code>litellm</code> 包和一个 <code>ANTHROPIC_API_KEY</code>；没有它时该单元会跳过，其余部分照常运行。<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_semantic_segmentation.ipynb">在 GitHub 上查看</a></li>
-</ul>
-</section>
 </section>
 <section id="sec-segment-validation" class="level2">
 <h2 class="anchored" data-anchor-id="sec-segment-validation">你的细分够好吗？</h2>
-<p>三项检查，按优先级排列。</p>
-<p>可行动性最重要。把细分群体画像展示给你的营销团队。对每一对细分群体问：“你会使用不同的信息、渠道、优惠或频率吗？”如果回答是“我对两者会做同样的事”，那么无论数学上看起来多么干净，这套细分都不可行动。常见的元凶是一个在所有方面都很平均的细分群体；把它与相邻群体合并，或重新审视你的变量选择。</p>
-<p>稳定性。在两个不重叠的时间段上重新运行聚类，检查客户是否大多落在相同的细分群体中。调整兰德指数（ARI）为此给出了一个数字；如果两个时间段之间换组的客户太多，你就不能依赖它们来做营销活动。配套 Notebook 展示了这两项检查：语义 notebook 中的 ARI 计算，以及传统 notebook 中的迁移矩阵视图。</p>
-<p>在食品杂货数据上，迁移矩阵是按每年的营收五分位给客户排名，而不是重新聚类：最高五分位中有 70%、最低五分位中有 61% 的客户从一年到下一年保持不变，而中间三个五分位只有约 40% 保持不变。客户群的中部是细分归属最不可靠的地方，因此基于这些归属构建的营销活动在那里需要留出最多的余地。</p>
-<div id="fig-segment-heatmap" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="细分群体画像热力图：行是细分群体，列是基础变量，颜色表示相对总体均值的偏离。">
+<p>按这个顺序检查三件事：可行动性、稳定性和规模。</p>
+<p>可行动性最重要。把细分群体画像展示给你的营销团队，并对每一对细分群体问：他们是否会使用不同的信息、渠道、优惠或频率。如果不会，那么无论聚类指标多好，这套细分都不可行动。常见的原因是一个在所有方面都很平均的细分群体；把它与相邻群体合并，或重新审视你的变量选择。</p>
+<p>第二项检查是稳定性。在两个不重叠的时间段上重新运行细分，检查客户是否大多落在相同的细分群体中；调整兰德指数（ARI）为此给出了一个数字。在食品杂货数据上，notebook 检查的是价值排名而不是簇：它把家庭放进每一年的营收五分位，并追踪它们的去向。</p>
+<div id="fig-migration-matrix" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="两年之间营收五分位的迁移矩阵，最高组中 70% 和最低组中 61% 的客户保持不变。">
 <figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-segment-heatmap-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part4/sec4.1/bertopic_segment_heatmap.png" class="fig-md img-fluid figure-img" alt="细分群体画像热力图：行是细分群体，列是基础变量，颜色表示相对总体均值的偏离。">
+<div aria-describedby="fig-migration-matrix-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.1/migration_matrix.png" class="fig-md img-fluid figure-img" alt="两年之间营收五分位的迁移矩阵，最高组中 70% 和最低组中 61% 的客户保持不变。">
 </div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-segment-heatmap-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-图&nbsp;5: 细分群体画像热力图。
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-migration-matrix-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;6: 营收五分位从第一年到第二年的迁移。
 </figcaption>
 </figure>
 </div>
-<p>规模。每个细分群体都应大到足以据此行动，但合适的下限取决于业务和营销活动：不存在通用的底线。作为粗略的指引，避免小到无法对其开展有意义营销活动的细分群体；对于宽泛的定向，这通常意味着客户群的 10% 左右，而一个真正高价值的小众群体可以是有意为之的例外。在实践中，少数几个细分群体，通常是 4 到 8 个，就足够了。</p>
-<p>细分群体建立在行为差异之上，但分配给这些细分群体的营销活动仍然需要测试。在宣布胜利之前，请回看 <a href="../part3/sec3.2-ab-testing.html">A/B 测试设计</a>。</p>
+<p>最高和最低五分位大多保持不变（70% 和 61%），而中间三个五分位只有约 40% 保持不变，因此建立在客户群中部的营销活动需要留出最多的余地。这说明的是价值排名有多稳定，而不是五个细分群体有多稳定。在第二个时间段上重新拟合 K-Means，是 <code>segment_id</code> 驱动营销活动之前要做的检查。</p>
+<p>第三项检查是规模。每个细分群体都应大到足以据此行动，但不存在通用的底线。对于宽泛的定向，这通常意味着客户群的 10% 左右；一个真正高价值的小众群体可以是有意为之的例外。</p>
 </section>
-<section id="sec-method-cheat-sheet" class="level2">
-<h2 class="anchored" data-anchor-id="sec-method-cheat-sheet">方法速查表</h2>
-<div id="tbl-method-cheat-sheet" class="quarto-float quarto-figure quarto-figure-center anchored">
+<section id="sec-segment-id" class="level2">
+<h2 class="anchored" data-anchor-id="sec-segment-id">从细分群体到 segment_id</h2>
+<p>离开项目的产出是每位客户一行。配套 Notebook 把 2,500 行写入 <code>segment_assignments.csv</code>，下面列出其中三行，CLV 那一章会关联这个文件，为每个细分群体赋予价值。</p>
+<div id="tbl-segment-export" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
-<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-method-cheat-sheet-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-表&nbsp;3: 按方法所回答的问题来选择方法，而不是按其复杂程度。
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-segment-export-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+表&nbsp;4: CRM 导出文件的前几行，细分群体名称来自 <a href="#tbl-kmeans-segments" class="quarto-xref">表&nbsp;<span>3</span></a>。
 </figcaption>
-<div aria-describedby="tbl-method-cheat-sheet-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div aria-describedby="tbl-segment-export-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <table class="caption-top table">
 <thead>
 <tr class="header">
-<th style="text-align: left;">问题</th>
-<th style="text-align: left;">方法</th>
-<th style="text-align: left;">输入</th>
-<th style="text-align: left;">输出</th>
+<th style="text-align: right;">household_key</th>
+<th style="text-align: left;">decile</th>
+<th style="text-align: right;">km_segment</th>
+<th style="text-align: left;">Segment</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td style="text-align: left;">哪些客户现在值得更多关注？</td>
-<td style="text-align: left;">十分位 / RFM</td>
-<td style="text-align: left;">交易日志</td>
-<td style="text-align: left;">价值层级或 R/F/M 得分</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">D3</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: left;">高频小篮客户</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">价值层级之外还存在哪些行为模式？</td>
-<td style="text-align: left;">K-Means</td>
-<td style="text-align: left;">数值型行为特征</td>
-<td style="text-align: left;">行为细分群体标签</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: left;">D6</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: left;">偶发大篮客户</td>
 </tr>
 <tr class="odd">
-<td style="text-align: left;">客户实际购买的是什么？</td>
-<td style="text-align: left;">基于嵌入向量的聚类</td>
-<td style="text-align: left;">由产品描述构成的客户文档</td>
-<td style="text-align: left;">带关键词指纹的基于含义的细分群体</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: left;">D5</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: left;">折扣倾向客户</td>
 </tr>
 </tbody>
 </table>
 </div>
 </figure>
 </div>
+<p>把每个细分群体的简报放在文件旁边，并给文件做版本管理：在营销活动之间悄悄变化的归属比没有归属更糟。细分群体描述的是客户之间的差异；它们并不能证明某条信息对其中某个群体有效。一旦选定了处理方式，就去测试它：<a href="../part3/sec3.2-ab-testing.html">A/B 测试设计</a>中的方法对细分群体营销活动同样适用，与任何其他营销活动无异。</p>
+<p><strong>配套 Notebook</strong>：<code>sec4.1_traditional_segmentation.ipynb</code> 在 Dunnhumby 数据上复现十分位、RFM、K-Means 和导出。<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_traditional_segmentation.ipynb">在 GitHub 上查看</a><br>
+<code>sec4.1_semantic_segmentation.ipynb</code> 在 UCI Online Retail II 上复现客户文档、BERTopic 拟合、稳定性检查和 LLM 命名。<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_semantic_segmentation.ipynb">在 GitHub 上查看</a></p>
 </section>
 <section id="key-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="key-takeaways">要点</h2>
 <ul>
-<li>从行为出发构建细分群体，之后再引入人口统计特征来描述和触达每个群体。交付物是你的 CRM 和广告平台能用的 <code>segment_id</code>，而不是一份幻灯片。</li>
-<li>先验证可行动性，再验证稳定性和规模。如果两个细分群体会收到同一个营销活动，就把它们合并。</li>
-<li>一个有说服力的细分群体名称不是证据。LLM 会为任何簇生成一个名称，包括随机的簇，所以在信任标签之前先自己读一读头部关键词。</li>
+<li>按细分所服务的决策来选择细分方法。十分位和 RFM 给价值排名，K-Means 找出行为群体，嵌入向量捕捉客户买什么；后一种方法回答的是另一个问题，并不细化前一种方法的细分群体。</li>
+<li>从行为出发构建细分群体，先验证可行动性，再验证稳定性和规模。如果两个细分群体会收到同一个营销活动，就把它们合并。</li>
+<li>LLM 会为任何簇生成一个有说服力的名称，包括随机的簇，所以在信任标签之前先自己读一读头部关键词。</li>
 </ul>
 
 

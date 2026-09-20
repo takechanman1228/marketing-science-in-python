@@ -673,7 +673,7 @@ window.Quarto = {
 <p><strong>关于中文版</strong><br>
 本页是英文版 <em>Marketing Science in Python</em> 的AI翻译。英文版为正式版本，如有出入，以英文版为准。代码、Notebook 和图片中的文字保持英文。 <a href="../../part4/sec4.2-clv-modeling.html" class="translation-source-link">阅读英文版</a></p>
 </div>
-<p>大多数营销团队关注的是单次获客成本（CPA），它常与 CAC（客户获取成本）混用：CPA 越低，营销活动越好。客户终身价值（CLV），在分析和 SaaS 语境中常称为 LTV，重新框定了这个问题。它不问你能以多低的成本获取一位客户，而是问每位客户在长期内值多少钱，并用这个答案来设定 CPA 上限。</p>
+<p>大多数营销团队关注的是单次获客成本（CPA），它常与 CAC（客户获取成本）混用：CPA 越低，营销活动越好。客户终身价值（CLV），在分析和 SaaS 语境中常称为 LTV，重新框定了这个问题。它估计每位客户在长期内值多少钱，而这个估计值就设定了该细分群体的 CPA 上限。</p>
 <p>本章展示如何使用概率型 BTYD 模型（在 PyMC-Marketing 中用 BG/NBD + Gamma-Gamma）在个体层面预测 CLV，以及如何把这些预测转化为预算决策。</p>
 <section id="why-clv-changes-the-decision" class="level2">
 <h2 class="anchored" data-anchor-id="why-clv-changes-the-decision">CLV 为何改变决策</h2>
@@ -692,7 +692,7 @@ window.Quarto = {
 </figcaption>
 </figure>
 </div>
-<p>只看首日 ROAS，选择似乎显而易见：把更多预算投向学生。但长期图景把结论翻转了过来。大学生在第一笔交易后就流失，因此其终身消费停留在 $100 附近。职场人士会回头并随时间花得更多，平均终身消费为 $400。突然之间，那个“昂贵”的细分群体反而成了划算的选择。</p>
+<p>首日 ROAS 偏向学生，但终身消费把排名倒了过来。大学生在第一笔交易后就流失，因此其终身消费停留在 $100 附近。职场人士会回头并随时间花得更多，平均终身消费为 $400。</p>
 <div id="fig-long-term-comparison" class="fig-sm quarto-float quarto-figure quarto-figure-center anchored" alt="计入复购后，职场人士带来两倍的广告支出回报，而学生客户则流失了。">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-long-term-comparison-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -735,7 +735,7 @@ window.Quarto = {
 <p><span class="math display">\[
 \text{CLV} = \text{Average Order Value} \times \text{Purchase Frequency} \times \text{Customer Lifespan}
 \]</span></p>
-<p>对于一个客户每单消费 $100、每年购物 4 次、保持忠诚 3 年的时尚品牌：<span class="math inline">\(\text{CLV} = 100 \times 4 \times 3 = \$1{,}200\)</span>。简单、直观，对粗略估算业务规模很有用，但对客户层面的决策来说太粗糙了。它在三点上失效。</p>
+<p>对于一个客户每单消费 $100、每年购物 4 次、保持忠诚 3 年的时尚品牌：<span class="math inline">\(\text{CLV} = 100 \times 4 \times 3 = \$1{,}200\)</span>。这对粗略估算业务规模很有用，但对客户层面的决策来说太粗糙了，原因有三。</p>
 <div id="fig-limitations" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="传统 CLV 公式的三个局限：客户异质性、首次购买时间的差异，以及“死或活”的模糊性。">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-limitations-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -786,7 +786,7 @@ window.Quarto = {
 </div>
 </figure>
 </div>
-<p>$1,090 这个平均值存在于数据中，却不描述任何人。你需要个体层面的 CLV。</p>
+<p>$1,090 的总体平均值掩盖了两个群体之间的差异。你需要个体层面的 CLV。</p>
 <p>局限 2：首次购买时间不同。一年前开始购买的客户有整整一年的可观测数据；三个月前开始的客户则少得多。除非按在册时长做调整，否则原始的频率计数会把“参与度低”和“新来的”混为一谈。</p>
 <div id="fig-tenure" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="在不同时间开始购买的客户拥有不同的可观测窗口，使得原始频率计数具有误导性。">
 <figure class="quarto-float quarto-float-fig figure">
@@ -798,22 +798,22 @@ window.Quarto = {
 </figcaption>
 </figure>
 </div>
-<p>局限 3：死了还是活着？在订阅业务中，流失是可观测的：客户取消订阅。在零售和电商中则不然。一位客户是否算“活着”，取决于他自己的模式。每月购买的人沉默三个月是危险信号；每半年购买一次的人跳过三个月则很正常。</p>
+<p>局限 3：流失不可观测。在订阅业务中，流失是可观测的：客户取消订阅。在零售和电商中则不然。一位客户是否算“活着”，取决于他自己的模式。每月购买的人沉默三个月是危险信号；每半年购买一次的人跳过三个月则很正常。</p>
 <div id="fig-dead-or-alive" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="距客户上次购买的同样间隔，既可能表示暂时不活跃，也可能表示永久离开，而这无法直接观测到。">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-dead-or-alive-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="../images/part4/sec4.2/dead_or_alive.png" class="fig-md img-fluid figure-img" alt="距客户上次购买的同样间隔，既可能表示暂时不活跃，也可能表示永久离开，而这无法直接观测到。">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-dead-or-alive-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-图&nbsp;6: 购买模式中的死或活模糊性。
+图&nbsp;6: 购买模式中不可观测的流失。
 </figcaption>
 </figure>
 </div>
-<p>这三个问题有同一个根源：单一的平均值无法代表异质的客户群。解决办法是在个体层面对 CLV 建模，而这正是 BTYD 所做的。</p>
+<p>模型必须考虑客户之间购买行为的差异、每位客户自首次购买以来的时间，以及客户可能已经停止购买的情形。BTYD 把这三点都构建进同一个个体层面的模型。</p>
 </section>
 <section id="sec-btyd" class="level2">
 <h2 class="anchored" data-anchor-id="sec-btyd">BTYD：BG/NBD + Gamma-Gamma 框架</h2>
-<p>Buy-Till-You-Die（BTYD）建模是两个概率模型的拼接：</p>
+<p>Buy-Till-You-Die（BTYD）建模结合了两个概率模型：</p>
 <ol type="1">
 <li>BG/NBD 预测客户仍然活跃的概率及其未来交易次数。</li>
 <li>Gamma-Gamma 估计其平均订单金额。</li>
@@ -905,7 +905,7 @@ window.Quarto = {
 </section>
 <section id="sec-implementation" class="level2">
 <h2 class="anchored" data-anchor-id="sec-implementation">使用 PyMC-Marketing 实现</h2>
-<p><a href="https://github.com/pymc-labs/pymc-marketing">PyMC-Marketing</a> 构建在 <a href="https://www.pymc.io/">PyMC</a> 之上，取代了 <code>lifetimes</code> 库（现已进入维护模式）。其标志性特性是内置的不确定性量化：每个 CLV 估计值都附带 HDI 区间，因此你可以看到模型对每位客户有多大把握。</p>
+<p><a href="https://github.com/pymc-labs/pymc-marketing">PyMC-Marketing</a> 构建在 <a href="https://www.pymc.io/">PyMC</a> 之上，取代了 <code>lifetimes</code> 库（现已进入维护模式）。其标志性特性是内置的不确定性量化：每个 CLV 估计值都附带 HDI 区间，因此你可以看到每位客户的估计值周围有多大的不确定性。</p>
 <p>CLV 模型只需要销售交易数据：客户 ID、交易日期、交易金额。两到三年的历史通常就足够了。</p>
 <div id="fig-required-data" class="fig-sm quarto-float quarto-figure quarto-figure-center anchored" alt="CLV 建模始于包含客户标识、交易日期和交易金额的交易级记录。">
 <figure class="quarto-float quarto-float-fig figure">
@@ -1006,12 +1006,12 @@ window.Quarto = {
 <span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    discount_rate<span class="op">=</span><span class="fl">0.01</span>,</span>
 <span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    time_unit<span class="op">=</span><span class="st">"D"</span>,</span>
 <span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
-<p>输出不仅包含点估计，还包含 HDI（最高密度区间）的上下界。在这个 API 中，<code>future_t</code> 以月为单位，而 <code>time_unit="D"</code> 告诉模型 RFM-T 输入是以天为单位的。模型会告诉你它对每位客户有多大把握，不过仅限于购买时间方面：消费的后验分布在折现之前被汇总为其均值，因此请把这些区间视为真实不确定性的下界。</p>
-<p>预测期（horizon）是一个决策，而不是默认值。这个数据集覆盖大约 23 个月，因此 120 个月的预测大约延伸到观测窗口的五倍之外。估计值不会失控，因为 BG/NBD 把客户退出内置进了预测，但这个退出率本身又是从这 23 个月中估计出来的。配套 Notebook 对同一个后验分别按 3 年、5 年和 10 年重新折现。在这个数据集上，客户排名在三者之间几乎不动，因此基于排名的定向对这些测试过的预测期不敏感；10 年估计值的中位数约为 3 年估计值的 2.23 倍，因此任何把 CLV 转化为美元上限的做法都必须说明所用的预测期。</p>
+<p>输出不仅包含点估计，还包含 HDI（最高密度区间）的上下界。在这个 API 中，<code>future_t</code> 以月为单位，而 <code>time_unit="D"</code> 告诉模型 RFM-T 输入是以天为单位的。这些区间只量化了购买时间方面的不确定性：消费的后验分布在折现之前被汇总为其均值，因此请把它们视为真实不确定性的下界。</p>
+<p>请明确选择预测期（horizon）；<code>future_t=120</code> 不是一个可以照单全收的默认值。这个数据集覆盖大约 23 个月，因此 120 个月的预测大约延伸到观测窗口的五倍之外。估计值保持有界，因为 BG/NBD 把客户退出内置进了预测，但这个退出率本身又是从这 23 个月中估计出来的。配套 Notebook 对同一个后验分别按 3 年、5 年和 10 年重新折现。在这个数据集上，客户排名在三者之间几乎不动，因此基于排名的定向对这些测试过的预测期不敏感；10 年估计值的中位数约为 3 年估计值的 2.23 倍，因此任何把 CLV 转化为美元上限的做法都必须说明所用的预测期。</p>
 </section>
 <section id="probability-alive-matrix" class="level3">
 <h3 class="anchored" data-anchor-id="probability-alive-matrix">存活概率矩阵</h3>
-<p>要快速了解 BG/NBD 模型学到了什么，可以看存活概率矩阵。一个轴是最近购买时间，另一个轴是购买频率，颜色表示 P(alive)。记住这里的最近购买时间是上表中的 BTYD 定义，即首次购买到最后一次购买的时间跨度，所以最近购买时间值高意味着客户直到最近还在购买，与营销 RFM 中该词的用法正好相反。四个角落讲述四个故事：忠诚回头客（高频率、高最近购买时间，购买频繁且仍然活跃）、有流失风险的忠诚客户（高频率、低最近购买时间，他们曾经买得很多，然后沉寂了）、一次性过客（低频率、低最近购买时间，获客后立即买了一两次，然后就没了动静），以及历史稀薄的客户（低频率、高最近购买时间，购买次数太少而无法确定，但最近一次购买很新，所以模型姑且往好处判断；图中把这个角落标为新客户）。</p>
+<p>要快速了解 BG/NBD 模型学到了什么，可以看存活概率矩阵。一个轴是最近购买时间，另一个轴是购买频率，颜色表示 P(alive)。记住这里的最近购买时间是上表中的 BTYD 定义，即首次购买到最后一次购买的时间跨度，所以最近购买时间值高意味着客户直到最近还在购买，与营销 RFM 中该词的用法正好相反。请分别解读四个角落。忠诚回头客（高频率、高最近购买时间）购买频繁且仍然活跃。有流失风险的忠诚客户（高频率、低最近购买时间）曾经买得很多，然后沉寂了。一次性过客（低频率、低最近购买时间）在获客后立即买了一两次，然后就停止了。历史稀薄的客户（低频率、高最近购买时间）购买次数太少而无法确定，但最近一次购买很新，所以 P(alive) 得出的结果很高；图中把这个角落标为新客户。</p>
 <div id="fig-prob-alive-matrix" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="按购买频率（x）和最近购买时间（y）绘制的存活概率矩阵；颜色表示每个客户位置的 P(alive)。">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-prob-alive-matrix-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -1033,7 +1033,7 @@ window.Quarto = {
 </section>
 <section id="combining-segments-and-clv" class="level3">
 <h3 class="anchored" data-anchor-id="combining-segments-and-clv">结合细分群体与 CLV</h3>
-<p>把细分那一章（第 4.1 章）的 <code>segment_id</code> 与每位客户的 CLV 估计值关联起来。这样你就得到了本部分一直在构建的运营表：这是什么样的客户、他们值多少钱，以及企业应该为他们做什么。</p>
+<p>把<a href="sec4.1-segmentation.html">第 4.1 节</a>的 <code>segment_id</code> 与每位客户的 CLV 估计值关联起来。这样你就得到了本部分一直在构建的运营表：这是什么样的客户、他们值多少钱，以及企业应该为他们做什么。</p>
 <p>人口统计特征仍然有助于描述或触达一个细分群体，但主要的决策层是行为细分群体 × 预测价值。配套 Notebook 把 CLV 估计值与 Dunnhumby 的 <code>hh_demographic.csv</code> 关联起来，让你可以沿着收入等人口统计维度刻画每个细分群体：这对挑选创意和渠道有用，对设定预算则用处不大。</p>
 <div class="callout callout-style-default callout-tip callout-titled">
 <div class="callout-header d-flex align-content-center">
@@ -1052,7 +1052,7 @@ window.Quarto = {
 </section>
 <section id="sec-using-clv" class="level2">
 <h2 class="anchored" data-anchor-id="sec-using-clv">让 CLV 发挥作用</h2>
-<p>一旦你有了每位客户的 <code>clv_estimate</code>，三个应用几乎是白送的。这些模式适用于任何 CLV 得分：下游系统只需要一个客户 ID 和一个数字。</p>
+<p>一旦你有了每位客户的 <code>clv_estimate</code>，三个应用就不再需要进一步建模，不过每个应用需要的都不只是这个得分。CPA 上限需要上文的利润率换算和一个明确说明的预测期；流失预警需要按客户 ID 与 CRM 关联以及一个阈值；群组预测需要每位客户的获客日期和财务部门的规划期。这些模式适用于任何 CLV 得分。</p>
 <ol type="1">
 <li>用于广告出价的 CPA 上限</li>
 </ol>
@@ -1064,11 +1064,11 @@ window.Quarto = {
 <ol start="2" type="1">
 <li>用于 CRM 的流失预警</li>
 </ol>
-<p>标记那些 P(alive) 在 30 天内下降超过 30 个百分点的客户。信号在于变化速率，而不是绝对水平。一位 P(alive) 在一个月内从 0.85 跌到 0.40 的客户，比一位六个月来稳定在 0.35 的客户紧急得多。前者正在脱离；后者只是一位低频买家。</p>
+<p>标记那些 P(alive) 在 30 天内下降超过 30 个百分点的客户。信号在于变化速率，而不是绝对水平。一位 P(alive) 在一个月内从 0.85 跌到 0.40 的客户，比一位六个月来稳定在 0.35 的客户紧急得多。前一位客户正在从先前较高的参与水平上远离；后一位客户一直都是低频买家。</p>
 <ol start="3" type="1">
 <li>用于财务部门的群组预测</li>
 </ol>
-<p>财务部门按预算周期而不是按客户生命周期做规划，因此要按获客群组（cohort）汇总个体 CLV 估计值，并预测 12、24 和 36 个月的营收。附上 HDI 区间，让财务部门知道这些是概率性估计，而不是固定目标。这就是你回答“我们 Q3 获客支出的预期回报是多少？”的方式，而不必让 CFO 去学 BG/NBD。</p>
+<p>财务部门按预算周期而不是按客户生命周期做规划，因此要按获客群组（cohort）汇总个体 CLV 估计值，并预测 12、24 和 36 个月的营收。附上 HDI 区间，让财务部门知道这些是概率性估计，而不是固定目标。这回答了财务部门关于一个季度获客支出预期回报的问题，而且用的是财务部门做规划时所用的单位和时间框架。</p>
 <div class="callout callout-style-default callout-tip callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -1086,8 +1086,8 @@ window.Quarto = {
 <section id="key-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="key-takeaways">要点</h2>
 <ul>
-<li>CLV 用与每位客户价值成比例的支出取代了统一的 CPA 目标。平均值存在于数据中，却不描述任何人。</li>
-<li>在非契约型场景中，BG/NBD 仅凭交易数据对未来购买建模，Gamma-Gamma 对消费建模。每位客户都得到一个可信区间，因此出价时要依据保守的下界而不是均值。</li>
+<li>CLV 用与每位客户价值成比例的支出取代了统一的 CPA 目标；单一的上限会为低价值客户付得太多，为高价值客户付得太少。</li>
+<li>在非契约型场景中，BG/NBD 仅凭交易数据对未来购买建模，Gamma-Gamma 对消费建模。每位客户都得到一个可信区间，因此请根据该区间保守的下界来设定出价。</li>
 <li>在 CLV 用于设定 CPA 上限之前，先把营收 CLV 换算成利润 CLV，并说明预测期：十年估计值的中位数约为三年估计值的 2.23 倍，尽管排名几乎不动。</li>
 </ul>
 

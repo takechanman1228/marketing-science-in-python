@@ -639,12 +639,12 @@ window.Quarto = {
 </header>
 
 
-<p>Which customers should get the next campaign? Most teams answer with a response model: rank customers by their likelihood to buy and target the top of that list. The problem is that many high-probability customers will convert whether you contact them or not, so spending on them does not move the needle. Uplift modeling ranks customers instead by how much contacting them is expected to change their behavior: it targets the ones who buy because you contacted them, not the ones who would have bought anyway. That is what makes it valuable whenever contact has a cost: the budget should go where it changes an outcome, not where it rides along with a sale that was already coming.</p>
+<p>Which customers should get the next campaign? Most teams answer with a response model: rank customers by their likelihood to buy and target the top of that list. The problem is that many high-probability customers will convert whether you contact them or not, so spending on them produces no incremental conversions. Uplift modeling ranks customers instead by how much contacting them is expected to change their behavior: it targets the ones who buy because you contacted them, not the ones who would have bought anyway. Whenever contact has a cost, the budget should go where contact changes the outcome.</p>
 <ul>
 <li>A response model predicts: <span class="math inline">\(P(\text{purchase})\)</span></li>
 <li>An uplift model predicts: <span class="math inline">\(P(\text{purchase} \mid \text{treated}) - P(\text{purchase} \mid \text{not treated})\)</span></li>
 </ul>
-<p>This second quantity is the per-customer treatment effect, the CATE; §3.5 covered how to estimate it. That score is just the measurement step. The next step is to turn it into a targeting policy, and to check on held-out data whether acting on the ranking actually delivers value.</p>
+<p>This second quantity is the per-customer treatment effect, the CATE; §3.5 covered how to estimate it. The score is the measurement step; the next step is to turn it into a targeting policy, and to check on held-out data whether acting on the ranking actually delivers value.</p>
 <div id="fig-uplift-targeting" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Uplift modeling ranks customers by predicted treatment effect so the campaign can prioritize those most likely to change behavior.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-uplift-targeting-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -672,14 +672,14 @@ Figure&nbsp;2: The four uplift customer segments.
 <li>Persuadables: buy only if contacted. These are the ideal targets; the email changes their behavior, and your whole return comes from them.</li>
 <li>Sure Things: buy either way. Contacting them spends budget for no incremental sale.</li>
 <li>Lost Causes: never buy. Contact is wasted.</li>
-<li>Sleeping Dogs: would buy on their own, but contact pushes them away. Reaching them actively costs you.</li>
+<li>Sleeping Dogs: would buy on their own, but contact pushes them away. Contacting them reduces conversions.</li>
 </ul>
-<p>A response model, chasing likelihood to buy, fills its list with Sure Things. An uplift model, chasing the treatment effect, aims for Persuadables and steers clear of the rest. That difference is the whole point.</p>
+<p>A response model ranks on likelihood to buy, so its list fills with Sure Things. An uplift model ranks on the treatment effect, so its list concentrates on Persuadables.</p>
 <p>Uplift has two method families: the meta-learners from §3.5, and decision trees built to split on uplift directly, whose advantage is handling several treatment arms at once (compare 5%, 10%, and 20% offers in one model). This chapter stays on the meta-learner route, using EconML as in §3.5 plus scikit-uplift to evaluate the ranking; CausalML, Uber’s library, is the established home of the tree-based methods.</p>
 </section>
 <section id="the-dataset" class="level2">
 <h2 class="anchored" data-anchor-id="the-dataset">The Dataset</h2>
-<p>We reuse the semi-synthetic MineThatData example from §3.5: Kevin Hillstrom’s randomized email experiment, restricted to the men’s email and no-email arms (42,613 customers, split roughly 50/50). The customer features and the treatment assignment are real; only the outcome is simulated, so we know each customer’s true effect and can grade the model at every step. The average effect we built in is about 11 percentage points, larger for men’s buyers, recently active customers, and multichannel shoppers.</p>
+<p>We reuse the semi-synthetic MineThatData example from §3.5: Kevin Hillstrom’s randomized email experiment, restricted to the men’s email and no-email arms (42,613 customers, split roughly 50/50). The customer features and the treatment assignment are real; only the outcome is simulated, so we know each customer’s true effect and can check the model at every step. The average effect we built in is about 11 percentage points, larger for men’s buyers, recently active customers, and multichannel shoppers.</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> msbook.data <span class="im">import</span> load_minethatdata</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> load_minethatdata()</span>
@@ -726,7 +726,7 @@ Figure&nbsp;2: The four uplift customer segments.
 </section>
 <section id="training-the-uplift-model" class="level2">
 <h2 class="anchored" data-anchor-id="training-the-uplift-model">Training the Uplift Model</h2>
-<p>The uplift score is just the CATE. We re-fit the §3.5 meta-learners and keep the one that best recovers the true effect on the holdout set: the S-Learner, whose estimates correlate 0.77 with the truth (the full comparison is <a href="sec3.5-meta-learners.html#tbl-cate-recovery" class="quarto-xref">Table&nbsp;<span>1</span></a> in §3.5). Its predicted CATE is the uplift score, and the fit is the same EconML call as in §3.5, so there is nothing new to install:</p>
+<p>The uplift score is just the CATE. We re-fit the §3.5 meta-learners and keep the one that best recovers the true effect on the holdout set: the S-Learner, whose estimates correlate 0.77 with the truth (the full comparison is <a href="sec3.5-meta-learners.html#tbl-cate-recovery" class="quarto-xref">Table&nbsp;<span>1</span></a> in §3.5). That choice is possible only because the data are semi-synthetic; on real data the true effect is never observed, so the learner is chosen on a randomized holdout by Qini or by observed uplift per decile, which the evaluation section below covers. The holdout used to choose the learner is separate from the fresh holdout used afterward to confirm that the chosen ranking beats random. Its predicted CATE is the uplift score, and the fit is the same EconML call as in §3.5, so there is nothing new to install:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> econml.metalearners <span class="im">import</span> SLearner</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> lightgbm <span class="im">import</span> LGBMRegressor</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -779,7 +779,7 @@ Figure&nbsp;3: Uplift by decile: predicted, observed, true.
 </figure>
 </div>
 <p>The exact rows are noisy, especially the observed uplift column, because each decile holds only about 1,300 customers. But the ranking works: the top decile shows far higher observed and true uplift (about 17 points, against an 11-point average) than the bottom decile. That ordering is what we need. We do not need every decile to be perfectly monotonic; focus on the top of the ranking, not the individual rows in the tail.</p>
-<p>The decile table is a local view. The global diagnostic is the Qini curve: rank customers from highest to lowest uplift and plot the cumulative incremental conversions, treatment-normalized, as you target deeper into the list. A ranking with real signal curves above the diagonal you would see from contacting customers at random. (The plain uplift curve shows the same shape on an un-normalized scale; the Qini curve is the standard for comparing uplift models because it stays reliable when the treated share varies across the ranking.)</p>
+<p>The decile table is a local view. The global diagnostic is the Qini curve: rank customers from highest to lowest uplift and plot the cumulative incremental conversions, treatment-normalized, as you target deeper into the list. If the ranking carries real signal, the curve sits above the diagonal produced by contacting customers at random. (The plain uplift curve shows the same shape on an un-normalized scale; the Qini curve is the standard for comparing uplift models because it stays reliable when the treated share varies across the ranking.)</p>
 <div id="fig-qini-curve" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="The Qini curve for the uplift ranking sits above the random-targeting diagonal across the held-out customers.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-qini-curve-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -790,7 +790,7 @@ Figure&nbsp;4: Qini curve vs.&nbsp;random targeting.
 </figcaption>
 </figure>
 </div>
-<p>Here the curve stays well above the random line from the start: targeting the top 30% of the ranking captures about 42% of the incremental conversions (versus 30% under random targeting), and the top half captures about 62%. That is what makes the ranking worth acting on.</p>
+<p>Here the curve stays well above the random line from the start: targeting the top 30% of the ranking captures about 42% of the incremental conversions (versus 30% under random targeting), and the top half captures about 62%.</p>
 <p>Both summary areas are positive, which formally means the ranking outperforms random targeting:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklift.metrics <span class="im">import</span> uplift_auc_score, qini_auc_score</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -802,7 +802,7 @@ Figure&nbsp;4: Qini curve vs.&nbsp;random targeting.
 </section>
 <section id="extracting-the-target-list" class="level2">
 <h2 class="anchored" data-anchor-id="extracting-the-target-list">Extracting the Target List</h2>
-<p>A score becomes actionable only when you connect it to business metrics. Say each incremental conversion is worth $30 in margin and contacting a customer costs $3. Then you should treat only customers whose uplift clears the 10% break-even, and the expected net value for each customer is their uplift times the conversion value, minus the contact cost:</p>
+<p>To act on the score, convert it into expected value per customer. Say each incremental conversion is worth $30 in margin and contacting a customer costs $3. Then you should treat only customers whose uplift clears the 10% break-even, and the expected net value for each customer is their uplift times the conversion value, minus the contact cost:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>value_per_conversion <span class="op">=</span> <span class="fl">30.0</span>   <span class="co"># $ margin per incremental conversion</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>treatment_cost <span class="op">=</span> <span class="fl">3.0</span>          <span class="co"># $ per contacted customer (email + offer)</span></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -855,12 +855,12 @@ Figure&nbsp;5: Net value by predicted-uplift decile.
 </tr>
 </tbody>
 </table>
-<p>With a $30 margin per incremental conversion and a $3 contact cost, the break-even uplift is 10%. The first five deciles clear that threshold on predicted uplift, so the policy is to target the top half of the list and skip the rest. The specific constants are just for illustration; the rule is what matters: convert uplift into expected value, subtract the contact cost, and target only where the result is positive. That becomes your customer list. In this run the predicted and observed columns do not quite agree: observed net value stays positive for two deciles past the predicted cutoff. That borderline zone is exactly where a fresh randomized holdout earns its keep before you commit budget.</p>
+<p>With a $30 margin per incremental conversion and a $3 contact cost, the break-even uplift is 10%. The first five deciles clear that threshold on predicted uplift, so the policy is to target the top half of the list and skip the rest. The constants here are illustrative; the procedure is to convert uplift into expected value, subtract the contact cost, and target only where the result is positive. That becomes your customer list. In this run the predicted and observed columns do not quite agree: observed net value stays positive for two deciles past the predicted cutoff. In that borderline zone, run a fresh randomized holdout before committing budget.</p>
 </section>
 <section id="key-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="key-takeaways">Key Takeaways</h2>
 <ul>
-<li>Uplift ranks customers by how much contact changes their behavior, not by how likely they are to buy. That is what keeps budget off the Sure Things and away from the Sleeping Dogs.</li>
+<li>Uplift ranks customers by how much contact changes their behavior, not by how likely they are to buy. This keeps budget off the Sure Things and away from the Sleeping Dogs.</li>
 <li>Confirm the ranking beats random on a fresh randomized holdout, then convert uplift into expected net value: target only where uplift times conversion value clears the contact cost.</li>
 </ul>
 

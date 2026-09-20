@@ -645,11 +645,11 @@ window.Quarto = {
 <p><strong>关于中文版</strong><br>
 本页是英文版 <em>Marketing Science in Python</em> 的AI翻译。英文版为正式版本，如有出入，以英文版为准。代码、Notebook 和图片中的文字保持英文。 <a href="../../part5/sec5.3-sales-forecasting.html" class="translation-source-link">阅读英文版</a></p>
 </div>
-<p>现在是 9 月下旬。销售额年初至今增长了 7.3%，但年度目标要求 8.0%。还剩十三周，其中包括从黑色星期五到圣诞节这一段，这家企业全年销售中不成比例的一大块就在这段时间完成。规划团队需要决定，当前的计划够不够，还是需要额外的行动。</p>
+<p>9 月底，销售额年初至今增长了 7.3%，而年度目标是 8.0%。还剩十三周，其中包括从黑色星期五到圣诞节这一段，这家企业全年销售中不成比例的一大块就在这段时间完成。规划团队需要决定，当前的计划够不够，还是需要额外的行动。</p>
 <div id="tbl-where-we-stand" class="quarto-float quarto-figure quarto-figure-center anchored" data-tbl-colwidths="[62,38]">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-where-we-stand-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-表&nbsp;1: 财年第 39 周末的年度进度（FY2019）
+表&nbsp;1: 财年第 39 周的年初至今销售额与年度目标（FY2019）
 </figcaption>
 <div aria-describedby="tbl-where-we-stand-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <table class="caption-top table">
@@ -694,7 +694,7 @@ window.Quarto = {
 </figure>
 </div>
 <p>要做这个决定，我们需要两样东西：在当前计划下销售额可能落在哪里，以及一次额外的营销行动能把这个结果推动多少。第一个是预测问题。第二个是因果问题，它的答案来自本书的测量章节，而不是来自预测。</p>
-<p>三个术语贯穿本章。<strong>目标</strong>是业务选定的固定阈值。<strong>基线</strong>是对剩余几周的预测，前提是当前计划继续执行，塑造了历史的那些经常性促销、价格和媒体投放仍然到位。<strong>增量</strong>是一次额外的营销行动在基线之上增加的部分。对于情景 <span class="math inline">\(s\)</span>，年末结果为</p>
+<p>本章使用三个术语。<strong>目标</strong>是业务选定的固定阈值。<strong>基线</strong>是对剩余几周的预测，前提是当前计划继续执行，塑造了历史的那些经常性促销、价格和媒体投放仍然到位。<strong>增量</strong>是一次额外的营销行动在基线之上增加的部分。对于情景 <span class="math inline">\(s\)</span>，年末结果为</p>
 <p><span class="math display">\[
 Y^{(s)}_{\text{year-end}} = Y_{\text{so far}} + R_{\text{baseline}} + \Delta_s
 \]</span></p>
@@ -727,7 +727,7 @@ Y^{(s)}_{\text{year-end}} = Y_{\text{so far}} + R_{\text{baseline}} + \Delta_s
 </div>
 <p>所以我们需要一个针对剩余几周的模型。两个基准设定了下限，四个候选在同一段历史上与它们竞争。</p>
 <ul>
-<li><strong>朴素法。</strong> 重复最后一个观测周。它对即将开始的季节视而不见。</li>
+<li><strong>朴素法。</strong> 重复最后一个观测周。它没有季节项，所以会把节假日高峰抹平。</li>
 <li><strong>季节性朴素法。</strong> 重复去年的同一个财年周。这是把“套用去年的模式”说明白了。</li>
 <li><strong>ETS（指数平滑）。</strong> 把水平、趋势和季节性作为显式成分，有两个版本，带和不带 52 周的季节项。</li>
 <li><strong>Prophet。</strong> 一条会变化的趋势、一个年度季节和日历效应，作为独立的加法成分拟合。</li>
@@ -753,7 +753,7 @@ Y^{(s)}_{\text{year-end}} = Y_{\text{so far}} + R_{\text{baseline}} + \Delta_s
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>        seasonal<span class="op">=</span>seasonal, seasonal_periods<span class="op">=</span><span class="dv">52</span> <span class="cf">if</span> seasonal <span class="cf">else</span> <span class="va">None</span>,</span>
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    )</span>
 <span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> model.fit(disp<span class="op">=</span><span class="va">False</span>)</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
-<p>七条路径在高峰上分歧很大，而图上没有任何东西告诉你该相信哪一条。在回测中打败基准的候选才成为基线。流行或新近都不能让一个模型合格。</p>
+<p>七条路径在高峰上分歧很大，而单凭图表无法给它们排名。在回测中打败基准的候选才成为基线；模型的流行程度或发布日期不参与选择。</p>
 <section id="sec-rolling-backtest" class="level3">
 <h3 class="anchored" data-anchor-id="sec-rolling-backtest">用滚动起点回测验证</h3>
 <p>通常的做法是随机的训练/测试集划分。在这份数据上，那会给 LightGBM 一个 4.5% 的 WAPE。这个数字有两个原因是误导性的。打乱顺序让模型可以在它要预测的那些周之后的周上训练，而有了滞后特征，大多数测试行在训练集里都有相邻的周。而且随机划分打分的是逐行的插值：它甚至产生不了决策所需要的那个对象，即从一个固定起点出发的 13 周路径。</p>
@@ -846,7 +846,7 @@ Y^{(s)}_{\text{year-end}} = Y_{\text{so far}} + R_{\text{baseline}} + \Delta_s
 </div>
 </figure>
 </div>
-<p>季节性主导了这个季度。季节性 ETS 在两列中误差都最低，成为基线。它也是这里唯一一个拟合后的模型能带着不确定性模拟许多条 13 周路径的候选，而下一步正需要这一点。TimesFM 只用原始序列就在 13 周总额上与它打平。Prophet 在 13 周总额上几乎没有比季节性朴素法好多少，因为它的年度季节是一个 365.25 天的周期，而这家企业是按固定的 52 周年份做规划的。在一条合成序列上，这两个结果都不能给方法排名。LightGBM 那一行承载着验证的教训：滚动起点的 12.3% 对比随机划分的 4.5%，就是泄漏的大小。</p>
+<p>季节项解释了这个季度上各模型之间的大部分差异。季节性 ETS 在两列中误差都最低，成为基线。它也是这里唯一一个拟合后的模型能带着不确定性模拟许多条 13 周路径的候选，而下一步正需要这一点。TimesFM 只用原始序列就在 13 周总额上与它打平。Prophet 在 13 周总额上几乎没有比季节性朴素法好多少，因为它的年度季节是一个 365.25 天的周期，而这家企业是按固定的 52 周年份做规划的。在一条合成序列上，这两个结果都不能给方法排名。LightGBM 那一行显示了泄漏的大小：滚动起点的 12.3% 对比随机划分的 4.5%。</p>
 </section>
 </section>
 <section id="sec-target-probability" class="level2">
@@ -868,17 +868,18 @@ Y^{(s)}_{\text{year-end}} = Y_{\text{so far}} + R_{\text{baseline}} + \Delta_s
 </figcaption>
 </figure>
 </div>
-<p>年末预测的中位数是 $10.91M，80% 区间从 $10.79M 到 $11.05M。中位数是通常出现在演示文稿里的那个数，但它不是一个承诺。$11.12M 的目标刚好在 P90 上方，所以在当前计划下达成它的概率是 4%。这不是不可能，但显然不太可能，而团队现在有了一个数字来说明有多不可能。</p>
-<p>这个 4% 来自一个模拟出的分布，所以这个分布本身需要一次检查，就检查我们据以决策的那个量：13 周总额。检查的方法是在过去的起点重演同一套流程，问已实现的总额是否落在 80% 区间带内。在 15 个不重叠的 13 周窗口中，它有 12 次落在带内，接近名义上的 80%，而三个 9 月复本覆盖了 3 个中的 2 个。这支持的是区间带的宽度，而不是它的尾部：目标位于 P90 之外，在那里 15 个窗口不足以认证一个像 4% 这么小的数字。把答案读作个位数的低百分比，并按“显然不太可能”而不是 4.0% 来做规划。</p>
+<p>年末预测的中位数是 $10.91M，80% 区间从 $10.79M 到 $11.05M。演示文稿通常展示的是中位数，而中位数被超过的概率约为 50%。$11.12M 的目标刚好在 P90 上方，所以在当前计划下达成它的概率是 4%。这不是不可能，但显然不太可能，而团队现在有了一个数字来说明有多不可能。</p>
+<p>这个 4% 来自一个模拟出的分布，所以这个分布本身需要一次检查，就检查我们据以决策的那个量：13 周总额。检查的方法是在过去的起点重演同一套流程，问已实现的总额是否落在 80% 区间带内。在 15 个不重叠的 13 周窗口中，它有 12 次落在带内，接近名义上的 80%，而三个 9 月复本覆盖了 3 个中的 2 个。这次检查覆盖的是分布的主体。目标位于 P90 之外，在那里 15 个窗口无法验证一个像 4% 这么小的尾部概率，所以把答案当作个位数的低百分比，并按这个读法来做规划。</p>
 </section>
 <section id="sec-marketing-scenarios" class="level2">
 <h2 class="anchored" data-anchor-id="sec-marketing-scenarios">营销情景需要经过测量的增量</h2>
 <p>基线分布说的是当前计划可能落在哪里。每次规划会议上的下一个问题是，一次额外的活动会不会改变答案。</p>
-<p>去年节假日促销周的销售比周围几周高出约 22%，所以人们很容易给一次额外活动填上 +22%。这个差距不是活动效应。促销安排在最强的几周，所以这 22% 中有一部分是季节性。基线已经带有经常性促销的平均效应，所以其余部分大多已经在预测里了。剩下的是促销和模型漏掉的其他一切的混合。预测说的是可能发生什么，而不是因为营销发生了什么。所以 <span class="math inline">\(\Delta_s\)</span> 来自预测之外，而且在进入模拟之前它需要两样东西：一个参照条件，即它是相对于什么的增量，以及一个不确定性分布。</p>
+<p>去年节假日促销周的销售比周围几周高出约 22%，所以人们很容易给一次额外活动填上 +22%。这个差距混合了季节性、基线中已经包含的经常性促销，以及活动本身。促销安排在最强的几周，所以这 22% 中有一部分是季节性。基线已经带有经常性促销的平均效应，所以其余部分大多已经在预测里了。剩下的是促销和模型漏掉的其他一切的混合。</p>
+<p>预测估计的是销售额的水平，而不是其中由营销引起的份额，所以 <span class="math inline">\(\Delta_s\)</span> 必须来自预测之外的一次测量。在进入模拟之前它需要两样东西：一个参照条件，即它是相对于什么的增量，以及一个不确定性分布。</p>
 <div id="tbl-scenarios" class="quarto-float quarto-figure quarto-figure-center anchored" data-tbl-colwidths="[24,38,38]">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-scenarios-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-表&nbsp;3: 情景增量及其来源
+表&nbsp;3: 情景增量及其来源（示意性输入）
 </figcaption>
 <div aria-describedby="tbl-scenarios-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <table class="caption-top table">
@@ -988,7 +989,7 @@ Y^{(s)}_{\text{year-end}} = Y_{\text{so far}} + R_{\text{baseline}} + \Delta_s
 </figcaption>
 </figure>
 </div>
-<p>活动把中位数从 $10.91M 推到 $11.00M。这张表同时呈现了改善后的胜算和仍然存在的差距，这是点预测做不到的。</p>
+<p>活动把中位数从 $10.91M 推到 $11.00M。这张表同时展示了改善后的概率和仍然存在的差距，这是单个点预测做不到的。</p>
 </section>
 <section id="sec-forecast-to-decision" class="level2">
 <h2 class="anchored" data-anchor-id="sec-forecast-to-decision">从预测到决策</h2>
@@ -996,7 +997,7 @@ Y^{(s)}_{\text{year-end}} = Y_{\text{so far}} + R_{\text{baseline}} + \Delta_s
 <div id="tbl-reverse" class="quarto-float quarto-figure quarto-figure-center anchored" data-tbl-colwidths="[62,38]">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-reverse-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-表&nbsp;5: 需要什么，对照发生过什么
+表&nbsp;5: 所需增幅，对照历史上 9 月最大的向上偏离
 </figcaption>
 <div aria-describedby="tbl-reverse-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <table class="caption-top table">
@@ -1033,14 +1034,14 @@ Y^{(s)}_{\text{year-end}} = Y_{\text{so far}} + R_{\text{baseline}} + \Delta_s
 </figure>
 </div>
 <p>达成目标需要一个比基线中位数高 7.2% 的季度。三个 9 月复本没有一个接近这个水平；最大的向上偏离是 6.0%，而即使两个增量加在一起也只增加约 5%。活动把胜算从 4% 提高到 13%，但目标仍然不太可能达成。</p>
-<p>团队现在有一个选择：加大投入、改变经营计划，或者修正预期。无论选哪个，这个差距都是一个可以在 9 月就据以规划的数字。它建立在一条在决策所用预测期上验证过的基线之上，也建立在预测之外测量得到的增量之上。</p>
+<p>团队现在有一个选择：加大投入、改变经营计划，或者修正预期。无论选哪个，这个差距都是一个可以在 9 月就据以规划的数字。两项输入都可以核查：基线在 13 周的预测期上验证过，而每个增量都指明了它必须来自哪项测量。</p>
 </section>
 <section id="key-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="key-takeaways">要点</h2>
 <ul>
-<li>在决策所用的预测期和日历时点上验证基线，只使用每个起点时可获得的信息。随机划分回答的是另一个问题。</li>
-<li>根据分布而不是点来决策。在整个预测期上模拟完整路径，把一个中位数预测变成 4% 的达标概率，它应读作个位数的低百分比，而不是一个精确的频率。</li>
-<li>情景等于基线加上一个单独测量的增量，两者各有一个参照条件和一个不确定性。促销周的销售额不是增量。</li>
+<li>在决策所用的预测期和日历时点上验证基线，只使用每个起点时可获得的信息。随机划分打分的是逐周的插值，永远产生不了 13 周的路径。</li>
+<li>根据 13 周总额的模拟分布来决策，而不是根据中位数路径：只有分布才能给出达成目标的概率，这里是 4%，它应读作个位数的低百分比，而不是一个精确的频率。</li>
+<li>情景等于基线加上一个单独测量的增量，两者各有一个参照条件和一个不确定性。促销周的销售额包含了季节性和基线中已有的促销，所以它们高估了增量。</li>
 </ul>
 
 

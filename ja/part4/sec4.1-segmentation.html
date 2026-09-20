@@ -6,7 +6,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="実際に運用できる顧客セグメンテーションとして、デシルとRFM、K-Meansによる行動クラスタリング、BERTopic埋め込み、セグメンテーションの良し悪しを判断する方法を扱います。">
+<meta name="description" content="実際に運用できる顧客セグメンテーション。下すべき意思決定に応じてデシルとRFM、K-Means、埋め込みを選び、セグメントを検証し、segment_idをCRMへ渡します。">
 
 <title>Pythonによる顧客セグメンテーション – Marketing Science in Python</title>
 <style>
@@ -129,12 +129,12 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 
 <link rel="stylesheet" href="../custom.css">
 <meta property="og:title" content="Pythonによる顧客セグメンテーション">
-<meta property="og:description" content="実際に運用できる顧客セグメンテーションとして、デシルとRFM、K-Meansによる行動クラスタリング、BERTopic埋め込み、セグメンテーションの良し悪しを判断する方法を扱います。">
+<meta property="og:description" content="実際に運用できる顧客セグメンテーション。下すべき意思決定に応じてデシルとRFM、K-Means、埋め込みを選び、セグメントを検証し、segment_idをCRMへ渡します。">
 <meta property="og:image" content="https://marketing-science-in-python.com/images/common/book_cover_online.png">
 <meta property="og:site_name" content="Marketing Science in Python">
 <meta property="og:image:alt" content="抽象的なデータストリームが幾何学的ネットワークへ集まる表紙">
 <meta name="twitter:title" content="Pythonによる顧客セグメンテーション">
-<meta name="twitter:description" content="実際に運用できる顧客セグメンテーションとして、デシルとRFM、K-Meansによる行動クラスタリング、BERTopic埋め込み、セグメンテーションの良し悪しを判断する方法を扱います。">
+<meta name="twitter:description" content="実際に運用できる顧客セグメンテーション。下すべき意思決定に応じてデシルとRFM、K-Means、埋め込みを選び、セグメントを検証し、segment_idをCRMへ渡します。">
 <meta name="twitter:image" content="https://marketing-science-in-python.com/images/common/book_cover_online.png">
 <meta name="twitter:image:alt" content="抽象的なデータストリームが幾何学的ネットワークへ集まる表紙">
 <meta name="twitter:card" content="summary_large_image">
@@ -578,23 +578,13 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
     <h2 id="toc-title">目次</h2>
    
   <ul>
-  <li><a href="#sec-behavioral-vs-profile" id="toc-sec-behavioral-vs-profile" class="nav-link active" data-scroll-target="#sec-behavioral-vs-profile">行動変数とプロフィール変数</a></li>
-  <li><a href="#sec-value-tiers" id="toc-sec-value-tiers" class="nav-link" data-scroll-target="#sec-value-tiers">単純な方法から始める：デシルとRFM</a>
-  <ul class="collapse">
-  <li><a href="#decile-analysis" id="toc-decile-analysis" class="nav-link" data-scroll-target="#decile-analysis">デシル分析</a></li>
-  <li><a href="#rfm-analysis" id="toc-rfm-analysis" class="nav-link" data-scroll-target="#rfm-analysis">RFM分析</a></li>
-  </ul></li>
-  <li><a href="#sec-kmeans" id="toc-sec-kmeans" class="nav-link" data-scroll-target="#sec-kmeans">K-Meansによる行動クラスタリング</a></li>
-  <li><a href="#sec-embedding" id="toc-sec-embedding" class="nav-link" data-scroll-target="#sec-embedding">BERTopicによる埋め込みベースのセグメンテーション</a>
-  <ul class="collapse">
-  <li><a href="#why-bertopic" id="toc-why-bertopic" class="nav-link" data-scroll-target="#why-bertopic">なぜBERTopicなのか？</a></li>
-  <li><a href="#constructing-the-customer-document" id="toc-constructing-the-customer-document" class="nav-link" data-scroll-target="#constructing-the-customer-document">顧客ドキュメントを構築する</a></li>
-  <li><a href="#reading-the-output" id="toc-reading-the-output" class="nav-link" data-scroll-target="#reading-the-output">出力を読み取る</a></li>
-  <li><a href="#when-one-theme-dominates" id="toc-when-one-theme-dominates" class="nav-link" data-scroll-target="#when-one-theme-dominates">一つのテーマが支配する場合</a></li>
-  <li><a href="#the-llm-naming-trap" id="toc-the-llm-naming-trap" class="nav-link" data-scroll-target="#the-llm-naming-trap">LLMによる命名の罠</a></li>
-  </ul></li>
+  <li><a href="#sec-method-cheat-sheet" id="toc-sec-method-cheat-sheet" class="nav-link active" data-scroll-target="#sec-method-cheat-sheet">問いに応じてセグメンテーションを選ぶ</a></li>
+  <li><a href="#sec-behavioral-vs-profile" id="toc-sec-behavioral-vs-profile" class="nav-link" data-scroll-target="#sec-behavioral-vs-profile">行動を先に、プロフィールは後で</a></li>
+  <li><a href="#sec-value-tiers" id="toc-sec-value-tiers" class="nav-link" data-scroll-target="#sec-value-tiers">価値階層：デシルとRFM</a></li>
+  <li><a href="#sec-kmeans" id="toc-sec-kmeans" class="nav-link" data-scroll-target="#sec-kmeans">K-Meansによる行動セグメント</a></li>
+  <li><a href="#sec-embedding" id="toc-sec-embedding" class="nav-link" data-scroll-target="#sec-embedding">商品の意味が重要なとき</a></li>
   <li><a href="#sec-segment-validation" id="toc-sec-segment-validation" class="nav-link" data-scroll-target="#sec-segment-validation">セグメンテーションは優れているか？</a></li>
-  <li><a href="#sec-method-cheat-sheet" id="toc-sec-method-cheat-sheet" class="nav-link" data-scroll-target="#sec-method-cheat-sheet">手法早見表</a></li>
+  <li><a href="#sec-segment-id" id="toc-sec-segment-id" class="nav-link" data-scroll-target="#sec-segment-id">セグメントからsegment_idへ</a></li>
   <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways">要点</a></li>
   </ul>
 <div class="quarto-code-links"><h2>コードリンクス</h2><ul><li><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_traditional_segmentation.ipynb"><i class="bi bi-github"></i>sec4.1_traditional_segmentation.ipynb</a></li><li><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_semantic_segmentation.ipynb"><i class="bi bi-github"></i>sec4.1_semantic_segmentation.ipynb</a></li></ul></div></nav>
@@ -626,25 +616,59 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 <p><strong>日本語版について</strong><br>
 このページは英語版 <em>Marketing Science in Python</em> のAI翻訳です。英語版を正本とし、差異がある場合は英語版を優先してください。コード、Notebook、画像内の文字は英語のままです。 <a href="../../part4/sec4.1-segmentation.html" class="translation-source-link">英語版を読む</a></p>
 </div>
-<p>セグメンテーションのプロジェクトでは、プレゼンテーションだけでなく、チームが実際に使えるものを作る必要があります。本当の成果物は、CRMや広告プラットフォームへ直接つながる <code>segment_id</code> と、各セグメントについて、その人たちは誰か、なぜ重要か、チームはどのような行動を取るべきかを示す簡潔な概要です。</p>
-<p>この章では、そのような成果物を3つの手順で作ります。</p>
-<ol type="1">
-<li>最初に、現在価値で顧客を順位づけします。デシル分析とRFM（Recency、Frequency、Monetary）によって、価値に基づくセグメントをすばやく作れます。</li>
-<li>次に、行動で顧客をグループ化します。行動クラスタリングは、価値階層だけでは捉えられないパターンを明らかにします。</li>
-<li>最後に、購入の意味を加えます。埋め込みベースのセグメンテーションは、顧客がいくら使うかだけでなく、実際に何を購入しているかを示します。</li>
-</ol>
+<p>セグメンテーションのプロジェクトでは、チームがそのままキャンペーンに使えるものを作ります。成果物は、CRMや広告プラットフォームへ直接つながる <code>segment_id</code> と、各セグメントについて、その人たちは誰か、なぜ重要か、チームはどのような行動を取るべきかを示す簡潔な概要です。</p>
+<p>セグメンテーションは一つの手法ではありません。デシル、RFM、K-Means、埋め込みベースのクラスタリングは、それぞれ異なる問いに答えます。その問いは、セグメントが支えるべき意思決定から生まれます。誰に維持予算を配分するか、どのメッセージを誰へ送るか、どの商品の物語を語るか、といった意思決定です。</p>
+<section id="sec-method-cheat-sheet" class="level2">
+<h2 class="anchored" data-anchor-id="sec-method-cheat-sheet">問いに応じてセグメンテーションを選ぶ</h2>
+<p>意思決定を表の行に対応させます。</p>
+<div id="tbl-method-cheat-sheet" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-method-cheat-sheet-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+表&nbsp;1: 各セグメンテーション手法と、それが答える問い。
+</figcaption>
+<div aria-describedby="tbl-method-cheat-sheet-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">問い</th>
+<th style="text-align: left;">手法</th>
+<th style="text-align: left;">入力</th>
+<th style="text-align: left;">出力</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">今、より注目すべき顧客は誰か？</td>
+<td style="text-align: left;">デシル／RFM</td>
+<td style="text-align: left;">取引ログ</td>
+<td style="text-align: left;">価値階層またはR/F/Mスコア</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">価値階層を超えて、どのような行動パターンがあるか？</td>
+<td style="text-align: left;">K-Means</td>
+<td style="text-align: left;">数値の行動特徴量</td>
+<td style="text-align: left;">行動セグメントラベル</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">顧客は実際に何を購入しているか？</td>
+<td style="text-align: left;">埋め込みベースのクラスタリング</td>
+<td style="text-align: left;">商品説明から作る顧客ドキュメント</td>
+<td style="text-align: left;">キーワード特徴を持つ、意味に基づくセグメント</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<p>これらは一つのパイプラインの3段階ではなく、3つのレンズです。後の行が前の行のセグメントを精緻化するわけではありません。別の問いに答えており、ときには別のデータを使います。意思決定を変えうる最も単純な行から始め、現在のレンズでは同じに見える2人の顧客が異なる扱いを受けるべき場合にだけ、下の行へ進みます。この章では、最初の2行を一つの食料品小売企業、Dunnhumbyの「The Complete Journey」データセット（2,500世帯、2年間）で構築し、3行目は商品テキストがこの手法に適したギフト小売企業で構築します。</p>
+</section>
 <section id="sec-behavioral-vs-profile" class="level2">
-<h2 class="anchored" data-anchor-id="sec-behavioral-vs-profile">行動変数とプロフィール変数</h2>
-<p>顧客セグメントを作る際、変数は大きく2種類に分かれます。行動変数は、最終購入からの期間、頻度、支出、購入カテゴリー、商品の幅、返品、値引きへの依存など、顧客が何をするかを表します。プロフィール変数は、年齢、所得、世帯構成、地域、ロイヤルティ階層、チャネル嗜好など、顧客が誰であるか、どこで接触できるかを表します。</p>
-<p>マーケティングのセグメンテーションでは、行動変数の方が強い基盤になります。誰かが見たもの、購入したもの、類似顧客が選んだものは、通常、人口統計より次の行動をうまく予測します。「この商品は30代男性向け」「このオファーは高所得者向け」のように人口統計だけへ頼ることは、顧客の実際の購入履歴よりはるかに弱いシグナルです。</p>
-<p>プロフィール変数にも役割があります。セグメントを作った後に、各群に誰がいるか、どこで接触できるか、コミュニケーションをどう調整するかを理解するために使います。</p>
+<h2 class="anchored" data-anchor-id="sec-behavioral-vs-profile">行動を先に、プロフィールは後で</h2>
+<p>行動変数は、最終購入からの期間、頻度、支出、購入カテゴリー、商品の幅、返品、値引きへの依存など、顧客が何をするかを表します。プロフィール変数は、年齢、所得、世帯構成、地域、ロイヤルティ階層、チャネル嗜好など、顧客が誰であるか、どこで接触できるかを表します。セグメントは行動の上に作ります。「30代の男性」「高所得者」といったラベルは、実際に何を購入したかに比べて、次の購入をはるかに予測できません。プロフィール変数は後から取り入れ、各セグメントを描き、どこで、どのように接触するかを選ぶために使います。</p>
 </section>
 <section id="sec-value-tiers" class="level2">
-<h2 class="anchored" data-anchor-id="sec-value-tiers">単純な方法から始める：デシルとRFM</h2>
-<p>最も単純なのはルールベースの方法です。アルゴリズムへ頼らず、自分で閾値を定義します。デシル分析とRFMが最も一般的な例です。</p>
-<section id="decile-analysis" class="level3">
-<h3 class="anchored" data-anchor-id="decile-analysis">デシル分析</h3>
-<p>デシル分析は、売上に基づいて顧客を同じ人数の10群へ分けます。多くの場合、パレートの法則に従い、少数の群が売上の大半を生みます。最上位デシルには維持施策とVIP対応を行います。次の3デシルは成長キャンペーンの主な対象です。中央の3デシルには低コストの自動ナーチャリングを行い、下位3デシルは高価なオファーから除外します。すばやく設定でき、チームへ明確な行動計画を渡せます。</p>
+<h2 class="anchored" data-anchor-id="sec-value-tiers">価値階層：デシルとRFM</h2>
+<p>最も速いセグメンテーションは順位づけです。デシル分析は、売上に基づいて顧客を同じ人数の10群へ分けます。食料品データは、よく見られる集中を示します。上位2デシルが売上の53%を占めます。</p>
 <div id="fig-decile-distribution" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="顧客価値は上位デシルに集中し、上位20%が売上の半分以上を生む">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-decile-distribution-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -655,14 +679,12 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 </figcaption>
 </figure>
 </div>
-</section>
-<section id="rfm-analysis" class="level3">
-<h3 class="anchored" data-anchor-id="rfm-analysis">RFM分析</h3>
-<p>RFMは、より細かな見方を提供します。休眠した高額購入者、新しく頻繁に購入する顧客など、チームがすでに使っている考え方に合うため、ダイレクトマーケティングで最も広く使われるセグメンテーションの枠組みです。</p>
+<p>デシルは価値がどこにあるかを示します。各顧客にどれだけの注意を向けるかが意思決定なら、必要なのはこれです。顧客がなぜ異なるのか、どのメッセージが効くのかについては何も語りません。</p>
+<p>RFMは、休眠した高額購入者、新しく頻繁に購入する顧客など、ダイレクトマーケティングのチームがすでに使っている言葉で、価値にエンゲージメントを加えます。</p>
 <div id="tbl-rfm-variables" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-rfm-variables-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-表&nbsp;1: RFM変数とその解釈。
+表&nbsp;2: RFM変数とその解釈。
 </figcaption>
 <div aria-describedby="tbl-rfm-variables-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <table class="caption-top table">
@@ -694,28 +716,14 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 </div>
 </figure>
 </div>
-<p>独立ソートでは各変数を別々に五分位へ分け、3桁のスコア（R=5、F=4、M=3）と最大125群を作ります。逐次ソートでは分割を入れ子にします。最初にRecency、次に各Recency群内でFrequency、最後にMonetaryで分けるため、Recencyへ最も大きな重みが置かれます。</p>
-<div class="callout callout-style-default callout-tip callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">ヒント</span>1回の呼び出しでRFMスコアリング
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p><a href="sec4.2-clv-modeling.html">Section 4.2</a>のCLVモデリングで使うPyMC-Marketingには、四分位に基づく <code>rfm_segments()</code> ユーティリティがあります。取引表からR、F、Mをスコアリングし、名前付きセグメントを直接割り当てます。K-Meansより柔軟性は低いものの、実務ではうまく機能し、非常に大きな顧客基盤でも高速です。</p>
-</div>
-</div>
-<p>デシルとRFMはすばやく設定でき、簡単に使えます。しかし、作れるのは価値階層だけであり、完全な顧客プロフィールではありません。似たRFMスコアを持つ2人の顧客も、大きく異なる行動を取る可能性があります。一人は多くのカテゴリーで定価商品を購入し、もう一人は単一カテゴリーの値引き商品だけを購入するかもしれません。こうした違いを見るには、価値階層から、より豊かな行動変数へ移る必要があります。</p>
-</section>
+<p>各変数を五分位でスコアリングして組み合わせると、昨日購入した高額購入者と、1年間沈黙している高額購入者が分かれます。組み合わせたスコアは最大125セルになるため、同じ扱いを受けるセルは統合します。<a href="sec4.2-clv-modeling.html">CLVの章</a>で使うライブラリのPyMC-Marketingは、<code>rfm_segments()</code> の1回の呼び出しでこのスコアリングを行います。</p>
+<p>デシルとRFMは、顧客がどれだけ、どれほど最近購入するかを測りますが、どのように購入するかは測りません。同じRFMスコアを持つ2人の顧客も、大きく異なる行動を取ることがあります。一人は多くのカテゴリーで定価商品を購入し、もう一人は単一カテゴリーの値引き商品だけを購入します。</p>
 </section>
 <section id="sec-kmeans" class="level2">
-<h2 class="anchored" data-anchor-id="sec-kmeans">K-Meansによる行動クラスタリング</h2>
-<p>K-Meansは古典的なクラスタリングアルゴリズムですが、今でもマーケティングのセグメンテーションにうまく機能します。支出が支配的にならないよう、StandardScalerで特徴量を正規化し、6〜10個の行動変数から始めます。RFMに加え、平均注文金額、バスケットサイズ、返品率などが有用です。</p>
-<p>スケーリング前に、歪んだ変数を対数変換します。支出、頻度、最終購入からの期間、バスケットサイズは通常、強く右に歪みます。少数の顧客が、ほかの全員よりはるかに多く購入するからです。StandardScalerは中心化と再スケーリングだけを行うため、長い裾は残ります。生のままK-Meansへ入力すると、最初の分割を高額購入者と少額購入者の切り分けに使い、ほぼ価値階層を再発見します。追加で見つけるクラスタも、施策を実施するには小さすぎる外れ値の集まりになります。歪んだ特徴量へ <code>log1p</code> を適用すると（単純なルールとして、歪度が約1を超えるものを変換）、裾が圧縮されます。その結果、クラスタは支出の大きさではなく行動の<em>形</em>を反映し、均衡した行動可能なセグメントが現れます。付属データセットでは、K-Meansが3つの価値階層へ縮退するか、顧客基盤を均衡した同程度の規模の5つの行動群へ分けるかの違いになります。</p>
-<p>Kの選択は、統計と判断の両方で行います。エルボー法は範囲を絞るのに役立ちますが、数を一つに決めることはほとんどありません。顧客データで最も鋭い折れ曲がりはK=3にあることが多く、通常はデシルとRFMですでに捉えた価値階層（高額、平均、休眠）を再現するだけです。価値ではなく行動で分けるには、実用的な範囲（多くの場合4〜8セグメント）まで進め、行動可能性で決めます。マーケティングチームが実際に異なる扱いをするセグメントを持つKを選びます。各セグメントに異なる行動を説明できなければ、セグメントが多すぎます。</p>
+<h2 class="anchored" data-anchor-id="sec-kmeans">K-Meansによる行動セグメント</h2>
+<p>この2人を分けるには、どのように買い物をするかを記述します。K-Meansは古典的なクラスタリングアルゴリズムですが、今でもこの用途にうまく機能します。6〜10個の行動変数から始めます。最終購入からの期間、頻度、支出に加え、平均注文金額、バスケットサイズ、カテゴリーの幅、値引き比率、返品率を追加します。支出が支配的にならないよう、StandardScalerで正規化します。</p>
+<p>スケーリング前に、歪んだ変数を対数変換します。支出、頻度、最終購入からの期間、バスケットサイズは強く右に歪んでおり、StandardScalerは中心化と再スケーリングだけを行うため、長い裾は残ります。生の特徴量のままK-Meansへ入力すると、最初の分割を高額購入者と少額購入者の切り分けに使い、ほぼ価値階層を再現します。歪んだ特徴量へ <code>log1p</code> を適用すると（単純なルールとして、歪度が約1を超えるものを変換）、裾が圧縮され、クラスタは支出水準ではなく購買パターンで顧客を分けます。食料品データでは、K-Meansが3つの価値階層へ縮退するか、顧客基盤を均衡した5つの行動群へ分けるかの違いになります。</p>
+<p>Kは診断指標とチームの判断の両方で決めます。エルボー法は範囲を絞りますが、数を一つに決めることはほとんどありません。顧客データで最も鋭い折れ曲がりはK=3にあることが多く、それはデシルとRFMですでに捉えた価値階層を再現するだけです。実用的な範囲の4〜8まで進め、行動可能性で決めます。マーケティングチームが異なる扱いをするセグメントを持つKを選びます。</p>
 <div id="fig-elbow" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="クラスタ内変動は約5クラスタまで急速に低下し、その後はクラスタを追加しても緩やかにしか改善しない">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-elbow-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -726,11 +734,22 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 </figcaption>
 </figure>
 </div>
-<p>付属データセットでは、K=5でセグメントが価値階層ではなく、施策概要として使えるものになります。<a href="#tbl-kmeans-segments" class="quarto-xref">表&nbsp;<span>2</span></a> がその結果です。構成比とプロフィール平均はNotebookから得ています（支出、来店回数、部門数は、セグメント内で平均した2年間の合計です）。名前と最後の2つの行動は、プロフィールのヒートマップに対する分析者の解釈であり、Notebookが読者へ残している手順です。</p>
+<p>食料品データでは、K=5にすると、支出水準だけでなく購買パターンでもセグメントが分かれます。<a href="#fig-kmeans-heatmap" class="quarto-xref">図&nbsp;<span>3</span></a> はその当てはめの背後にあるプロフィールです。行はセグメント、列は行動特徴量で、母集団に対するセグメント平均で色づけしています。</p>
+<div id="fig-kmeans-heatmap" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="9つの行動特徴量にわたる5つのK-Meansセグメントのヒートマップ。母集団平均に対するzスコアで色づけし、各セルにセグメント平均を表示">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-kmeans-heatmap-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.1/segment_heatmap.png" class="fig-md img-fluid figure-img" alt="9つの行動特徴量にわたる5つのK-Meansセグメントのヒートマップ。母集団平均に対するzスコアで色づけし、各セルにセグメント平均を表示">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-kmeans-heatmap-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+図&nbsp;3: 食料品データにおけるK-Meansセグメントのプロフィール。
+</figcaption>
+</figure>
+</div>
+<p><a href="#tbl-kmeans-segments" class="quarto-xref">表&nbsp;<span>3</span></a> は、そのヒートマップに対する分析者の読み取りであり、Notebookが読者へ残している手順です。構成比とプロフィール平均はNotebookから得ています（支出、来店回数、部門数は、セグメント内で平均した2年間の合計です）。名前と行動は分析者のものです。</p>
 <div id="tbl-kmeans-segments" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-kmeans-segments-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-表&nbsp;2: 付属Notebookの食料品データにおけるK=5のセグメント。
+表&nbsp;3: 付属Notebookの食料品データにおけるK=5のセグメント。
 </figcaption>
 <div aria-describedby="tbl-kmeans-segments-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <table class="caption-top table">
@@ -778,33 +797,14 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 </div>
 </figure>
 </div>
-<p>名前は略称であり、行全体が概要です。以下の行動可能性を確認するため、この表をマーケティングチームへ渡します。2つの行へ同じキャンペーンを行うなら、統合します。</p>
-<p>数値によるクラスタリングでは、商品の意味が依然として平坦化されます。頻度、支出、最終購入からの期間、カテゴリーの幅、値引き依存度などを入力すると、購入する商品が大きく異なっても、2人の顧客が似て見える場合があります。その意味を捉えるには、商品テキストをセグメンテーションへ直接取り込みます。</p>
+<p>セグメント名は略称で、マーケティングチームが使うのはプロフィール列と行動列です。以下の行動可能性の確認のため、この表をマーケティングチームへ渡します。</p>
 </section>
 <section id="sec-embedding" class="level2">
-<h2 class="anchored" data-anchor-id="sec-embedding">BERTopicによる埋め込みベースのセグメンテーション</h2>
-<p>顧客が実際に何を購入するかを捉えるため、各顧客の購入履歴をテキストとして扱います。購入した商品の説明を一つの文字列（顧客ドキュメント）へ連結し、埋め込みモデルで密なベクトルへ変換します。この埋め込み空間では、誕生日用キャンドルとパーティー用の皿は近く、アンティークのティーポットは遠くに位置します。そのため、ベクトルをクラスタリングすると、購入量だけでなく購入の意味で顧客を分けられます。</p>
-<p>例では、英国のギフト小売企業から得た約100万件の取引を含むUCI Online Retail IIデータセットを使います。自由記述の商品説明は、埋め込みモデルが読み取るものに適しています。パイプライン全体をBERTopicで実行します。</p>
-<div id="fig-umap-clusters" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="顧客ドキュメント埋め込みのUMAP射影。各点が一人の顧客で、BERTopicが発見したセグメントごとに色分けされている">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-umap-clusters-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part4/sec4.1/umap_clusters.png" class="fig-md img-fluid figure-img" alt="顧客ドキュメント埋め込みのUMAP射影。各点が一人の顧客で、BERTopicが発見したセグメントごとに色分けされている">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-umap-clusters-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-図&nbsp;3: 埋め込み空間内の顧客ドキュメント。
-</figcaption>
-</figure>
-</div>
-<section id="why-bertopic" class="level3">
-<h3 class="anchored" data-anchor-id="why-bertopic">なぜBERTopicなのか？</h3>
-<p>このパイプラインを手作業で構築すると、ドキュメントを埋め込むSentenceTransformers、次元を削減するUMAP、クラスタリングするHDBSCAN、結果を読み取る独自コードという4つのライブラリをつなぐ必要があります。BERTopicは4つすべてを一つのAPIで包み、出力を使えるものにする機能も追加します。各セグメントの特徴的なキーワードを抽出するc-TF-IDF、HDBSCANが未割り当てとした顧客のための <code>reduce_outliers()</code>、再学習せずに新規顧客をスコアリングする <code>transform()</code>、名前をつけるための任意のLLM手順です。この節の残りでは、そのパイプラインに沿います。</p>
-</section>
-<section id="constructing-the-customer-document" class="level3">
-<h3 class="anchored" data-anchor-id="constructing-the-customer-document">顧客ドキュメントを構築する</h3>
-<p>たとえば、顧客のドキュメントは次のようになります。</p>
+<h2 class="anchored" data-anchor-id="sec-embedding">商品の意味が重要なとき</h2>
+<p>数値の特徴量は、顧客がどのように買い物をするかを表しますが、何を買うかは表しません。意思決定がカテゴリーマーケティング、クロスセル、クリエイティブに関わるとき、シグナルは商品そのものにあるため、商品テキストが必要です。したがってこの節は、K-Meansの次の手順ではなく別の経路であり、別のデータで動きます。UCI Online Retail IIデータセットは、英国のギフト小売企業から得た約100万件の取引を含み、埋め込みモデルが読み取れる自由記述の商品説明を持っています。</p>
+<p>各顧客の購入履歴をテキストとして扱います。購入した商品の説明を一つの文字列（顧客ドキュメント）へ連結し、埋め込みモデルでその文字列を密なベクトルへ変換します。この埋め込み空間では、誕生日用キャンドルとパーティー用の皿の距離は短く、アンティークのティーポットはどちらからも離れています。そのため、ベクトルをクラスタリングすると、支出額ではなく購入内容で顧客がグループ化されます。たとえば次のようなドキュメントです。</p>
 <p><code>red retrospot cake stand, party bunting, paper cups, birthday candles, cake cases</code></p>
-<p>数値モデルには、この顧客が頻繁に購入する、または支出が多いとしか見えないかもしれません。埋め込みモデルには、パーティー用品とお祝い関連の購入という商品の意味が見えます。</p>
-<p>取引ログをグループ化して連結することで作成します。</p>
+<p>数値特徴量では、この顧客は購入頻度が高く支出も多い層に入ります。埋め込みでは、パーティー用品を買うほかの顧客の近くに配置されます。ドキュメントの構築は、取引ログのグループ化と連結です。</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Keep each customer's top-N products by revenue, then join the descriptions</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>prod_rev <span class="op">=</span> (</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    df.groupby([<span class="st">"CustomerID"</span>, <span class="st">"Description"</span>])[<span class="st">"Revenue"</span>].<span class="bu">sum</span>()</span>
@@ -818,15 +818,8 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    .<span class="bu">apply</span>(<span class="kw">lambda</span> d: <span class="st">", "</span>.join(d))</span>
 <span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    .reset_index(name<span class="op">=</span><span class="st">"doc"</span>)</span>
 <span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
-<p>セグメントの品質を大きく左右する、3つの実務上の判断があります。</p>
-<p>どの商品を入れるか。頻度または売上による購入上位N商品は、通常、購入履歴全体よりうまく機能します。完全なリストには一度限りの購入によるノイズが加わりますが、上位商品は顧客の実際のパターンを捉えます。</p>
-<p>売上で重みづけするか。高額商品を1回、低額商品を1回含めるだけでは、顧客が何を重視するかを正しく表せない場合があります。売上による重みづけ（支出に比例して商品への言及を繰り返すこと）は、混合バスケットを持つ顧客のセグメントを明確にします。商品間の価格差が大きい場合は重みに上限を設けるか、対数支出による重みづけを使います。そうしなければ、一度の高級品購入がドキュメントを支配する可能性があります。</p>
-<p>一般的な商品を除外する。「ギフトカード」「送料」や一般的なSKUはノイズです。すべてのセグメントに現れ、キーワードを薄めます。StockCodeのパターンで除外するか、小さな除外リストを管理します。この一つの手順だけで、意味のあるセグメントと意味のないセグメントが分かれることがよくあります。</p>
-<p>多くの小売カタログでは、軽量な文埋め込みモデルで十分です。セグメントの品質は、どの埋め込みモデルを選ぶかより、顧客ドキュメントをどのように設計・検証するかに大きく依存します。Notebookでは再現性のためローカルのSentenceTransformersモデルを使いますが、同じワークフローでOpenAI embeddingsなどAPIベースの埋め込みモデルも利用できます。</p>
-</section>
-<section id="reading-the-output" class="level3">
-<h3 class="anchored" data-anchor-id="reading-the-output">出力を読み取る</h3>
-<p>この地図の背後にある当てはめは、1回の呼び出しだけです。ローカルの埋め込みモデルが各ドキュメントをベクトルへ変換し、BERTopicがクラスタリングとキーワード抽出を処理します。</p>
+<p>購入履歴全体ではなく各顧客の上位商品を残し、すべてのセグメントに現れる「Postage」のような一般的な商品を除外し、一度の高額購入の重みに上限を設けます。これらの判断は、埋め込みモデルの選択よりも重要です。</p>
+<p>BERTopicは、残りのパイプラインを1回の呼び出しで実行します。ローカルの文埋め込みモデルが各ドキュメントをベクトルへ変換し、BERTopicがベクトルをクラスタリングして、各クラスタの特徴的なキーワードを抽出します。</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> bertopic <span class="im">import</span> BERTopic</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sentence_transformers <span class="im">import</span> SentenceTransformer</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -837,105 +830,104 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 <span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>topics, probs <span class="op">=</span> topic_model.fit_transform(</span>
 <span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    customer_docs[<span class="st">"doc"</span>].tolist(), embeddings<span class="op">=</span>embeddings</span>
 <span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
-<p>付属NotebookではUMAP、HDBSCAN、c-TF-IDFのサブモデルを明示的に設定しますが、これはデフォルト値を使った同じパイプラインです。その結果、各セグメントのキーワードによる特徴が得られます。</p>
-<div id="fig-bertopic-barchart" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="商品説明の埋め込みから得たセグメント別の特徴的な上位キーワード。数値によるRFMクラスタリングでは明らかにできない">
+<div id="fig-umap-clusters" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="顧客ドキュメント埋め込みのUMAP射影。各点が一人の顧客で、BERTopicが発見したセグメントごとに色分けされている">
 <figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-bertopic-barchart-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part4/sec4.1/bertopic_barchart.png" class="fig-md img-fluid figure-img" alt="商品説明の埋め込みから得たセグメント別の特徴的な上位キーワード。数値によるRFMクラスタリングでは明らかにできない">
+<div aria-describedby="fig-umap-clusters-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.1/umap_clusters.png" class="fig-md img-fluid figure-img" alt="顧客ドキュメント埋め込みのUMAP射影。各点が一人の顧客で、BERTopicが発見したセグメントごとに色分けされている">
 </div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-bertopic-barchart-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-図&nbsp;4: セグメント別の特徴的な上位キーワード。
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-umap-clusters-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+図&nbsp;4: 埋め込み空間内の顧客ドキュメント。
 </figcaption>
 </figure>
 </div>
-<p>このパネルをマーケターへ渡すと、各群にどのカテゴリー、キャンペーン、クリエイティブが合うかをすぐに理解できるはずです。</p>
-</section>
-<section id="when-one-theme-dominates" class="level3">
-<h3 class="anchored" data-anchor-id="when-one-theme-dominates">一つのテーマが支配する場合</h3>
-<p>実際のカタログでは、顧客の大半を覆う一つの幅広いテーマと、周辺に明確なニッチの裾があることがよくあります。HDBSCANは両方を明らかにしますが、外れ値を減らした後、幅広いテーマが一つの巨大トピックへ膨らみ、一つのセグメントとして行動するには大きすぎる状態になります。修正は限定的に行います。<strong>巨大トピックの埋め込みだけ</strong>にK-Meansを実行し、施策を実行できる規模の下位セグメントへ分けます。一方、小さなニッチトピックは発見事項として残します。「発見にはHDBSCAN、運用にはK-Means」というパターンを、顧客基盤全体ではなく、支配的なクラスタの内部へ適用します。付属Notebookは、どれかのトピックが顧客基盤の50%を超えると、自動的にこれを行います。</p>
-</section>
-<section id="the-llm-naming-trap" class="level3">
-<h3 class="anchored" data-anchor-id="the-llm-naming-trap">LLMによる命名の罠</h3>
-<p>LLMによる命名支援は、セグメントを実際以上に信頼できるものと感じさせます。無作為なものを含め、どのクラスタでもLLMへ渡して名前とペルソナを求めれば、洗練された説得力のある説明が返ります。クラスタに意味があるかどうかにかかわらず、物語はもっともらしく聞こえます。</p>
-<p>2つの安全策があります。</p>
+<p><a href="#fig-bertopic-barchart" class="quarto-xref">図&nbsp;<span>5</span></a> はBERTopicが見つけた7つのトピックを示しており、キーワードがニッチをそのまま表しています。パーティー用キャンドルとランタン、チョコレート柄のケーキ用品、フェルトクラフトのキット、航空会社風のバッグです。</p>
+<div id="fig-bertopic-barchart" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="商品説明の埋め込みから得た7つのトピックの特徴的な上位キーワード。トピックごとに小さな棒グラフを一つ表示">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-bertopic-barchart-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.1/bertopic_barchart.png" class="fig-md img-fluid figure-img" alt="商品説明の埋め込みから得た7つのトピックの特徴的な上位キーワード。トピックごとに小さな棒グラフを一つ表示">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-bertopic-barchart-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+図&nbsp;5: トピック別の特徴的な上位キーワード。
+</figcaption>
+</figure>
+</div>
+<p>キーワードの特徴が示さないのは、顧客基盤がそれらにどう分布しているかであり、このカタログではそれが発見事項です。幅広いトピック（装飾、キャンドル、リース）は、HDBSCANが未割り当てとした顧客を戻すと、顧客の92%を占めます。6つのニッチを合わせても約8%です。Notebookは幅広いトピックをK-Meansで6つの下位セグメントへ分けますが、後の期間で再当てはめしても同じセグメントは再現されません。調整Rand指数はゼロ近くで、同じ顧客に対するRFMベースのK-Meansの約0.14と対照的です。LLMがつけた12の名前のうち9つは、同じホームデコアのテーマの変奏です。このセグメンテーションは発見、つまりカタログが何を誰に売っているかの記述として読み、CRMの <code>segment_id</code> は行動セグメンテーションに置いたままにします。</p>
+<p>キーワードは、LLMによる命名支援に対する防御でもあります。無作為なものを含め、どのクラスタでもLLMへ渡して名前とペルソナを求めれば、洗練された説得力のある説明が返ります。2つの安全策があります。</p>
 <ul>
-<li>LLMの説明を読む前に、キーワードの証拠を検証します。上位キーワードから自分で明確なテーマを見つけられなければ、LLMの名前は創作です。</li>
-<li>マーケティングチームと名前をテストします。異なる名前をつけた2つのセグメントに、同じキャンペーン概要を書くのであれば、名前は情報ではなく飾りです。</li>
+<li>LLMの説明より先に上位キーワードを読みます。自分で明確なテーマを見つけられなければ、その名前はデータに裏づけられていません。</li>
+<li>マーケティングチームと名前をテストします。2つのセグメントが同じキャンペーンを受け取るなら、その意思決定にとって両者を分ける価値はほとんどありません。</li>
 </ul>
-<p><strong>付属Notebook：</strong> 完全に動作するコードを、それぞれの手法に適したデータセットを使う2つのNotebookへ分けています。</p>
-<ul>
-<li><code>sec4.1_traditional_segmentation.ipynb</code>：Dunnhumbyの「The Complete Journey」データセットで、デシル、RFM、K-Meansを実行します。CLVの章と同じデータセットなので、セグメント所属を引き継げます。<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_traditional_segmentation.ipynb">GitHubで見る</a></li>
-<li><code>sec4.1_semantic_segmentation.ipynb</code>：この手法に必要な豊富な商品説明を持つUCI Online Retail IIデータセットで、埋め込みパイプライン（顧客ドキュメントの構築、一般商品の除外、埋め込み、BERTopicクラスタリング、キーワード抽出、LLMによる命名支援）を実行します。任意のLLM命名手順は現在Anthropic向けに設定され、<code>litellm</code> パッケージと <code>ANTHROPIC_API_KEY</code> が必要です。なくても、そのセルをスキップし、残りは実行されます。<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_semantic_segmentation.ipynb">GitHubで見る</a></li>
-</ul>
-</section>
 </section>
 <section id="sec-segment-validation" class="level2">
 <h2 class="anchored" data-anchor-id="sec-segment-validation">セグメンテーションは優れているか？</h2>
-<p>優先順位に沿って3つを確認します。</p>
-<p>行動可能性が最も重要です。マーケティングチームへセグメントのプロフィールを見せます。セグメントの各組について「異なるメッセージ、チャネル、オファー、頻度を使うか？」と尋ねます。「どちらにも同じことをする」と答えるなら、数式がどれほどきれいでも、そのセグメンテーションは行動可能ではありません。通常の原因は、すべてが平均的なセグメントです。隣のセグメントと統合するか、変数選択を見直します。</p>
-<p>安定性。重複しない2つの期間でクラスタリングを再実行し、顧客の大半が同じセグメントに入ることを確認します。調整Rand指数（ARI）で数値化できます。期間間でセグメントを移る顧客が多すぎる場合、キャンペーンの基準として信頼できません。付属Notebookでは、セマンティック版でARIの計算、従来版で移行行列を示し、両方を確認します。</p>
-<p>食料品データの移行行列では、再クラスタリングする代わりに、各年の売上五分位で顧客を順位づけします。上位五分位の70%、下位五分位の61%が翌年も同じ位置に残りますが、中央3群では約40%にすぎません。顧客基盤の中央では、セグメント割り当ての信頼性が最も低いため、それを使うキャンペーンには最も余裕が必要です。</p>
-<div id="fig-segment-heatmap" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="セグメントプロフィールのヒートマップ。行はセグメント、列は基礎変数、色は母集団平均からの偏差を示す">
+<p>次の3つをこの順で確認します。行動可能性、安定性、規模です。</p>
+<p>行動可能性が最も重要です。マーケティングチームへセグメントのプロフィールを見せ、セグメントの各組について、異なるメッセージ、チャネル、オファー、頻度を使うかを確認します。使わないのであれば、クラスタリングの指標が良くても、そのセグメンテーションは行動可能ではありません。通常の原因は、すべてが平均的なセグメントです。隣のセグメントと統合するか、変数選択を見直します。</p>
+<p>2つ目は安定性です。重複しない2つの期間でセグメンテーションを再実行し、顧客の大半が同じセグメントに入ることを確認します。調整Rand指数（ARI）がこれを数値化します。食料品データでは、Notebookはクラスタではなく価値の順位を確認します。各年で世帯を売上五分位に置き、どこへ移るかを追います。</p>
+<div id="fig-migration-matrix" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="2年間の売上五分位の移行行列。上位群の70%と下位群の61%がそのまま残る">
 <figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-segment-heatmap-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part4/sec4.1/bertopic_segment_heatmap.png" class="fig-md img-fluid figure-img" alt="セグメントプロフィールのヒートマップ。行はセグメント、列は基礎変数、色は母集団平均からの偏差を示す">
+<div aria-describedby="fig-migration-matrix-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.1/migration_matrix.png" class="fig-md img-fluid figure-img" alt="2年間の売上五分位の移行行列。上位群の70%と下位群の61%がそのまま残る">
 </div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-segment-heatmap-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-図&nbsp;5: セグメントプロフィールのヒートマップ。
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-migration-matrix-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+図&nbsp;6: 売上五分位の移行、1年目から2年目。
 </figcaption>
 </figure>
 </div>
-<p>規模。各セグメントは施策を実施できる十分な大きさが必要ですが、適切な最小値はビジネスとキャンペーンによって異なり、普遍的な下限はありません。大まかな目安として、意味のあるキャンペーンを実施できないほど小さいセグメントは避けます。幅広いターゲティングでは顧客基盤の約10%が目安になることが多い一方、本当に価値の高いニッチは意図的な例外にできます。実務では、多くの場合4〜8個ほどのセグメントで十分です。</p>
-<p>セグメントは行動の違いから作りますが、そのセグメントへ割り当てるキャンペーンは依然としてテストが必要です。成功と判断する前に、<a href="../part3/sec3.2-ab-testing.html">A/Bテストの設計</a>へ戻ってください。</p>
+<p>上位と下位の五分位はおおむねそのまま残り（70%と61%）、中央の3群は約40%しか残らないため、顧客基盤の中央に基づくキャンペーンには最も余裕が必要です。これは価値の順位がどれだけ安定しているかを示すもので、5つのセグメントがどれだけ安定しているかではありません。<code>segment_id</code> がキャンペーンを動かす前に実行すべき確認は、2番目の期間でK-Meansを再当てはめすることです。</p>
+<p>3つ目は規模です。各セグメントは施策を実施できる十分な大きさが必要ですが、普遍的な下限はありません。幅広いターゲティングでは顧客基盤の約10%が目安になることが多い一方、本当に価値の高いニッチは意図的な例外にできます。</p>
 </section>
-<section id="sec-method-cheat-sheet" class="level2">
-<h2 class="anchored" data-anchor-id="sec-method-cheat-sheet">手法早見表</h2>
-<div id="tbl-method-cheat-sheet" class="quarto-float quarto-figure quarto-figure-center anchored">
+<section id="sec-segment-id" class="level2">
+<h2 class="anchored" data-anchor-id="sec-segment-id">セグメントからsegment_idへ</h2>
+<p>プロジェクトから出ていく出力は、顧客1人につき1行です。付属Notebookは2,500行を <code>segment_assignments.csv</code> へ書き出します。以下はそのうち3行で、CLVの章はこのファイルを結合して各セグメントに価値をつけます。</p>
+<div id="tbl-segment-export" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
-<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-method-cheat-sheet-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-表&nbsp;3: 高度さではなく、答える問いによって手法を選ぶ。
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-segment-export-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+表&nbsp;4: CRMエクスポートの先頭行。セグメント名は <a href="#tbl-kmeans-segments" class="quarto-xref">表&nbsp;<span>3</span></a> のもの。
 </figcaption>
-<div aria-describedby="tbl-method-cheat-sheet-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div aria-describedby="tbl-segment-export-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <table class="caption-top table">
 <thead>
 <tr class="header">
-<th style="text-align: left;">問い</th>
-<th style="text-align: left;">手法</th>
-<th style="text-align: left;">入力</th>
-<th style="text-align: left;">出力</th>
+<th style="text-align: right;">household_key</th>
+<th style="text-align: left;">decile</th>
+<th style="text-align: right;">km_segment</th>
+<th style="text-align: left;">Segment</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td style="text-align: left;">今、より注目すべき顧客は誰か？</td>
-<td style="text-align: left;">デシル／RFM</td>
-<td style="text-align: left;">取引ログ</td>
-<td style="text-align: left;">価値階層またはR/F/Mスコア</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">D3</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: left;">頻繁な少額購入層</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">価値階層を超えて、どのような行動パターンがあるか？</td>
-<td style="text-align: left;">K-Means</td>
-<td style="text-align: left;">数値の行動特徴量</td>
-<td style="text-align: left;">行動セグメントラベル</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: left;">D6</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: left;">ときどき高額購入する層</td>
 </tr>
 <tr class="odd">
-<td style="text-align: left;">顧客は実際に何を購入しているか？</td>
-<td style="text-align: left;">埋め込みベースのクラスタリング</td>
-<td style="text-align: left;">商品説明から作る顧客ドキュメント</td>
-<td style="text-align: left;">キーワード特徴を持つ、意味に基づくセグメント</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: left;">D5</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: left;">値引き志向層</td>
 </tr>
 </tbody>
 </table>
 </div>
 </figure>
 </div>
+<p>各セグメントの概要をファイルの隣に置き、ファイルをバージョン管理します。キャンペーンの間に静かに変わる所属は、ないより悪いものです。セグメントは顧客間の違いを表しますが、あるメッセージがそのうちの一つに効くことを示すわけではありません。施策を選んだら、テストします。<a href="../part3/sec3.2-ab-testing.html">A/Bテストの設計</a>の手法は、ほかのキャンペーンと同じようにセグメントキャンペーンにも当てはまります。</p>
+<p><strong>付属Notebook：</strong> <code>sec4.1_traditional_segmentation.ipynb</code> は、Dunnhumbyデータでデシル、RFM、K-Means、エクスポートを再現します。<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_traditional_segmentation.ipynb">GitHubで見る</a><br>
+<code>sec4.1_semantic_segmentation.ipynb</code> は、UCI Online Retail IIで顧客ドキュメント、BERTopicの当てはめ、安定性の確認、LLMによる命名を再現します。<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_semantic_segmentation.ipynb">GitHubで見る</a></p>
 </section>
 <section id="key-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="key-takeaways">要点</h2>
 <ul>
-<li>行動からセグメントを作り、その後で人口統計を使って各群を説明し、到達可能にする。成果物はスライドではなく、CRMと広告プラットフォームで使える<code>segment_id</code>である。</li>
-<li>最初に実行可能性、次に安定性と規模を検証する。同じキャンペーンを受ける2つのセグメントは統合する。</li>
-<li>説得力のあるセグメント名は証拠ではない。LLMはランダムなクラスタを含め、どのクラスタにも名前を付けるため、ラベルを信頼する前に上位キーワードを自分で読む。</li>
+<li>セグメンテーションは、それが支える意思決定に応じて選ぶ。デシルとRFMは価値を順位づけし、K-Meansは行動グループを見つけ、埋め込みは顧客が何を買うかを捉える。後の手法は別の問いに答えるのであって、前の手法のセグメントを精緻化するのではない。</li>
+<li>セグメントは行動から作り、最初に行動可能性、次に安定性と規模を検証する。2つのセグメントが同じキャンペーンを受けるなら統合する。</li>
+<li>LLMは無作為なものを含め、どのクラスタにも説得力のある名前をつけるため、ラベルを信頼する前に上位キーワードを自分で読む。</li>
 </ul>
 
 

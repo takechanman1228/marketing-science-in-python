@@ -673,7 +673,7 @@ window.Quarto = {
 <p><strong>À propos de la version française</strong><br>
 Cette page est une traduction par IA de la version anglaise de <em>Marketing Science in Python</em>. La version anglaise fait foi et prévaut en cas de divergence. Le code, les notebooks et le texte intégré aux images restent en anglais. <a href="../../part4/sec4.2-clv-modeling.html" class="translation-source-link">Lire la version anglaise</a></p>
 </div>
-<p>La plupart des équipes marketing se concentrent sur le coût par acquisition (CPA), souvent employé indifféremment avec le CAC (coût d’acquisition client) : un CPA plus faible signifie une meilleure campagne. La valeur vie client (CLV), souvent appelée LTV dans les contextes de l’analytique et du SaaS, reformule la question. Au lieu de demander à quel coût minimal vous pouvez acquérir un client, elle demande combien chaque client rapporte au fil du temps, puis utilise cette réponse pour fixer le plafond de CPA.</p>
+<p>La plupart des équipes marketing se concentrent sur le coût par acquisition (CPA), souvent employé indifféremment avec le CAC (coût d’acquisition client) : un CPA plus faible signifie une meilleure campagne. La valeur vie client (CLV), souvent appelée LTV dans les contextes de l’analytique et du SaaS, reformule la question. Elle estime combien chaque client rapporte au fil du temps, et cette estimation fixe le plafond de CPA du segment.</p>
 <p>Ce chapitre montre comment prédire la CLV à l’échelle individuelle à l’aide de modèles probabilistes BTYD (BG/NBD + Gamma-Gamma avec PyMC-Marketing), et comment transformer ces prédictions en décisions budgétaires.</p>
 <section id="why-clv-changes-the-decision" class="level2">
 <h2 class="anchored" data-anchor-id="why-clv-changes-the-decision">Pourquoi la CLV change la décision</h2>
@@ -692,7 +692,7 @@ Figure&nbsp;1: Comparaison du premier achat : étudiants et actifs.
 </figcaption>
 </figure>
 </div>
-<p>À en juger par le ROAS du premier jour, le choix paraît évident : consacrer davantage de budget aux étudiants. Mais la perspective à long terme inverse la conclusion. Les étudiants cessent d’acheter après la première transaction, si bien que leurs dépenses sur l’ensemble de la relation client restent proches de $100. Les actifs reviennent et dépensent davantage au fil du temps, avec des dépenses moyennes de $400 sur l’ensemble de la relation. Soudain, le segment « cher » est en réalité la bonne affaire.</p>
+<p>Le ROAS du premier jour favorise l’étudiant, mais les dépenses sur l’ensemble de la relation client inversent le classement. Les étudiants cessent d’acheter après la première transaction, si bien que leurs dépenses sur l’ensemble de la relation client restent proches de $100. Les actifs reviennent et dépensent davantage au fil du temps, avec des dépenses moyennes de $400 sur l’ensemble de la relation.</p>
 <div id="fig-long-term-comparison" class="fig-sm quarto-float quarto-figure quarto-figure-center anchored" alt="Après les achats répétés, l’actif génère un retour sur dépenses publicitaires deux fois plus élevé, tandis que le client étudiant cesse d’acheter.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-long-term-comparison-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -735,7 +735,7 @@ Figure&nbsp;3: CPA fixe (à gauche) et CPA ajusté à la CLV (à droite).
 <p><span class="math display">\[
 \text{CLV} = \text{Average Order Value} \times \text{Purchase Frequency} \times \text{Customer Lifespan}
 \]</span></p>
-<p>Pour une marque de mode dont les clients dépensent $100 par commande, achètent 4 fois par an et restent fidèles pendant 3 ans : <span class="math inline">\(\text{CLV} = 100 \times 4 \times 3 = \$1{,}200\)</span>. Simple, intuitive et utile pour estimer les ordres de grandeur de l’activité, mais trop grossière pour prendre des décisions à l’échelle du client. Elle échoue sur trois points.</p>
+<p>Pour une marque de mode dont les clients dépensent $100 par commande, achètent 4 fois par an et restent fidèles pendant 3 ans : <span class="math inline">\(\text{CLV} = 100 \times 4 \times 3 = \$1{,}200\)</span>. C’est utile pour estimer les ordres de grandeur de l’activité, mais trop grossier pour prendre des décisions à l’échelle du client, pour trois raisons.</p>
 <div id="fig-limitations" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Les trois limites de la formule traditionnelle de la CLV : l’hétérogénéité des clients, les différences de date du premier achat et l’ambiguïté entre client « mort ou vivant ».">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-limitations-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -786,7 +786,7 @@ Table&nbsp;1: La CLV moyenne de $1,090 représente mal les deux groupes.
 </div>
 </figure>
 </div>
-<p>La moyenne de $1,090 existe dans les données et ne décrit personne. Il vous faut une CLV à l’échelle individuelle.</p>
+<p>La moyenne globale de $1,090 masque la différence entre les deux groupes. Il vous faut une CLV à l’échelle individuelle.</p>
 <p>Limite 2 : des dates de premier achat différentes. Un client qui a commencé à acheter il y a un an dispose d’une année complète de données observables ; celui qui a commencé il y a trois mois en a beaucoup moins. Les décomptes bruts de fréquence confondent « faible engagement » et « arrivée récente » si l’on ne tient pas compte de l’ancienneté.</p>
 <div id="fig-tenure" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Les clients qui commencent à acheter à des dates différentes ont des fenêtres d’observation différentes, ce qui rend trompeurs les décomptes bruts de fréquence.">
 <figure class="quarto-float quarto-float-fig figure">
@@ -798,22 +798,22 @@ Figure&nbsp;5: Biais d’ancienneté dans les fenêtres d’observation des clie
 </figcaption>
 </figure>
 </div>
-<p>Limite 3 : mort ou vivant ? Dans les abonnements, l’attrition est observable : le client résilie. Dans le commerce de détail et le commerce en ligne, elle ne l’est pas. Le fait de considérer un client comme « vivant » dépend de ses habitudes propres. Une personne qui achète chaque mois et ne donne plus signe de vie pendant trois mois constitue un signal d’alerte ; une absence de trois mois chez quelqu’un qui achète tous les six mois est normale.</p>
+<p>Limite 3 : l’attrition n’est pas observée. Dans les abonnements, l’attrition est observable : le client résilie. Dans le commerce de détail et le commerce en ligne, elle ne l’est pas. Le fait de considérer un client comme « vivant » dépend de ses habitudes propres. Une personne qui achète chaque mois et ne donne plus signe de vie pendant trois mois constitue un signal d’alerte ; une absence de trois mois chez quelqu’un qui achète tous les six mois est normale.</p>
 <div id="fig-dead-or-alive" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Un même délai depuis le dernier achat d’un client peut indiquer une inactivité temporaire ou un départ définitif, lequel n’est pas directement observé.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-dead-or-alive-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="../images/part4/sec4.2/dead_or_alive.png" class="fig-md img-fluid figure-img" alt="Un même délai depuis le dernier achat d’un client peut indiquer une inactivité temporaire ou un départ définitif, lequel n’est pas directement observé.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-dead-or-alive-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;6: Ambiguïté entre client mort ou vivant dans les habitudes d’achat.
+Figure&nbsp;6: L’attrition non observée dans les habitudes d’achat.
 </figcaption>
 </figure>
 </div>
-<p>Ces trois problèmes ont la même origine : une moyenne unique ne peut pas représenter une clientèle hétérogène. La solution consiste à modéliser la CLV à l’échelle individuelle, ce que fait précisément BTYD.</p>
+<p>Le modèle doit tenir compte des différences de comportement d’achat entre clients, du temps écoulé depuis le premier achat de chacun, et de la possibilité qu’un client ait cessé d’acheter. BTYD intègre ces trois éléments dans un seul modèle à l’échelle individuelle.</p>
 </section>
 <section id="sec-btyd" class="level2">
 <h2 class="anchored" data-anchor-id="sec-btyd">BTYD : le cadre BG/NBD + Gamma-Gamma</h2>
-<p>La modélisation « acheter jusqu’à disparaître », ou Buy-Till-You-Die (BTYD), assemble deux modèles probabilistes :</p>
+<p>La modélisation « acheter jusqu’à disparaître », ou Buy-Till-You-Die (BTYD), combine deux modèles probabilistes :</p>
 <ol type="1">
 <li>BG/NBD prédit la probabilité qu’un client soit encore actif et son nombre de transactions futures.</li>
 <li>Gamma-Gamma estime le montant moyen de ses commandes.</li>
@@ -905,7 +905,7 @@ Figure&nbsp;9: La probabilité d’être actif diminue entre les achats, puis re
 </section>
 <section id="sec-implementation" class="level2">
 <h2 class="anchored" data-anchor-id="sec-implementation">Implémentation avec PyMC-Marketing</h2>
-<p><a href="https://github.com/pymc-labs/pymc-marketing">PyMC-Marketing</a> repose sur <a href="https://www.pymc.io/">PyMC</a> et remplace la bibliothèque <code>lifetimes</code> (désormais en mode maintenance). Sa fonctionnalité phare est la quantification intégrée de l’incertitude : chaque estimation de CLV s’accompagne des bornes d’un intervalle de plus haute densité (HDI), ce qui permet de voir le degré de confiance du modèle pour chaque client.</p>
+<p><a href="https://github.com/pymc-labs/pymc-marketing">PyMC-Marketing</a> repose sur <a href="https://www.pymc.io/">PyMC</a> et remplace la bibliothèque <code>lifetimes</code> (désormais en mode maintenance). Sa fonctionnalité phare est la quantification intégrée de l’incertitude : chaque estimation de CLV s’accompagne des bornes d’un intervalle de plus haute densité (HDI), ce qui permet de voir l’ampleur de l’incertitude qui entoure l’estimation de chaque client.</p>
 <p>Le modèle de CLV n’a besoin que des transactions de vente : identifiant client, date de transaction, montant de transaction. Deux à trois ans d’historique suffisent généralement.</p>
 <div id="fig-required-data" class="fig-sm quarto-float quarto-figure quarto-figure-center anchored" alt="La modélisation de la CLV part d’enregistrements au niveau des transactions contenant un identifiant client, une date de transaction et un montant de transaction.">
 <figure class="quarto-float quarto-float-fig figure">
@@ -1006,12 +1006,12 @@ Table&nbsp;2: Indicateurs RFM-T utilisés dans le modèle BTYD.
 <span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    discount_rate<span class="op">=</span><span class="fl">0.01</span>,</span>
 <span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    time_unit<span class="op">=</span><span class="st">"D"</span>,</span>
 <span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copier vers le presse-papier" class="code-copy-button"><i class="bi"></i></button></div>
-<p>La sortie comprend non seulement des estimations ponctuelles, mais aussi les bornes d’un HDI (intervalle de plus haute densité). Dans cette API, <code>future_t</code> se mesure en mois, tandis que <code>time_unit="D"</code> indique au modèle que les données RFM-T en entrée sont mesurées en jours. Le modèle indique son degré de confiance pour chaque client, mais uniquement en ce qui concerne le calendrier des achats : la distribution a posteriori des dépenses est résumée par sa moyenne avant l’actualisation ; considérez donc ces bornes comme une limite inférieure de l’incertitude réelle.</p>
-<p>L’horizon relève d’une décision, pas d’une valeur par défaut. Ce jeu de données couvre environ 23 mois ; une projection à 120 mois s’étend donc sur une durée d’environ cinq fois la fenêtre observée. L’estimation ne s’emballe pas, car BG/NBD intègre le départ des clients dans la projection, mais ce taux de départ est lui-même estimé à partir de ces 23 mois. Le notebook complémentaire applique à nouveau l’actualisation à la même distribution a posteriori sur des horizons de 3, 5 et 10 ans. Sur ce jeu de données, le classement des clients varie à peine entre les trois horizons : le ciblage fondé sur le rang est donc insensible aux horizons testés ; l’estimation médiane à 10 ans représente environ 2,23 fois celle à 3 ans, si bien que toute conversion de la CLV en plafond monétaire doit préciser l’horizon utilisé.</p>
+<p>La sortie comprend non seulement des estimations ponctuelles, mais aussi les bornes d’un HDI (intervalle de plus haute densité). Dans cette API, <code>future_t</code> se mesure en mois, tandis que <code>time_unit="D"</code> indique au modèle que les données RFM-T en entrée sont mesurées en jours. Ces bornes ne quantifient que l’incertitude sur le calendrier des achats : la distribution a posteriori des dépenses est résumée par sa moyenne avant l’actualisation ; considérez-les donc comme une limite inférieure de l’incertitude réelle.</p>
+<p>Choisissez l’horizon explicitement ; <code>future_t=120</code> n’est pas une valeur par défaut à accepter telle quelle. Ce jeu de données couvre environ 23 mois ; une projection à 120 mois s’étend donc sur une durée d’environ cinq fois la fenêtre observée. L’estimation reste bornée, car BG/NBD intègre le départ des clients dans la projection, mais ce taux de départ est lui-même estimé à partir de ces 23 mois. Le notebook complémentaire applique à nouveau l’actualisation à la même distribution a posteriori sur des horizons de 3, 5 et 10 ans. Sur ce jeu de données, le classement des clients varie à peine entre les trois horizons : le ciblage fondé sur le rang est donc insensible aux horizons testés ; l’estimation médiane à 10 ans représente environ 2,23 fois celle à 3 ans, si bien que toute conversion de la CLV en plafond monétaire doit préciser l’horizon utilisé.</p>
 </section>
 <section id="probability-alive-matrix" class="level3">
 <h3 class="anchored" data-anchor-id="probability-alive-matrix">Matrice de probabilité d’être actif</h3>
-<p>La matrice de probabilité d’être actif permet de voir rapidement ce que le modèle BG/NBD a appris. La récence sur un axe, la fréquence sur l’autre, la couleur représentant la probabilité d’être actif. Rappelons que la récence correspond ici à la définition BTYD du tableau ci-dessus, la durée entre le premier et le dernier achat : une récence élevée signifie donc que le client achetait encore récemment, à l’inverse du sens donné à ce terme dans le RFM marketing. Les quatre coins racontent quatre histoires : les acheteurs réguliers fidèles (fréquence élevée, récence élevée, achats fréquents et activité toujours présente), les fidèles à risque (fréquence élevée, récence faible, ils achetaient beaucoup puis ont cessé de donner signe de vie), les clients de passage (fréquence faible, récence faible, un ou deux achats juste après l’acquisition puis plus rien) et les clients à historique limité (fréquence faible, récence élevée, trop peu d’achats pour être certain, mais le plus récent est frais ; le modèle leur accorde donc le bénéfice du doute ; la figure appelle ce coin les nouveaux clients).</p>
+<p>La matrice de probabilité d’être actif permet de voir rapidement ce que le modèle BG/NBD a appris. La récence sur un axe, la fréquence sur l’autre, la couleur représentant la probabilité d’être actif. Rappelons que la récence correspond ici à la définition BTYD du tableau ci-dessus, la durée entre le premier et le dernier achat : une récence élevée signifie donc que le client achetait encore récemment, à l’inverse du sens donné à ce terme dans le RFM marketing. Lisez les quatre coins séparément. Les acheteurs réguliers fidèles (fréquence élevée, récence élevée) achètent souvent et sont toujours actifs. Les fidèles à risque (fréquence élevée, récence faible) achetaient beaucoup puis ont cessé de donner signe de vie. Les clients de passage (fréquence faible, récence faible) ont fait un ou deux achats juste après l’acquisition, puis se sont arrêtés. Les clients à historique limité (fréquence faible, récence élevée) ont trop peu d’achats pour que l’on puisse être certain, mais le plus récent est frais, si bien que la probabilité d’être actif ressort élevée ; la figure appelle ce coin les nouveaux clients.</p>
 <div id="fig-prob-alive-matrix" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Matrice de probabilité d’être actif selon la fréquence d’achat (x) et la récence (y) ; la couleur indique cette probabilité pour chaque position de client.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-prob-alive-matrix-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -1033,7 +1033,7 @@ Figure&nbsp;11: La matrice de probabilité d’être actif.
 </section>
 <section id="combining-segments-and-clv" class="level3">
 <h3 class="anchored" data-anchor-id="combining-segments-and-clv">Combiner segments et CLV</h3>
-<p>Rapprochez le <code>segment_id</code> du chapitre sur la segmentation (chapitre 4.1) de l’estimation de CLV de chaque client. Vous obtenez ainsi le tableau opérationnel vers lequel cette partie progresse : de quel type de client il s’agit, quelle est sa valeur et ce que l’entreprise devrait faire pour lui.</p>
+<p>Rapprochez le <code>segment_id</code> de la <a href="sec4.1-segmentation.html">section 4.1</a> de l’estimation de CLV de chaque client. Vous obtenez ainsi le tableau opérationnel vers lequel cette partie progresse : de quel type de client il s’agit, quelle est sa valeur et ce que l’entreprise devrait faire pour lui.</p>
 <p>Les données démographiques peuvent toujours aider à décrire ou à atteindre un segment, mais la décision repose principalement sur le croisement segment comportemental × valeur prédite. Le notebook complémentaire joint les estimations de CLV au fichier Dunnhumby <code>hh_demographic.csv</code> pour dresser le profil de chaque segment selon des dimensions démographiques telles que le revenu : utile pour choisir la création publicitaire et le canal, moins pour fixer le budget.</p>
 <div class="callout callout-style-default callout-tip callout-titled">
 <div class="callout-header d-flex align-content-center">
@@ -1052,7 +1052,7 @@ Figure&nbsp;11: La matrice de probabilité d’être actif.
 </section>
 <section id="sec-using-clv" class="level2">
 <h2 class="anchored" data-anchor-id="sec-using-clv">Mettre la CLV en pratique</h2>
-<p>Une fois que vous disposez d’un <code>clv_estimate</code> par client, trois applications deviennent accessibles presque sans effort supplémentaire. Ces approches fonctionnent avec n’importe quel score de CLV : les systèmes en aval n’ont besoin que d’un identifiant client et d’un nombre.</p>
+<p>Une fois que vous disposez d’un <code>clv_estimate</code> par client, trois applications ne demandent plus aucune modélisation supplémentaire, même si chacune a besoin de plus que le score. Un plafond de CPA a besoin de la conversion en marge décrite ci-dessus et d’un horizon explicite ; une alerte d’attrition a besoin d’une jointure avec le CRM sur l’identifiant client et d’un seuil ; une prévision par cohorte a besoin de la date d’acquisition de chaque client et de l’horizon de planification de la direction financière. Ces approches fonctionnent avec n’importe quel score de CLV.</p>
 <ol type="1">
 <li>Plafonds de CPA pour les enchères publicitaires</li>
 </ol>
@@ -1064,11 +1064,11 @@ Figure&nbsp;11: La matrice de probabilité d’être actif.
 <ol start="2" type="1">
 <li>Alertes d’attrition pour le CRM</li>
 </ol>
-<p>Signalez les clients dont la probabilité d’être actif baisse de plus de 30 points en 30 jours. Le signal réside dans la vitesse de variation, pas dans le niveau absolu. Le cas d’un client dont cette probabilité est passée de 0,85 à 0,40 en un mois est bien plus urgent que celui d’un client dont elle reste stable à 0,35 depuis six mois. Le premier se désengage ; le second achète simplement peu souvent.</p>
+<p>Signalez les clients dont la probabilité d’être actif baisse de plus de 30 points en 30 jours. Le signal réside dans la vitesse de variation, pas dans le niveau absolu. Le cas d’un client dont cette probabilité est passée de 0,85 à 0,40 en un mois est bien plus urgent que celui d’un client dont elle reste stable à 0,35 depuis six mois. Le premier client s’éloigne d’un niveau d’engagement auparavant élevé ; le second a toujours été un acheteur peu fréquent.</p>
 <ol start="3" type="1">
 <li>Prévisions par cohorte pour la direction financière</li>
 </ol>
-<p>La direction financière planifie selon des cycles budgétaires, pas sur toute la durée de vie des clients : agrégez donc les estimations individuelles de CLV par cohorte d’acquisition et projetez le chiffre d’affaires à 12, 24 et 36 mois. Incluez les bornes HDI pour que la direction financière sache qu’il s’agit d’estimations probabilistes et non d’objectifs fixes. C’est ainsi que vous répondez à la question « Quel est le retour attendu de nos dépenses d’acquisition du troisième trimestre ? » sans obliger le directeur financier à apprendre BG/NBD.</p>
+<p>La direction financière planifie selon des cycles budgétaires, pas sur toute la durée de vie des clients : agrégez donc les estimations individuelles de CLV par cohorte d’acquisition et projetez le chiffre d’affaires à 12, 24 et 36 mois. Incluez les bornes HDI pour que la direction financière sache qu’il s’agit d’estimations probabilistes et non d’objectifs fixes. Cela répond à la question financière du retour attendu sur les dépenses d’acquisition d’un trimestre, dans les unités et le cadre temporel selon lesquels la direction financière planifie.</p>
 <div class="callout callout-style-default callout-tip callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -1086,8 +1086,8 @@ Figure&nbsp;11: La matrice de probabilité d’être actif.
 <section id="key-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="key-takeaways">Points clés à retenir</h2>
 <ul>
-<li>La CLV remplace une cible de CPA uniforme par des dépenses proportionnelles à la valeur de chaque client. La moyenne existe dans les données et ne décrit personne.</li>
-<li>Dans les contextes non contractuels, BG/NBD modélise les achats futurs et Gamma-Gamma les dépenses, à partir des seules données transactionnelles. Chaque client dispose d’un intervalle de crédibilité : fondez donc vos enchères sur une borne inférieure prudente plutôt que sur la moyenne.</li>
+<li>La CLV remplace une cible de CPA uniforme par des dépenses proportionnelles à la valeur de chaque client ; un plafond unique paie trop cher les clients à faible valeur et pas assez ceux à forte valeur.</li>
+<li>Dans les contextes non contractuels, BG/NBD modélise les achats futurs et Gamma-Gamma les dépenses, à partir des seules données transactionnelles. Chaque client dispose d’un intervalle de crédibilité : fixez donc l’enchère à partir d’une borne inférieure prudente de cet intervalle.</li>
 <li>Convertissez la CLV en chiffre d’affaires en CLV en bénéfice avant de l’utiliser pour fixer un plafond de CPA, et précisez l’horizon : l’estimation médiane à dix ans représente environ 2,23 fois celle à trois ans, même si le classement varie à peine.</li>
 </ul>
 

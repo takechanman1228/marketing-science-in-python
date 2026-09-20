@@ -645,11 +645,11 @@ window.Quarto = {
 <p><strong>À propos de la version française</strong><br>
 Cette page est une traduction par IA de la version anglaise de <em>Marketing Science in Python</em>. La version anglaise fait foi et prévaut en cas de divergence. Le code, les notebooks et le texte intégré aux images restent en anglais. <a href="../../part5/sec5.3-sales-forecasting.html" class="translation-source-link">Lire la version anglaise</a></p>
 </div>
-<p>Nous sommes fin septembre. Les ventes progressent de 7.3 % depuis le début de l’année, mais l’objectif annuel exige 8.0 %. Il reste treize semaines, dont la période allant du Black Friday à Noël, durant laquelle cette entreprise réalise une part disproportionnée de ses ventes annuelles. L’équipe de planification doit décider si le plan actuel suffit ou si une action supplémentaire est nécessaire.</p>
+<p>Fin septembre, les ventes progressent de 7.3 % depuis le début de l’année, pour un objectif annuel de 8.0 %. Il reste treize semaines, dont la période allant du Black Friday à Noël, durant laquelle cette entreprise réalise une part disproportionnée de ses ventes annuelles. L’équipe de planification doit décider si le plan actuel suffit ou si une action supplémentaire est nécessaire.</p>
 <div id="tbl-where-we-stand" class="quarto-float quarto-figure quarto-figure-center anchored" data-tbl-colwidths="[62,38]">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-where-we-stand-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Table&nbsp;1: Situation à la fin de la semaine 39 de l’exercice 2019 (FY2019)
+Table&nbsp;1: Ventes cumulées et objectif annuel à la semaine 39 de l’exercice (FY2019)
 </figcaption>
 <div aria-describedby="tbl-where-we-stand-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <table class="caption-top table">
@@ -694,7 +694,7 @@ Table&nbsp;1: Situation à la fin de la semaine 39 de l’exercice 2019 (FY2019)
 </figure>
 </div>
 <p>Pour prendre cette décision, il nous faut deux choses : le niveau auquel les ventes aboutiront probablement avec le plan actuel, et l’ampleur avec laquelle une action marketing supplémentaire pourrait modifier ce résultat. La première est une question de prévision. La seconde est une question causale, et sa réponse vient des chapitres de ce livre consacrés à la mesure, pas de la prévision.</p>
-<p>Trois termes portent ce chapitre. L’<strong>objectif</strong> est un seuil fixe choisi par l’entreprise. La <strong>prévision de référence</strong> porte sur les semaines restantes si le plan actuel se poursuit, avec les promotions récurrentes, les prix et les actions médias qui ont façonné l’historique. L’<strong>incrément</strong> est ce qu’une action marketing supplémentaire ajoute à cette référence. Pour un scénario <span class="math inline">\(s\)</span>, le résultat de fin d’année est</p>
+<p>Ce chapitre utilise trois termes. L’<strong>objectif</strong> est un seuil fixe choisi par l’entreprise. La <strong>prévision de référence</strong> porte sur les semaines restantes si le plan actuel se poursuit, avec les promotions récurrentes, les prix et les actions médias qui ont façonné l’historique. L’<strong>incrément</strong> est ce qu’une action marketing supplémentaire ajoute à cette référence. Pour un scénario <span class="math inline">\(s\)</span>, le résultat de fin d’année est</p>
 <p><span class="math display">\[
 Y^{(s)}_{\text{year-end}} = Y_{\text{so far}} + R_{\text{baseline}} + \Delta_s
 \]</span></p>
@@ -727,7 +727,7 @@ Figure&nbsp;2: Six exercices de ventes hebdomadaires
 </div>
 <p>Il nous faut donc un modèle pour les semaines restantes. Deux références fixent le niveau minimal, et quatre candidats les affrontent sur le même historique.</p>
 <ul>
-<li><strong>Méthode naïve.</strong> Répéter la dernière semaine observée. Elle est aveugle à la saison qui s’annonce.</li>
+<li><strong>Méthode naïve.</strong> Répéter la dernière semaine observée. Elle ne comporte aucun terme saisonnier et aplatit donc le pic des fêtes.</li>
 <li><strong>Méthode naïve saisonnière.</strong> Répéter la même semaine de l’exercice précédent. C’est « appliquer le profil de l’année dernière » rendu explicite.</li>
 <li><strong>ETS (lissage exponentiel).</strong> Niveau, tendance et saisonnalité comme composantes explicites, dans deux versions, avec et sans le terme saisonnier de 52 semaines.</li>
 <li><strong>Prophet.</strong> Une tendance changeante, une saisonnalité annuelle et des effets calendaires, ajustés comme des composantes additives distinctes.</li>
@@ -753,7 +753,7 @@ Figure&nbsp;3: Ce que chaque modèle prévoit pour les mêmes 13 semaines
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>        seasonal<span class="op">=</span>seasonal, seasonal_periods<span class="op">=</span><span class="dv">52</span> <span class="cf">if</span> seasonal <span class="cf">else</span> <span class="va">None</span>,</span>
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    )</span>
 <span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> model.fit(disp<span class="op">=</span><span class="va">False</span>)</span></code></pre></div><button title="Copier vers le presse-papier" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Les sept trajectoires divergent fortement au niveau du pic, et rien dans le graphique ne dit laquelle croire. Le candidat qui bat les références lors d’un test rétrospectif devient la prévision de référence. La popularité ou la nouveauté ne suffisent pas à qualifier un modèle.</p>
+<p>Les sept trajectoires divergent fortement au niveau du pic, et le graphique seul ne permet pas de les classer. Le candidat qui bat les références lors d’un test rétrospectif devient la prévision de référence ; la popularité d’un modèle ou sa date de sortie n’entrent pas dans la sélection.</p>
 <section id="sec-rolling-backtest" class="level3">
 <h3 class="anchored" data-anchor-id="sec-rolling-backtest">Valider par un test rétrospectif à origine glissante</h3>
 <p>L’approche habituelle consiste à répartir aléatoirement les données entre apprentissage et test. Sur ces données, elle donne à LightGBM une WAPE de 4.5 %. Ce chiffre est trompeur pour deux raisons. Le mélange permet au modèle d’apprendre sur des semaines postérieures à celles qu’il prévoit et, avec des variables retardées, la plupart des lignes de test ont des semaines adjacentes dans l’ensemble d’apprentissage. Et une répartition aléatoire évalue une interpolation ligne par ligne : elle ne peut même pas produire l’objet dont la décision a besoin, une trajectoire de 13 semaines à partir d’une origine fixe.</p>
@@ -846,7 +846,7 @@ Table&nbsp;2: Test rétrospectif à origine glissante sur les trois répétition
 </div>
 </figure>
 </div>
-<p>La saisonnalité détermine le trimestre. L’ETS saisonnier présente l’erreur la plus faible dans les deux colonnes et devient la référence. C’est aussi le seul candidat ici dont le modèle ajusté peut simuler de nombreuses trajectoires de 13 semaines avec leur incertitude, ce dont l’étape suivante a besoin. TimesFM l’a égalé sur le total des 13 semaines avec pour seule entrée la série brute. Prophet a à peine amélioré le total des 13 semaines de la méthode naïve saisonnière, car sa saison annuelle suit un cycle de 365.25 jours alors que cette entreprise planifie sur des années fixes de 52 semaines. Sur une seule série synthétique, aucun de ces deux résultats ne classe les méthodes. La ligne LightGBM porte la leçon de validation : 12.3 % à origine glissante contre 4.5 % avec la répartition aléatoire, c’est la taille de la fuite d’information.</p>
+<p>Le terme saisonnier explique l’essentiel de l’écart entre les modèles sur ce trimestre. L’ETS saisonnier présente l’erreur la plus faible dans les deux colonnes et devient la référence. C’est aussi le seul candidat ici dont le modèle ajusté peut simuler de nombreuses trajectoires de 13 semaines avec leur incertitude, ce dont l’étape suivante a besoin. TimesFM l’a égalé sur le total des 13 semaines avec pour seule entrée la série brute. Prophet a à peine amélioré le total des 13 semaines de la méthode naïve saisonnière, car sa saison annuelle suit un cycle de 365.25 jours alors que cette entreprise planifie sur des années fixes de 52 semaines. Sur une seule série synthétique, aucun de ces deux résultats ne classe les méthodes. La ligne LightGBM montre la taille de la fuite d’information : 12.3 % à origine glissante contre 4.5 % avec la répartition aléatoire.</p>
 </section>
 </section>
 <section id="sec-target-probability" class="level2">
@@ -868,17 +868,18 @@ Figure&nbsp;5: Trajectoire vers la fin d’année selon le plan actuel
 </figcaption>
 </figure>
 </div>
-<p>La prévision médiane de fin d’année est de $10.91M, avec un intervalle à 80 % allant de $10.79M à $11.05M. La médiane est ce qui figure généralement dans les présentations, mais ce n’est pas un engagement. L’objectif de $11.12M se situe juste au-dessus du P90 : la probabilité de l’atteindre avec le plan actuel est donc de 4 %. Ce n’est pas impossible, mais c’est clairement peu probable, et l’équipe dispose désormais d’un chiffre pour quantifier à quel point.</p>
-<p>Les 4 % proviennent d’une distribution simulée ; celle-ci mérite donc sa propre vérification, sur la grandeur qui guide notre décision : le total des 13 semaines. La vérification consiste à rejouer la même procédure à des origines passées et à examiner si le total réalisé se situe dans la bande à 80 %. Sur 15 fenêtres de 13 semaines sans chevauchement, cela s’est produit 12 fois, soit un résultat proche du taux nominal de 80 %, et les trois répétitions de septembre ont donné une couverture de 2 sur 3. Cela étaye la dispersion de la bande, pas sa queue : l’objectif se situe au-delà du P90, là où 15 fenêtres ne permettent pas de certifier un chiffre aussi faible que 4 %. Lisez la réponse comme quelques pour cent, et planifiez sur la base de « clairement peu probable » plutôt que de 4.0 %.</p>
+<p>La prévision médiane de fin d’année est de $10.91M, avec un intervalle à 80 % allant de $10.79M à $11.05M. Les présentations montrent généralement la médiane, qui a environ 50 % de chances d’être dépassée. L’objectif de $11.12M se situe juste au-dessus du P90 : la probabilité de l’atteindre avec le plan actuel est donc de 4 %. Ce n’est pas impossible, mais c’est clairement peu probable, et l’équipe dispose désormais d’un chiffre pour quantifier à quel point.</p>
+<p>Les 4 % proviennent d’une distribution simulée ; celle-ci mérite donc sa propre vérification, sur la grandeur qui guide notre décision : le total des 13 semaines. La vérification consiste à rejouer la même procédure à des origines passées et à examiner si le total réalisé se situe dans la bande à 80 %. Sur 15 fenêtres de 13 semaines sans chevauchement, cela s’est produit 12 fois, soit un résultat proche du taux nominal de 80 %, et les trois répétitions de septembre ont donné une couverture de 2 sur 3. Cette vérification couvre le corps de la distribution. L’objectif se situe au-delà du P90, là où 15 fenêtres ne permettent pas de vérifier une probabilité de queue aussi faible que 4 % ; considérez donc la réponse comme quelques pour cent, et planifiez sur cette lecture.</p>
 </section>
 <section id="sec-marketing-scenarios" class="level2">
 <h2 class="anchored" data-anchor-id="sec-marketing-scenarios">Les scénarios marketing exigent des incréments mesurés</h2>
 <p>La distribution de référence indique où le plan actuel a des chances d’aboutir. La question suivante, dans toutes les réunions de planification, est de savoir si une campagne supplémentaire changerait la réponse.</p>
-<p>L’an dernier, les semaines de promotion des fêtes ont enregistré des ventes supérieures d’environ 22 % à celles des semaines voisines ; il est donc tentant d’inscrire +22 % pour une campagne supplémentaire. Cet écart n’est pas un effet de campagne. Les promotions sont programmées pendant les semaines les plus fortes : une partie des 22 % relève donc de la saisonnalité. La référence intègre déjà l’effet moyen des promotions récurrentes : l’essentiel du reste figure donc déjà dans la prévision. Ce qui subsiste mêle l’effet de la promotion et tout ce que le modèle a manqué. Une prévision indique ce qui va probablement se passer, pas ce qui s’est produit grâce au marketing. Ainsi, <span class="math inline">\(\Delta_s\)</span> provient de l’extérieur de la prévision, et il exige deux éléments avant de pouvoir entrer dans la simulation : une condition de référence, c’est-à-dire ce par rapport à quoi il constitue un supplément, et une distribution d’incertitude.</p>
+<p>L’an dernier, les semaines de promotion des fêtes ont enregistré des ventes supérieures d’environ 22 % à celles des semaines voisines ; il est donc tentant d’inscrire +22 % pour une campagne supplémentaire. Cet écart mêle la saisonnalité, les promotions récurrentes déjà intégrées à la référence et la campagne elle-même. Les promotions sont programmées pendant les semaines les plus fortes : une partie des 22 % relève donc de la saisonnalité. La référence intègre déjà l’effet moyen des promotions récurrentes : l’essentiel du reste figure donc déjà dans la prévision. Ce qui subsiste mêle l’effet de la promotion et tout ce que le modèle a manqué.</p>
+<p>Une prévision estime le niveau des ventes, pas la part de celles-ci causée par le marketing ; <span class="math inline">\(\Delta_s\)</span> doit donc provenir d’une mesure extérieure à la prévision. Il exige deux éléments avant de pouvoir entrer dans la simulation : une condition de référence, c’est-à-dire ce par rapport à quoi il constitue un supplément, et une distribution d’incertitude.</p>
 <div id="tbl-scenarios" class="quarto-float quarto-figure quarto-figure-center anchored" data-tbl-colwidths="[24,38,38]">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-scenarios-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Table&nbsp;3: Incréments des scénarios et leurs sources
+Table&nbsp;3: Incréments des scénarios et leurs sources (valeurs illustratives)
 </figcaption>
 <div aria-describedby="tbl-scenarios-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <table class="caption-top table">
@@ -988,7 +989,7 @@ Figure&nbsp;6: Ventes de fin d’année simulées pour chaque scénario
 </figcaption>
 </figure>
 </div>
-<p>La campagne fait passer la médiane de $10.91M à $11.00M. Le tableau présente simultanément l’amélioration des chances et l’écart qui subsiste, ce qu’une prévision ponctuelle ne peut pas faire.</p>
+<p>La campagne fait passer la médiane de $10.91M à $11.00M. Le tableau montre à la fois la probabilité améliorée et l’écart qui subsiste, ce qu’une simple prévision ponctuelle ne peut pas faire.</p>
 </section>
 <section id="sec-forecast-to-decision" class="level2">
 <h2 class="anchored" data-anchor-id="sec-forecast-to-decision">De la prévision à la décision</h2>
@@ -996,7 +997,7 @@ Figure&nbsp;6: Ventes de fin d’année simulées pour chaque scénario
 <div id="tbl-reverse" class="quarto-float quarto-figure quarto-figure-center anchored" data-tbl-colwidths="[62,38]">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-reverse-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Table&nbsp;5: Ce qu’il faudrait, mis en regard de ce qui s’est produit
+Table&nbsp;5: Hausse nécessaire, comparée au plus grand dépassement historique de septembre
 </figcaption>
 <div aria-describedby="tbl-reverse-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <table class="caption-top table">
@@ -1033,14 +1034,14 @@ Table&nbsp;5: Ce qu’il faudrait, mis en regard de ce qui s’est produit
 </figure>
 </div>
 <p>Atteindre l’objectif exige un trimestre supérieur de 7.2 % à la médiane de référence. Aucune des trois répétitions de septembre ne s’en est approchée ; le plus grand dépassement était de 6.0 %, et même les deux incréments réunis ajoutent environ 5 %. La campagne fait passer les chances de 4 % à 13 %, mais l’objectif reste peu probable.</p>
-<p>L’équipe a désormais un choix à faire : investir davantage, modifier le plan d’exploitation, ou revoir ses attentes. Quelle que soit l’option retenue, l’écart est un chiffre autour duquel elle peut planifier dès septembre. Il repose sur une référence validée à l’horizon utilisé pour la décision, et sur des incréments mesurés en dehors de la prévision.</p>
+<p>L’équipe a désormais un choix à faire : investir davantage, modifier le plan d’exploitation, ou revoir ses attentes. Quelle que soit l’option retenue, l’écart est un chiffre autour duquel elle peut planifier dès septembre. Les deux entrées sont vérifiables : la référence a été validée à un horizon de 13 semaines, et chaque incrément désigne la mesure dont il doit provenir.</p>
 </section>
 <section id="key-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="key-takeaways">Points clés à retenir</h2>
 <ul>
-<li>Validez la référence à l’horizon et au point du calendrier utilisés pour la décision, avec uniquement l’information disponible à chaque origine. Une répartition aléatoire répond à une autre question.</li>
-<li>Décidez à partir de la distribution, pas du point. Simuler des trajectoires complètes sur l’horizon transforme une prévision médiane en une probabilité de 4 % d’atteindre l’objectif, à lire comme quelques pour cent, pas comme une fréquence précise.</li>
-<li>Un scénario est la référence augmentée d’un incrément mesuré séparément, chacun avec une condition de référence et une incertitude. Les ventes des semaines de promotion ne sont pas un incrément.</li>
+<li>Validez la référence à l’horizon et au point du calendrier utilisés pour la décision, avec uniquement l’information disponible à chaque origine. Une répartition aléatoire évalue une interpolation semaine par semaine et ne produit jamais la trajectoire de 13 semaines.</li>
+<li>Décidez à partir de la distribution simulée du total des 13 semaines, pas de la trajectoire médiane : seule la distribution donne la probabilité d’atteindre l’objectif, 4 % ici, à lire comme quelques pour cent plutôt que comme une fréquence précise.</li>
+<li>Un scénario est la référence augmentée d’un incrément mesuré séparément, chacun avec une condition de référence et une incertitude. Les ventes des semaines de promotion incluent la saisonnalité et les promotions déjà intégrées à la référence ; elles surestiment donc l’incrément.</li>
 </ul>
 
 

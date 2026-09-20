@@ -645,8 +645,8 @@ window.Quarto = {
 <p><strong>Über die deutsche Ausgabe</strong><br>
 Diese Seite ist eine KI-Übersetzung der englischen Ausgabe von <em>Marketing Science in Python</em>. Die englische Ausgabe ist maßgeblich und hat bei Abweichungen Vorrang. Code, Notebooks und Text in Abbildungen bleiben auf Englisch. <a href="../../part3/sec3.5-meta-learners.html" class="translation-source-link">Englische Ausgabe lesen</a></p>
 </div>
-<p>Die Methoden der vorherigen Kapitel schätzen eine Zahl für eine ganze Gruppe: den durchschnittlichen Treatment-Effekt (ATE), also die durchschnittliche Wirkung eines Treatments über alle, die es erreicht hat. Aber im Marketing können Durchschnitte irreführend sein. Ein Coupon könnte die Käufe zum Beispiel im Durchschnitt um 5% steigern, aber diese Zahl verbirgt die eigentliche Geschichte. Manche Kunden reagieren vielleicht mit einem Lift von 20%, während andere keinen Effekt oder sogar einen Rückgang zeigen. Wenn Sie erkennen könnten, welche Kunden tatsächlich reagieren, könnten Sie Ihr Budget deutlich wirksamer einsetzen.</p>
-<p>Meta-Learner versuchen, Treatment-Effekte für jeden einzelnen Kunden zu schätzen. Aber wie sieht das in der Praxis tatsächlich aus?</p>
+<p>Ein Coupon, der die Käufe im Durchschnitt um 5% steigert, kann bei verschiedenen Kunden sehr unterschiedlich wirken: Manche reagieren vielleicht mit einem Lift von 20%, während andere keinen Effekt oder sogar einen Rückgang zeigen. Die Methoden der vorherigen Kapitel schätzen eine Zahl für eine ganze Gruppe, den durchschnittlichen Treatment-Effekt (ATE), also die durchschnittliche Wirkung eines Treatments über alle, die es erreicht hat. Im Marketing kann dieser Durchschnitt irreführend sein. Wenn Sie erkennen könnten, welche Kunden tatsächlich reagieren, könnten Sie Ihr Budget deutlich wirksamer einsetzen.</p>
+<p>Meta-Learner versuchen, Treatment-Effekte für jeden einzelnen Kunden zu schätzen. Der Rest dieses Kapitels definiert die Größe, die sie schätzen, und vergleicht die wichtigsten Ansätze.</p>
 <section id="treatment-effects-ate-cate-ite" class="level2">
 <h2 class="anchored" data-anchor-id="treatment-effects-ate-cate-ite">Treatment-Effekte: ATE, CATE, ITE</h2>
 <p>Um den Treatment-Effekt zu definieren, greifen wir auf das Potential-Outcomes-Framework zurück. Der Treatment-Effekt ist der durch ein Treatment verursachte Unterschied in den Ergebnissen: formal <span class="math inline">\(\tau = Y(1) - Y(0)\)</span>, wobei <span class="math inline">\(Y(1)\)</span> das Ergebnis unter Treatment und <span class="math inline">\(Y(0)\)</span> das Ergebnis unter Kontrolle ist. Wenn zum Beispiel die potenzielle Kaufrate mit Coupon 20% und die Rate ohne Coupon 10% beträgt, ist der Treatment-Effekt 10%.</p>
@@ -666,7 +666,7 @@ Abbildung&nbsp;1: Der Treatment-Effekt als Differenz potenzieller Ergebnisse.
 <li>CATE (bedingter durchschnittlicher Treatment-Effekt): der durchschnittliche Effekt für Kunden mit bestimmten Merkmalen. „Hat der Coupon bei städtischen Kunden unter 30 besser funktioniert?“</li>
 <li>ITE (individueller Treatment-Effekt): der Effekt für eine bestimmte Person. In der Praxis nicht beobachtbar, aber der CATE liefert unsere beste Schätzung.</li>
 </ul>
-<p>Warum ist das wichtig? Weil sich nicht alle Kunden gleich verhalten. Ein preissensibler Kunde springt vielleicht auf einen Rabatt an, während ein markentreuer Kunde ohnehin zum vollen Preis gekauft hätte. Wenn Sie wissen, wer wer ist, können Sie Rabatte dort einsetzen, wo sie tatsächlich zusätzliche Verkäufe bringen, statt Marge an Kunden zu verschenken, die sowieso gekauft hätten.</p>
+<p>Diese Unterscheidung ist wichtig, weil Kunden nicht auf dasselbe Angebot gleich reagieren. Ein preissensibler Kunde kauft vielleicht nur mit Rabatt, während ein markentreuer Kunde ohnehin zum vollen Preis gekauft hätte. Wenn Sie wissen, wer wer ist, können Sie Rabatte dort einsetzen, wo sie tatsächlich zusätzliche Verkäufe bringen, statt Marge an Kunden zu verschenken, die sowieso gekauft hätten.</p>
 </section>
 <section id="why-we-need-meta-learners" class="level2">
 <h2 class="anchored" data-anchor-id="why-we-need-meta-learners">Warum wir Meta-Learner brauchen</h2>
@@ -715,7 +715,7 @@ Abbildung&nbsp;3: S-Learner: Ein Modell sagt beide potenziellen Ergebnisse vorhe
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'treatment_effect'</span>] <span class="op">=</span> df[<span class="st">'sales_treated'</span>] <span class="op">-</span> df[<span class="st">'sales_control'</span>]</span>
 <span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>ATE <span class="op">=</span> df[<span class="st">'treatment_effect'</span>].mean()</span></code></pre></div><button title="In die Zwischenablage kopieren" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Der S-Learner ist der einfachste Einstieg und oft eine vernünftige Baseline. Aber er hat eine zentrale Schwäche: Wenn der Treatment-Effekt im Vergleich zu anderen Merkmalen klein ist, kann das Modell die Treatment-Variable am Ende ignorieren, besonders wenn Sie Regularisierung verwenden. Das heißt, Ihre CATE-Schätzungen können in Richtung null verzerrt sein.</p>
+<p>Der S-Learner ist der einfachste Einstieg und oft eine vernünftige Baseline. Aber er hat eine zentrale Schwäche: Wenn der Treatment-Effekt im Vergleich zu anderen Merkmalen klein ist, kann die Regularisierung den Beitrag der Treatment-Variable auf nahezu null schrumpfen lassen. Das heißt, Ihre CATE-Schätzungen können in Richtung null verzerrt sein.</p>
 </section>
 <section id="t-learner-two-separate-models" class="level2">
 <h2 class="anchored" data-anchor-id="t-learner-two-separate-models">T-Learner: Zwei getrennte Modelle</h2>
@@ -748,11 +748,11 @@ Abbildung&nbsp;4: T-Learner: Getrennte Modelle füllen jede Spalte potenzieller 
 <span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'treatment_effect'</span>] <span class="op">=</span> df[<span class="st">'sales_treated'</span>] <span class="op">-</span> df[<span class="st">'sales_control'</span>]</span>
 <span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>ATE <span class="op">=</span> df[<span class="st">'treatment_effect'</span>].mean()</span></code></pre></div><button title="In die Zwischenablage kopieren" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Der T-Learner ist flexibler, weil jedes Modell unterschiedliche Muster für Treatment- und Kontrollgruppe lernen kann. Aber es gibt einen Kompromiss: Er kann eine hohe Varianz haben, besonders wenn Ihre Treatment- und Kontrollgruppe unausgewogen sind. Wenn Sie die Vorhersagen subtrahieren, können sich die Fehler beider Modelle addieren.</p>
-<p>Der S-Learner ist also einfach, neigt aber dazu, Effekte zu unterschätzen. Der T-Learner vermeidet dieses spezielle Versagen, um den Preis verrauschterer Schätzungen. Was können wir als Nächstes tun?</p>
+<p>Der S-Learner ist einfach, neigt aber dazu, Effekte zu unterschätzen; der T-Learner vermeidet das, um den Preis verrauschterer Schätzungen. Die Methoden unten gehen beide Grenzen an.</p>
 </section>
 <section id="advanced-meta-learners" class="level2">
 <h2 class="anchored" data-anchor-id="advanced-meta-learners">Fortgeschrittene Meta-Learner</h2>
-<p>Über S und T hinaus gehen mehrere ausgefeiltere Methoden deren Grenzen an:</p>
+<p>Über S und T hinaus gibt es mehrere ausgefeiltere Methoden:</p>
 <ul>
 <li>X-Learner: Eine Erweiterung des T-Learners für unausgewogene Treatment-Gruppen. Er imputiert die fehlenden Kontrafakten und kombiniert sie mit Propensity-Score-Gewichtung. Funktioniert gut, wenn eine Gruppe viel größer ist als die andere.</li>
 <li>DR-Learner (Doubly Robust): Kombiniert Ergebnismodellierung und Propensity-Score-Schätzung. Konsistent, wenn eines der beiden Modelle korrekt spezifiziert ist, daher „doppelt robust“.</li>
@@ -768,13 +768,13 @@ Abbildung&nbsp;5: Meta-Learner-Methoden, von einfach bis komplex.
 </figcaption>
 </figure>
 </div>
-<p>Die Theorie sagt uns, was jede Methode optimieren soll. Aber der eigentliche Test ist zu sehen, wie sie auf demselben Datensatz abschneiden, wo die praktischen Unterschiede sichtbar werden.</p>
+<p>Welche davon am besten abschneidet, hängt von den Daten ab, deshalb wendet der nächste Abschnitt alle auf denselben Datensatz an.</p>
 </section>
 <section id="example-estimating-heterogeneous-email-effects" class="level2">
 <h2 class="anchored" data-anchor-id="example-estimating-heterogeneous-email-effects">Beispiel: Heterogene E-Mail-Effekte schätzen</h2>
-<p>Um zu sehen, wie sich diese Methoden verhalten, brauchen wir einen Datensatz, an dem wir ihre Arbeit überprüfen können. Das ist schwieriger, als es klingt. In echten Daten beobachten wir nie den wahren Treatment-Effekt eines Kunden, also können wir nicht sagen, ob ein Meta-Learner das richtige Muster wiedergefunden oder nur plausibles Rauschen erzeugt hat.</p>
-<p>Wir lösen das mit einem semisynthetischen Beispiel auf Basis von Kevin Hillstroms MineThatData-E-Mail-Experiment, einem klassischen Marketing-Datensatz mit 64,000 Kunden, die zufällig einer Herrenartikel-E-Mail, einer Damen-E-Mail oder keiner E-Mail zugewiesen wurden. Wir behalten die echten Kundenmerkmale (Recency, Kaufhistorie, Kanal und die übrigen) und die echte randomisierte Zuweisung für den binären Kontrast Herren-E-Mail gegen keine E-Mail. Nur die Ergebnisse sind simuliert: Wir definieren eine Baseline-Kaufwahrscheinlichkeit und einen Treatment-Effekt <span class="math inline">\(\tau(x)\)</span>, der für Käufer von Herrenartikeln, kürzlich aktive Kunden und Multichannel-Käufer größer ist. Weil wir <span class="math inline">\(\tau(x)\)</span> selbst geschrieben haben, kennen wir den wahren CATE jedes Kunden und können jeden Learner daran bewerten.</p>
-<p>Das ist ein Lehrmittel. Das Ziel ist nicht, den durchschnittlichen Effekt besser zu schätzen, als es das Experiment ohnehin tut, sondern zu prüfen, ob ein Meta-Learner die Heterogenität wiederfindet, die wir eingepflanzt haben.</p>
+<p>Um zu sehen, wie sich diese Methoden verhalten, brauchen wir einen Datensatz, an dem wir ihre Arbeit überprüfen können. In echten Daten beobachten wir nie den wahren Treatment-Effekt eines Kunden, also können wir nicht sagen, ob ein Meta-Learner das richtige Muster wiedergefunden oder nur plausibles Rauschen erzeugt hat.</p>
+<p>Wir lösen das mit einem semisynthetischen Beispiel auf Basis von Kevin Hillstroms MineThatData-E-Mail-Experiment, einem klassischen Marketing-Datensatz mit 64,000 Kunden, die zufällig einer Herrenartikel-E-Mail, einer Damen-E-Mail oder keiner E-Mail zugewiesen wurden. Wir behalten die echten Kundenmerkmale (Recency, Kaufhistorie, Kanal und die übrigen) und die echte randomisierte Zuweisung für den binären Kontrast Herren-E-Mail gegen keine E-Mail. Nur die Ergebnisse sind simuliert: Wir definieren eine Baseline-Kaufwahrscheinlichkeit und einen Treatment-Effekt <span class="math inline">\(\tau(x)\)</span>, der für Käufer von Herrenartikeln, kürzlich aktive Kunden und Multichannel-Käufer größer ist. Weil wir <span class="math inline">\(\tau(x)\)</span> selbst geschrieben haben, kennen wir den wahren CATE jedes Kunden, und jeder Learner kann daran verglichen werden.</p>
+<p>Dieser Aufbau dient der Lehre: Das Ziel ist zu prüfen, ob ein Meta-Learner die Heterogenität wiederfindet, die wir eingepflanzt haben, nicht, den durchschnittlichen Effekt besser zu schätzen, als es das Experiment ohnehin tut.</p>
 <p><strong>Begleit-Notebook:</strong> <code>sec3.5_meta_learners.ipynb</code> vergleicht S-, T-, X- und DR-Learner sowie CausalForestDML mit dem bekannten wahren CATE im semisynthetischen MineThatData-Experiment.<br>
 <a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.5_meta_learners.ipynb">Auf GitHub ansehen</a></p>
 <p>Alle fünf Learner finden den durchschnittlichen Effekt wieder und, nützlicher noch, das Muster auf Segmentebene. Das Streudiagramm unten vergleicht den geschätzten CATE mit dem wahren Effekt für einen repräsentativen Learner. Die Schätzungen sammeln sich um die 45-Grad-Linie, die Kunden werden also in ungefähr der richtigen Reihenfolge gereiht, mit einer vertikalen Streuung, die das Rauschen binärer Ergebnisse widerspiegelt.</p>
@@ -799,7 +799,7 @@ Abbildung&nbsp;7: Geschätzter gegen wahren CATE nach Segment.
 </figcaption>
 </figure>
 </div>
-<p>Welcher Learner die Kunden am besten reiht, hängt von den Daten ab. Am wahren CATE auf dem Holdout-Set bewertet, begünstigt dieses saubere, ausgewogene Experiment die einfachen Learner:</p>
+<p>Welcher Learner die Kunden am besten reiht, hängt von den Daten ab. Mit dem wahren CATE auf dem Holdout-Set verglichen, begünstigt dieses saubere, ausgewogene Experiment die einfachen Learner:</p>
 <div id="tbl-cate-recovery" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-cate-recovery-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -851,14 +851,14 @@ Tabelle&nbsp;1: Wiederfindung des wahren CATE nach Learner auf dem Holdout-Set.
 </div>
 </figure>
 </div>
-<p>Alle fünf finden den durchschnittlichen Effekt von rund 11 Punkten wieder, den wir eingepflanzt haben; was sie trennt, ist die Korrelation mit dem wahren CATE, und die bestimmt die Qualität der Reihung. S-Learner und X-Learner liegen vorn, während die Zwei-Modell- und Cross-Fitting-Learner einen Varianzpreis zahlen. Auf verrauschteren oder unausgewogenen Daten kann sich die Reihenfolge ändern, und genau deshalb prüfen Sie die Wiederfindung, statt einer Methode aufgrund ihres Rufs zu vertrauen.</p>
+<p>Alle fünf finden den durchschnittlichen Effekt von rund 11 Punkten wieder, den wir eingepflanzt haben; was sie trennt, ist die Korrelation mit dem wahren CATE, und die bestimmt die Qualität der Reihung. S-Learner und X-Learner liegen vorn, während die Zwei-Modell- und Cross-Fitting-Learner auf diesen Daten eine höhere Varianz haben. Auf verrauschteren oder unausgewogenen Daten kann sich die Reihenfolge ändern, vergleichen Sie Learner auf echten Daten also anhand zurückgehaltener Experimentergebnisse und prüfen Sie, ob ihre Reihungen stabil sind; §3.6 zeigt, wie.</p>
 </section>
 <section id="what-to-check-before-trusting-cate" class="level2">
 <h2 class="anchored" data-anchor-id="what-to-check-before-trusting-cate">Was vor dem Vertrauen in CATE zu prüfen ist</h2>
-<p>Dieses Beispiel war absichtlich nachsichtig: randomisiertes Treatment, perfekte Überlappung und eine bekannte Antwort. Echte Projekte sind das selten. Bevor Sie auf Basis von CATE-Schätzungen handeln:</p>
+<p>Dieses Beispiel hatte ein randomisiertes Treatment, vollständige Überlappung und eine bekannte Antwort, was echte Projekte selten haben. Bevor Sie auf Basis von CATE-Schätzungen handeln:</p>
 <ul>
 <li>Ein Meta-Learner erzeugt keinen kausalen Vergleich. Er modelliert, wie der Effekt innerhalb eines Vergleichs variiert, den Sie bereits haben; auf Beobachtungsdaten erbt der CATE also jedes Confounding-Problem, das der zugrunde liegende Vergleich trägt.</li>
-<li>Der individuelle Treatment-Effekt wird in echten Daten nie beobachtet. Wir konnten die Learner hier nur bewerten, weil wir die Wahrheit simuliert haben.</li>
+<li>Der individuelle Treatment-Effekt wird in echten Daten nie beobachtet. Wir konnten die Learner hier nur prüfen, weil wir die Wahrheit simuliert haben.</li>
 <li>CATE ist eine Modellschätzung, keine Messung. Lesen Sie ihn auf Gruppen- oder Segmentebene, nicht als wörtliche Zahl für einen einzelnen Kunden.</li>
 <li>Plausibilisieren Sie den Durchschnitt. Wenn der mittlere geschätzte CATE weit von einer einfachen Mittelwertdifferenz in einem Experiment entfernt ist, stimmt etwas nicht.</li>
 <li>Prüfen Sie die Stabilität über Learner hinweg. Wenn S, T, X und der Causal Forest bei der Reihung nicht übereinstimmen, vertrauen Sie noch keinem von ihnen.</li>
@@ -869,7 +869,7 @@ Tabelle&nbsp;1: Wiederfindung des wahren CATE nach Learner auf dem Holdout-Set.
 <h2 class="anchored" data-anchor-id="key-takeaways">Das Wichtigste in Kürze</h2>
 <ul>
 <li>Der ATE fragt, ob das Treatment gewirkt hat; der CATE fragt, für wen. Meta-Learner schätzen diese Variation innerhalb eines kausalen Vergleichs, den Sie bereits haben, und keiner von ihnen repariert Confounding, das Sie nicht gemessen haben.</li>
-<li>CATE ist eine Modellschätzung auf Gruppenebene, und der wahre Effekt wird in echten Daten nie beobachtet, also verdient sich kein Learner Vertrauen durch seinen Ruf. Prüfen Sie den Mittelwert gegen das Experiment, die Stabilität über Learner hinweg und die Überlappung.</li>
+<li>CATE ist eine Modellschätzung auf Gruppenebene, und der wahre Effekt wird in echten Daten nie beobachtet, also sollte kein Learner allein aufgrund seines Rufs gewählt werden. Prüfen Sie den Mittelwert gegen das Experiment, die Stabilität über Learner hinweg und die Überlappung.</li>
 </ul>
 
 

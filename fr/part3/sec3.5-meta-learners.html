@@ -645,8 +645,8 @@ window.Quarto = {
 <p><strong>À propos de la version française</strong><br>
 Cette page est une traduction par IA de la version anglaise de <em>Marketing Science in Python</em>. La version anglaise fait foi et prévaut en cas de divergence. Le code, les notebooks et le texte intégré aux images restent en anglais. <a href="../../part3/sec3.5-meta-learners.html" class="translation-source-link">Lire la version anglaise</a></p>
 </div>
-<p>Les méthodes des chapitres précédents estiment un seul nombre pour tout un groupe : l’effet moyen du traitement (ATE), c’est-à-dire l’impact moyen d’un traitement sur l’ensemble des personnes qui l’ont reçu. Mais en marketing, les moyennes peuvent être trompeuses. Par exemple, un bon de réduction peut augmenter les achats de 5 % en moyenne, mais ce chiffre masque la réalité. Certains clients peuvent réagir par une hausse de 20 %, tandis que d’autres ne présentent aucun effet, voire une baisse. Si vous pouviez identifier les clients qui réagissent réellement, vous pourriez dépenser votre budget bien plus efficacement.</p>
-<p>Les méta-apprenants cherchent à estimer les effets de traitement pour chaque client. Mais à quoi cela ressemble-t-il concrètement ?</p>
+<p>Un bon de réduction qui augmente les achats de 5 % en moyenne peut avoir des effets très différents selon les clients : certains peuvent réagir par une hausse de 20 %, tandis que d’autres ne présentent aucun effet, voire une baisse. Les méthodes des chapitres précédents estiment un seul nombre pour tout un groupe, l’effet moyen du traitement (ATE), c’est-à-dire l’impact moyen d’un traitement sur l’ensemble des personnes qui l’ont reçu. En marketing, cette moyenne peut être trompeuse. Si vous pouviez identifier les clients qui réagissent réellement, vous pourriez dépenser votre budget bien plus efficacement.</p>
+<p>Les méta-apprenants cherchent à estimer les effets de traitement pour chaque client. La suite de ce chapitre définit la quantité qu’ils estiment et compare les principales approches.</p>
 <section id="treatment-effects-ate-cate-ite" class="level2">
 <h2 class="anchored" data-anchor-id="treatment-effects-ate-cate-ite">Effets de traitement : ATE, CATE, ITE</h2>
 <p>Pour définir l’effet de traitement, nous nous appuyons sur le cadre des résultats potentiels. L’effet de traitement est la différence de résultats causée par un traitement : formellement, <span class="math inline">\(\tau = Y(1) - Y(0)\)</span>, où <span class="math inline">\(Y(1)\)</span> est le résultat sous traitement et <span class="math inline">\(Y(0)\)</span> le résultat en condition témoin. Par exemple, si le taux d’achat potentiel avec un bon de réduction est de 20 % et le taux sans ce bon de 10 %, l’effet de traitement est de 10 %.</p>
@@ -666,7 +666,7 @@ Figure&nbsp;1: L’effet de traitement comme différence entre résultats potent
 <li>CATE (effet moyen conditionnel du traitement) : l’effet moyen pour les clients présentant des caractéristiques précises. « Le bon de réduction a-t-il mieux fonctionné auprès des clients urbains de moins de 30 ans ? »</li>
 <li>ITE (effet individuel du traitement) : l’effet pour un individu donné. Il est inobservable en pratique, mais le CATE en fournit notre meilleure estimation.</li>
 </ul>
-<p>Pourquoi cette distinction compte-t-elle ? Parce que tous les clients ne se comportent pas de la même façon. Un client sensible au prix peut se précipiter sur une remise, tandis qu’un client fidèle à la marque aurait de toute façon acheté au prix fort. Si vous savez les distinguer, vous pouvez cibler les remises là où elles génèrent réellement des ventes supplémentaires, au lieu de céder de la marge à des clients qui auraient acheté quoi qu’il arrive.</p>
+<p>Cette distinction compte parce que les clients ne réagissent pas tous de la même façon à une même offre. Un client sensible au prix peut n’acheter qu’avec une remise, tandis qu’un client fidèle à la marque aurait de toute façon acheté au prix fort. Si vous savez les distinguer, vous pouvez cibler les remises là où elles génèrent réellement des ventes supplémentaires, au lieu de céder de la marge à des clients qui auraient acheté quoi qu’il arrive.</p>
 </section>
 <section id="why-we-need-meta-learners" class="level2">
 <h2 class="anchored" data-anchor-id="why-we-need-meta-learners">Pourquoi avons-nous besoin de méta-apprenants ?</h2>
@@ -715,7 +715,7 @@ Figure&nbsp;3: Apprenant S : un modèle prédit les deux résultats potentiels.
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'treatment_effect'</span>] <span class="op">=</span> df[<span class="st">'sales_treated'</span>] <span class="op">-</span> df[<span class="st">'sales_control'</span>]</span>
 <span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>ATE <span class="op">=</span> df[<span class="st">'treatment_effect'</span>].mean()</span></code></pre></div><button title="Copier vers le presse-papier" class="code-copy-button"><i class="bi"></i></button></div>
-<p>L’apprenant S est la façon la plus simple de commencer et constitue souvent une référence raisonnable. Mais il présente une faiblesse majeure : si l’effet de traitement est faible par rapport aux autres variables explicatives, le modèle peut finir par ignorer la variable de traitement, surtout si vous utilisez une régularisation. Vos estimations du CATE peuvent alors être biaisées vers zéro.</p>
+<p>L’apprenant S est la façon la plus simple de commencer et constitue souvent une référence raisonnable. Mais il présente une faiblesse majeure : si l’effet de traitement est faible par rapport aux autres variables explicatives, la régularisation peut réduire la contribution de la variable de traitement à presque zéro. Vos estimations du CATE peuvent alors être biaisées vers zéro.</p>
 </section>
 <section id="t-learner-two-separate-models" class="level2">
 <h2 class="anchored" data-anchor-id="t-learner-two-separate-models">Apprenant T : deux modèles distincts</h2>
@@ -748,11 +748,11 @@ Figure&nbsp;4: Apprenant T : des modèles distincts remplissent chaque colonne d
 <span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'treatment_effect'</span>] <span class="op">=</span> df[<span class="st">'sales_treated'</span>] <span class="op">-</span> df[<span class="st">'sales_control'</span>]</span>
 <span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>ATE <span class="op">=</span> df[<span class="st">'treatment_effect'</span>].mean()</span></code></pre></div><button title="Copier vers le presse-papier" class="code-copy-button"><i class="bi"></i></button></div>
 <p>L’apprenant T est plus flexible, car chaque modèle peut apprendre des relations différentes pour les groupes traité et témoin. Mais il y a une contrepartie : sa variance peut être élevée, surtout si les groupes traité et témoin sont déséquilibrés. Lorsque vous soustrayez les prédictions, les erreurs des deux modèles peuvent s’additionner.</p>
-<p>L’apprenant S est donc simple, mais tend à sous-estimer les effets. L’apprenant T évite ce problème particulier, au prix d’estimations plus bruitées. Que pouvons-nous faire ensuite ?</p>
+<p>L’apprenant S est simple, mais tend à sous-estimer les effets ; l’apprenant T évite ce problème, au prix d’estimations plus bruitées. Les méthodes ci-dessous répondent à ces deux limites.</p>
 </section>
 <section id="advanced-meta-learners" class="level2">
 <h2 class="anchored" data-anchor-id="advanced-meta-learners">Méta-apprenants avancés</h2>
-<p>Au-delà des apprenants S et T, plusieurs méthodes plus élaborées répondent à leurs limites :</p>
+<p>Au-delà des apprenants S et T, il existe plusieurs méthodes plus élaborées :</p>
 <ul>
 <li>Apprenant X : une extension de l’apprenant T conçue pour les groupes de traitement déséquilibrés. Il impute les contrefactuels manquants et les combine au moyen d’une pondération par le score de propension. Il fonctionne bien lorsqu’un groupe est beaucoup plus grand que l’autre.</li>
 <li>Apprenant DR (doublement robuste) : il combine la modélisation du résultat et l’estimation du score de propension. Il est convergent si l’un ou l’autre des modèles est correctement spécifié, d’où « doublement robuste ».</li>
@@ -768,13 +768,13 @@ Figure&nbsp;5: Méthodes de méta-apprentissage, des plus simples aux plus compl
 </figcaption>
 </figure>
 </div>
-<p>La théorie nous indique ce que chaque méthode est censée optimiser. Mais le véritable test consiste à observer leurs performances sur le même jeu de données, où les différences pratiques deviennent visibles.</p>
+<p>Laquelle de ces méthodes fonctionne le mieux dépend des données ; la section suivante les applique donc toutes au même jeu de données.</p>
 </section>
 <section id="example-estimating-heterogeneous-email-effects" class="level2">
 <h2 class="anchored" data-anchor-id="example-estimating-heterogeneous-email-effects">Exemple : estimer les effets hétérogènes d’un e-mail</h2>
-<p>Pour voir comment ces méthodes se comportent, nous avons besoin d’un jeu de données permettant de vérifier leur travail. C’est plus difficile qu’il n’y paraît. Dans les données réelles, nous n’observons jamais le véritable effet de traitement d’un client ; nous ne pouvons donc pas savoir si un méta-apprenant a retrouvé la bonne structure ou simplement produit un bruit plausible.</p>
-<p>Nous résolvons ce problème avec un exemple semi-synthétique construit à partir de l’expérience d’e-mailing MineThatData de Kevin Hillstrom, un jeu de données classique en marketing portant sur 64 000 clients répartis aléatoirement entre un e-mail proposant des articles pour hommes, un e-mail proposant des articles pour femmes et aucun e-mail. Nous conservons les caractéristiques réelles des clients (récence, historique d’achat, canal et les autres) ainsi que l’affectation aléatoire réelle pour la comparaison binaire entre e-mail pour hommes et absence d’e-mail. Seuls les résultats sont simulés : nous définissons une probabilité d’achat de base et un effet de traitement <span class="math inline">\(\tau(x)\)</span> plus élevé pour les acheteurs d’articles pour hommes, les clients récemment actifs et les acheteurs multicanaux. Comme nous avons nous-mêmes défini <span class="math inline">\(\tau(x)\)</span>, nous connaissons le véritable CATE de chaque client et pouvons évaluer chaque apprenant par rapport à lui.</p>
-<p>Il s’agit d’un dispositif pédagogique. L’objectif n’est pas de mieux estimer l’effet moyen que ne le fait déjà l’expérience, mais de vérifier si un méta-apprenant retrouve l’hétérogénéité que nous avons introduite.</p>
+<p>Pour voir comment ces méthodes se comportent, nous avons besoin d’un jeu de données permettant de vérifier leur travail. Dans les données réelles, nous n’observons jamais le véritable effet de traitement d’un client ; nous ne pouvons donc pas savoir si un méta-apprenant a retrouvé la bonne structure ou simplement produit un bruit plausible.</p>
+<p>Nous résolvons ce problème avec un exemple semi-synthétique construit à partir de l’expérience d’e-mailing MineThatData de Kevin Hillstrom, un jeu de données classique en marketing portant sur 64 000 clients répartis aléatoirement entre un e-mail proposant des articles pour hommes, un e-mail proposant des articles pour femmes et aucun e-mail. Nous conservons les caractéristiques réelles des clients (récence, historique d’achat, canal et les autres) ainsi que l’affectation aléatoire réelle pour la comparaison binaire entre e-mail pour hommes et absence d’e-mail. Seuls les résultats sont simulés : nous définissons une probabilité d’achat de base et un effet de traitement <span class="math inline">\(\tau(x)\)</span> plus élevé pour les acheteurs d’articles pour hommes, les clients récemment actifs et les acheteurs multicanaux. Comme nous avons nous-mêmes défini <span class="math inline">\(\tau(x)\)</span>, nous connaissons le véritable CATE de chaque client, et chaque apprenant peut être comparé à celui-ci.</p>
+<p>Ce dispositif est pédagogique : l’objectif est de vérifier si un méta-apprenant retrouve l’hétérogénéité que nous avons introduite, et non de mieux estimer l’effet moyen que ne le fait déjà l’expérience.</p>
 <p><strong>Notebook associé :</strong> <code>sec3.5_meta_learners.ipynb</code> compare les apprenants S, T, X et DR ainsi que CausalForestDML au véritable CATE connu dans l’expérience semi-synthétique MineThatData.<br>
 <a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.5_meta_learners.ipynb">Voir sur GitHub</a></p>
 <p>Les cinq apprenants retrouvent l’effet moyen et, ce qui est plus utile, la structure au niveau des segments. Le nuage de points ci-dessous compare le CATE estimé à l’effet véritable pour un apprenant représentatif. Les estimations se concentrent autour de la droite à 45 degrés : les clients sont donc classés dans un ordre globalement correct, avec une dispersion verticale qui reflète le bruit des résultats binaires.</p>
@@ -799,7 +799,7 @@ Figure&nbsp;7: CATE estimé et CATE véritable par segment.
 </figcaption>
 </figure>
 </div>
-<p>L’apprenant qui classe le mieux les clients dépend des données. Évaluée par rapport au véritable CATE sur l’échantillon réservé à l’évaluation, cette expérience sans complications et équilibrée favorise les apprenants simples :</p>
+<p>L’apprenant qui classe le mieux les clients dépend des données. Comparée au véritable CATE sur l’échantillon réservé à l’évaluation, cette expérience sans complications et équilibrée favorise les apprenants simples :</p>
 <div id="tbl-cate-recovery" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-cate-recovery-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -851,14 +851,14 @@ Table&nbsp;1: Restitution du véritable CATE par apprenant sur l’échantillon 
 </div>
 </figure>
 </div>
-<p>Les cinq retrouvent l’effet moyen d’environ 11 points que nous avons introduit ; ce qui les distingue est la corrélation avec le véritable CATE, laquelle détermine la qualité du classement. Les apprenants S et X arrivent en tête, tandis que les apprenants à deux modèles et ceux utilisant l’ajustement croisé en paient le prix en variance. Sur des données plus bruitées ou déséquilibrées, l’ordre peut changer : c’est précisément pourquoi il faut vérifier la restitution de l’effet plutôt que se fier à la réputation d’une méthode.</p>
+<p>Les cinq retrouvent l’effet moyen d’environ 11 points que nous avons introduit ; ce qui les distingue est la corrélation avec le véritable CATE, laquelle détermine la qualité du classement. Les apprenants S et X arrivent en tête, tandis que les apprenants à deux modèles et ceux utilisant l’ajustement croisé présentent une variance plus élevée sur ces données. Sur des données plus bruitées ou déséquilibrées, l’ordre peut changer ; sur des données réelles, comparez donc les apprenants sur des résultats expérimentaux réservés à l’évaluation et vérifiez que leurs classements sont stables ; la §3.6 montre comment.</p>
 </section>
 <section id="what-to-check-before-trusting-cate" class="level2">
 <h2 class="anchored" data-anchor-id="what-to-check-before-trusting-cate">Que vérifier avant de se fier au CATE ?</h2>
-<p>Cet exemple était délibérément favorable : traitement randomisé, recouvrement parfait et réponse connue. Les projets réels le sont rarement. Avant d’agir sur la base d’estimations du CATE :</p>
+<p>Cet exemple bénéficiait d’un traitement randomisé, d’un recouvrement complet et d’une réponse connue, ce que les projets réels ont rarement. Avant d’agir sur la base d’estimations du CATE :</p>
 <ul>
 <li>Un méta-apprenant ne crée pas de comparaison causale. Il modélise la variation de l’effet au sein d’une comparaison dont vous disposez déjà ; sur des données observationnelles, le CATE hérite donc de tous les problèmes de confusion que porte la comparaison sous-jacente.</li>
-<li>L’effet individuel du traitement n’est jamais observé dans les données réelles. Nous n’avons pu évaluer les apprenants ici que parce que nous avons simulé la vérité.</li>
+<li>L’effet individuel du traitement n’est jamais observé dans les données réelles. Nous n’avons pu vérifier les apprenants ici que parce que nous avons simulé la vérité.</li>
 <li>Le CATE est une estimation issue d’un modèle, pas une mesure. Interprétez-le au niveau du groupe ou du segment, et non comme un chiffre à prendre au pied de la lettre pour un client.</li>
 <li>Vérifiez la plausibilité de la moyenne. Si le CATE estimé moyen s’écarte fortement d’une simple différence de moyennes dans une expérience, quelque chose ne va pas.</li>
 <li>Vérifiez la stabilité entre apprenants. Si S, T, X et la forêt causale ne s’accordent pas sur le classement, ne vous fiez encore à aucun d’eux.</li>
@@ -869,7 +869,7 @@ Table&nbsp;1: Restitution du véritable CATE par apprenant sur l’échantillon 
 <h2 class="anchored" data-anchor-id="key-takeaways">Points à retenir</h2>
 <ul>
 <li>L’ATE demande si le traitement a fonctionné ; le CATE demande pour qui. Les méta-apprenants estiment cette variation au sein d’une comparaison causale dont vous disposez déjà, et aucun ne corrige les facteurs de confusion que vous n’avez pas mesurés.</li>
-<li>Le CATE est une estimation de modèle au niveau du groupe, et l’effet véritable n’est jamais observé dans les données réelles : aucun apprenant ne mérite donc votre confiance sur sa seule réputation. Vérifiez la moyenne par rapport à l’expérience, la stabilité entre apprenants et le recouvrement.</li>
+<li>Le CATE est une estimation de modèle au niveau du groupe, et l’effet véritable n’est jamais observé dans les données réelles : aucun apprenant ne doit donc être choisi sur sa seule réputation. Vérifiez la moyenne par rapport à l’expérience, la stabilité entre apprenants et le recouvrement.</li>
 </ul>
 
 

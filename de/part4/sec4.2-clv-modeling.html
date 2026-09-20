@@ -673,7 +673,7 @@ window.Quarto = {
 <p><strong>Über die deutsche Ausgabe</strong><br>
 Diese Seite ist eine KI-Übersetzung der englischen Ausgabe von <em>Marketing Science in Python</em>. Die englische Ausgabe ist maßgeblich und hat bei Abweichungen Vorrang. Code, Notebooks und Text in Abbildungen bleiben auf Englisch. <a href="../../part4/sec4.2-clv-modeling.html" class="translation-source-link">Englische Ausgabe lesen</a></p>
 </div>
-<p>Die meisten Marketingteams konzentrieren sich auf die Cost Per Acquisition (CPA), oft gleichbedeutend mit CAC (Customer Acquisition Cost) verwendet: Ein niedrigerer CPA bedeutet eine bessere Kampagne. Der Customer Lifetime Value (CLV), in Analytics- und SaaS-Kontexten oft LTV genannt, stellt die Frage neu. Statt zu fragen, wie günstig Sie einen Kunden gewinnen können, fragt er, wie viel jeder Kunde im Zeitverlauf wert ist, und nutzt diese Antwort, um die CPA-Obergrenze festzulegen.</p>
+<p>Die meisten Marketingteams konzentrieren sich auf die Cost Per Acquisition (CPA), oft gleichbedeutend mit CAC (Customer Acquisition Cost) verwendet: Ein niedrigerer CPA bedeutet eine bessere Kampagne. Der Customer Lifetime Value (CLV), in Analytics- und SaaS-Kontexten oft LTV genannt, stellt die Frage neu. Er schätzt, wie viel jeder Kunde im Zeitverlauf wert ist, und diese Schätzung legt die CPA-Obergrenze für das Segment fest.</p>
 <p>Dieses Kapitel zeigt, wie Sie den CLV auf Ebene des einzelnen Kunden mit probabilistischen BTYD-Modellen (BG/NBD + Gamma-Gamma mit PyMC-Marketing) vorhersagen und wie Sie diese Vorhersagen in Budgetentscheidungen überführen.</p>
 <section id="why-clv-changes-the-decision" class="level2">
 <h2 class="anchored" data-anchor-id="why-clv-changes-the-decision">Warum der CLV die Entscheidung verändert</h2>
@@ -692,7 +692,7 @@ Abbildung&nbsp;1: Vergleich des Erstkaufs: Studierende vs.&nbsp;Berufstätige.
 </figcaption>
 </figure>
 </div>
-<p>Nach dem ROAS des ersten Tages scheint die Wahl klar: mehr Budget in Studierende. Aber das langfristige Bild kehrt sie um. Studierende wandern nach der ersten Transaktion ab, sodass ihre Ausgaben über die gesamte Kundenbeziehung nahe $100 bleiben. Berufstätige kommen wieder und geben im Zeitverlauf mehr aus, mit durchschnittlichen Ausgaben von $400 über die gesamte Kundenbeziehung. Plötzlich ist das „teure“ Segment in Wirklichkeit das Schnäppchen.</p>
+<p>Der ROAS des ersten Tages begünstigt die Studierenden, aber die Ausgaben über die gesamte Kundenbeziehung kehren die Rangfolge um. Studierende wandern nach der ersten Transaktion ab, sodass ihre Ausgaben über die gesamte Kundenbeziehung nahe $100 bleiben. Berufstätige kommen wieder und geben im Zeitverlauf mehr aus, mit durchschnittlichen Ausgaben von $400 über die gesamte Kundenbeziehung.</p>
 <div id="fig-long-term-comparison" class="fig-sm quarto-float quarto-figure quarto-figure-center anchored" alt="Nach Wiederholungskäufen erzielen die Berufstätigen den doppelten Return on Ad Spend, während der studentische Kunde abwandert.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-long-term-comparison-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -735,7 +735,7 @@ Abbildung&nbsp;3: Fester CPA (links) vs.&nbsp;CLV-skalierter CPA (rechts).
 <p><span class="math display">\[
 \text{CLV} = \text{Average Order Value} \times \text{Purchase Frequency} \times \text{Customer Lifespan}
 \]</span></p>
-<p>Für eine Modemarke, deren Kunden $100 pro Bestellung ausgeben, 4-mal im Jahr einkaufen und 3 Jahre treu bleiben: <span class="math inline">\(\text{CLV} = 100 \times 4 \times 3 = \$1{,}200\)</span>. Einfach, intuitiv und nützlich für grobe Größenschätzungen des Geschäfts, aber zu grob für Entscheidungen auf Kundenebene. Sie scheitert an drei Punkten.</p>
+<p>Für eine Modemarke, deren Kunden $100 pro Bestellung ausgeben, 4-mal im Jahr einkaufen und 3 Jahre treu bleiben: <span class="math inline">\(\text{CLV} = 100 \times 4 \times 3 = \$1{,}200\)</span>. Das ist nützlich für grobe Größenschätzungen des Geschäfts, aber zu grob für Entscheidungen auf Kundenebene, und zwar aus drei Gründen.</p>
 <div id="fig-limitations" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Die drei Grenzen der traditionellen CLV-Formel: Kundenheterogenität, Unterschiede im Zeitpunkt des Erstkaufs und die Mehrdeutigkeit &quot;tot oder lebendig&quot;.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-limitations-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -786,7 +786,7 @@ Tabelle&nbsp;1: Der durchschnittliche CLV von $1,090 verzerrt beide Gruppen.
 </div>
 </figure>
 </div>
-<p>Der Durchschnitt von $1,090 existiert in den Daten und beschreibt niemanden. Sie brauchen den CLV auf Ebene des einzelnen Kunden.</p>
+<p>Der Gesamtdurchschnitt von $1,090 verdeckt den Unterschied zwischen den beiden Gruppen. Sie brauchen den CLV auf Ebene des einzelnen Kunden.</p>
 <p>Grenze 2: Unterschiedliche Zeitpunkte des Erstkaufs. Ein Kunde, der vor einem Jahr angefangen hat, liefert ein volles Jahr beobachtbarer Daten; einer, der vor drei Monaten angefangen hat, viel weniger. Rohe Kaufhäufigkeiten vermengen „geringes Engagement“ mit „Neuankömmling“, sofern Sie nicht um die Tenure bereinigen.</p>
 <div id="fig-tenure" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Kunden, die zu unterschiedlichen Zeitpunkten zu kaufen beginnen, haben unterschiedliche beobachtbare Zeitfenster, was rohe Kaufhäufigkeiten irreführend macht.">
 <figure class="quarto-float quarto-float-fig figure">
@@ -798,22 +798,22 @@ Abbildung&nbsp;5: Tenure-Verzerrung in den beobachtbaren Kundenzeitfenstern.
 </figcaption>
 </figure>
 </div>
-<p>Grenze 3: Tot oder lebendig? Bei Abonnements ist der Churn beobachtbar: Der Kunde kündigt. Im Einzelhandel und E-Commerce ist er das nicht. Ob ein Kunde als „lebendig“ zählt, hängt von seinem eigenen Muster ab. Wenn jemand, der monatlich kauft, drei Monate lang verstummt, ist das ein Warnsignal; wenn jemand, der alle sechs Monate kauft, drei Monate aussetzt, ist das normal.</p>
+<p>Grenze 3: Churn wird nicht beobachtet. Bei Abonnements ist der Churn beobachtbar: Der Kunde kündigt. Im Einzelhandel und E-Commerce ist er das nicht. Ob ein Kunde als „lebendig“ zählt, hängt von seinem eigenen Muster ab. Wenn jemand, der monatlich kauft, drei Monate lang verstummt, ist das ein Warnsignal; wenn jemand, der alle sechs Monate kauft, drei Monate aussetzt, ist das normal.</p>
 <div id="fig-dead-or-alive" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Dieselbe Lücke seit dem letzten Kauf eines Kunden kann vorübergehende Inaktivität oder dauerhaften Ausstieg bedeuten, was nicht direkt beobachtet wird.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-dead-or-alive-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="../images/part4/sec4.2/dead_or_alive.png" class="fig-md img-fluid figure-img" alt="Dieselbe Lücke seit dem letzten Kauf eines Kunden kann vorübergehende Inaktivität oder dauerhaften Ausstieg bedeuten, was nicht direkt beobachtet wird.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-dead-or-alive-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Abbildung&nbsp;6: Die Tot-oder-lebendig-Mehrdeutigkeit in Kaufmustern.
+Abbildung&nbsp;6: Unbeobachteter Churn in Kaufmustern.
 </figcaption>
 </figure>
 </div>
-<p>Alle drei Probleme haben dieselbe Wurzel: Ein einzelner Durchschnitt kann einen heterogenen Kundenstamm nicht abbilden. Die Lösung besteht darin, den CLV auf Ebene des einzelnen Kunden zu modellieren, und genau das tut BTYD.</p>
+<p>Das Modell muss Unterschiede im Kaufverhalten zwischen Kunden, die Zeit seit dem Erstkauf jedes Kunden und die Möglichkeit berücksichtigen, dass ein Kunde nicht mehr kauft. BTYD baut alle drei in ein einziges Modell auf Ebene des einzelnen Kunden ein.</p>
 </section>
 <section id="sec-btyd" class="level2">
 <h2 class="anchored" data-anchor-id="sec-btyd">BTYD: Das BG/NBD- + Gamma-Gamma-Framework</h2>
-<p>Buy-Till-You-Die-Modellierung (BTYD) besteht aus zwei zusammengefügten probabilistischen Modellen:</p>
+<p>Buy-Till-You-Die-Modellierung (BTYD) kombiniert zwei probabilistische Modelle:</p>
 <ol type="1">
 <li>BG/NBD sagt die Wahrscheinlichkeit vorher, dass ein Kunde noch aktiv ist, sowie seine künftige Zahl an Transaktionen.</li>
 <li>Gamma-Gamma schätzt seinen durchschnittlichen Bestellwert.</li>
@@ -905,7 +905,7 @@ Abbildung&nbsp;9: P(alive) fällt zwischen Käufen ab und setzt sich zurück.
 </section>
 <section id="sec-implementation" class="level2">
 <h2 class="anchored" data-anchor-id="sec-implementation">Implementierung mit PyMC-Marketing</h2>
-<p><a href="https://github.com/pymc-labs/pymc-marketing">PyMC-Marketing</a> baut auf <a href="https://www.pymc.io/">PyMC</a> auf und ersetzt die Bibliothek <code>lifetimes</code> (inzwischen im Wartungsmodus). Das Hauptmerkmal ist die eingebaute Quantifizierung der Unsicherheit: Jede CLV-Schätzung kommt mit HDI-Grenzen, sodass Sie sehen, wie sicher sich das Modell bei jedem Kunden ist.</p>
+<p><a href="https://github.com/pymc-labs/pymc-marketing">PyMC-Marketing</a> baut auf <a href="https://www.pymc.io/">PyMC</a> auf und ersetzt die Bibliothek <code>lifetimes</code> (inzwischen im Wartungsmodus). Das Hauptmerkmal ist die eingebaute Quantifizierung der Unsicherheit: Jede CLV-Schätzung kommt mit HDI-Grenzen, sodass Sie sehen, wie viel Unsicherheit die Schätzung jedes Kunden umgibt.</p>
 <p>Das CLV-Modell braucht nur Verkaufstransaktionen: Kunden-ID, Transaktionsdatum, Transaktionswert. Zwei bis drei Jahre Historie reichen in der Regel aus.</p>
 <div id="fig-required-data" class="fig-sm quarto-float quarto-figure quarto-figure-center anchored" alt="Die CLV-Modellierung geht von Datensätzen auf Transaktionsebene aus, die eine Kundenkennung, ein Transaktionsdatum und einen Transaktionswert enthalten.">
 <figure class="quarto-float quarto-float-fig figure">
@@ -1006,12 +1006,12 @@ Tabelle&nbsp;2: Im BTYD-Modell verwendete RFM-T-Metriken.
 <span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    discount_rate<span class="op">=</span><span class="fl">0.01</span>,</span>
 <span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    time_unit<span class="op">=</span><span class="st">"D"</span>,</span>
 <span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="In die Zwischenablage kopieren" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Die Ausgabe enthält nicht nur Punktschätzungen, sondern auch HDI-Grenzen (Highest Density Interval). In dieser API wird <code>future_t</code> in Monaten gemessen, während <code>time_unit="D"</code> dem Modell mitteilt, dass die RFM-T-Eingaben in Tagen gemessen sind. Das Modell sagt Ihnen, wie sicher es sich bei jedem Kunden ist, allerdings nur in Bezug auf den Zeitpunkt der Käufe: Die Posterior-Verteilung der Ausgaben wird vor der Diskontierung auf ihren Mittelwert zusammengefasst, behandeln Sie die Grenzen also als Untergrenze der tatsächlichen Unsicherheit.</p>
-<p>Der Horizont ist eine Entscheidung, kein Standardwert. Dieser Datensatz deckt etwa 23 Monate ab, eine Projektion über 120 Monate reicht also rund fünfmal über das beobachtete Fenster hinaus. Die Schätzung läuft nicht davon, weil BG/NBD die Kundenabwanderung in die Projektion einbaut, aber diese Abwanderungsrate ist selbst aus diesen 23 Monaten geschätzt. Das Begleit-Notebook diskontiert dieselbe Posterior-Verteilung erneut auf 3, 5 und 10 Jahre. Auf diesem Datensatz bewegt sich die Rangfolge der Kunden über die drei Horizonte kaum, sodass rangbasiertes Targeting gegenüber diesen getesteten Horizonten unempfindlich ist; die mediane 10-Jahres-Schätzung liegt etwa beim 2.23-Fachen der 3-Jahres-Schätzung, sodass alles, was den CLV in eine Dollar-Obergrenze verwandelt, den verwendeten Horizont angeben muss.</p>
+<p>Die Ausgabe enthält nicht nur Punktschätzungen, sondern auch HDI-Grenzen (Highest Density Interval). In dieser API wird <code>future_t</code> in Monaten gemessen, während <code>time_unit="D"</code> dem Modell mitteilt, dass die RFM-T-Eingaben in Tagen gemessen sind. Die Grenzen quantifizieren nur die Unsicherheit über den Zeitpunkt der Käufe: Die Posterior-Verteilung der Ausgaben wird vor der Diskontierung auf ihren Mittelwert zusammengefasst, behandeln Sie sie also als Untergrenze der tatsächlichen Unsicherheit.</p>
+<p>Wählen Sie den Horizont explizit; <code>future_t=120</code> ist kein Standardwert, den man einfach übernimmt. Dieser Datensatz deckt etwa 23 Monate ab, eine Projektion über 120 Monate reicht also rund fünfmal über das beobachtete Fenster hinaus. Die Schätzung bleibt begrenzt, weil BG/NBD die Kundenabwanderung in die Projektion einbaut, aber diese Abwanderungsrate ist selbst aus diesen 23 Monaten geschätzt. Das Begleit-Notebook diskontiert dieselbe Posterior-Verteilung erneut auf 3, 5 und 10 Jahre. Auf diesem Datensatz bewegt sich die Rangfolge der Kunden über die drei Horizonte kaum, sodass rangbasiertes Targeting gegenüber diesen getesteten Horizonten unempfindlich ist; die mediane 10-Jahres-Schätzung liegt etwa beim 2.23-Fachen der 3-Jahres-Schätzung, sodass alles, was den CLV in eine Dollar-Obergrenze verwandelt, den verwendeten Horizont angeben muss.</p>
 </section>
 <section id="probability-alive-matrix" class="level3">
 <h3 class="anchored" data-anchor-id="probability-alive-matrix">Probability-Alive-Matrix</h3>
-<p>Ein schneller Weg, zu sehen, was das BG/NBD-Modell gelernt hat, ist die Probability-Alive-Matrix. Recency auf der einen Achse, Frequency auf der anderen, die Farbe zeigt P(alive). Denken Sie daran, dass Recency hier die BTYD-Definition aus der Tabelle oben ist, die Spanne vom ersten bis zum letzten Kauf, sodass hohe Recency bedeutet, dass der Kunde bis vor Kurzem noch gekauft hat, das Gegenteil davon, wie das Marketing-RFM das Wort verwendet. Vier Ecken erzählen vier Geschichten: treue Wiederholungskäufer (hohe Frequency, hohe Recency, häufig und weiterhin aktiv), gefährdete Stammkunden (hohe Frequency, niedrige Recency, sie kauften früher viel und wurden dann still), einmalige Passanten (niedrige Frequency, niedrige Recency, ein oder zwei Käufe direkt nach der Akquisition und dann Stille) und Kunden mit dünner Historie (niedrige Frequency, hohe Recency, zu wenige Käufe, um sicher zu sein, aber der jüngste ist frisch, sodass das Modell ihnen im Zweifel Recht gibt; die Abbildung beschriftet diese Ecke als neue Kunden).</p>
+<p>Ein schneller Weg, zu sehen, was das BG/NBD-Modell gelernt hat, ist die Probability-Alive-Matrix. Recency auf der einen Achse, Frequency auf der anderen, die Farbe zeigt P(alive). Denken Sie daran, dass Recency hier die BTYD-Definition aus der Tabelle oben ist, die Spanne vom ersten bis zum letzten Kauf, sodass hohe Recency bedeutet, dass der Kunde bis vor Kurzem noch gekauft hat, das Gegenteil davon, wie das Marketing-RFM das Wort verwendet. Lesen Sie die vier Ecken getrennt. Treue Wiederholungskäufer (hohe Frequency, hohe Recency) kaufen häufig und sind weiterhin aktiv. Gefährdete Stammkunden (hohe Frequency, niedrige Recency) kauften früher viel und wurden dann still. Einmalige Passanten (niedrige Frequency, niedrige Recency) haben direkt nach der Akquisition ein- oder zweimal gekauft und dann aufgehört. Kunden mit dünner Historie (niedrige Frequency, hohe Recency) haben zu wenige Käufe, um sicher zu sein, aber der jüngste ist frisch, sodass P(alive) hoch ausfällt; die Abbildung beschriftet diese Ecke als neue Kunden.</p>
 <div id="fig-prob-alive-matrix" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Probability-Alive-Matrix über Kauffrequenz (x) und Recency (y); die Farbe zeigt P(alive) für jede Kundenposition.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-prob-alive-matrix-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -1033,7 +1033,7 @@ Abbildung&nbsp;11: Die Probability-Alive-Matrix.
 </section>
 <section id="combining-segments-and-clv" class="level3">
 <h3 class="anchored" data-anchor-id="combining-segments-and-clv">Segmente und CLV kombinieren</h3>
-<p>Verknüpfen Sie die <code>segment_id</code> aus dem Segmentierungskapitel (Kapitel 4.1) mit der CLV-Schätzung jedes Kunden. Das ergibt die Arbeitstabelle, auf die dieser Teil hingearbeitet hat: welche Art von Kunde das ist, was er wert ist und was das Unternehmen für ihn tun sollte.</p>
+<p>Verknüpfen Sie die <code>segment_id</code> aus <a href="sec4.1-segmentation.html">Abschnitt 4.1</a> mit der CLV-Schätzung jedes Kunden. Das ergibt die Arbeitstabelle, auf die dieser Teil hingearbeitet hat: welche Art von Kunde das ist, was er wert ist und was das Unternehmen für ihn tun sollte.</p>
 <p>Demografie kann weiterhin helfen, ein Segment zu beschreiben oder zu erreichen, aber die Hauptentscheidungsebene ist Verhaltenssegment × vorhergesagter Wert. Das Begleit-Notebook verknüpft die CLV-Schätzungen mit der Dunnhumby-Datei <code>hh_demographic.csv</code>, sodass Sie jedes Segment entlang demografischer Dimensionen wie Einkommen profilieren können: nützlich für die Wahl von Creative und Kanal, weniger für die Festlegung des Budgets.</p>
 <div class="callout callout-style-default callout-tip callout-titled">
 <div class="callout-header d-flex align-content-center">
@@ -1052,7 +1052,7 @@ Abbildung&nbsp;11: Die Probability-Alive-Matrix.
 </section>
 <section id="sec-using-clv" class="level2">
 <h2 class="anchored" data-anchor-id="sec-using-clv">Den CLV in die Praxis bringen</h2>
-<p>Sobald Sie ein <code>clv_estimate</code> pro Kunde haben, ergeben sich drei Anwendungen fast von selbst. Diese Muster funktionieren mit jedem CLV-Score: Nachgelagerte Systeme brauchen nur eine Kunden-ID und eine Zahl.</p>
+<p>Sobald Sie ein <code>clv_estimate</code> pro Kunde haben, brauchen drei Anwendungen keine weitere Modellierung, auch wenn jede mehr braucht als den Score. Eine CPA-Obergrenze braucht die oben beschriebene Umrechnung in die Marge und einen genannten Horizont; ein Churn-Alarm braucht eine Verknüpfung mit dem CRM über die Kunden-ID und einen Schwellenwert; eine Kohortenprognose braucht das Akquisitionsdatum jedes Kunden und den Planungshorizont der Finanzabteilung. Die Muster funktionieren mit jedem CLV-Score.</p>
 <ol type="1">
 <li>CPA-Obergrenzen für das Anzeigen-Bidding</li>
 </ol>
@@ -1064,11 +1064,11 @@ Abbildung&nbsp;11: Die Probability-Alive-Matrix.
 <ol start="2" type="1">
 <li>Churn-Alarme für das CRM</li>
 </ol>
-<p>Markieren Sie Kunden, deren P(alive) in 30 Tagen um mehr als 30 Punkte fällt. Das Signal ist die Änderungsrate, nicht das absolute Niveau. Ein Kunde, dessen P(alive) innerhalb eines Monats von 0.85 auf 0.40 gefallen ist, ist weit dringender als einer, der seit sechs Monaten stabil bei 0.35 liegt. Der erste löst sich ab; der zweite ist einfach ein Käufer mit niedriger Frequenz.</p>
+<p>Markieren Sie Kunden, deren P(alive) in 30 Tagen um mehr als 30 Punkte fällt. Das Signal ist die Änderungsrate, nicht das absolute Niveau. Ein Kunde, dessen P(alive) innerhalb eines Monats von 0.85 auf 0.40 gefallen ist, ist weit dringender als einer, der seit sechs Monaten stabil bei 0.35 liegt. Der erste Kunde entfernt sich von einem zuvor hohen Engagement-Niveau; der zweite war von Anfang an ein Käufer mit niedriger Frequenz.</p>
 <ol start="3" type="1">
 <li>Kohortenprognosen für die Finanzabteilung</li>
 </ol>
-<p>Die Finanzabteilung plant in Budgetzyklen, nicht in Kundenlebensdauern; aggregieren Sie die individuellen CLV-Schätzungen daher nach Akquisitionskohorte und projizieren Sie den Umsatz auf 12, 24 und 36 Monate. Fügen Sie HDI-Grenzen hinzu, damit die Finanzabteilung weiß, dass es sich um probabilistische Schätzungen handelt, nicht um feste Ziele. So beantworten Sie die Frage „Was ist der erwartete Ertrag unserer Akquisitionsausgaben im dritten Quartal?“, ohne dass der CFO BG/NBD lernen muss.</p>
+<p>Die Finanzabteilung plant in Budgetzyklen, nicht in Kundenlebensdauern; aggregieren Sie die individuellen CLV-Schätzungen daher nach Akquisitionskohorte und projizieren Sie den Umsatz auf 12, 24 und 36 Monate. Fügen Sie HDI-Grenzen hinzu, damit die Finanzabteilung weiß, dass es sich um probabilistische Schätzungen handelt, nicht um feste Ziele. Das beantwortet die Frage der Finanzabteilung nach dem erwarteten Ertrag der Akquisitionsausgaben eines Quartals, in den Einheiten und im Zeitrahmen, in denen die Finanzabteilung plant.</p>
 <div class="callout callout-style-default callout-tip callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -1086,8 +1086,8 @@ Abbildung&nbsp;11: Die Probability-Alive-Matrix.
 <section id="key-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="key-takeaways">Das Wichtigste in Kürze</h2>
 <ul>
-<li>Der CLV ersetzt ein einheitliches CPA-Ziel durch Ausgaben, die proportional zu dem sind, was jeder Kunde wert ist. Der Durchschnitt existiert in den Daten und beschreibt niemanden.</li>
-<li>In nicht-vertraglichen Umfeldern modelliert BG/NBD die künftigen Käufe und Gamma-Gamma die Ausgaben, allein aus Transaktionsdaten. Jeder Kunde bekommt ein Kredibilitätsintervall, bieten Sie also gegen eine konservative Untergrenze statt gegen den Mittelwert.</li>
+<li>Der CLV ersetzt ein einheitliches CPA-Ziel durch Ausgaben, die proportional zu dem sind, was jeder Kunde wert ist; eine einzige Obergrenze zahlt für Kunden mit geringem Wert zu viel und für Kunden mit hohem Wert zu wenig.</li>
+<li>In nicht-vertraglichen Umfeldern modelliert BG/NBD die künftigen Käufe und Gamma-Gamma die Ausgaben, allein aus Transaktionsdaten. Jeder Kunde bekommt ein Kredibilitätsintervall, setzen Sie das Gebot also anhand einer konservativen Untergrenze dieses Intervalls.</li>
 <li>Rechnen Sie den Umsatz-CLV in den Gewinn-CLV um, bevor er eine CPA-Obergrenze setzt, und nennen Sie den Horizont: Die mediane Zehnjahresschätzung liegt etwa beim 2.23-Fachen der Dreijahresschätzung, auch wenn sich die Rangfolge kaum bewegt.</li>
 </ul>
 

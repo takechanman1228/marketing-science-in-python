@@ -658,7 +658,7 @@ window.Quarto = {
 </header>
 
 
-<p>Your team just finished a two-week A/B test on the new checkout page. Everyone is eager to see the results. Then the numbers come in:</p>
+<p>Your team just finished a two-week A/B test on the new checkout page, with these results:</p>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -691,7 +691,7 @@ window.Quarto = {
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>users <span class="op">=</span> np.array([<span class="dv">5000</span>, <span class="dv">5000</span>])</span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>stat, p_value <span class="op">=</span> proportions_ztest(conversions, users, alternative<span class="op">=</span><span class="st">"two-sided"</span>)</span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"p-value: </span><span class="sc">{</span>p_value<span class="sc">:.2f}</span><span class="ss">"</span>)     <span class="co"># 0.43</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>So the team says, “Not significant. The redesign doesn’t work. Let’s move on.” That conclusion isn’t backed up by the data. A p-value of 0.43 doesn’t mean there’s no effect. It means the test couldn’t separate a small effect from random noise. The treatment might really be better; the data just can’t say. The gap between “no effect” and “we can’t tell” comes down to whether the test had enough power.</p>
+<p>A team reading only the p-value concludes that the redesign doesn’t work and moves on. That conclusion isn’t backed up by the data. A p-value of 0.43 says only that the test couldn’t separate a small effect from random noise. The 95% confidence interval for the difference runs from −0.36 to +0.84 points, so the data are consistent with a small loss and with a sizable win. The treatment might really be better, but this sample size can’t show it. The interval still includes a lift worth shipping, so the result is inconclusive.</p>
 <section id="statistical-power" class="level2">
 <h2 class="anchored" data-anchor-id="statistical-power">Statistical Power</h2>
 <p>Statistical power is the chance your test will detect an effect of a specific size if that effect truly exists. Most teams aim for 80% power, which still leaves a 20% chance of missing an effect that large.</p>
@@ -706,7 +706,7 @@ Figure&nbsp;1: Statistical power: the H0 and H1 distributions.
 </figcaption>
 </figure>
 </div>
-<p>For a low-conversion event like a purchase (say a 2% conversion rate), detecting a 0.5-point lift takes many thousands of users per group, and most teams run with far fewer. This is the part most teams underestimate: detecting small lifts usually requires far more traffic than intuition suggests.</p>
+<p>For a low-conversion event like a purchase (say a 2% conversion rate), detecting a 0.5-point lift takes many thousands of users per group, and most teams run with far fewer. Detecting small lifts usually requires far more traffic than intuition suggests.</p>
 </section>
 <section id="calculating-sample-size" class="level2">
 <h2 class="anchored" data-anchor-id="calculating-sample-size">Calculating Sample Size</h2>
@@ -741,7 +741,7 @@ Figure&nbsp;2: Sample-size sensitivity to the MDE.
 </figcaption>
 </figure>
 </div>
-<p>The curve makes the main lesson visible: sample size does not grow linearly but climbs steeply as the target lift shrinks. This is why small improvements on low-conversion metrics are expensive to measure.</p>
+<p>Sample size does not grow linearly with the target lift: halving the MDE roughly quadruples the required sample. This is why small improvements on low-conversion metrics are expensive to measure.</p>
 </section>
 <section id="decide-before-you-launch" class="level2">
 <h2 class="anchored" data-anchor-id="decide-before-you-launch">Decide Before You Launch</h2>
@@ -752,19 +752,19 @@ Figure&nbsp;2: Sample-size sensitivity to the MDE.
 <li><strong>Sample size and duration</strong>: how much data will you collect before judging the result?</li>
 <li><strong>Guardrail metrics</strong>: what should not get worse (revenue per user, page-load time, support tickets)?</li>
 </ol>
-<p>Writing these down up front guards against two habits that quietly inflate false positives: <em>peeking</em> (stopping the test the moment it looks significant) and <em>metric fishing</em> (reporting whichever of many metrics happened to move).</p>
+<p>Writing these down up front prevents two habits that raise the false-positive rate: <em>peeking</em> (stopping the test the moment it looks significant) and <em>metric fishing</em> (reporting whichever of many metrics happened to move).</p>
 </section>
 <section id="cuped-getting-more-precision-from-the-same-sample" class="level2">
 <h2 class="anchored" data-anchor-id="cuped-getting-more-precision-from-the-same-sample">CUPED: Getting More Precision from the Same Sample</h2>
 <p>When the required sample is out of reach, you can’t always add more users, stores, or markets. CUPED (short for Controlled-experiment Using Pre-Experiment Data) can sometimes give you more precision from the same data by using information from before the experiment. Microsoft’s experimentation team introduced it in 2013 to make online experiments more sensitive without collecting more data <span class="citation" data-cites="deng2013cuped">(<a href="../appendix/further-reading.html#ref-deng2013cuped" role="doc-biblioref">Deng et al. 2013</a>)</span>, and it has since become a standard variance-reduction tool in large-scale experimentation.</p>
-<p>The idea is simple. If a customer was already a high spender before the experiment, they will probably keep spending during it too, treatment or not. CUPED subtracts that predictable part of the outcome, so the comparison focuses on what actually changed during the test.</p>
+<p>If a customer was already a high spender before the experiment, they will probably keep spending during it too, treatment or not. CUPED subtracts that predictable part of the outcome, so the comparison focuses on what actually changed during the test.</p>
 <div id="fig-cuped" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Three-step diagram: each customer's pre-campaign spend, their campaign spend, and the CUPED-adjusted lift above expected spend, with narrower distributions and the same average effect after adjustment.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-cuped-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="../images/part3/sec3.2/cuped_how_it_works.png" class="fig-md img-fluid figure-img" alt="Three-step diagram: each customer's pre-campaign spend, their campaign spend, and the CUPED-adjusted lift above expected spend, with narrower distributions and the same average effect after adjustment.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-cuped-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;3: How CUPED removes pre-experiment variance.
+Figure&nbsp;3: CUPED variance reduction, step by step.
 </figcaption>
 </figure>
 </div>
@@ -793,18 +793,17 @@ Figure&nbsp;3: How CUPED removes pre-experiment variance.
 </section>
 <section id="when-a-test-is-inconclusive" class="level2">
 <h2 class="anchored" data-anchor-id="when-a-test-is-inconclusive">When a Test Is Inconclusive</h2>
-<p>Return to the checkout test. The right question isn’t “was the p-value below 0.05?” It’s “was the test precise enough to rule out an effect we’d care about?”</p>
-<p>Look at the confidence interval. The observed lift was +0.24 points, but the 95% interval runs from −0.36 to +0.84 points, wide enough to include both a small loss and a sizable win. That test is inconclusive: it hasn’t shown the redesign works, but it certainly hasn’t shown it doesn’t. Only when the interval is narrow and excludes any lift worth shipping can you reasonably set a treatment aside.</p>
-<p>A non-significant result, in other words, is not automatically a failed treatment. It may simply mean the test was too small, too noisy, or run during an unusual period.</p>
+<p>Return to the checkout test. Instead of asking whether the p-value fell below 0.05, ask whether the test was precise enough to rule out an effect worth shipping.</p>
+<p>The observed lift was +0.24 points, with a 95% interval from −0.36 to +0.84 points. That test is inconclusive: the interval is too wide to support either conclusion. Only when the interval is narrow and excludes any lift worth shipping can you reasonably set a treatment aside. An inconclusive result may simply mean the test was too small, too noisy, or run during an unusual period.</p>
 <p><strong>Companion notebook:</strong> <code>sec3.2_ab_test_figures.ipynb</code> reproduces the sample-size and power figures and runs the CUPED simulation from this chapter.<br>
 <a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.2_ab_test_figures.ipynb">View on GitHub</a></p>
 </section>
 <section id="key-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="key-takeaways">Key Takeaways</h2>
 <ul>
-<li>Design for the effect worth detecting: fix the primary metric, MDE, sample size, and guardrails before launch. Sample size scales with <span class="math inline">\(1/\text{MDE}^2\)</span>, so half the lift costs four times the users.</li>
-<li>A non-significant result is not evidence of no effect. Judge it by the confidence interval: if lifts worth shipping still sit inside, the test has not answered yet.</li>
-<li>When you cannot buy more traffic, CUPED buys precision instead, using a pre-experiment covariate to strip variance from the comparison.</li>
+<li>Design for the effect worth detecting: fix the primary metric, MDE, sample size, and guardrails before launch. Sample size scales with <span class="math inline">\(1/\text{MDE}^2\)</span>, so halving the MDE roughly quadruples the required sample.</li>
+<li>A non-significant result is not evidence of no effect. Judge it by the confidence interval: if lifts worth shipping still sit inside, the test has not settled the question.</li>
+<li>When you cannot buy more traffic, use CUPED: a pre-experiment covariate removes variance from the comparison and narrows the interval.</li>
 </ul>
 
 

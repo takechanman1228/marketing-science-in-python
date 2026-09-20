@@ -662,7 +662,7 @@ window.Quarto = {
 <p><strong>关于中文版</strong><br>
 本页是英文版 <em>Marketing Science in Python</em> 的AI翻译。英文版为正式版本，如有出入，以英文版为准。代码、Notebook 和图片中的文字保持英文。 <a href="../../part3/sec3.2-ab-testing.html" class="translation-source-link">阅读英文版</a></p>
 </div>
-<p>你的团队刚刚在新的结账页面上完成了一次为期两周的 A/B 测试。每个人都迫不及待想看结果。然后数字出来了：</p>
+<p>你的团队刚刚在新的结账页面上完成了一次为期两周的 A/B 测试，结果如下：</p>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -695,7 +695,7 @@ window.Quarto = {
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>users <span class="op">=</span> np.array([<span class="dv">5000</span>, <span class="dv">5000</span>])</span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>stat, p_value <span class="op">=</span> proportions_ztest(conversions, users, alternative<span class="op">=</span><span class="st">"two-sided"</span>)</span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"p-value: </span><span class="sc">{</span>p_value<span class="sc">:.2f}</span><span class="ss">"</span>)     <span class="co"># 0.43</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
-<p>于是团队说：“不显著。改版没用。我们接着做别的吧。”这个结论并没有数据支持。p 值为 0.43 并不意味着没有效应。它意味着这次测试无法把一个小效应与随机噪声区分开。实验组的版本可能真的更好，只是数据说不清。“没有效应”和“我们无法判断”之间的差别，取决于测试是否有足够的功效。</p>
+<p>只看 p 值的团队会得出改版没用的结论，然后转向别的事情。这个结论并没有数据支持。p 值为 0.43 只是说明这次测试无法把一个小效应与随机噪声区分开。差值的 95% 置信区间从 −0.36 到 +0.84 个百分点，所以数据既与小幅损失相容，也与可观的收益相容。实验组的版本可能真的更好，但这个样本量无法证明这一点。置信区间里仍然包含值得上线的提升幅度，所以这个结果是无法下结论的。</p>
 <section id="statistical-power" class="level2">
 <h2 class="anchored" data-anchor-id="statistical-power">统计功效</h2>
 <p>统计功效是指，如果某个特定大小的效应真实存在，你的测试能够检测到它的概率。大多数团队以 80% 的功效为目标，这仍然留下 20% 的概率错过一个那么大的效应。</p>
@@ -710,7 +710,7 @@ window.Quarto = {
 </figcaption>
 </figure>
 </div>
-<p>对于购买这样的低转化事件（比如 2% 的转化率），检测 0.5 个百分点的提升需要每组好几千名用户，而大多数团队的样本远少于此。这是大多数团队低估的部分：检测小幅提升通常需要的流量远超直觉。</p>
+<p>对于购买这样的低转化事件（比如 2% 的转化率），检测 0.5 个百分点的提升需要每组好几千名用户，而大多数团队的样本远少于此。检测小幅提升通常需要的流量远超直觉。</p>
 </section>
 <section id="calculating-sample-size" class="level2">
 <h2 class="anchored" data-anchor-id="calculating-sample-size">计算样本量</h2>
@@ -745,7 +745,7 @@ window.Quarto = {
 </figcaption>
 </figure>
 </div>
-<p>这条曲线让主要教训一目了然：样本量并不是线性增长的，而是随着目标提升的缩小而陡峭攀升。这就是为什么在低转化指标上测量小幅改进代价高昂。</p>
+<p>样本量并不随目标提升线性增长：MDE 减半，所需样本量大约变成四倍。这就是为什么在低转化指标上测量小幅改进代价高昂。</p>
 </section>
 <section id="decide-before-you-launch" class="level2">
 <h2 class="anchored" data-anchor-id="decide-before-you-launch">上线前先做决定</h2>
@@ -756,19 +756,19 @@ window.Quarto = {
 <li><strong>样本量与时长</strong>：在评判结果之前你要收集多少数据？</li>
 <li><strong>护栏指标</strong>：哪些东西不能变差（每用户收入、页面加载时间、客服工单）？</li>
 </ol>
-<p>提前写下这些，可以防范两种悄悄推高假阳性的习惯：<em>偷看</em>（测试一看起来显著就停止）和<em>指标钓鱼</em>（在众多指标中挑出恰好有变动的那个来汇报）。</p>
+<p>提前写下这些，可以防止两种推高假阳性率的习惯：<em>偷看</em>（测试一看起来显著就停止）和<em>指标钓鱼</em>（在众多指标中挑出恰好有变动的那个来汇报）。</p>
 </section>
 <section id="cuped-getting-more-precision-from-the-same-sample" class="level2">
 <h2 class="anchored" data-anchor-id="cuped-getting-more-precision-from-the-same-sample">CUPED：从同样的样本中获得更高精度</h2>
 <p>当所需样本量遥不可及时，你并不总能增加更多用户、门店或市场。CUPED（Controlled-experiment Using Pre-Experiment Data 的缩写）有时可以利用实验之前的信息，从同样的数据中获得更高的精度。微软的实验团队在 2013 年提出了这一方法，目的是在不收集更多数据的情况下让在线实验更加灵敏 <span class="citation" data-cites="deng2013cuped">(<a href="../appendix/further-reading.html#ref-deng2013cuped" role="doc-biblioref">Deng 等 2013年</a>)</span>，此后它已成为大规模实验中标准的方差缩减工具。</p>
-<p>思路很简单。如果一位客户在实验之前就已经是高消费者，那么无论是否接受处理，他在实验期间很可能也会继续消费。CUPED 从结果中减去这部分可预测的成分，使比较聚焦于测试期间真正发生变化的部分。</p>
+<p>如果一位客户在实验之前就已经是高消费者，那么无论是否接受处理，他在实验期间很可能也会继续消费。CUPED 从结果中减去这部分可预测的成分，使比较聚焦于测试期间真正发生变化的部分。</p>
 <div id="fig-cuped" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="三步示意图：每位客户活动前的消费、活动期间的消费，以及经 CUPED 调整后高于预期消费的提升；调整后分布更窄，平均效应不变。">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-cuped-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="../images/part3/sec3.2/cuped_how_it_works.png" class="fig-md img-fluid figure-img" alt="三步示意图：每位客户活动前的消费、活动期间的消费，以及经 CUPED 调整后高于预期消费的提升；调整后分布更窄，平均效应不变。">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-cuped-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-图&nbsp;3: CUPED 如何去除实验前方差。
+图&nbsp;3: CUPED 方差缩减的分步过程。
 </figcaption>
 </figure>
 </div>
@@ -797,18 +797,17 @@ window.Quarto = {
 </section>
 <section id="when-a-test-is-inconclusive" class="level2">
 <h2 class="anchored" data-anchor-id="when-a-test-is-inconclusive">当测试无法下结论时</h2>
-<p>回到结账页面的测试。正确的问题不是“p 值是否低于 0.05？”，而是“测试是否足够精确，足以排除一个我们会在意的效应？”</p>
-<p>看看置信区间。观察到的提升是 +0.24 个百分点，但 95% 区间从 −0.36 到 +0.84 个百分点，宽到既包含小幅损失也包含可观的收益。这次测试无法下结论：它没有证明改版有效，但也肯定没有证明它无效。只有当区间足够窄、并且排除了任何值得上线的提升时，你才能合理地把一个处理放到一边。</p>
-<p>换句话说，不显著的结果并不自动等于失败的处理。它可能只是意味着测试太小、噪声太大，或者在一个不寻常的时期内运行。</p>
+<p>回到结账页面的测试。与其问 p 值是否低于 0.05，不如问测试是否足够精确，足以排除一个值得上线的效应。</p>
+<p>观察到的提升是 +0.24 个百分点，95% 区间从 −0.36 到 +0.84 个百分点。这次测试无法下结论：区间太宽，无法支持任何一种结论。只有当区间足够窄、并且排除了任何值得上线的提升时，你才能合理地把一个处理放到一边。无法下结论的结果可能只是意味着测试太小、噪声太大，或者在一个不寻常的时期内运行。</p>
 <p><strong>配套 Notebook：</strong> <code>sec3.2_ab_test_figures.ipynb</code> 重现了本章的样本量和功效图，并运行了 CUPED 模拟。<br>
 <a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.2_ab_test_figures.ipynb">在 GitHub 上查看</a></p>
 </section>
 <section id="key-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="key-takeaways">要点</h2>
 <ul>
-<li>针对值得检测的效应来设计：在上线前确定主要指标、MDE、样本量和护栏指标。样本量与 <span class="math inline">\(1/\text{MDE}^2\)</span> 成比例，所以提升减半，用户数就要变成四倍。</li>
-<li>不显著的结果不是没有效应的证据。用置信区间来评判：如果值得上线的提升仍然落在区间之内，测试就还没有给出答案。</li>
-<li>当你无法购买更多流量时，CUPED 可以转而购买精度，用实验前的协变量从比较中剔除方差。</li>
+<li>针对值得检测的效应来设计：在上线前确定主要指标、MDE、样本量和护栏指标。样本量与 <span class="math inline">\(1/\text{MDE}^2\)</span> 成比例，所以 MDE 减半，所需样本量大约变成四倍。</li>
+<li>不显著的结果不是没有效应的证据。用置信区间来评判：如果值得上线的提升仍然落在区间之内，测试就还没有解决这个问题。</li>
+<li>当你无法购买更多流量时，使用 CUPED：实验前的协变量从比较中剔除方差并收窄区间。</li>
 </ul>
 
 

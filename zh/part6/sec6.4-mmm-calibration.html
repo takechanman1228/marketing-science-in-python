@@ -614,7 +614,7 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 本页是英文版 <em>Marketing Science in Python</em> 的AI翻译。英文版为正式版本，如有出入，以英文版为准。代码、Notebook 和图片中的文字保持英文。 <a href="../../part6/sec6.4-mmm-calibration.html" class="translation-source-link">阅读英文版</a></p>
 </div>
 <p>在地理实验运行之前，MMM 已经预测了把 Google Search 削减 30% 的代价：每移除一美元损失 $2.95 的收入，90% 可信区间从 0.34 到 8.48。<a href="sec6.3-incrementality-experiments.html">第 6.3 节</a>的实验测得 1.500，95% 置信区间从 0.892 到 2.109。模型对该渠道的整体价值估计得大致不差，对削减代价的估计却高了约一倍，而且它的区间无论朝哪个方向都宽得无法据此行动。两者都不意外。三年的历史里 Search 支出几乎没有动过，所以模型对 Search 的估计大体上就是它起步时的先验，而这次实验是关于该渠道的第一份因果证据。</p>
-<p>校准把这份证据放进模型。实验测量的是一个渠道在一个运行点上、一个窗口内的表现；<a href="sec6.2-mmm-fundamentals.html">第 6.2 节</a>的模型仍然要为五个渠道设定预算。所以我们把结果转换成一个先验，重新拟合，然后检查推荐是否改变。目标不是让模型与实验一致。目标是弄清更好的证据是否改变了决策，如果没有，为什么没有。因为这里的结果是收入，Meridian 的 ROI 在数值上就是收入 ROAS；正文说 ROAS，代码保留 Meridian 的命名。</p>
+<p>校准把这份证据放进模型。实验测量的是一个渠道在一个运行点上、一个窗口内的表现；<a href="sec6.2-mmm-fundamentals.html">第 6.2 节</a>的模型仍然要为五个渠道设定预算。所以我们把结果转换成一个先验，重新拟合，然后比较。校准从三个方面评判：估计值移到了哪里，不确定性缩小了多少，以及分配是否改变。推荐保持不变并不算失败。因为这里的结果是收入，Meridian 的 ROI 在数值上就是收入 ROAS；正文说 ROAS，代码保留 Meridian 的命名。</p>
 <div id="fig-calibration-workflow" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="五个步骤：地理测试、DiD 估计、转换为先验、重新拟合 MMM，以及护栏之下的预算决策，再循环回到下一次测试。">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-calibration-workflow-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -629,7 +629,33 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 <a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part6-media-optimization/sec6.2_6.4_mmm_meridian.ipynb">在 GitHub 上查看</a></p>
 <section id="match-the-evidence-to-the-model-quantity" class="level2">
 <h2 class="anchored" data-anchor-id="match-the-evidence-to-the-model-quantity">让证据与模型量对应</h2>
-<p>实验测量的是一段支出的回报：当 Search 在八周内从预算的 100% 降到 70% 时，企业每美元损失了多少。模型为同一渠道报告的是另外两种回报。<strong>平均 ROAS</strong> 用 Search 的总增量收入除以它的总支出，是从零开始平均的回报。<strong>边际 ROAS</strong>是响应曲线在当前支出水平上的斜率，是下一美元的回报。在饱和曲线上，早期的美元比后期的美元干得更卖力，所以只要曲线开始弯曲，平均 ROAS 就位于边际 ROAS 之上（<a href="#fig-marginal-vs-average" class="quarto-xref">图&nbsp;<span>2</span></a>）。所测削减是在支出最顶端的 30% 上对曲线取平均，因此它落在接近边际回报、远低于平均回报的位置。</p>
+<p>实验测量的是一段支出的回报：当 Search 在八周内从预算的 100% 降到 70% 时，企业每美元损失了多少。模型为同一渠道报告的是另外两种回报，<strong>平均 ROAS</strong> 和 <strong>边际 ROAS</strong>，这三者不能互换。在饱和曲线上，前面的美元比后面的更有效，所以只要曲线开始弯曲，平均值就高于边际回报（<a href="#fig-marginal-vs-average" class="quarto-xref">图&nbsp;<span>2</span></a>），而对支出最上面 30% 取平均的测试削减，则落在边际回报附近。</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>量</th>
+<th>它测量什么</th>
+<th>来自哪里</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>平均 ROAS</td>
+<td>从零支出起平均的回报</td>
+<td>模型</td>
+</tr>
+<tr class="even">
+<td>边际 ROAS</td>
+<td>响应曲线在当前支出处的斜率</td>
+<td>模型</td>
+</tr>
+<tr class="odd">
+<td>所测削减的回报</td>
+<td>支出最顶端 30% 上的平均回报</td>
+<td>实验</td>
+</tr>
+</tbody>
+</table>
 <div id="fig-marginal-vs-average" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="在饱和曲线上，边际 ROAS 是当前支出水平处的切线斜率，而平均 ROAS 是从原点到该点的斜率。">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-marginal-vs-average-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -640,13 +666,13 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 </figcaption>
 </figure>
 </div>
-<p>Meridian 的默认先验 <code>roi_m</code> 是针对平均 ROAS 的。把经时长调整的估计值 1.71 放到那个先验上，模型会照办：Notebook 试了一下，后验平均 ROAS 落在 1.96，而植入的真实值是 3.30。模型现在被迫用一条从零起算的回报低了 40% 的曲线来解释 Search。这里边际回报和对所测削减的预测仍然落在真实值附近，分别是 1.59 和 1.44，因为曲线在 Search 区间的顶端几乎是直的，所以出错的是平均值这个量；在弯曲更厉害的渠道上，局部读数也会跟着出错。在 TikTok 上，其边际回报约为平均回报的四分之一，同样的替换会错上近四倍。一次测量应该放在与之匹配的参数上。</p>
+<p>Meridian 的默认先验 <code>roi_m</code> 是针对平均 ROAS 的。把经时长调整的估计值 1.71 放到那个先验上，后验就会跟着它走：Notebook 试了一下，后验平均 ROAS 落在 1.96，而植入的真实值是 3.30。模型现在被迫用一条从零起算的回报低了 40% 的曲线来解释 Search。这里边际回报和对所测削减的预测仍然落在真实值附近，分别是 1.59 和 1.44，因为曲线在 Search 区间的顶端几乎是直的，所以出错的是平均值这个量；在弯曲更厉害的渠道上，局部读数也会跟着出错。在 TikTok 上，其边际回报约为平均回报的四分之一，同样的替换会错上近四倍。一次测量应该放在与之匹配的参数上。</p>
 </section>
 <section id="turn-the-experiment-into-a-prior" class="level2">
 <h2 class="anchored" data-anchor-id="turn-the-experiment-into-a-prior">把实验转换为先验</h2>
 <p>Meridian 也可以把先验放在边际 ROI 上，用 <code>media_prior_type="mroi"</code>。这个参数是支出增加 1% 的回报。实验测量的是八周内 30% 的削减，所以它是通过一个近似转换来为先验提供信息，而不是直接观测这个参数：关于曲线形状、关于延续效应（carryover）、关于八个市场如何迁移到全国的假设，都仍然是结果的一部分。对 Search 来说，区段和斜率相距很近，1.50 对比植入的 1.57；对 TV/CTV 这样的慢渠道则不然，<a href="sec6.5-when-tools-disagree.html">第 6.5 节</a>会展示这一点。</p>
 <p>这个转换有三个部分。<strong>时长</strong>修正中心值，以补上测试窗口错过的延续效应。第八周做出的削减在第九周和第十周仍然要损失收入，所以即便 Search 的半衰期只有一周，一次持续八周的削减约有 12% 的效应落在窗口之后，中心值从 1.50 移到 1.71。这个比例是一个近似，来自逐周等量变动和线性延续权重；饱和效应和实际的支出路径都可能改变它。对 TV/CTV 这样的慢渠道，修正量会大上好几倍。<strong>支出规模</strong>拓宽先验。八个测试市场的支出速率约为全国的五分之一，测试离渠道规模越远，其结果可被假定迁移的程度就越低。这一项把标准误从 0.257 提到 0.64，而下面的转换不确定性再把它提到 0.69。实验自身的精度没有问题；拓宽先验的原因是八个市场只占渠道的五分之一。Notebook 会打印每一项，外加两个在这里几乎不起作用的小项。</p>
-<p><strong>转换不确定性</strong>是第三部分，而且它是我们加的，不是 Google 的：30% 的区段与 1% 的斜率之间的差距是一个建模假设，所以要把中心值的一个明示比例（这里是 15%）加到宽度上，这样一次非常精确的实验就不会产生一个声称精确知道斜率的先验。其余四个渠道保留一个弱边际 ROI 先验 <code>LogNormal(-0.49, 0.90)</code>，即第 6.2 节的弱 ROAS 先验在边际尺度上的重述。不要把它设得更平：在饱和曲线上，边际 ROI 上的弥散先验会让平均 ROI 失去界限，未校准的渠道会带着毫无用处的区间回来。</p>
+<p><strong>转换不确定性</strong>是第三部分。它不在 Meridian 的指南里；是本书加上的。30% 的区段与 1% 的斜率之间的差距是一个建模假设，所以要把中心值的一个明示比例（这里是 15%）加到宽度上，这样一次非常精确的实验就不会产生一个声称精确知道斜率的先验。其余四个渠道保留一个弱边际 ROI 先验 <code>LogNormal(-0.49, 0.90)</code>，即第 6.2 节的弱 ROAS 先验在边际尺度上的重述。不要把它设得更平：在饱和曲线上，边际 ROI 上的弥散先验会让平均 ROI 失去界限，未校准渠道的区间会宽到没有任何意义。</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> tensorflow <span class="im">as</span> tf</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> tensorflow_probability <span class="im">as</span> tfp</span>
@@ -727,7 +753,7 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 </tr>
 </tbody>
 </table>
-<p>变的是宽度。与对照相比，校准把 Search 的边际回报从 1.95 移到 2.00，而植入的真实值是 1.57，并把它的相对半宽从 1.76 削到 0.67。模型对所测削减的预测从 1.75 移到 1.82，而测得的是 1.50。两个点估计都不是重点；区间才是。<a href="#fig-response-curve-calibrated" class="quarto-xref">图&nbsp;<span>3</span></a> 沿着曲线展示了这一点：参考拟合读数接近 3，带宽横跨一个数量级；对照拟合读数低于 2，带宽同样；校准后的曲线穿过实验区间，带宽只有三分之一。参考拟合与校准拟合之间更大的差距主要来自先验设定的变化，而不是实验，这正是对照列存在的原因。</p>
+<p>校准对宽度的改变远大于对点估计的改变。与对照相比，它把 Search 的边际回报从 1.95 移到 2.00，而植入的真实值是 1.57，并把它的相对半宽从 1.76 削到 0.67。模型对所测削减的预测从 1.75 移到 1.82，而测得的是 1.50。<a href="#fig-response-curve-calibrated" class="quarto-xref">图&nbsp;<span>3</span></a> 沿着曲线展示了这一变化：参考拟合读数接近 3，带宽横跨一个数量级；对照拟合读数低于 2，带宽同样；校准后的曲线穿过实验区间，带宽只有三分之一。参考拟合与校准拟合之间更大的差距主要来自先验设定的变化，而不是实验，这正是对照列存在的原因。</p>
 <div id="fig-response-curve-calibrated" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="在不同支出倍数下，把 Google Search 支出从当前水平移开的回报，分别对应第 6.2 节参考拟合、对照拟合和校准拟合；校准后曲线的带宽远窄于对照，并在 70% 支出处穿过实验区间。">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-response-curve-calibrated-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -738,7 +764,7 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 </figcaption>
 </figure>
 </div>
-<p>仍然未知的部分也值得点明。平均 ROAS 那一行落在 2.82，而植入的真实值是 3.30，区间上达 5.3：实验从未测量过从零起算的回报，所以那一行是模型的外推，不是证据。第 6.2 节的宽度规则现在通过了，但那条规则检查的是精度，不是盈利能力；削减本身是由第 6.3 节的门槛裁定的，而释放出来的预算流向 OOH 和 Meta，因为它们的边际区间起点分别是 2.6 和 3.6，高于 Search 的估计值 2.0，尽管并不高于其区间上限。Search 在每一列都停在 −30% 的下限（<a href="#fig-allocation-before-after" class="quarto-xref">图&nbsp;<span>4</span></a>），而 TV/CTV 和 TikTok 略有移动，主要发生在参考拟合与对照拟合之间，那是先验设定而非实验所致。在更窄的按市场聚类宽度下做同样的校准，边际估计值是 1.85，半宽 0.48；分配同样没有移动。所以，实验在所述的边际贡献率和窗口下支持所测削减，校准把这份证据带进了分配模型，而它提出的重新分配仍然取决于响应曲线、从八个市场到全国的迁移，以及优化器看不到的业务约束。</p>
+<p>校准之后仍有两件事未知。平均 ROAS 那一行落在 2.82，而植入的真实值是 3.30，区间上达 5.3：实验从未测量过从零起算的回报，所以那一行是模型的外推，不是证据。第 6.2 节的宽度规则现在通过了，但那条规则检查的是精度，不是盈利能力；削减本身是由第 6.3 节的门槛裁定的，而释放出来的预算流向 OOH 和 Meta，因为它们的边际区间起点分别是 2.6 和 3.6，高于 Search 的估计值 2.0，尽管并不高于其区间上限。Search 在每一列都停在 −30% 的下限（<a href="#fig-allocation-before-after" class="quarto-xref">图&nbsp;<span>4</span></a>），而 TV/CTV 和 TikTok 略有移动，主要发生在参考拟合与对照拟合之间，那是先验设定而非实验所致。在更窄的按市场聚类宽度下做同样的校准，边际估计值是 1.85，半宽 0.48；分配同样没有移动。所以，实验在所述的边际贡献率和窗口下支持所测削减，校准把这份证据带进了分配模型，而它提出的重新分配仍然取决于响应曲线、从八个市场到全国的迁移，以及优化器看不到的业务约束。</p>
 <div id="fig-allocation-before-after" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="参考、对照和校准三次拟合下优化器按渠道的支出变动；Google Search 在三者中都停在 −30% 的约束下限，而 TV/CTV 和 TikTok 在参考拟合与对照拟合之间有所移动。">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-allocation-before-after-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -760,14 +786,14 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 <li><strong>决策稳定性。</strong> 在各种站得住脚的转换宽度下，推荐的行动是否成立？如果在它们之间发生反转，那么无论点估计怎么说，证据都还没有解决这个决策。</li>
 </ol>
 <p>数据质量和一般的模型验证属于<a href="sec6.2-mmm-fundamentals.html#sec-mmm-data-requirements">第 6.2 节</a>，这里不必重复。</p>
-<p>你不需要为每个渠道都做实验。在支出重大、模型区间很宽、而且结果可能改变行动的地方做测试。在每次测试前记录模型的预测，就像第 6.2 节的决策卡那样。在下一次分配之前刷新模型，让下一次分歧来选择下一次测试。</p>
+<p>你不需要为每个渠道都做实验。在支出重大、模型区间很宽、而且结果可能改变行动的地方做测试。在每次测试前记录模型的预测，就像第 6.2 节的决策卡那样。在下一次分配之前刷新模型，并按同样三个条件挑选下一次测试。</p>
 </section>
 <section id="key-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="key-takeaways">要点</h2>
 <ul>
 <li>校准之前先对齐估计目标。对一段支出的测量通过近似转换为边际参数提供信息，转换中的假设以宽度的形式随之而行。</li>
 <li>重新拟合整个模型并保留一次对照拟合，这样证据就与先验设定的变化区分开来。这里证据几乎没有移动 Search 的估计值，却把它的区间削去了三分之二。</li>
-<li>用校准让你能支持什么来评判它。实验裁定了削减；校准把它带进了分配模型，而该模型的重新分配仍然依赖于曲线、迁移假设和业务约束。</li>
+<li>用校准让你能支持多少分配来评判它。实验裁定了削减；校准把它带进了分配模型，而该模型的重新分配仍然依赖于曲线、迁移假设和业务约束。</li>
 </ul>
 
 

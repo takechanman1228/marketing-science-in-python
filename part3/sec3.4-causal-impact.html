@@ -624,16 +624,15 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 </header>
 
 
-<p>Every design in <a href="sec3.3-quasi-experiments.html">the previous chapter</a> had a control group. Some stores got the display and some didn’t. One market got the campaign and the others didn’t. This chapter is for when there’s no control group at all.</p>
-<p>A national TV campaign ran for eight weeks. Sales went up. But every market was exposed, so there’s no untreated market to compare against. What would sales have been without the campaign?</p>
-<p>This chapter has one job: build that missing no-campaign path, and decide whether it’s credible enough to measure the campaign against. The building takes fifteen lines of code. Deciding whether to trust it is the rest of the chapter.</p>
+<p>A national TV campaign ran for eight weeks in every market, and sales went up. With every market exposed, there’s no untreated market to compare against, and every quasi-experimental design in <a href="sec3.3-quasi-experiments.html">the previous chapter</a> requires one. What would sales have been without the campaign?</p>
+<p>This chapter has one job: build that missing no-campaign path, and decide whether it’s credible enough to measure the campaign against. Building it takes about fifteen lines of code; validating it takes the rest of the chapter.</p>
 <section id="sec-counterfactual-recipe" class="level2">
 <h2 class="anchored" data-anchor-id="sec-counterfactual-recipe">Building the Counterfactual</h2>
 <p><strong>Core idea:</strong> forecast the sales you would have seen without the campaign. The effect is observed sales minus that forecast.</p>
-<p>With no control group, the comparison has to come from time. Fit a time series model to sales <em>before</em> the campaign, so the campaign can’t leak into it. Project the model forward through the campaign window. That projection is the counterfactual, and the gap between it and what actually happened is the estimated effect.</p>
-<p>The forecast can still use <strong>control series</strong>, and it’s worth being clear that these aren’t a control group. A control group is untreated units of the same kind: stores that didn’t get the display. A control series is a predictor: any series the campaign couldn’t have touched, such as a category demand index or a sibling product line with no media. It isn’t compared to the brand. It tells the forecast what the market was doing while the campaign ran.</p>
+<p>With no control group, the comparison has to be built from the series’ own history. Fit a time series model to sales <em>before</em> the campaign, so the campaign can’t leak into it. Project the model forward through the campaign window. That projection is the counterfactual, and the gap between it and what actually happened is the estimated effect.</p>
+<p>The forecast can still use <strong>control series</strong>, and it’s worth being clear that these aren’t a control group. A control group is untreated units of the same kind: stores that didn’t get the display. A control series is a predictor: any series the campaign couldn’t have touched, such as a category demand index or a sibling product line with no media. A control series isn’t compared to the brand; it enters the model as a regressor that carries what the market was doing while the campaign ran.</p>
 <p>The best-known implementation is <strong>CausalImpact</strong>, which Google released as an R package and Brodersen and colleagues described in a 2015 paper. In the causal inference literature the same design is called an interrupted time series. Python ports exist (<code>tfp-causalimpact</code>, and <code>InterruptedTimeSeries</code> in <code>CausalPy</code>). This chapter builds the same logic directly with <code>statsmodels</code>, so every assumption stays visible.</p>
-<p>It’s the last rung of the ladder from the previous chapter, and the table shows what changed on the way up:</p>
+<p>The table below compares this design with DiD and Synthetic Control on what each one requires:</p>
 <table class="caption-top table">
 <caption>Three ways to build the sales you didn’t observe.</caption>
 <thead>
@@ -665,7 +664,7 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 </tr>
 </tbody>
 </table>
-<p>The worked example is a national CPG brand: four years of weekly revenue, an eight-week TV and PR campaign, and twenty weeks of observation after it. Two control series: a subcategory demand index and a sibling product line that got no media. The data is synthetic, so the true no-campaign path is known. Before any code, the brief:</p>
+<p>The worked example is a national CPG brand: four years of weekly revenue, an eight-week TV and PR campaign, and twenty weeks of observation after it. Two control series: a subcategory demand index and a sibling product line that got no media. The data is synthetic, so the true no-campaign path is known. Before any code, fix the analysis brief:</p>
 <div class="callout callout-style-default callout-note callout-titled" title="Analysis brief">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -684,14 +683,14 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 </ul>
 </div>
 </div>
-<p>That last line is a decision, and it’s made now, before anyone has seen a number. It’s why the forecast below runs 28 weeks, and why the reporting-window section later in the chapter is a check rather than a choice.</p>
+<p>The estimand is a decision, and it’s fixed here rather than after the results are in. It’s why the forecast below runs 28 weeks, and why the reporting-window section later in the chapter is a check rather than a choice.</p>
 <div id="fig-panel" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Four years of brand revenue with the true untreated path marked, above a subcategory demand index and a sibling product line, with the eight-week flight shaded.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-panel-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="../images/part3/sec3.4/01_panel_overview.png" class="fig-lg img-fluid figure-img" alt="Four years of brand revenue with the true untreated path marked, above a subcategory demand index and a sibling product line, with the eight-week flight shaded.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-panel-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;1: The treated brand and its two controls
+Figure&nbsp;1: The treated brand and its two controls.
 </figcaption>
 </figure>
 </div>
@@ -721,14 +720,14 @@ Figure&nbsp;1: The treated brand and its two controls
 <span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>weekly_effect <span class="op">=</span> y_post <span class="op">-</span> counterfactual</span>
 <span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>cumulative <span class="op">=</span> weekly_effect.<span class="bu">sum</span>()</span>
 <span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>lo, hi <span class="op">=</span> np.percentile((y_post[:, <span class="va">None</span>] <span class="op">-</span> paths).<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">0</span>), [<span class="fl">2.5</span>, <span class="fl">97.5</span>])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Three choices in that code matter. The model is fit on the pre-period only, so the campaign can’t contaminate its own baseline. Sales are modelled in logs, because a campaign lift and seasonality are both multiplicative, and the simulated paths are converted back to dollars before anything is summed. And the controls enter as regressors, so the forecast knows what the market did during the campaign. Whether the model also needs a trend term, or the controls at all, isn’t a matter of taste. The next section settles it by measurement.</p>
+<p>Three choices in that code matter. The model is fit on the pre-period only, so the campaign can’t contaminate its own baseline. Sales are modelled in logs, because a campaign lift and seasonality are both multiplicative, and the simulated paths are converted back to dollars before anything is summed. And the controls enter as regressors, so the forecast knows what the market did during the campaign. Whether the model also needs a trend term, or the controls at all, is settled by the backtest in the next section.</p>
 </section>
 <section id="sec-preperiod-validation" class="level2">
 <h2 class="anchored" data-anchor-id="sec-preperiod-validation">Validating the Counterfactual Before Measuring</h2>
-<p>This step isn’t optional. The effect you’ll report is observed minus forecast, so every dollar of forecast error becomes a dollar of fake effect. Before using the forecast to measure the campaign, you have to show it can predict a period where nothing happened. Three checks do that, and all three run on the pre-period alone.</p>
+<p>The effect you’ll report is observed minus forecast, so forecast error passes through one-for-one into the estimated effect. That makes this step mandatory. Before using the forecast to measure the campaign, you have to show it can predict a period where nothing happened. Three checks do that, and all three run on the pre-period alone.</p>
 <section id="backtesting-the-forecast" class="level3">
 <h3 class="anchored" data-anchor-id="backtesting-the-forecast">Backtesting the forecast</h3>
-<p>Can the model predict the untreated world? Pretend the campaign started at some earlier date inside the pre-period. Fit on the data before that date, forecast the next twenty-eight weeks, and compare to what actually happened. Repeat from several dates. Twenty-eight weeks because that’s the estimand in the brief, and a model that looks fine over eight weeks can fall apart over twenty-eight.</p>
+<p>The first check is whether the model can forecast a period where nothing happened. Pretend the campaign started at some earlier date inside the pre-period. Fit on the data before that date, forecast the next twenty-eight weeks, and compare to what actually happened. Repeat this from several dates. The horizon is twenty-eight weeks because that’s the estimand in the brief, and a model that looks fine over eight weeks can fall apart over twenty-eight. The results below select the specification.</p>
 <table class="caption-top table">
 <caption>Rolling-origin validation over nine pre-period windows where nothing happened.</caption>
 <thead>
@@ -766,44 +765,44 @@ Figure&nbsp;1: The treated brand and its two controls
 </tr>
 </tbody>
 </table>
-<p>The table makes the decision. Trend plus controls has the lowest error and the smallest bias, so that’s the specification we use. Two details matter along the way. The controls cut the error in half, so on this data they earn their place. And the trend term matters at this horizon: the brand grows faster than its subcategory, and a model without a slope would charge that gap to the campaign.</p>
+<p>Trend plus controls has the lowest error and the smallest bias, so that’s the specification we use, with two details worth noting. The controls cut the error in half, so on this data they earn their place. And the trend term matters at this horizon: the brand grows faster than its subcategory, and a model without a slope would attribute that gap to the campaign.</p>
 </section>
 <section id="placebo-interventions" class="level3">
 <h3 class="anchored" data-anchor-id="placebo-interventions">Placebo interventions</h3>
-<p>Does the design invent effects when nothing happened? Pick a date in the pre-period, say week 120, when there was no campaign. Pretend one started that week and run the full analysis. The right answer is zero, so whatever comes back is what this design produces from noise. That’s a <strong>placebo intervention</strong>, and the nine backtest windows above double as nine placebos. The largest placebo effect here was $636k, and one of the nine returned an interval that excluded zero. Keep both numbers. The campaign estimate has to clear them.</p>
+<p>The second check is what the design returns when nothing happened. Pick a date in the pre-period, say week 120, when there was no campaign. Pretend one started that week and run the full analysis. The correct answer is zero, so any non-zero result measures what this design returns from noise alone. That’s a <strong>placebo intervention</strong>, and the nine backtest windows above double as nine placebos. The largest placebo effect here was $636k, and one of the nine returned an interval that excluded zero. Record both numbers, and require the campaign estimate to clear them.</p>
 <div id="fig-validation" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Left, forecast error by specification over pre-period windows; right, the spread of cumulative effects the design returns on dates where nothing happened.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-validation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="../images/part3/sec3.4/02_validation_and_placebo.png" class="fig-lg img-fluid figure-img" alt="Left, forecast error by specification over pre-period windows; right, the spread of cumulative effects the design returns on dates where nothing happened.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-validation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;2: Validation and placebo checks before the campaign
+Figure&nbsp;2: Validation and placebo checks before the campaign.
 </figcaption>
 </figure>
 </div>
 </section>
 <section id="checking-that-the-controls-help" class="level3">
 <h3 class="anchored" data-anchor-id="checking-that-the-controls-help">Checking that the controls help</h3>
-<p>Do the controls actually improve the forecast? The backtest already said yes on this data, and it’s worth seeing what that buys. In a calm world the controls narrow the interval by a factor of twelve. When a category-wide dip hits three weeks of the campaign, the estimate with controls lands within 1.3% of the truth, because the counterfactual dips with the market. Without controls the same dip is charged to the campaign, and the estimate lands 21% below the truth. That’s what a good control series does: it absorbs shocks that hit everyone, so the model doesn’t mistake them for the campaign.</p>
+<p>Do the controls actually improve the forecast? The backtest already said yes on this data, and it’s worth seeing what that buys. In a calm world the controls narrow the interval by a factor of twelve. When a category-wide dip hits three weeks of the campaign, the estimate with controls lands within 1.3% of the truth, because the counterfactual dips with the market. Without controls the same dip is attributed to the campaign, and the estimate lands 21% below the truth. A useful control series carries the shocks that hit the whole market, so the counterfactual moves with them instead of leaving them in the estimated effect.</p>
 <p>It only works if the campaign didn’t touch the control. That’s the assumption that can’t be tested from the data, and it gets its own section, <a href="#sec-failure-modes">When Not to Trust the Estimate</a>.</p>
 </section>
 </section>
 <section id="sec-reading-the-campaign" class="level2">
 <h2 class="anchored" data-anchor-id="sec-reading-the-campaign">Estimating the Campaign Effect</h2>
-<p>Only now does the campaign window get used. The chosen specification is fit on the full pre-period and projected forward. The result is the three-panel chart that has become the standard way to present a one-shot campaign: observed against counterfactual, the weekly gap, and the running total.</p>
+<p>The campaign window is used only at this point. The chosen specification is fit on the full pre-period and projected forward. The result is the three-panel chart that has become the standard way to present a one-shot campaign: observed against counterfactual, the weekly gap, and the running total.</p>
 <div id="fig-impact-panels" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Three stacked panels showing the observed series against its counterfactual, the weekly effect, and a cumulative curve that climbs and then gives part of itself back.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-impact-panels-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="../images/part3/sec3.4/03_impact_three_panel.png" class="fig-lg img-fluid figure-img" alt="Three stacked panels showing the observed series against its counterfactual, the weekly effect, and a cumulative curve that climbs and then gives part of itself back.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-impact-panels-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;3: Observed, weekly effect, and cumulative effect
+Figure&nbsp;3: Observed, weekly effect, and cumulative effect.
 </figcaption>
 </figure>
 </div>
 <section id="choosing-the-reporting-window" class="level3">
 <h3 class="anchored" data-anchor-id="choosing-the-reporting-window">Choosing the reporting window</h3>
-<p>The brief fixed the estimand at 28 weeks. Here’s why that mattered. Look at the cumulative panel: the curve climbs during the eight-week flight, keeps climbing for a few weeks after it as the carryover runs, then turns down as demand that was pulled forward gets paid back. Three windows, each of which sounds reasonable, give three different numbers.</p>
+<p>The brief fixed the estimand at 28 weeks. Look at the cumulative panel: the curve climbs during the eight-week flight, keeps climbing for a few weeks after it as the carryover runs, then turns down as demand that was pulled forward gets paid back. Three windows, each of which sounds reasonable, give three different numbers.</p>
 <table class="caption-top table">
 <caption>The same model and the same campaign, read over three windows.</caption>
 <thead>
@@ -839,11 +838,11 @@ Figure&nbsp;3: Observed, weekly effect, and cumulative effect
 </tr>
 </tbody>
 </table>
-<p>All three estimates are accurate for the window they cover. Only the last one answers the brief, because only it counts the payback. Stopping at week 12, the peak of the curve, overstates the full answer by 38%. The model wasn’t wrong. The window was. That’s why the window goes in the brief, before anyone looks at the curve.</p>
+<p>All three estimates are accurate for the window they cover. Only the last one answers the brief, because only it counts the payback. Stopping at week 12, the peak of the curve, overstates the full answer by 38%. The three numbers come from the same model and differ only in the reporting window, which is why the window is fixed in the brief rather than chosen after the curve is plotted.</p>
 </section>
 <section id="sec-two-uncertainties" class="level3">
 <h3 class="anchored" data-anchor-id="sec-two-uncertainties">How much to trust the interval</h3>
-<p>The band on the chart holds the fitted model fixed and propagates its noise forward. That makes it a floor on the real uncertainty, not the whole of it. Two things help you read it. First, the placebo results: the $1,164k estimate is larger than every placebo effect this design produced, and the biggest of those was $636k. That’s a more useful statement than a p-value, because it’s in the same units as the decision. Second, the audit below.</p>
+<p>The band on the chart holds the fitted model fixed and propagates its noise forward. That makes it a floor on the real uncertainty, not the whole of it. Two things help you read it: the placebo results, and the audit below. The $1,164k estimate is larger than every placebo effect this design produced, and the biggest of those was $636k. Stated in dollars, this is directly comparable to the decision, which a p-value isn’t.</p>
 <div class="callout callout-style-default callout-note callout-titled" title="Deep dive: how good is this design, really?">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -854,52 +853,52 @@ Figure&nbsp;3: Observed, weekly effect, and cumulative effect
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>The notebook re-runs the chosen specification on two hundred fresh synthetic datasets and grades it against the truth each time. The nominal 95% interval covers the truth 90% of the time. A genuine effect is flagged as significant 60% of the time. When the true effect is zero, it’s called significant 9% of the time. That isn’t a weak model. It’s a weak measurement situation: one treated series, no randomization, an effect that’s small next to the noise. If the decision needs more than that, run a geo experiment next time (<a href="../part6/sec6.3-incrementality-experiments.html">Chapter 6.3</a>).</p>
+<p>The notebook re-runs the chosen specification on two hundred fresh synthetic datasets and checks it against the truth each time. The nominal 95% interval covers the truth 90% of the time. A genuine effect is flagged as significant 60% of the time. When the true effect is zero, it’s called significant 9% of the time. These numbers reflect the measurement situation rather than the model: one treated series, no randomization, and an effect that’s small relative to the noise. If the decision needs more than that, run a geo experiment next time (<a href="../part6/sec6.3-incrementality-experiments.html">Section 6.3</a>).</p>
 </div>
 </div>
 </section>
 </section>
 <section id="sec-failure-modes" class="level2">
 <h2 class="anchored" data-anchor-id="sec-failure-modes">When Not to Trust the Estimate</h2>
-<p>Three things break this analysis. Two of them leave no trace in the data.</p>
+<p>Three things break this analysis, and two of them leave no trace in the data.</p>
 <div id="fig-scenarios" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Estimates with intervals against known truth for six scenarios, from clean controls through a market shock, a contaminated control, and a broken relationship.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-scenarios-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="../images/part3/sec3.4/04_scenarios.png" class="fig-lg img-fluid figure-img" alt="Estimates with intervals against known truth for six scenarios, from clean controls through a market shock, a contaminated control, and a broken relationship.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-scenarios-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;4: What controls buy, and what breaks them
+Figure&nbsp;4: Estimates under six control-series scenarios.
 </figcaption>
 </figure>
 </div>
 <section id="the-campaign-touched-a-control" class="level3">
 <h3 class="anchored" data-anchor-id="the-campaign-touched-a-control">The campaign touched a control</h3>
-<p>The more predictive a control is, the more likely the campaign reached it. The subcategory index carries most of the model’s explanatory power, which is exactly why a national campaign for a large brand in that subcategory is a threat to it. Leak 35% of the brand’s lift into the index and the estimate keeps only 65% of the true effect, with an interval that no longer excludes zero. A campaign that worked now reads as inconclusive. And every diagnostic passes: the pre-period fit is clean, the interval is tight, the backtest looks the same. The violated assumption lives outside the data. The only way to check it is to ask the people who ran the campaign what it could have touched.</p>
+<p>A control series is predictive because it moves with the same demand the brand sells into, which is also what makes it likely that the campaign reached it. The subcategory index carries most of the model’s explanatory power, so a national campaign for a large brand in that subcategory is a threat to it. Leak 35% of the brand’s lift into the index and the estimate keeps only 65% of the true effect, with an interval that no longer excludes zero. A campaign that worked is then reported as inconclusive, and no diagnostic catches it: the pre-period fit, the interval width, and the backtest are all unchanged. The assumption is violated outside the data, so no data check can detect it. The only way to check it is to ask the people who ran the campaign what it could have touched.</p>
 </section>
 <section id="the-pre-period-relationship-broke" class="level3">
 <h3 class="anchored" data-anchor-id="the-pre-period-relationship-broke">The pre-period relationship broke</h3>
-<p>A relationship that held for four years can still stop. Suppose a competitor enters and grows the subcategory by 5% in the post-period, and this brand doesn’t share in it. The controls now say the market got better, the counterfactual rises, and the estimate comes back at negative $460k against a true effect of positive $1,124k. It’s the only scenario in the chapter where the truth falls outside the interval, and it isn’t testable from pre-period data by construction. This is the same discipline DiD demands: the output is only as good as the claim that the controls kept behaving the way they did before.</p>
+<p>A relationship that held over the four-year pre-period can change in the post-period. Suppose a competitor enters and grows the subcategory by 5% in the post-period, and this brand doesn’t share in it. The controls now say the market got better, the counterfactual rises, and the estimate comes back at negative $460k against a true effect of positive $1,124k. It’s the only scenario in the chapter where the truth falls outside the interval, and it isn’t testable from pre-period data by construction. This is the same discipline DiD demands: the estimate depends entirely on the claim that the controls kept the same relationship to the brand as before.</p>
 </section>
 <section id="sec-real-data-check" class="level3">
 <h3 class="anchored" data-anchor-id="sec-real-data-check">The forecast was never good enough</h3>
-<p>The third failure does leave a trace, if you look. Run the same machinery on real Dunnhumby store data: take one store’s weekly sales, multiply the final twelve weeks by 1.15, and try to recover the planted lift with four other stores as controls.</p>
-<p>The lift comes back. The planted 1,775 units are recovered as 1,833, with an interval that excludes zero. It would be easy to write that up as a successful controlled analysis.</p>
+<p>The third failure does leave a trace in the data. Run the same machinery on real Dunnhumby store data: take one store’s weekly sales, multiply the final twelve weeks by 1.15, and try to recover the planted lift with four other stores as controls.</p>
+<p>The lift comes back. The planted 1,775 units are recovered as 1,833, with an interval that excludes zero. This could be written up as a successful controlled analysis, but the controls carried no information.</p>
 <div id="fig-reality-check" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Correlation collapsing after an enrollment ramp is trimmed, a flat backtest with and without controls, and a narrower interval that the backtest does not justify.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-reality-check-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="../images/part3/sec3.4/05_dunnhumby_reality_check.png" class="fig-lg img-fluid figure-img" alt="Correlation collapsing after an enrollment ramp is trimmed, a flat backtest with and without controls, and a narrower interval that the backtest does not justify.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-reality-check-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;5: Real controls that carry no information
+Figure&nbsp;5: Control-series checks on real store data.
 </figcaption>
 </figure>
 </div>
-<p>It isn’t one. The cross-store correlation that justified the controls was 0.45, but the Dunnhumby panel starts small and grows, so every store rises together for reasons that have nothing to do with demand. Trim that onboarding ramp and the correlation falls to 0.01. The backtest settles it: adding the four control stores moves forecast error from 13.7% to 13.8%, which is to say not at all. The narrower interval is the trap. Extra regressors soak up in-sample variation and tighten the band even when the forecast didn’t improve. A narrower interval isn’t evidence that the controls helped. A better backtest is. What produced the number was a projection of one store’s own recent level, and a 13.7% forecast error is too weak to carry a causal claim. Saying so is the finding.</p>
+<p>The cross-store correlation that justified the controls was 0.45, but the Dunnhumby panel starts small and grows, so every store rises together for reasons that have nothing to do with demand. Trim that onboarding ramp and the correlation falls to 0.01. The backtest settles it: adding the four control stores moves forecast error from 13.7% to 13.8%, which is to say not at all. Extra regressors soak up in-sample variation and tighten the band even when the forecast didn’t improve, so interval width isn’t a test of whether the controls helped; the backtest is. What produced the number was a projection of one store’s own recent level. A 13.7% forecast error is too weak to carry a causal claim, and reporting that is the result.</p>
 </section>
 </section>
 <section id="sec-intervention-checklist" class="level2">
 <h2 class="anchored" data-anchor-id="sec-intervention-checklist">A Practical Workflow</h2>
-<p>The chapter compresses to eight steps. Run them in order.</p>
+<p>The workflow has eight steps, run in order.</p>
 <ol type="1">
 <li><strong>Write the brief.</strong> Business question, outcome, treatment, and the estimand with its reporting window. Fix it before you see a number.</li>
 <li><strong>Choose the control series.</strong> They have to be series the campaign couldn’t touch. Ask the people who ran it.</li>
@@ -908,9 +907,9 @@ Figure&nbsp;5: Real controls that carry no information
 <li><strong>Run placebo interventions.</strong> Know what the design returns from noise before you read the real number.</li>
 <li><strong>Estimate the post-period effect</strong> over the window you fixed in step 1.</li>
 <li><strong>Stress-test the controls.</strong> Could the campaign have reached them? Could the pre-period relationship have broken?</li>
-<li><strong>If the counterfactual is weak, don’t report a causal number.</strong> A 13.7% backtest error is a forecast, not a measurement.</li>
+<li><strong>If the counterfactual is weak, don’t report a causal number.</strong> At a 13.7% backtest error, the output is a forecast that can’t support a causal claim.</li>
 </ol>
-<p>CausalImpact doesn’t turn observational data into an experiment. It gives you a structured way to ask whether a time series can support a credible counterfactual. When it can’t, the answer isn’t a better model. It’s a better experiment next time (<a href="../part6/sec6.3-incrementality-experiments.html">Chapter 6.3</a>).</p>
+<p>CausalImpact doesn’t turn observational data into an experiment. It gives you a structured way to ask whether a time series can support a credible counterfactual. When it can’t, a better model won’t fix that; plan a geo experiment instead (<a href="../part6/sec6.3-incrementality-experiments.html">Section 6.3</a>).</p>
 <p><strong>Companion notebook:</strong> <code>sec3.4_causal_impact.ipynb</code> builds the counterfactual, validates it on placebo dates, audits its interval across two hundred draws, and then breaks it on purpose.<br>
 <a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.4_causal_impact.ipynb">View on GitHub</a></p>
 </section>
@@ -918,7 +917,7 @@ Figure&nbsp;5: Real controls that carry no information
 <h2 class="anchored" data-anchor-id="key-takeaways">Key Takeaways</h2>
 <ul>
 <li>With no control group, forecast the no-campaign path from the pre-period and from series the campaign could not touch, then earn that forecast with backtests at the horizon you will report.</li>
-<li>Two failures leave no trace in the data: a control the campaign reached, and a pre-period relationship that broke. A narrower interval is not evidence the controls helped; a better backtest is.</li>
+<li>Two failures leave no trace in the data: a control the campaign reached, and a pre-period relationship that broke. A narrower interval is not evidence the controls helped; judge that on forecast error in the backtest.</li>
 <li>Fix the reporting window before you see a number. Stopping at the peak of the cumulative curve overstated the full-window answer by 38%.</li>
 </ul>
 

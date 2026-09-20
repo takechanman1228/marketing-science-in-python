@@ -610,7 +610,7 @@ window.Quarto = {
 <p><strong>Über die deutsche Ausgabe</strong><br>
 Diese Seite ist eine KI-Übersetzung der englischen Ausgabe von <em>Marketing Science in Python</em>. Die englische Ausgabe ist maßgeblich und hat bei Abweichungen Vorrang. Code, Notebooks und Text in Abbildungen bleiben auf Englisch. <a href="../../part3/sec3.1-thinking-causally.html" class="translation-source-link">Englische Ausgabe lesen</a></p>
 </div>
-<p>Betrachten wir eine typische Situation, der viele Data Scientists im Unternehmen begegnen. Stellen Sie sich vor, Sie unterstützen eine Kollegin aus dem Marketing-Team, und sie sagt:</p>
+<p>Marketing-Teams berichten oft ein Ergebnis wie dieses:</p>
 <p>„Das Marketing-Team hat einigen Nutzern Coupons geschickt, und deren Kaufrate war doppelt so hoch wie bei denen, die keinen erhalten haben. Die Coupons müssen die Kaufrate also verdoppelt haben!“</p>
 <div id="fig-coupon-results" class="fig-sm quarto-float quarto-figure quarto-figure-center anchored" alt="Die Coupon-Gruppe hat 200 Käufer unter 1,000 Kunden, verglichen mit 100 von 1,000 in der Gruppe ohne Coupon.">
 <figure class="quarto-float quarto-float-fig figure">
@@ -622,12 +622,11 @@ Abbildung&nbsp;1: Ergebnisse der Coupon-Kampagne.
 </figcaption>
 </figure>
 </div>
-<p>Würden Sie dieser Schlussfolgerung zustimmen? Auf den ersten Blick sind Sie vielleicht geneigt, zuzustimmen. Aber Moment: Was, wenn Sie dieses zusätzliche Detail kennen würden?</p>
+<p>Die Schlussfolgerung wirkt plausibel, bis Sie ein weiteres Detail darüber erfahren, wie die Coupons verschickt wurden:</p>
 <p>„Wir haben die Coupons nur an Kunden geschickt, die in den letzten 12 Monaten etwas gekauft hatten.“</p>
-<p>Jetzt sollten die Alarmglocken läuten. Worin liegt hier also das mögliche Problem?</p>
 <section id="selection-bias" class="level2">
 <h2 class="anchored" data-anchor-id="selection-bias">Selektionsverzerrung</h2>
-<p>Die entscheidende Frage lautet: Was ist die <em>wahre</em> Wirkung der Coupons? Wenn wir Coupons nach gezielten Kriterien verteilen, können wir die Kaufraten nicht fair vergleichen. Die Kunden, die die Coupons erhalten haben, hätten möglicherweise ohnehin gekauft. Sie waren bereits stärker engagiert und wurden vielleicht von anderen Faktoren wie Newslettern oder sozialen Medien beeinflusst. Diese Faktoren führen zu dem, was man als <strong>Selektionsverzerrung</strong> bezeichnet: die Verzerrung, die entsteht, wenn die behandelte und die unbehandelte Gruppe von vornherein nicht vergleichbar sind.</p>
+<p>Die Frage ist, was die Coupons tatsächlich bewirkt haben. Wenn wir Coupons nach gezielten Kriterien verteilen, können wir die Kaufraten nicht fair vergleichen. Die Kunden, die die Coupons erhalten haben, hätten möglicherweise ohnehin gekauft. Sie waren bereits stärker engagiert und wurden vielleicht von anderen Faktoren wie Newslettern oder sozialen Medien beeinflusst. Diese Faktoren führen zu dem, was man als <strong>Selektionsverzerrung</strong> bezeichnet: die Verzerrung, die entsteht, wenn die behandelte und die unbehandelte Gruppe von vornherein nicht vergleichbar sind.</p>
 <div id="fig-selection-bias" class="fig-sm quarto-float quarto-figure quarto-figure-center anchored" alt="Der beobachtete Abstand von 10 Punkten in der Kaufrate enthält sowohl Selektionsverzerrung als auch einen kleineren wahren Coupon-Effekt.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-selection-bias-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -639,13 +638,12 @@ Abbildung&nbsp;2: Selektionsverzerrung vs.&nbsp;wahrer Coupon-Effekt.
 </figure>
 </div>
 <p>Der Abstand von 10 Punkten zwischen den Gruppen sieht beeindruckend aus, aber der größte Teil davon bestand schon, bevor die Coupons verschickt wurden. Der echte Lift durch den Coupon (der Teil, der sonst nicht eingetreten wäre) beträgt vielleicht nur wenige Punkte. Der Rest ist Selektionsverzerrung: Der Coupon ging an Personen, die wahrscheinlich ohnehin gekauft hätten.</p>
-<p>Dieses Muster begegnet Ihnen im Marketing ständig. Retargeting-Kampagnen weisen hohe Conversion-Raten auf, aber das liegt daran, dass sie Personen erreichen, die Ihre Website bereits besucht haben. E-Mail-Kampagnen sehen beim Umsatz pro Empfänger großartig aus, aber diese E-Mails gehen an Ihre engagiertesten Abonnenten. In beiden Fällen sind Treatment und Ergebnis wegen der Kundenabsicht verknüpft, nicht weil das Treatment das Ergebnis verursacht hat.</p>
+<p>Dieses Muster begegnet Ihnen im Marketing ständig. Retargeting-Kampagnen weisen hohe Conversion-Raten auf, aber das liegt daran, dass sie Personen erreichen, die Ihre Website bereits besucht haben. E-Mail-Kampagnen sehen beim Umsatz pro Empfänger großartig aus, aber diese E-Mails gehen an Ihre engagiertesten Abonnenten. In beiden Fällen stammt der Zusammenhang zwischen Treatment und Ergebnis aus der Kundenabsicht: Dieselbe Absicht bestimmt sowohl, wer kontaktiert wird, als auch, wer kauft.</p>
 </section>
 <section id="what-is-causal-inference" class="level2">
 <h2 class="anchored" data-anchor-id="what-is-causal-inference">Was ist Kausalinferenz?</h2>
-<p>Wie kommen wir also an diesen Fallen vorbei? Hier kommt die Kausalinferenz ins Spiel.</p>
-<p>Bei der Kausalinferenz geht es darum, herauszufinden, ob zwischen einer bestimmten Maßnahme (dem „Treatment“) und ihrem Resultat (dem „Ergebnis“) ein Ursache-Wirkungs-Zusammenhang besteht. Traditionell ist sie ein Eckpfeiler in Bereichen wie dem Gesundheitswesen. Ein häufiger Anwendungsfall ist zum Beispiel die Beurteilung, ob ein neues Medikament eine Krankheit wirksam behandelt. In diesem Kontext ist die Verabreichung des Medikaments das „Treatment“ und die Genesung des Patienten das „Ergebnis“.</p>
-<p>Aber Kausalinferenz ist nicht nur etwas für das Gesundheitswesen. Im E-Commerce und im Marketing umfassen „Treatments“ Maßnahmen wie das Versenden von Coupons, das Schalten von Werbung oder Direktmailing-Kampagnen, und „Ergebnisse“ sind Dinge wie Käufe, Anmeldungen oder Umsatz.</p>
+<p>Kausalinferenz ist die Sammlung von Methoden, mit denen sich der Effekt von der Selektion trennen lässt: Es geht darum, herauszufinden, ob zwischen einer bestimmten Maßnahme (dem „Treatment“) und ihrem Resultat (dem „Ergebnis“) ein Ursache-Wirkungs-Zusammenhang besteht. Traditionell ist sie ein Eckpfeiler in Bereichen wie dem Gesundheitswesen. Ein häufiger Anwendungsfall ist zum Beispiel die Beurteilung, ob ein neues Medikament eine Krankheit wirksam behandelt. In diesem Kontext ist die Verabreichung des Medikaments das „Treatment“ und die Genesung des Patienten das „Ergebnis“.</p>
+<p>E-Commerce und Marketing verwenden denselben Rahmen. „Treatments“ umfassen Maßnahmen wie das Versenden von Coupons, das Schalten von Werbung oder Direktmailing-Kampagnen, und „Ergebnisse“ sind Dinge wie Käufe, Anmeldungen oder Umsatz.</p>
 <div id="fig-treatment-outcome" class="fig-sm quarto-float quarto-figure quarto-figure-center anchored" alt="Treatment-und-Ergebnis-Diagramm: Im Gesundheitswesen führt ein Medikament zur Genesung, im Marketing führt ein Coupon zu einem Kauf.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-treatment-outcome-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -659,8 +657,8 @@ Abbildung&nbsp;3: Treatment und Ergebnis im Gesundheitswesen und im Marketing.
 </section>
 <section id="the-counterfactual" class="level2">
 <h2 class="anchored" data-anchor-id="the-counterfactual">Das Kontrafaktum</h2>
-<p>Die zentrale Herausforderung der Kausalinferenz besteht darin, dass wir für jede Person nur ein Ergebnis beobachten können. Hätten wir eine Zeitmaschine, könnten wir einem Kunden einen Coupon geben, dann die Zeit zurückdrehen und sehen, was passiert, wenn wir ihm den Coupon nicht geben. In der realen Welt geht das nicht: Wir sehen für jeden Kunden immer nur eine Version der Geschichte.</p>
-<p>Hier setzt die Kausalinferenz an: Sie erlaubt uns, das Ergebnis zu schätzen, das nicht eingetreten ist, das sogenannte <strong>Kontrafaktum</strong>.</p>
+<p>Die zentrale Herausforderung der Kausalinferenz besteht darin, dass wir für jede Person nur ein Ergebnis beobachten können. Ein Kunde erhält den Coupon oder nicht. Wir beobachten das Ergebnis unter der Bedingung, die tatsächlich eingetreten ist, nie unter der anderen.</p>
+<p>Die Kausalinferenz schätzt das Ergebnis, das nicht eingetreten ist, das sogenannte <strong>Kontrafaktum</strong>.</p>
 <div id="fig-counterfactual" class="fig-sm quarto-float quarto-figure quarto-figure-center anchored" alt="Das fundamentale Problem der Kausalinferenz: Wir sehen das Ergebnis mit dem Coupon, aber nie denselben Kunden ohne ihn.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-counterfactual-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -677,8 +675,7 @@ Abbildung&nbsp;4: Das fundamentale Problem der Kausalinferenz.
 </section>
 <section id="why-not-just-run-an-ab-test" class="level2">
 <h2 class="anchored" data-anchor-id="why-not-just-run-an-ab-test">Warum nicht einfach einen A/B-Test durchführen?</h2>
-<p>Vielleicht fragen Sie sich: „Warum nicht einfach einen A/B-Test durchführen?“</p>
-<p>Im Marketing wird dieser Ansatz <strong>A/B-Test</strong> genannt, und in der breiteren Literatur zur Kausalinferenz ist er auch als <strong>randomisierte kontrollierte Studie (RCT)</strong> bekannt. Er gilt oft als „Goldstandard“ für die Beantwortung kausaler Fragen. So funktioniert er.</p>
+<p>Die direkteste Lösung besteht darin, zufällig zu bestimmen, wer das Treatment erhält. Im Marketing wird dieser Ansatz <strong>A/B-Test</strong> genannt, und in der breiteren Literatur zur Kausalinferenz ist er auch als <strong>randomisierte kontrollierte Studie (RCT)</strong> bekannt. Er gilt oft als „Goldstandard“ für die Beantwortung kausaler Fragen. So funktioniert er.</p>
 <p>Sie teilen Ihre Kunden zufällig in zwei Gruppen auf: die „Treatment-Gruppe“ und die „Kontrollgruppe“. Die Treatment-Gruppe erhält den Coupon, die Kontrollgruppe nicht. Nehmen wir an, die Kaufrate der Treatment-Gruppe landet bei 40% und die der Kontrollgruppe bei 20%. Die Differenz, 20 Prozentpunkte, ist der Effekt des Coupons.</p>
 <div id="fig-rct" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Eine zufällige Aufteilung schickt der Treatment-Gruppe einen Coupon, der Kontrollgruppe nicht; die Kaufraten liegen bei 40% vs. 20%, ein Lift von +20 Punkten.">
 <figure class="quarto-float quarto-float-fig figure">
@@ -694,7 +691,7 @@ Abbildung&nbsp;5: Eine randomisierte kontrollierte Studie.
 </section>
 <section id="limitations-of-ab-testing" class="level2">
 <h2 class="anchored" data-anchor-id="limitations-of-ab-testing">Grenzen des A/B-Tests</h2>
-<p>Wenn wir A/B-Tests verstanden haben, sind sie dann immer die perfekte Lösung? Leider nein. A/B-Tests liefern zwar die stärkste verfügbare Evidenz, aber es gibt viele Situationen, in denen sie schlicht nicht machbar sind:</p>
+<p>A/B-Tests liefern die stärkste verfügbare Evidenz, aber es gibt viele Situationen, in denen sie nicht machbar sind:</p>
 <ol type="1">
 <li><p><strong>Entgangene Chancen.</strong> Wenn Sie einen A/B-Test durchführen, erhält die Hälfte Ihrer Kunden das neue Produkt oder Angebot nicht. Das kann entgangene Verkäufe und entgangenes Wachstum bedeuten, einen „Opportunitätsverlust“, den sich das Unternehmen nicht immer leisten kann.</p></li>
 <li><p><strong>Zeitliche Beschränkungen.</strong> A/B-Tests können zeitaufwendig sein. Oft braucht es Wochen oder sogar Monate, um genug Daten für verlässliche Schlussfolgerungen zu sammeln. Diese Verzögerung kann bedeuten, ein Marktfenster zu verpassen oder einen Wettbewerbsvorteil zu verlieren.</p></li>
@@ -706,8 +703,8 @@ Abbildung&nbsp;5: Eine randomisierte kontrollierte Studie.
 <h2 class="anchored" data-anchor-id="simpsons-paradox-challenges-of-observed-data">Das Simpson-Paradoxon: Herausforderungen beobachteter Daten</h2>
 <p>Beobachtete Marketingdaten können irreführend sein, selbst wenn das Muster offensichtlich aussieht.</p>
 <p>Angenommen, wir wollen den Zusammenhang zwischen E-Mail-Frequenz und Abmelderisiko verstehen. Wir tragen jeden Abonnenten danach ein, wie viele Marketing-E-Mails er erhält und ob er sich wahrscheinlich abmeldet. In den aggregierten Daten wirkt das Muster überraschend: Abonnenten, die mehr E-Mails erhalten, scheinen sich <em>seltener</em> abzumelden.</p>
-<p>Auf den ersten Blick könnte das nahelegen, dass mehr E-Mails das Abmelderisiko senken. Aber diese Schlussfolgerung sollte uns unbehaglich sein. Für denselben Typ von Abonnent sollten zu viele E-Mails die Wahrscheinlichkeit einer Abmeldung normalerweise erhöhen, nicht senken.</p>
-<p>Was fehlt also? Das bisherige E-Mail-Engagement.</p>
+<p>Wörtlich gelesen heißt das, dass mehr E-Mails das Abmelderisiko senken, was dem widerspricht, was wir über die Versandfrequenz wissen. Für denselben Typ von Abonnent sollten zu viele E-Mails die Wahrscheinlichkeit einer Abmeldung normalerweise erhöhen, nicht senken.</p>
+<p>Die fehlende Variable ist das bisherige E-Mail-Engagement.</p>
 <p>Marketing-Teams verschicken E-Mails selten zufällig. Abonnenten, die E-Mails oft öffnen und anklicken, erhalten in der Regel mehr Kampagnen, weil sie aktiv und reaktionsfreudig sind. Abonnenten, die selten interagieren, erhalten oft weniger Kampagnen oder werden von manchen Sendungen ausgeschlossen. Diese Gruppen haben sehr unterschiedliche Baseline-Abmelderisiken.</p>
 <p>Sobald wir die Abonnenten nach ihrem bisherigen E-Mail-Engagement segmentieren, kehrt sich das Muster um: Innerhalb jeder Engagement-Gruppe geht eine höhere E-Mail-Frequenz mit einem höheren Abmelderisiko einher. (Abonnenten mit geringem Engagement melden sich insgesamt eher ab, aber innerhalb jeder Gruppe erhöht das Versenden von mehr E-Mails dieses Risiko trotzdem.)</p>
 <p>Das ist das <strong>Simpson-Paradoxon</strong>: Der aggregierte Trend sagt das eine, während das Muster innerhalb vergleichbarer Gruppen das Gegenteil sagt.</p>
@@ -735,11 +732,11 @@ Abbildung&nbsp;7: Ein Confounder hinter E-Mail-Frequenz und Abmeldungen.
 </figcaption>
 </figure>
 </div>
-<p>Die Lektion: Fragen Sie sich bei Beobachtungsdaten immer, ob sich hinter den Zahlen ein Confounder verbirgt.</p>
+<p>Prüfen Sie bei Beobachtungsdaten auf einen Confounder, bevor Sie einen Unterschied als Effekt lesen.</p>
 </section>
 <section id="road-map-for-part-3" class="level2">
 <h2 class="anchored" data-anchor-id="road-map-for-part-3">Wegweiser für Teil 3</h2>
-<p>So sieht der Plan aus. Die erste Aufgabe ist, einen Vergleich zu bekommen, dem Sie glauben können. Wenn Sie randomisieren können, liefert der A/B-Test die verlässlichste Antwort. Wenn nicht, rekonstruieren quasi-experimentelle Designs den Vergleich daraus, wie das Treatment zugewiesen wurde, und das schließt die Maßnahme ein, die an einem bekannten Datum alle erreicht hat und bei der der fehlende Pfad ohne Treatment aus der eigenen Historie der Zeitreihe prognostiziert wird. Die zweite Aufgabe beginnt, sobald Sie einen Effekt haben, dem Sie vertrauen, und fragt, wie er sich von Kunde zu Kunde unterscheidet, damit Sie kein Geld mehr für Personen ausgeben, die ohnehin konvertiert hätten. Genau das leisten Meta-Learner und Uplift-Modeling.</p>
+<p>Die erste Aufgabe ist, einen Vergleich zu bekommen, dem Sie glauben können. Wenn Sie randomisieren können, liefert der A/B-Test die verlässlichste Antwort. Wenn nicht, rekonstruieren quasi-experimentelle Designs den Vergleich daraus, wie das Treatment zugewiesen wurde, und das schließt die Maßnahme ein, die an einem bekannten Datum alle erreicht hat und bei der der fehlende Pfad ohne Treatment aus der eigenen Historie der Zeitreihe prognostiziert wird. Die zweite Aufgabe beginnt, sobald Sie einen Effekt haben, dem Sie vertrauen, und fragt, wie er sich von Kunde zu Kunde unterscheidet, damit Sie kein Geld mehr für Personen ausgeben, die ohnehin konvertiert hätten. Genau das leisten Meta-Learner und Uplift-Modeling.</p>
 
 
 </section>

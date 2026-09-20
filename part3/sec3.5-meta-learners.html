@@ -641,8 +641,8 @@ window.Quarto = {
 </header>
 
 
-<p>The methods in previous chapters estimate one number for a whole group: the Average Treatment Effect (ATE), or the average impact of a treatment across everyone it reached. But in marketing, averages can be misleading. For example, a coupon might increase purchases by 5% on average, but that number hides the real story. Some customers might respond with a 20% lift, while others see no effect or even a drop. If you could identify which customers actually respond, you could spend your budget much more effectively.</p>
-<p>Meta-learners try to estimate treatment effects for each individual customer. But what does that actually look like in practice?</p>
+<p>A coupon that increases purchases by 5% on average can have very different effects on different customers: some might respond with a 20% lift, while others see no effect or even a drop. The methods in the previous chapters estimate one number for a whole group, the Average Treatment Effect (ATE), or the average impact of a treatment across everyone it reached. In marketing, that average can be misleading. If you could identify which customers actually respond, you could spend your budget much more effectively.</p>
+<p>Meta-learners try to estimate treatment effects for each individual customer. The rest of this chapter defines the quantity they estimate and compares the main approaches.</p>
 <section id="treatment-effects-ate-cate-ite" class="level2">
 <h2 class="anchored" data-anchor-id="treatment-effects-ate-cate-ite">Treatment Effects: ATE, CATE, ITE</h2>
 <p>To define the treatment effect, we turn to the Potential Outcomes Framework. The treatment effect is the difference in outcomes caused by a treatment: formally, <span class="math inline">\(\tau = Y(1) - Y(0)\)</span>, where <span class="math inline">\(Y(1)\)</span> is the outcome under treatment and <span class="math inline">\(Y(0)\)</span> is the outcome under control. For example, if the potential purchase rate with a coupon is 20% and the rate without it is 10%, the treatment effect is 10%.</p>
@@ -662,7 +662,7 @@ Figure&nbsp;1: The treatment effect as a difference in potential outcomes.
 <li>CATE (Conditional Average Treatment Effect): the average effect for customers with specific characteristics. “Did the coupon work better for urban customers under 30?”</li>
 <li>ITE (Individual Treatment Effect): the effect for a specific individual. Unobservable in practice, but CATE provides our best estimate.</li>
 </ul>
-<p>Why does this matter? Because not all customers behave the same way. A price-sensitive customer might jump at a discount, while a brand-loyal customer would have bought at full price anyway. If you know who is who, you can target discounts where they actually drive extra sales, instead of giving away margin to customers who would have purchased regardless.</p>
+<p>This distinction matters because customers do not respond to the same offer in the same way. A price-sensitive customer may buy only with a discount, while a brand-loyal customer would have bought at full price anyway. If you know who is who, you can target discounts where they actually drive extra sales, instead of giving away margin to customers who would have purchased regardless.</p>
 </section>
 <section id="why-we-need-meta-learners" class="level2">
 <h2 class="anchored" data-anchor-id="why-we-need-meta-learners">Why We Need Meta Learners</h2>
@@ -711,7 +711,7 @@ Figure&nbsp;3: S-learner: one model predicts both potential outcomes.
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'treatment_effect'</span>] <span class="op">=</span> df[<span class="st">'sales_treated'</span>] <span class="op">-</span> df[<span class="st">'sales_control'</span>]</span>
 <span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>ATE <span class="op">=</span> df[<span class="st">'treatment_effect'</span>].mean()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>S-learner is the simplest way to start, and often a reasonable baseline. But it has a key weakness: if the treatment effect is small compared to other features, the model can end up ignoring the treatment variable, especially if you use regularization. This means your CATE estimates can be biased toward zero.</p>
+<p>S-learner is the simplest way to start, and often a reasonable baseline. But it has a key weakness: if the treatment effect is small compared to other features, regularization can shrink the treatment variable’s contribution to near zero. This means your CATE estimates can be biased toward zero.</p>
 </section>
 <section id="t-learner-two-separate-models" class="level2">
 <h2 class="anchored" data-anchor-id="t-learner-two-separate-models">T-Learner: Two Separate Models</h2>
@@ -744,11 +744,11 @@ Figure&nbsp;4: T-learner: separate models fill each potential-outcome column.
 <span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'treatment_effect'</span>] <span class="op">=</span> df[<span class="st">'sales_treated'</span>] <span class="op">-</span> df[<span class="st">'sales_control'</span>]</span>
 <span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>ATE <span class="op">=</span> df[<span class="st">'treatment_effect'</span>].mean()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>T-learner is more flexible because each model can learn different patterns for treated and control groups. But there is a tradeoff: it can have high variance, especially if your treatment and control groups are imbalanced. When you subtract the predictions, errors from both models can add up.</p>
-<p>So, S-learner is simple but tends to underestimate effects. T-learner avoids that particular failure, at the cost of noisier estimates. What can we do next?</p>
+<p>S-learner is simple but tends to underestimate effects; T-learner avoids that at the cost of noisier estimates. The methods below address both limitations.</p>
 </section>
 <section id="advanced-meta-learners" class="level2">
 <h2 class="anchored" data-anchor-id="advanced-meta-learners">Advanced Meta-Learners</h2>
-<p>Beyond S and T, several more sophisticated methods address their limitations:</p>
+<p>Beyond S and T, there are several more sophisticated methods:</p>
 <ul>
 <li>X-Learner: An extension of T-learner designed for imbalanced treatment groups. It imputes the missing counterfactuals and combines them using propensity-score weighting. Works well when one group is much larger than the other.</li>
 <li>DR-Learner (Doubly Robust): Combines outcome modeling and propensity score estimation. Consistent if either model is correctly specified, hence “doubly robust.”</li>
@@ -764,13 +764,13 @@ Figure&nbsp;5: Meta-learner methods, from simple to complex.
 </figcaption>
 </figure>
 </div>
-<p>Theory tells us what each method is supposed to optimize. But the real test is seeing how they perform on the same dataset, where you can see the practical differences.</p>
+<p>Which of these performs best depends on the data, so the next section applies all of them to the same dataset.</p>
 </section>
 <section id="example-estimating-heterogeneous-email-effects" class="level2">
 <h2 class="anchored" data-anchor-id="example-estimating-heterogeneous-email-effects">Example: Estimating Heterogeneous Email Effects</h2>
-<p>To see how these methods behave, we need a dataset where we can check their work. That is harder than it sounds. In real data we never observe a customer’s true treatment effect, so we cannot tell whether a meta-learner recovered the right pattern or just produced plausible noise.</p>
-<p>We solve this with a semi-synthetic example built on Kevin Hillstrom’s MineThatData email experiment, a classic marketing dataset of 64,000 customers randomized to a men’s-merchandise email, a women’s email, or no email. We keep the real customer features (recency, purchase history, channel, and the rest) and the real randomized assignment for the binary contrast of men’s email versus no email. Only the outcomes are simulated: we define a baseline purchase probability and a treatment effect <span class="math inline">\(\tau(x)\)</span> that is larger for men’s-merchandise buyers, recently active customers, and multichannel shoppers. Because we wrote <span class="math inline">\(\tau(x)\)</span> ourselves, we know each customer’s true CATE and can grade every learner against it.</p>
-<p>This is a teaching device. The goal is not to estimate the average effect better than the experiment already does, but to check whether a meta-learner recovers the heterogeneity we planted.</p>
+<p>To see how these methods behave, we need a dataset where we can check their work. In real data we never observe a customer’s true treatment effect, so we cannot tell whether a meta-learner recovered the right pattern or just produced plausible noise.</p>
+<p>We solve this with a semi-synthetic example built on Kevin Hillstrom’s MineThatData email experiment, a classic marketing dataset of 64,000 customers randomized to a men’s-merchandise email, a women’s email, or no email. We keep the real customer features (recency, purchase history, channel, and the rest) and the real randomized assignment for the binary contrast of men’s email versus no email. Only the outcomes are simulated: we define a baseline purchase probability and a treatment effect <span class="math inline">\(\tau(x)\)</span> that is larger for men’s-merchandise buyers, recently active customers, and multichannel shoppers. Because we wrote <span class="math inline">\(\tau(x)\)</span> ourselves, we know each customer’s true CATE, and every learner can be compared against it.</p>
+<p>This setup is for teaching: the goal is to check whether a meta-learner recovers the heterogeneity we planted, not to improve on the experiment’s own average effect.</p>
 <p><strong>Companion notebook:</strong> <code>sec3.5_meta_learners.ipynb</code> compares S-, T-, X-, and DR-learners and CausalForestDML against the known true CATE on the semi-synthetic MineThatData experiment.<br>
 <a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.5_meta_learners.ipynb">View on GitHub</a></p>
 <p>All five learners recover the average effect and, more usefully, the segment-level pattern. The scatter below compares estimated CATE against the true effect for a representative learner. The estimates cluster around the 45-degree line, so customers are ranked in roughly the right order, with vertical spread that reflects the noise of binary outcomes.</p>
@@ -795,7 +795,7 @@ Figure&nbsp;7: Estimated versus true CATE by segment.
 </figcaption>
 </figure>
 </div>
-<p>Which learner ranks customers best is data-dependent. Graded against the true CATE on the holdout set, this clean, balanced experiment favors the simple learners:</p>
+<p>Which learner ranks customers best is data-dependent. Compared against the true CATE on the holdout set, this clean, balanced experiment favors the simple learners:</p>
 <div id="tbl-cate-recovery" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-cate-recovery-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -847,14 +847,14 @@ Table&nbsp;1: Recovery of the true CATE by learner on the holdout set.
 </div>
 </figure>
 </div>
-<p>All five recover the roughly 11-point average effect we planted; what separates them is the correlation with the true CATE, which is what governs ranking quality. The S-learner and X-learner come out ahead, while the two-model and cross-fitting learners pay a variance cost. On noisier or imbalanced data the order can change, which is exactly why you check recovery rather than trusting one method by reputation.</p>
+<p>All five recover the roughly 11-point average effect we planted; what separates them is the correlation with the true CATE, which is what governs ranking quality. The S-learner and X-learner come out ahead, while the two-model and cross-fitting learners have higher variance on this data. On noisier or imbalanced data the order can change, so on real data compare learners on held-out experimental outcomes and check that their rankings are stable; §3.6 shows how.</p>
 </section>
 <section id="what-to-check-before-trusting-cate" class="level2">
 <h2 class="anchored" data-anchor-id="what-to-check-before-trusting-cate">What to Check Before Trusting CATE</h2>
-<p>This example was forgiving by design: randomized treatment, perfect overlap, and a known answer. Real projects rarely are. Before you act on CATE estimates:</p>
+<p>This example had randomized treatment, full overlap, and a known answer, which real projects rarely have. Before you act on CATE estimates:</p>
 <ul>
 <li>A meta-learner does not create a causal comparison. It models how the effect varies inside one you already have, so on observational data the CATE inherits every confounding problem the underlying comparison carries.</li>
-<li>The individual treatment effect is never observed in real data. We could grade the learners here only because we simulated the truth.</li>
+<li>The individual treatment effect is never observed in real data. We could check the learners here only because we simulated the truth.</li>
 <li>CATE is a model estimate, not a measurement. Read it at the group or segment level, not as a literal number for one customer.</li>
 <li>Sanity-check the average. If the mean estimated CATE is far from a simple difference in means on an experiment, something is wrong.</li>
 <li>Check stability across learners. If S, T, X, and the causal forest disagree on the ranking, trust none of them yet.</li>
@@ -865,7 +865,7 @@ Table&nbsp;1: Recovery of the true CATE by learner on the holdout set.
 <h2 class="anchored" data-anchor-id="key-takeaways">Key Takeaways</h2>
 <ul>
 <li>ATE asks whether the treatment worked; CATE asks for whom. Meta-learners estimate that variation inside a causal comparison you already have, and none of them repairs confounding you did not measure.</li>
-<li>CATE is a group-level model estimate, and the true effect is never observed in real data, so no learner earns trust by reputation. Check the mean against the experiment, stability across learners, and overlap.</li>
+<li>CATE is a group-level model estimate, and the true effect is never observed in real data, so no learner should be chosen on reputation alone. Check the mean against the experiment, stability across learners, and overlap.</li>
 </ul>
 
 

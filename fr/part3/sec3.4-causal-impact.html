@@ -628,16 +628,15 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 <p><strong>À propos de la version française</strong><br>
 Cette page est une traduction par IA de la version anglaise de <em>Marketing Science in Python</em>. La version anglaise fait foi et prévaut en cas de divergence. Le code, les notebooks et le texte intégré aux images restent en anglais. <a href="../../part3/sec3.4-causal-impact.html" class="translation-source-link">Lire la version anglaise</a></p>
 </div>
-<p>Chaque protocole du <a href="sec3.3-quasi-experiments.html">chapitre précédent</a> disposait d’un groupe témoin. Certains magasins avaient reçu le présentoir, d’autres non. Un marché avait été exposé à la campagne, les autres non. Ce chapitre traite du cas où il n’existe aucun groupe témoin.</p>
-<p>Une campagne télévisée nationale a duré huit semaines. Les ventes ont augmenté. Mais tous les marchés ont été exposés, donc aucun marché non traité ne permet de comparaison. Quelles auraient été les ventes sans la campagne ?</p>
-<p>Ce chapitre a un seul objectif : construire cette trajectoire manquante sans campagne et décider si elle est suffisamment crédible pour servir à mesurer la campagne. La construction tient en quinze lignes de code. Décider si l’on peut s’y fier occupe le reste du chapitre.</p>
+<p>Une campagne télévisée nationale a duré huit semaines sur tous les marchés, et les ventes ont augmenté. Tous les marchés ayant été exposés, aucun marché non traité ne permet de comparaison, et chaque protocole quasi expérimental du <a href="sec3.3-quasi-experiments.html">chapitre précédent</a> en exige un. Quelles auraient été les ventes sans la campagne ?</p>
+<p>Ce chapitre a un seul objectif : construire cette trajectoire manquante sans campagne et décider si elle est suffisamment crédible pour servir à mesurer la campagne. La construire tient en une quinzaine de lignes de code ; la valider occupe le reste du chapitre.</p>
 <section id="sec-counterfactual-recipe" class="level2">
 <h2 class="anchored" data-anchor-id="sec-counterfactual-recipe">Construire le contrefactuel</h2>
 <p><strong>Idée centrale :</strong> prévoyez les ventes que vous auriez observées sans la campagne. L’effet correspond aux ventes observées moins cette prévision.</p>
-<p>Sans groupe témoin, la comparaison doit venir du temps. Ajustez un modèle de séries temporelles aux ventes <em>avant</em> la campagne, pour qu’elle ne puisse pas s’y introduire. Projetez le modèle sur la fenêtre de campagne. Cette projection est le contrefactuel, et l’écart entre elle et ce qui s’est réellement passé est l’effet estimé.</p>
-<p>La prévision peut tout de même utiliser des <strong>séries de contrôle</strong>, et il convient de préciser qu’elles ne constituent pas un groupe témoin. Un groupe témoin se compose d’unités non traitées de même nature : des magasins qui n’ont pas reçu le présentoir. Une série de contrôle est un prédicteur : toute série que la campagne ne pouvait pas affecter, comme un indice de demande de la catégorie ou une gamme de produits apparentée sans soutien média. Elle n’est pas comparée à la marque. Elle indique à la prévision comment le marché évoluait pendant la campagne.</p>
+<p>Sans groupe témoin, la comparaison doit être construite à partir de l’historique de la série elle-même. Ajustez un modèle de séries temporelles aux ventes <em>avant</em> la campagne, pour qu’elle ne puisse pas s’y introduire. Projetez le modèle sur la fenêtre de campagne. Cette projection est le contrefactuel, et l’écart entre elle et ce qui s’est réellement passé est l’effet estimé.</p>
+<p>La prévision peut tout de même utiliser des <strong>séries de contrôle</strong>, et il convient de préciser qu’elles ne constituent pas un groupe témoin. Un groupe témoin se compose d’unités non traitées de même nature : des magasins qui n’ont pas reçu le présentoir. Une série de contrôle est un prédicteur : toute série que la campagne ne pouvait pas affecter, comme un indice de demande de la catégorie ou une gamme de produits apparentée sans soutien média. Une série de contrôle n’est pas comparée à la marque ; elle entre dans le modèle comme un régresseur qui porte l’évolution du marché pendant la campagne.</p>
 <p>L’implémentation la plus connue est <strong>CausalImpact</strong>, que Google a publié sous forme de package R et que Brodersen et ses collègues ont décrit dans un article de 2015. Dans la littérature sur l’inférence causale, le même protocole est appelé série temporelle interrompue. Des portages Python existent (<code>tfp-causalimpact</code>, et <code>InterruptedTimeSeries</code> dans <code>CausalPy</code>). Ce chapitre construit directement la même logique avec <code>statsmodels</code>, pour que chaque hypothèse reste visible.</p>
-<p>C’est le dernier échelon de l’échelle du chapitre précédent, et le tableau montre ce qui a changé en la montant :</p>
+<p>Le tableau ci-dessous compare ce protocole aux DiD et au contrôle synthétique selon ce que chacun exige :</p>
 <table class="caption-top table">
 <caption>Trois façons de construire les ventes que vous n’avez pas observées.</caption>
 <thead>
@@ -669,7 +668,7 @@ Cette page est une traduction par IA de la version anglaise de <em>Marketing Sci
 </tr>
 </tbody>
 </table>
-<p>L’exemple détaillé porte sur une marque nationale de produits de grande consommation : quatre années de chiffre d’affaires hebdomadaire, une campagne télévisée et de relations publiques de huit semaines, puis vingt semaines d’observation. Deux séries de contrôle : un indice de demande de la sous-catégorie et une gamme de produits apparentée qui n’a reçu aucun soutien média. Les données sont synthétiques, donc la véritable trajectoire sans campagne est connue. Avant tout code, le cadrage :</p>
+<p>L’exemple détaillé porte sur une marque nationale de produits de grande consommation : quatre années de chiffre d’affaires hebdomadaire, une campagne télévisée et de relations publiques de huit semaines, puis vingt semaines d’observation. Deux séries de contrôle : un indice de demande de la sous-catégorie et une gamme de produits apparentée qui n’a reçu aucun soutien média. Les données sont synthétiques, donc la véritable trajectoire sans campagne est connue. Avant tout code, fixez le cadrage de l’analyse :</p>
 <div class="callout callout-style-default callout-note callout-titled" title="Cadrage de l’analyse">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -688,14 +687,14 @@ Cette page est une traduction par IA de la version anglaise de <em>Marketing Sci
 </ul>
 </div>
 </div>
-<p>Cette dernière ligne est une décision, prise maintenant, avant que quiconque ait vu un chiffre. C’est pourquoi la prévision ci-dessous porte sur 28 semaines, et pourquoi la section consacrée plus loin à la fenêtre de restitution est une vérification plutôt qu’un choix.</p>
+<p>L’estimand est une décision, et elle est fixée ici plutôt qu’une fois les résultats connus. C’est pourquoi la prévision ci-dessous porte sur 28 semaines, et pourquoi la section consacrée plus loin à la fenêtre de restitution est une vérification plutôt qu’un choix.</p>
 <div id="fig-panel" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Quatre années de chiffre d’affaires de la marque avec la véritable trajectoire sans traitement indiquée, au-dessus d’un indice de demande de la sous-catégorie et d’une gamme de produits apparentée ; la période de diffusion de huit semaines est ombrée.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-panel-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="../images/part3/sec3.4/01_panel_overview.png" class="fig-lg img-fluid figure-img" alt="Quatre années de chiffre d’affaires de la marque avec la véritable trajectoire sans traitement indiquée, au-dessus d’un indice de demande de la sous-catégorie et d’une gamme de produits apparentée ; la période de diffusion de huit semaines est ombrée.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-panel-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;1: La marque traitée et ses deux séries de contrôle
+Figure&nbsp;1: La marque traitée et ses deux séries de contrôle.
 </figcaption>
 </figure>
 </div>
@@ -725,14 +724,14 @@ Figure&nbsp;1: La marque traitée et ses deux séries de contrôle
 <span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>weekly_effect <span class="op">=</span> y_post <span class="op">-</span> counterfactual</span>
 <span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>cumulative <span class="op">=</span> weekly_effect.<span class="bu">sum</span>()</span>
 <span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>lo, hi <span class="op">=</span> np.percentile((y_post[:, <span class="va">None</span>] <span class="op">-</span> paths).<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">0</span>), [<span class="fl">2.5</span>, <span class="fl">97.5</span>])</span></code></pre></div><button title="Copier vers le presse-papier" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Trois choix dans ce code comptent. Le modèle est ajusté uniquement sur la période préalable, pour que la campagne ne puisse pas contaminer sa propre référence. Les ventes sont modélisées en logarithmes, car l’augmentation due à une campagne et la saisonnalité sont toutes deux multiplicatives, et les trajectoires simulées sont reconverties en dollars avant toute somme. Enfin, les séries de contrôle entrent comme régresseurs, pour que la prévision sache ce qu’a fait le marché pendant la campagne. Savoir si le modèle a aussi besoin d’un terme de tendance, ou même des séries de contrôle, n’est pas une affaire de goût. La section suivante tranche par la mesure.</p>
+<p>Trois choix dans ce code comptent. Le modèle est ajusté uniquement sur la période préalable, pour que la campagne ne puisse pas contaminer sa propre référence. Les ventes sont modélisées en logarithmes, car l’augmentation due à une campagne et la saisonnalité sont toutes deux multiplicatives, et les trajectoires simulées sont reconverties en dollars avant toute somme. Enfin, les séries de contrôle entrent comme régresseurs, pour que la prévision sache ce qu’a fait le marché pendant la campagne. Savoir si le modèle a aussi besoin d’un terme de tendance, ou même des séries de contrôle, est tranché par la validation rétrospective de la section suivante.</p>
 </section>
 <section id="sec-preperiod-validation" class="level2">
 <h2 class="anchored" data-anchor-id="sec-preperiod-validation">Valider le contrefactuel avant de mesurer</h2>
-<p>Cette étape n’est pas facultative. L’effet que vous présenterez correspond à l’observation moins la prévision, donc chaque dollar d’erreur de prévision devient un dollar d’effet fictif. Avant d’utiliser la prévision pour mesurer la campagne, vous devez montrer qu’elle peut prédire une période où rien ne s’est passé. Trois vérifications le permettent, et toutes trois portent exclusivement sur la période préalable.</p>
+<p>L’effet que vous présenterez correspond à l’observation moins la prévision, donc l’erreur de prévision se répercute intégralement dans l’effet estimé. C’est ce qui rend cette étape obligatoire. Avant d’utiliser la prévision pour mesurer la campagne, vous devez montrer qu’elle peut prédire une période où rien ne s’est passé. Trois vérifications le permettent, et toutes trois portent exclusivement sur la période préalable.</p>
 <section id="backtesting-the-forecast" class="level3">
 <h3 class="anchored" data-anchor-id="backtesting-the-forecast">Tester rétrospectivement la prévision</h3>
-<p>Le modèle peut-il prédire le monde sans traitement ? Faites comme si la campagne avait commencé à une date antérieure, au sein de la période préalable. Ajustez le modèle sur les données précédant cette date, prévoyez les vingt-huit semaines suivantes et comparez à ce qui s’est réellement passé. Répétez à partir de plusieurs dates. Vingt-huit semaines parce que c’est l’estimand du cadrage, et qu’un modèle satisfaisant sur huit semaines peut s’effondrer sur vingt-huit.</p>
+<p>La première vérification consiste à savoir si le modèle peut prévoir une période où rien ne s’est passé. Faites comme si la campagne avait commencé à une date antérieure, au sein de la période préalable. Ajustez le modèle sur les données précédant cette date, prévoyez les vingt-huit semaines suivantes et comparez à ce qui s’est réellement passé. Répétez l’opération à partir de plusieurs dates. L’horizon est de vingt-huit semaines parce que c’est l’estimand du cadrage, et qu’un modèle satisfaisant sur huit semaines peut s’effondrer sur vingt-huit. Les résultats ci-dessous déterminent la spécification.</p>
 <table class="caption-top table">
 <caption>Validation à origine glissante sur neuf fenêtres de la période préalable où rien ne s’est passé.</caption>
 <thead>
@@ -770,44 +769,44 @@ Figure&nbsp;1: La marque traitée et ses deux séries de contrôle
 </tr>
 </tbody>
 </table>
-<p>Le tableau dicte la décision. La tendance avec séries de contrôle présente l’erreur la plus faible et le biais le plus faible : c’est donc la spécification retenue. Deux détails comptent au passage. Les séries de contrôle divisent l’erreur par deux : sur ces données, elles justifient donc leur présence. Et le terme de tendance compte à cet horizon : la marque progresse plus vite que sa sous-catégorie, et un modèle sans pente attribuerait cet écart à la campagne.</p>
+<p>La tendance avec séries de contrôle présente l’erreur la plus faible et le biais le plus faible : c’est donc la spécification retenue, avec deux détails à noter. Les séries de contrôle divisent l’erreur par deux : sur ces données, elles justifient donc leur présence. Et le terme de tendance compte à cet horizon : la marque progresse plus vite que sa sous-catégorie, et un modèle sans pente attribuerait cet écart à la campagne.</p>
 </section>
 <section id="placebo-interventions" class="level3">
 <h3 class="anchored" data-anchor-id="placebo-interventions">Interventions placebo</h3>
-<p>Le protocole invente-t-il des effets lorsqu’il ne s’est rien passé ? Choisissez une date dans la période préalable, par exemple la semaine 120, où il n’y avait pas de campagne. Faites comme si une campagne avait commencé cette semaine-là et exécutez l’analyse complète. La bonne réponse est zéro, donc tout résultat obtenu correspond à ce que ce protocole produit à partir du bruit. C’est une <strong>intervention placebo</strong>, et les neuf fenêtres de validation rétrospective ci-dessus servent aussi de neuf placebos. Ici, le plus grand effet placebo était de $636k, et l’un des neuf a donné un intervalle excluant zéro. Gardez ces deux chiffres en tête. L’estimation de la campagne doit franchir ces deux repères.</p>
+<p>La deuxième vérification porte sur ce que le protocole renvoie lorsqu’il ne s’est rien passé. Choisissez une date dans la période préalable, par exemple la semaine 120, où il n’y avait pas de campagne. Faites comme si une campagne avait commencé cette semaine-là et exécutez l’analyse complète. La bonne réponse est zéro, donc tout résultat non nul mesure ce que ce protocole renvoie à partir du seul bruit. C’est une <strong>intervention placebo</strong>, et les neuf fenêtres de validation rétrospective ci-dessus servent aussi de neuf placebos. Ici, le plus grand effet placebo était de $636k, et l’un des neuf a donné un intervalle excluant zéro. Notez ces deux chiffres, et exigez que l’estimation de la campagne les dépasse.</p>
 <div id="fig-validation" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="À gauche, l’erreur de prévision par spécification sur les fenêtres de la période préalable ; à droite, la dispersion des effets cumulés produits par le protocole à des dates où rien ne s’est passé.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-validation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="../images/part3/sec3.4/02_validation_and_placebo.png" class="fig-lg img-fluid figure-img" alt="À gauche, l’erreur de prévision par spécification sur les fenêtres de la période préalable ; à droite, la dispersion des effets cumulés produits par le protocole à des dates où rien ne s’est passé.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-validation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;2: Validation et tests placebo avant la campagne
+Figure&nbsp;2: Validation et tests placebo avant la campagne.
 </figcaption>
 </figure>
 </div>
 </section>
 <section id="checking-that-the-controls-help" class="level3">
 <h3 class="anchored" data-anchor-id="checking-that-the-controls-help">Vérifier que les séries de contrôle sont utiles</h3>
-<p>Les séries de contrôle améliorent-elles réellement la prévision ? La validation rétrospective a déjà répondu oui sur ces données, et il est utile de voir ce que cela apporte. Dans un monde calme, les séries de contrôle divisent la largeur de l’intervalle par douze. Lorsqu’un recul de l’ensemble de la catégorie touche trois semaines de la campagne, l’estimation avec séries de contrôle se situe à moins de 1,3 % de la vérité, car le contrefactuel recule avec le marché. Sans séries de contrôle, le même recul est imputé à la campagne, et l’estimation se situe 21 % en dessous de la vérité. C’est ce que fait une bonne série de contrôle : elle absorbe les chocs qui touchent tout le monde, pour que le modèle ne les confonde pas avec la campagne.</p>
+<p>Les séries de contrôle améliorent-elles réellement la prévision ? La validation rétrospective a déjà répondu oui sur ces données, et il est utile de voir ce que cela apporte. Dans un monde calme, les séries de contrôle divisent la largeur de l’intervalle par douze. Lorsqu’un recul de l’ensemble de la catégorie touche trois semaines de la campagne, l’estimation avec séries de contrôle se situe à moins de 1,3 % de la vérité, car le contrefactuel recule avec le marché. Sans séries de contrôle, le même recul est attribué à la campagne, et l’estimation se situe 21 % en dessous de la vérité. Une série de contrôle utile porte les chocs qui touchent l’ensemble du marché, de sorte que le contrefactuel évolue avec eux au lieu de les laisser dans l’effet estimé.</p>
 <p>Cela ne fonctionne que si la campagne n’a pas affecté la série de contrôle. C’est l’hypothèse qui ne peut pas être testée à partir des données, et elle a sa propre section, <a href="#sec-failure-modes">Quand ne pas se fier à l’estimation</a>.</p>
 </section>
 </section>
 <section id="sec-reading-the-campaign" class="level2">
 <h2 class="anchored" data-anchor-id="sec-reading-the-campaign">Estimer l’effet de la campagne</h2>
-<p>Ce n’est que maintenant que la fenêtre de campagne est utilisée. La spécification choisie est ajustée sur l’ensemble de la période préalable, puis projetée vers l’avenir. Le résultat est le graphique à trois panneaux devenu la présentation habituelle d’une campagne ponctuelle : observations face au contrefactuel, écart hebdomadaire et cumul progressif.</p>
+<p>La fenêtre de campagne n’est utilisée qu’à ce stade. La spécification choisie est ajustée sur l’ensemble de la période préalable, puis projetée vers l’avenir. Le résultat est le graphique à trois panneaux devenu la présentation habituelle d’une campagne ponctuelle : observations face au contrefactuel, écart hebdomadaire et cumul progressif.</p>
 <div id="fig-impact-panels" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Trois panneaux superposés montrant la série observée face à son contrefactuel, l’effet hebdomadaire et une courbe cumulée qui monte puis restitue une partie de ses gains.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-impact-panels-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="../images/part3/sec3.4/03_impact_three_panel.png" class="fig-lg img-fluid figure-img" alt="Trois panneaux superposés montrant la série observée face à son contrefactuel, l’effet hebdomadaire et une courbe cumulée qui monte puis restitue une partie de ses gains.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-impact-panels-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;3: Observations, effet hebdomadaire et effet cumulé
+Figure&nbsp;3: Observations, effet hebdomadaire et effet cumulé.
 </figcaption>
 </figure>
 </div>
 <section id="choosing-the-reporting-window" class="level3">
 <h3 class="anchored" data-anchor-id="choosing-the-reporting-window">Choisir la fenêtre de restitution</h3>
-<p>Le cadrage a fixé l’estimand à 28 semaines. Voici pourquoi cela comptait. Regardez le panneau du cumul : la courbe monte pendant les huit semaines de diffusion, continue à monter quelques semaines après grâce aux effets persistants, puis redescend lorsque la demande anticipée se traduit par une baisse compensatoire. Trois fenêtres, chacune apparemment raisonnable, donnent trois chiffres différents.</p>
+<p>Le cadrage a fixé l’estimand à 28 semaines. Regardez le panneau du cumul : la courbe monte pendant les huit semaines de diffusion, continue à monter quelques semaines après grâce aux effets persistants, puis redescend lorsque la demande anticipée se traduit par une baisse compensatoire. Trois fenêtres, chacune apparemment raisonnable, donnent trois chiffres différents.</p>
 <table class="caption-top table">
 <caption>Le même modèle et la même campagne, lus sur trois fenêtres.</caption>
 <thead>
@@ -843,11 +842,11 @@ Figure&nbsp;3: Observations, effet hebdomadaire et effet cumulé
 </tr>
 </tbody>
 </table>
-<p>Les trois estimations sont exactes pour la fenêtre qu’elles couvrent. Seule la dernière répond au cadrage, car elle seule comptabilise la baisse compensatoire. S’arrêter à la semaine 12, au sommet de la courbe, surestime la réponse complète de 38 %. Le modèle n’était pas en cause. La fenêtre l’était. Voilà pourquoi la fenêtre figure dans le cadrage, avant que quiconque regarde la courbe.</p>
+<p>Les trois estimations sont exactes pour la fenêtre qu’elles couvrent. Seule la dernière répond au cadrage, car elle seule comptabilise la baisse compensatoire. S’arrêter à la semaine 12, au sommet de la courbe, surestime la réponse complète de 38 %. Les trois chiffres proviennent du même modèle et ne diffèrent que par la fenêtre de restitution, ce qui explique pourquoi la fenêtre est fixée dans le cadrage plutôt que choisie une fois la courbe tracée.</p>
 </section>
 <section id="sec-two-uncertainties" class="level3">
 <h3 class="anchored" data-anchor-id="sec-two-uncertainties">Quelle confiance accorder à l’intervalle</h3>
-<p>La bande du graphique maintient le modèle ajusté fixe et propage son bruit vers l’avenir. Elle constitue donc un plancher de l’incertitude réelle, pas sa totalité. Deux éléments aident à l’interpréter. D’abord, les résultats placebo : l’estimation de $1,164k dépasse tous les effets placebo produits par ce protocole, dont le plus grand était de $636k. C’est une indication plus utile qu’une valeur p, car elle s’exprime dans les mêmes unités que la décision. Ensuite, l’audit ci-dessous.</p>
+<p>La bande du graphique maintient le modèle ajusté fixe et propage son bruit vers l’avenir. Elle constitue donc un plancher de l’incertitude réelle, pas sa totalité. Deux éléments aident à l’interpréter : les résultats placebo et l’audit ci-dessous. L’estimation de $1,164k dépasse tous les effets placebo produits par ce protocole, dont le plus grand était de $636k. Exprimé en dollars, ce constat est directement comparable à la décision, ce qu’une valeur p n’est pas.</p>
 <div class="callout callout-style-default callout-note callout-titled" title="Pour approfondir : que vaut vraiment ce protocole ?">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -858,52 +857,52 @@ Figure&nbsp;3: Observations, effet hebdomadaire et effet cumulé
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>Le notebook réexécute la spécification choisie sur deux cents nouveaux jeux de données synthétiques et l’évalue chaque fois par rapport à la vérité. L’intervalle nominal à 95 % couvre la vérité dans 90 % des cas. Un effet réel est signalé comme significatif dans 60 % des cas. Lorsque l’effet réel est nul, il est déclaré significatif dans 9 % des cas. Ce n’est pas un modèle faible. C’est une situation de mesure peu favorable : une seule série traitée, aucune randomisation, un effet faible par rapport au bruit. Si la décision exige davantage, menez une expérience géographique la prochaine fois (<a href="../part6/sec6.3-incrementality-experiments.html">chapitre 6.3</a>).</p>
+<p>Le notebook réexécute la spécification choisie sur deux cents nouveaux jeux de données synthétiques et la confronte chaque fois à la vérité. L’intervalle nominal à 95 % couvre la vérité dans 90 % des cas. Un effet réel est signalé comme significatif dans 60 % des cas. Lorsque l’effet réel est nul, il est déclaré significatif dans 9 % des cas. Ces chiffres reflètent la situation de mesure plutôt que le modèle : une seule série traitée, aucune randomisation et un effet faible par rapport au bruit. Si la décision exige davantage, menez une expérience géographique la prochaine fois (<a href="../part6/sec6.3-incrementality-experiments.html">section 6.3</a>).</p>
 </div>
 </div>
 </section>
 </section>
 <section id="sec-failure-modes" class="level2">
 <h2 class="anchored" data-anchor-id="sec-failure-modes">Quand ne pas se fier à l’estimation</h2>
-<p>Trois choses invalident cette analyse. Deux d’entre elles ne laissent aucune trace dans les données.</p>
+<p>Trois choses invalident cette analyse, et deux d’entre elles ne laissent aucune trace dans les données.</p>
 <div id="fig-scenarios" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Estimations et intervalles comparés à la vérité connue dans six scénarios, allant de séries de contrôle non affectées à un choc de marché, une série de contrôle contaminée et une relation rompue.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-scenarios-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="../images/part3/sec3.4/04_scenarios.png" class="fig-lg img-fluid figure-img" alt="Estimations et intervalles comparés à la vérité connue dans six scénarios, allant de séries de contrôle non affectées à un choc de marché, une série de contrôle contaminée et une relation rompue.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-scenarios-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;4: Ce qu’apportent les séries de contrôle et ce qui les invalide
+Figure&nbsp;4: Estimations dans six scénarios de séries de contrôle.
 </figcaption>
 </figure>
 </div>
 <section id="the-campaign-touched-a-control" class="level3">
 <h3 class="anchored" data-anchor-id="the-campaign-touched-a-control">La campagne a affecté une série de contrôle</h3>
-<p>Plus une série de contrôle est prédictive, plus il est probable que la campagne l’ait touchée. L’indice de la sous-catégorie porte l’essentiel du pouvoir explicatif du modèle, et c’est précisément pourquoi une campagne nationale pour une grande marque de cette sous-catégorie le menace. Faites passer 35 % de l’augmentation de la marque dans l’indice, et l’estimation ne conserve que 65 % de l’effet réel, avec un intervalle qui n’exclut plus zéro. Une campagne qui a fonctionné paraît désormais non concluante. Et tous les diagnostics sont satisfaisants : l’ajustement sur la période préalable est bon, l’intervalle est étroit, la validation rétrospective ne change pas. L’hypothèse violée se situe en dehors des données. La seule façon de la vérifier est de demander aux personnes qui ont mené la campagne ce qu’elle aurait pu affecter.</p>
+<p>Une série de contrôle est prédictive parce qu’elle évolue avec la même demande que celle à laquelle la marque vend, et c’est aussi ce qui rend probable que la campagne l’ait touchée. L’indice de la sous-catégorie porte l’essentiel du pouvoir explicatif du modèle, donc une campagne nationale pour une grande marque de cette sous-catégorie le menace. Faites passer 35 % de l’augmentation de la marque dans l’indice, et l’estimation ne conserve que 65 % de l’effet réel, avec un intervalle qui n’exclut plus zéro. Une campagne qui a fonctionné est alors présentée comme non concluante, et aucun diagnostic ne le détecte : l’ajustement sur la période préalable, la largeur de l’intervalle et la validation rétrospective sont tous inchangés. L’hypothèse est violée en dehors des données, donc aucune vérification sur les données ne peut le déceler. La seule façon de la vérifier est de demander aux personnes qui ont mené la campagne ce qu’elle aurait pu affecter.</p>
 </section>
 <section id="the-pre-period-relationship-broke" class="level3">
 <h3 class="anchored" data-anchor-id="the-pre-period-relationship-broke">La relation de la période préalable s’est rompue</h3>
-<p>Une relation qui a tenu pendant quatre ans peut tout de même s’interrompre. Supposons qu’un concurrent entre sur le marché et fasse croître la sous-catégorie de 5 % sur la période postérieure, sans que cette marque en bénéficie. Les séries de contrôle indiquent désormais que le marché s’est amélioré, le contrefactuel augmente, et l’estimation ressort à moins $460k pour un effet réel de plus $1,124k. C’est le seul scénario du chapitre où la vérité se trouve hors de l’intervalle, et il n’est par construction pas testable à partir des données de la période préalable. C’est la même discipline que celle exigée par les DiD : le résultat ne vaut que ce que vaut l’affirmation selon laquelle les séries de contrôle ont continué à se comporter comme auparavant.</p>
+<p>Une relation qui a tenu sur les quatre années de la période préalable peut changer sur la période postérieure. Supposons qu’un concurrent entre sur le marché et fasse croître la sous-catégorie de 5 % sur la période postérieure, sans que cette marque en bénéficie. Les séries de contrôle indiquent désormais que le marché s’est amélioré, le contrefactuel augmente, et l’estimation ressort à moins $460k pour un effet réel de plus $1,124k. C’est le seul scénario du chapitre où la vérité se trouve hors de l’intervalle, et il n’est par construction pas testable à partir des données de la période préalable. C’est la même discipline que celle exigée par les DiD : l’estimation dépend entièrement de l’affirmation selon laquelle les séries de contrôle ont conservé la même relation à la marque qu’auparavant.</p>
 </section>
 <section id="sec-real-data-check" class="level3">
 <h3 class="anchored" data-anchor-id="sec-real-data-check">La prévision n’a jamais été assez bonne</h3>
-<p>La troisième défaillance laisse bien une trace, si vous la cherchez. Appliquez la même procédure à des données réelles de magasins Dunnhumby : prenez les ventes hebdomadaires d’un magasin, multipliez les douze dernières semaines par 1,15 et essayez de retrouver l’augmentation injectée en utilisant quatre autres magasins comme témoins.</p>
-<p>L’augmentation est retrouvée. Les 1 775 unités injectées sont estimées à 1 833, avec un intervalle qui exclut zéro. Il serait facile de présenter cela comme une analyse réussie avec témoins.</p>
+<p>La troisième défaillance laisse bien une trace dans les données. Appliquez la même procédure à des données réelles de magasins Dunnhumby : prenez les ventes hebdomadaires d’un magasin, multipliez les douze dernières semaines par 1,15 et essayez de retrouver l’augmentation injectée en utilisant quatre autres magasins comme témoins.</p>
+<p>L’augmentation est retrouvée. Les 1 775 unités injectées sont estimées à 1 833, avec un intervalle qui exclut zéro. On pourrait présenter cela comme une analyse réussie avec témoins, mais les séries de contrôle n’apportaient aucune information.</p>
 <div id="fig-reality-check" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Une corrélation qui s’effondre après retrait de la montée en charge du recrutement, une validation rétrospective inchangée avec ou sans séries de contrôle, et un intervalle plus étroit que cette validation ne justifie pas.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-reality-check-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="../images/part3/sec3.4/05_dunnhumby_reality_check.png" class="fig-lg img-fluid figure-img" alt="Une corrélation qui s’effondre après retrait de la montée en charge du recrutement, une validation rétrospective inchangée avec ou sans séries de contrôle, et un intervalle plus étroit que cette validation ne justifie pas.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-reality-check-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;5: Des séries de contrôle réelles qui n’apportent aucune information
+Figure&nbsp;5: Vérifications des séries de contrôle sur des données réelles de magasins.
 </figcaption>
 </figure>
 </div>
-<p>Ce n’en est pas une. La corrélation entre magasins qui justifiait les témoins était de 0,45, mais le panel Dunnhumby commence petit puis grandit, si bien que tous les magasins progressent ensemble pour des raisons sans rapport avec la demande. Retirez cette phase de montée en charge et la corrélation tombe à 0,01. La validation rétrospective tranche : ajouter les quatre magasins témoins fait passer l’erreur de prévision de 13,7 % à 13,8 %, autrement dit ne change rien. L’intervalle plus étroit est le piège. Des régresseurs supplémentaires absorbent la variation dans l’échantillon et resserrent la bande même lorsque la prévision ne s’améliore pas. Un intervalle plus étroit ne prouve pas que les séries de contrôle ont aidé. Une meilleure validation rétrospective, si. Ce qui a produit le chiffre était une projection du niveau récent du magasin lui-même, et une erreur de prévision de 13,7 % traduit une performance trop faible pour étayer une affirmation causale. Le dire constitue le résultat de l’analyse.</p>
+<p>La corrélation entre magasins qui justifiait les témoins était de 0,45, mais le panel Dunnhumby commence petit puis grandit, si bien que tous les magasins progressent ensemble pour des raisons sans rapport avec la demande. Retirez cette phase de montée en charge et la corrélation tombe à 0,01. La validation rétrospective tranche : ajouter les quatre magasins témoins fait passer l’erreur de prévision de 13,7 % à 13,8 %, autrement dit ne change rien. Des régresseurs supplémentaires absorbent la variation dans l’échantillon et resserrent la bande même lorsque la prévision ne s’améliore pas ; la largeur de l’intervalle ne permet donc pas de tester si les séries de contrôle ont aidé, contrairement à la validation rétrospective. Ce qui a produit le chiffre était une projection du niveau récent du magasin lui-même. Une erreur de prévision de 13,7 % est trop faible pour étayer une affirmation causale, et le rapporter constitue le résultat de l’analyse.</p>
 </section>
 </section>
 <section id="sec-intervention-checklist" class="level2">
 <h2 class="anchored" data-anchor-id="sec-intervention-checklist">Une démarche pratique</h2>
-<p>Le chapitre se résume en huit étapes. Exécutez-les dans l’ordre.</p>
+<p>La démarche compte huit étapes, à exécuter dans l’ordre.</p>
 <ol type="1">
 <li><strong>Rédigez le cadrage.</strong> Question métier, variable de résultat, traitement et estimand avec sa fenêtre de restitution. Fixez-le avant de voir un chiffre.</li>
 <li><strong>Choisissez les séries de contrôle.</strong> Ce doivent être des séries que la campagne ne pouvait pas affecter. Interrogez les personnes qui l’ont menée.</li>
@@ -912,9 +911,9 @@ Figure&nbsp;5: Des séries de contrôle réelles qui n’apportent aucune inform
 <li><strong>Exécutez des interventions placebo.</strong> Sachez ce que le protocole produit à partir du bruit avant de lire le vrai chiffre.</li>
 <li><strong>Estimez l’effet sur la période postérieure</strong> pour la fenêtre fixée à l’étape 1.</li>
 <li><strong>Mettez les séries de contrôle à l’épreuve.</strong> La campagne aurait-elle pu les affecter ? La relation de la période préalable aurait-elle pu se rompre ?</li>
-<li><strong>Si le contrefactuel est faible, ne présentez pas de chiffre causal.</strong> Une erreur de validation rétrospective de 13,7 % correspond à une prévision, pas à une mesure.</li>
+<li><strong>Si le contrefactuel est faible, ne présentez pas de chiffre causal.</strong> Avec une erreur de validation rétrospective de 13,7 %, le résultat est une prévision qui ne peut pas étayer une affirmation causale.</li>
 </ol>
-<p>CausalImpact ne transforme pas des données observationnelles en expérience. Il vous donne une façon structurée de déterminer si une série temporelle peut étayer un contrefactuel crédible. Lorsque ce n’est pas le cas, la réponse n’est pas un meilleur modèle. C’est une meilleure expérience la prochaine fois (<a href="../part6/sec6.3-incrementality-experiments.html">chapitre 6.3</a>).</p>
+<p>CausalImpact ne transforme pas des données observationnelles en expérience. Il vous donne une façon structurée de déterminer si une série temporelle peut étayer un contrefactuel crédible. Lorsque ce n’est pas le cas, un meilleur modèle n’y changera rien ; prévoyez plutôt une expérience géographique (<a href="../part6/sec6.3-incrementality-experiments.html">section 6.3</a>).</p>
 <p><strong>Notebook d’accompagnement :</strong> <code>sec3.4_causal_impact.ipynb</code> construit le contrefactuel, le valide sur des dates placebo, audite son intervalle sur deux cents tirages, puis le met délibérément en échec.<br>
 <a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.4_causal_impact.ipynb">Voir sur GitHub</a></p>
 </section>
@@ -922,7 +921,7 @@ Figure&nbsp;5: Des séries de contrôle réelles qui n’apportent aucune inform
 <h2 class="anchored" data-anchor-id="key-takeaways">Points à retenir</h2>
 <ul>
 <li>Sans groupe témoin, prévoyez la trajectoire sans campagne à partir de la période préalable et de séries que la campagne ne pouvait pas affecter, puis justifiez cette prévision par des validations rétrospectives à l’horizon que vous présenterez.</li>
-<li>Deux défaillances ne laissent aucune trace dans les données : une série de contrôle affectée par la campagne et une relation de la période préalable qui s’est rompue. Un intervalle plus étroit ne prouve pas que les séries de contrôle ont aidé ; une meilleure validation rétrospective, si.</li>
+<li>Deux défaillances ne laissent aucune trace dans les données : une série de contrôle affectée par la campagne et une relation de la période préalable qui s’est rompue. Un intervalle plus étroit ne prouve pas que les séries de contrôle ont aidé ; jugez-en d’après l’erreur de prévision de la validation rétrospective.</li>
 <li>Fixez la fenêtre de restitution avant de voir un chiffre. S’arrêter au sommet de la courbe cumulée a surestimé de 38 % la réponse sur la fenêtre complète.</li>
 </ul>
 

@@ -6,7 +6,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="Une segmentation client opérationnelle : déciles et RFM, regroupement comportemental avec K-Means, plongements vectoriels avec BERTopic et critères pour juger la qualité d’une segmentation.">
+<meta name="description" content="Une segmentation client opérationnelle : choisir les déciles et RFM, K-Means ou les plongements vectoriels selon la décision à prendre, valider les segments et remettre un segment_id à votre CRM.">
 
 <title>Segmentation client en Python – Marketing Science in Python</title>
 <style>
@@ -129,12 +129,12 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 
 <link rel="stylesheet" href="../custom.css">
 <meta property="og:title" content="Segmentation client en Python">
-<meta property="og:description" content="Une segmentation client opérationnelle : déciles et RFM, regroupement comportemental avec K-Means, plongements vectoriels avec BERTopic et critères pour juger la qualité d’une segmentation.">
+<meta property="og:description" content="Une segmentation client opérationnelle : choisir les déciles et RFM, K-Means ou les plongements vectoriels selon la décision à prendre, valider les segments et remettre un segment_id à votre CRM.">
 <meta property="og:image" content="https://marketing-science-in-python.com/images/common/book_cover_online.png">
 <meta property="og:site_name" content="Marketing Science in Python">
 <meta property="og:image:alt" content="Couverture montrant des flux de données abstraits convergeant vers un réseau géométrique">
 <meta name="twitter:title" content="Segmentation client en Python">
-<meta name="twitter:description" content="Une segmentation client opérationnelle : déciles et RFM, regroupement comportemental avec K-Means, plongements vectoriels avec BERTopic et critères pour juger la qualité d’une segmentation.">
+<meta name="twitter:description" content="Une segmentation client opérationnelle : choisir les déciles et RFM, K-Means ou les plongements vectoriels selon la décision à prendre, valider les segments et remettre un segment_id à votre CRM.">
 <meta name="twitter:image" content="https://marketing-science-in-python.com/images/common/book_cover_online.png">
 <meta name="twitter:image:alt" content="Couverture montrant des flux de données abstraits convergeant vers un réseau géométrique">
 <meta name="twitter:card" content="summary_large_image">
@@ -578,23 +578,13 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
     <h2 id="toc-title">Table des matières</h2>
    
   <ul>
-  <li><a href="#sec-behavioral-vs-profile" id="toc-sec-behavioral-vs-profile" class="nav-link active" data-scroll-target="#sec-behavioral-vs-profile">Variables comportementales et variables de profil</a></li>
-  <li><a href="#sec-value-tiers" id="toc-sec-value-tiers" class="nav-link" data-scroll-target="#sec-value-tiers">Commencer simplement : déciles et RFM</a>
-  <ul class="collapse">
-  <li><a href="#decile-analysis" id="toc-decile-analysis" class="nav-link" data-scroll-target="#decile-analysis">Analyse par déciles</a></li>
-  <li><a href="#rfm-analysis" id="toc-rfm-analysis" class="nav-link" data-scroll-target="#rfm-analysis">Analyse RFM</a></li>
-  </ul></li>
-  <li><a href="#sec-kmeans" id="toc-sec-kmeans" class="nav-link" data-scroll-target="#sec-kmeans">Regroupement comportemental avec K-Means</a></li>
-  <li><a href="#sec-embedding" id="toc-sec-embedding" class="nav-link" data-scroll-target="#sec-embedding">Segmentation fondée sur les plongements vectoriels avec BERTopic</a>
-  <ul class="collapse">
-  <li><a href="#why-bertopic" id="toc-why-bertopic" class="nav-link" data-scroll-target="#why-bertopic">Pourquoi BERTopic ?</a></li>
-  <li><a href="#constructing-the-customer-document" id="toc-constructing-the-customer-document" class="nav-link" data-scroll-target="#constructing-the-customer-document">Construire le document client</a></li>
-  <li><a href="#reading-the-output" id="toc-reading-the-output" class="nav-link" data-scroll-target="#reading-the-output">Lire les résultats</a></li>
-  <li><a href="#when-one-theme-dominates" id="toc-when-one-theme-dominates" class="nav-link" data-scroll-target="#when-one-theme-dominates">Lorsqu’un thème domine</a></li>
-  <li><a href="#the-llm-naming-trap" id="toc-the-llm-naming-trap" class="nav-link" data-scroll-target="#the-llm-naming-trap">Le piège des noms donnés par un LLM</a></li>
-  </ul></li>
+  <li><a href="#sec-method-cheat-sheet" id="toc-sec-method-cheat-sheet" class="nav-link active" data-scroll-target="#sec-method-cheat-sheet">Choisir la segmentation selon la question</a></li>
+  <li><a href="#sec-behavioral-vs-profile" id="toc-sec-behavioral-vs-profile" class="nav-link" data-scroll-target="#sec-behavioral-vs-profile">Le comportement d’abord, le profil ensuite</a></li>
+  <li><a href="#sec-value-tiers" id="toc-sec-value-tiers" class="nav-link" data-scroll-target="#sec-value-tiers">Niveaux de valeur : déciles et RFM</a></li>
+  <li><a href="#sec-kmeans" id="toc-sec-kmeans" class="nav-link" data-scroll-target="#sec-kmeans">Segments comportementaux avec K-Means</a></li>
+  <li><a href="#sec-embedding" id="toc-sec-embedding" class="nav-link" data-scroll-target="#sec-embedding">Lorsque le sens des produits compte</a></li>
   <li><a href="#sec-segment-validation" id="toc-sec-segment-validation" class="nav-link" data-scroll-target="#sec-segment-validation">Votre segmentation est-elle de bonne qualité ?</a></li>
-  <li><a href="#sec-method-cheat-sheet" id="toc-sec-method-cheat-sheet" class="nav-link" data-scroll-target="#sec-method-cheat-sheet">Aide-mémoire des méthodes</a></li>
+  <li><a href="#sec-segment-id" id="toc-sec-segment-id" class="nav-link" data-scroll-target="#sec-segment-id">Des segments à un segment_id</a></li>
   <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways">Points clés à retenir</a></li>
   </ul>
 <div class="quarto-code-links"><h2>Liens de code</h2><ul><li><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_traditional_segmentation.ipynb"><i class="bi bi-github"></i>sec4.1_traditional_segmentation.ipynb</a></li><li><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_semantic_segmentation.ipynb"><i class="bi bi-github"></i>sec4.1_semantic_segmentation.ipynb</a></li></ul></div></nav>
@@ -626,25 +616,59 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 <p><strong>À propos de la version française</strong><br>
 Cette page est une traduction par IA de la version anglaise de <em>Marketing Science in Python</em>. La version anglaise fait foi et prévaut en cas de divergence. Le code, les notebooks et le texte intégré aux images restent en anglais. <a href="../../part4/sec4.1-segmentation.html" class="translation-source-link">Lire la version anglaise</a></p>
 </div>
-<p>Un projet de segmentation doit produire quelque chose que votre équipe peut réellement utiliser, et pas seulement une présentation. Le véritable livrable est un <code>segment_id</code> directement exploitable dans votre CRM et vos plateformes publicitaires, accompagné d’une fiche synthétique pour chaque segment : qui sont ces clients, pourquoi ils comptent et quelles actions votre équipe doit entreprendre.</p>
-<p>Ce chapitre explique comment construire ce type de livrable en trois étapes :</p>
-<ol type="1">
-<li>D’abord, classer les clients selon leur valeur actuelle. L’analyse par déciles et la méthode RFM (récence, fréquence, montant) permettent de segmenter rapidement selon la valeur.</li>
-<li>Ensuite, regrouper les clients selon leur comportement. Le regroupement comportemental fait ressortir des tendances que les niveaux de valeur seuls ne peuvent pas saisir.</li>
-<li>Enfin, ajouter le sens des achats. La segmentation fondée sur les plongements vectoriels montre ce que les clients achètent réellement, et pas seulement combien ils dépensent.</li>
-</ol>
+<p>Un projet de segmentation doit produire quelque chose que l’équipe peut mettre dans une campagne. Le livrable est un <code>segment_id</code> directement exploitable dans votre CRM et vos plateformes publicitaires, accompagné d’une fiche synthétique pour chaque segment : qui sont ces clients, pourquoi ils comptent et quelles actions votre équipe doit entreprendre.</p>
+<p>La segmentation n’est pas une méthode unique. Les déciles, la méthode RFM, K-Means et le regroupement fondé sur les plongements vectoriels répondent chacun à une question différente. La question découle de la décision que les segments doivent soutenir : qui reçoit le budget de fidélisation, quel message va à qui, quelle histoire de produit raconter.</p>
+<section id="sec-method-cheat-sheet" class="level2">
+<h2 class="anchored" data-anchor-id="sec-method-cheat-sheet">Choisir la segmentation selon la question</h2>
+<p>Faites correspondre la décision à une ligne.</p>
+<div id="tbl-method-cheat-sheet" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-method-cheat-sheet-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;1: Les méthodes de segmentation selon la question à laquelle chacune répond.
+</figcaption>
+<div aria-describedby="tbl-method-cheat-sheet-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Question</th>
+<th style="text-align: left;">Méthode</th>
+<th style="text-align: left;">Entrée</th>
+<th style="text-align: left;">Sortie</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Quels clients méritent davantage d’attention maintenant ?</td>
+<td style="text-align: left;">Déciles / RFM</td>
+<td style="text-align: left;">Journal des transactions</td>
+<td style="text-align: left;">Niveaux de valeur ou scores R/F/M</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Quels comportements existent au-delà des niveaux de valeur ?</td>
+<td style="text-align: left;">K-Means</td>
+<td style="text-align: left;">Variables comportementales numériques</td>
+<td style="text-align: left;">Étiquettes de segments comportementaux</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Qu’achètent réellement les clients ?</td>
+<td style="text-align: left;">Regroupement fondé sur les plongements vectoriels</td>
+<td style="text-align: left;">Documents clients issus des descriptions de produits</td>
+<td style="text-align: left;">Segments fondés sur le sens des achats, avec signatures de mots-clés</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<p>Il s’agit de trois angles d’analyse, et non de trois étapes d’une même chaîne de traitement. Une ligne plus bas ne raffine pas les segments d’une ligne plus haut ; elle répond à une question différente, parfois sur des données différentes. Partez de la ligne la plus simple qui changerait la décision, et ne descendez que lorsque deux clients que l’angle actuel traite de la même façon recevraient un traitement différent. Le chapitre construit les deux premières lignes sur un même distributeur alimentaire, le jeu de données Dunnhumby « The Complete Journey » (2 500 ménages sur deux ans), et la troisième sur un détaillant d’articles cadeaux dont le texte des produits s’y prête.</p>
+</section>
 <section id="sec-behavioral-vs-profile" class="level2">
-<h2 class="anchored" data-anchor-id="sec-behavioral-vs-profile">Variables comportementales et variables de profil</h2>
-<p>Lorsqu’on construit des segments de clientèle, les variables se répartissent en deux grandes catégories. Les variables comportementales décrivent ce que font les clients : récence, fréquence, dépenses, catégories achetées, diversité des produits, retours et dépendance aux remises. Les variables de profil décrivent qui ils sont ou où vous pouvez les toucher : âge, revenu, composition du ménage, localisation géographique, niveau dans le programme de fidélité et préférence de canal.</p>
-<p>Pour la segmentation marketing, les variables comportementales constituent une base plus solide. Ce qu’une personne a consulté ou acheté, ou ce que des clients similaires ont choisi, prédit généralement mieux sa prochaine action que les caractéristiques démographiques. S’appuyer uniquement sur ces dernières, par exemple « ce produit pour un homme d’une trentaine d’années » ou « cette offre pour une personne à revenu élevé », fournit un signal beaucoup plus faible que l’historique d’achats réel du client.</p>
-<p>Les variables de profil ont néanmoins leur rôle. Utilisez-les après avoir construit les segments pour comprendre qui compose chaque groupe, où le toucher et comment adapter la communication.</p>
+<h2 class="anchored" data-anchor-id="sec-behavioral-vs-profile">Le comportement d’abord, le profil ensuite</h2>
+<p>Les variables comportementales décrivent ce que font les clients : récence, fréquence, dépenses, catégories achetées, diversité des produits, retours et dépendance aux remises. Les variables de profil décrivent qui ils sont ou où les toucher : âge, revenu, composition du ménage, localisation géographique, niveau dans le programme de fidélité, préférence de canal. Construisez les segments sur le comportement : des étiquettes comme « un homme d’une trentaine d’années » ou « une personne à revenu élevé » prédisent le prochain achat bien moins bien que ce que quelqu’un a réellement acheté. Faites intervenir les variables de profil ensuite, pour décrire chaque segment et choisir où et comment le toucher.</p>
 </section>
 <section id="sec-value-tiers" class="level2">
-<h2 class="anchored" data-anchor-id="sec-value-tiers">Commencer simplement : déciles et RFM</h2>
-<p>L’approche la plus simple repose sur des règles : vous définissez les seuils au lieu de vous en remettre à un algorithme. L’analyse par déciles et la méthode RFM en sont les exemples les plus courants.</p>
-<section id="decile-analysis" class="level3">
-<h3 class="anchored" data-anchor-id="decile-analysis">Analyse par déciles</h3>
-<p>L’analyse par déciles répartit les clients en dix groupes de même taille selon le chiffre d’affaires. La répartition suit souvent le principe de Pareto : un petit groupe génère l’essentiel du chiffre d’affaires. Le décile supérieur bénéficie d’actions de fidélisation et d’un traitement VIP. Les trois déciles suivants sont la cible principale des campagnes de développement. Les trois déciles intermédiaires reçoivent des communications automatisées peu coûteuses pour entretenir la relation, et les trois derniers sont exclus des offres coûteuses. Vous pouvez mettre cela en place rapidement et donner à votre équipe un plan d’action clair.</p>
+<h2 class="anchored" data-anchor-id="sec-value-tiers">Niveaux de valeur : déciles et RFM</h2>
+<p>La segmentation la plus rapide est un classement. L’analyse par déciles répartit les clients en dix groupes de même taille selon le chiffre d’affaires, et les données d’achats alimentaires montrent la concentration habituelle : les deux déciles supérieurs détiennent 53% du chiffre d’affaires.</p>
 <div id="fig-decile-distribution" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="La valeur client se concentre dans les déciles supérieurs, les 20 pour cent de clients en tête contribuant à plus de la moitié du chiffre d’affaires.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-decile-distribution-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -655,14 +679,12 @@ Figure&nbsp;1: Répartition typique de la valeur client par décile.
 </figcaption>
 </figure>
 </div>
-</section>
-<section id="rfm-analysis" class="level3">
-<h3 class="anchored" data-anchor-id="rfm-analysis">Analyse RFM</h3>
-<p>La méthode RFM offre une vision plus nuancée. C’est le cadre de segmentation le plus utilisé en marketing direct, car les équipes raisonnent déjà en ces termes : anciens gros acheteurs devenus inactifs, nouveaux acheteurs fréquents et autres profils similaires.</p>
+<p>Un décile indique où se situe la valeur, ce dont vous avez besoin lorsque la décision porte sur le degré d’attention à accorder à chaque client. Il ne dit rien sur les raisons pour lesquelles les clients diffèrent ni sur le message qui fonctionnera.</p>
+<p>La méthode RFM ajoute l’engagement à la valeur, dans les termes que les équipes de marketing direct utilisent déjà : anciens gros acheteurs devenus inactifs, nouveaux acheteurs fréquents.</p>
 <div id="tbl-rfm-variables" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-rfm-variables-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Table&nbsp;1: Variables RFM et leur interprétation.
+Table&nbsp;2: Variables RFM et leur interprétation.
 </figcaption>
 <div aria-describedby="tbl-rfm-variables-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <table class="caption-top table">
@@ -694,28 +716,14 @@ Table&nbsp;1: Variables RFM et leur interprétation.
 </div>
 </figure>
 </div>
-<p>Le classement indépendant divise chaque variable en quintiles séparément, créant un score à trois chiffres (R=5, F=4, M=3) et jusqu’à 125 groupes. Le classement séquentiel imbrique les divisions : d’abord selon la récence, puis selon la fréquence au sein de chaque groupe de récence, puis selon le montant ; la récence reçoit donc le poids le plus important.</p>
-<div class="callout callout-style-default callout-tip callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Astuce</span>Calculer les scores RFM en un seul appel
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>PyMC-Marketing, la bibliothèque utilisée pour la modélisation de la CLV dans la <a href="sec4.2-clv-modeling.html">section 4.2</a>, fournit un utilitaire <code>rfm_segments()</code> fondé sur les quartiles, qui attribue des scores R, F et M ainsi que des segments nommés directement à partir d’une table de transactions. Il est moins souple que K-Means, mais fonctionne bien en pratique et reste rapide sur de très grandes bases de clientèle.</p>
-</div>
-</div>
-<p>Les déciles et la méthode RFM sont rapides à mettre en place et faciles à utiliser. Mais ils ne créent que des niveaux de valeur, pas des profils clients complets. Deux clients ayant des scores RFM similaires peuvent se comporter très différemment : l’un peut acheter des articles au prix fort dans de nombreuses catégories, tandis que l’autre n’achète que des articles remisés dans une seule catégorie. Pour voir ces différences, il faut passer des niveaux de valeur à des variables comportementales plus riches.</p>
-</section>
+<p>Attribuez à chaque variable un score par quintile et combinez-les : un gros acheteur qui a acheté hier se distingue alors d’un autre resté silencieux pendant un an. Le score combiné compte jusqu’à 125 cases ; regroupez donc les cases qui recevraient le même traitement. PyMC-Marketing, la bibliothèque utilisée dans le <a href="sec4.2-clv-modeling.html">chapitre sur la CLV</a>, effectue ce scoring en un seul appel avec <code>rfm_segments()</code>.</p>
+<p>Les déciles et la méthode RFM mesurent combien et à quelle date récente les clients achètent, pas comment. Deux clients ayant le même score RFM peuvent se comporter très différemment : l’un achète des articles au prix fort dans de nombreuses catégories, l’autre uniquement des articles remisés dans une seule catégorie.</p>
 </section>
 <section id="sec-kmeans" class="level2">
-<h2 class="anchored" data-anchor-id="sec-kmeans">Regroupement comportemental avec K-Means</h2>
-<p>K-Means est un algorithme classique de regroupement qui reste efficace pour la segmentation marketing. Standardisez les variables avec StandardScaler pour que les dépenses ne dominent pas, et commencez avec 6 à 10 variables comportementales. Au-delà de RFM, le montant moyen des commandes, la taille du panier et le taux de retour sont des ajouts utiles.</p>
-<p>Appliquez une transformation logarithmique aux variables asymétriques avant la mise à l’échelle. Les dépenses, la fréquence, la récence et la taille du panier présentent généralement une forte asymétrie à droite : une poignée de clients achètent beaucoup plus que tous les autres. StandardScaler ne fait que centrer et remettre à l’échelle, de sorte que ces longues queues de distribution subsistent. Alimenté par les valeurs brutes, K-Means consacre ses premières divisions à séparer les gros acheteurs des petits et retrouve essentiellement des niveaux de valeur ; tout groupe supplémentaire qu’il découvre est une minuscule poche de valeurs atypiques, trop petite pour justifier une action. Appliquer <code>log1p</code> aux variables asymétriques (règle simple : transformer toute variable dont le coefficient d’asymétrie dépasse environ 1) comprime les queues de distribution. Les groupes reflètent alors la <em>forme</em> des comportements plutôt que le niveau des dépenses, et des segments équilibrés, utilisables pour agir, émergent. Sur le jeu de données du notebook associé, c’est ce qui fait la différence entre un K-Means qui se réduit à trois niveaux de valeur et un K-Means qui répartit la clientèle en cinq groupes comportementaux équilibrés, de tailles comparables.</p>
-<p>Choisir K relève à la fois des statistiques et du jugement. La méthode du coude aide à resserrer la plage de valeurs, mais fixe rarement le nombre. Sur les données clients, le coude le plus marqué se situe souvent à K=3, ce qui ne fait généralement que retrouver des niveaux de valeur (gros acheteurs, acheteurs moyens, clients inactifs) que les déciles et RFM saisissent déjà. Pour segmenter selon le comportement plutôt que la valeur, explorez la plage utile en pratique (souvent 4 à 8 segments) et laissez les possibilités d’action trancher : retenez le K dont les segments seraient réellement traités différemment par votre équipe marketing. Si elle ne peut pas décrire une action distincte pour chaque segment, vous en avez trop.</p>
+<h2 class="anchored" data-anchor-id="sec-kmeans">Segments comportementaux avec K-Means</h2>
+<p>Pour séparer ces deux clients, décrivez comment ils font leurs achats. K-Means est un algorithme classique de regroupement qui reste efficace pour cela. Commencez avec 6 à 10 variables comportementales : au-delà de la récence, de la fréquence et des dépenses, ajoutez le montant moyen des commandes, la taille du panier, la diversité des catégories, la part des remises et le taux de retour. Standardisez-les avec StandardScaler pour que les dépenses ne dominent pas.</p>
+<p>Appliquez une transformation logarithmique aux variables asymétriques avant la mise à l’échelle. Les dépenses, la fréquence, la récence et la taille du panier présentent une forte asymétrie à droite, et StandardScaler ne fait que centrer et remettre à l’échelle, de sorte que les longues queues de distribution subsistent. Alimenté par les variables brutes, K-Means consacre ses premières divisions à séparer les gros acheteurs des petits et reproduit essentiellement les niveaux de valeur. Appliquer <code>log1p</code> aux variables asymétriques (règle simple : transformer toute variable dont le coefficient d’asymétrie dépasse environ 1) comprime les queues de distribution, de sorte que les groupes séparent les clients selon leurs habitudes d’achat plutôt que selon leur niveau de dépenses. Sur les données d’achats alimentaires, c’est ce qui fait la différence entre un K-Means qui se réduit à trois niveaux de valeur et un K-Means qui répartit la clientèle en cinq groupes comportementaux équilibrés.</p>
+<p>Le choix de K s’appuie à la fois sur les diagnostics et sur le jugement de l’équipe. La méthode du coude resserre la plage de valeurs mais fixe rarement le nombre, et sur les données clients son coude le plus marqué se situe souvent à K=3, ce qui ne fait que retrouver les niveaux de valeur que les déciles et RFM saisissent déjà. Poussez jusqu’à la plage utile en pratique de 4 à 8 et laissez les possibilités d’action trancher : retenez le K dont les segments seraient traités différemment par votre équipe marketing.</p>
 <div id="fig-elbow" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="La variation au sein des groupes diminue rapidement jusqu’à environ cinq groupes, puis s’améliore plus progressivement à mesure que des groupes supplémentaires sont ajoutés.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-elbow-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -726,11 +734,22 @@ Figure&nbsp;2: Graphique du coude pour choisir K.
 </figcaption>
 </figure>
 </div>
-<p>Sur le jeu de données du notebook associé, K=5 est le point où les segments cessent d’être des niveaux de valeur et deviennent des fiches d’action. <a href="#tbl-kmeans-segments" class="quarto-xref">Table&nbsp;<span>2</span></a> présente ce résultat. Les proportions et les moyennes des profils proviennent du notebook (les dépenses, les visites et les rayons sont des totaux sur deux ans, moyennés au sein du segment) ; les noms et les deux dernières actions sont l’interprétation par l’analyste de la carte thermique des profils, étape que le notebook vous laisse réaliser.</p>
+<p>Sur les données d’achats alimentaires, avec K=5 les segments diffèrent par leurs habitudes d’achat et pas seulement par leur niveau de dépenses. <a href="#fig-kmeans-heatmap" class="quarto-xref">Figure&nbsp;<span>3</span></a> est le profil qui sous-tend cet ajustement : une ligne par segment, une colonne par variable comportementale, colorée selon la moyenne du segment par rapport à la population.</p>
+<div id="fig-kmeans-heatmap" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Carte thermique de cinq segments K-Means sur neuf variables comportementales, colorée selon le score z par rapport à la moyenne de la population, avec les moyennes des segments imprimées dans chaque cellule.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-kmeans-heatmap-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.1/segment_heatmap.png" class="fig-md img-fluid figure-img" alt="Carte thermique de cinq segments K-Means sur neuf variables comportementales, colorée selon le score z par rapport à la moyenne de la population, avec les moyennes des segments imprimées dans chaque cellule.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-kmeans-heatmap-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3: Profils des segments K-Means sur les données d’achats alimentaires.
+</figcaption>
+</figure>
+</div>
+<p><a href="#tbl-kmeans-segments" class="quarto-xref">Table&nbsp;<span>3</span></a> est l’interprétation par l’analyste de cette carte thermique, étape que le notebook vous laisse réaliser. Les proportions et les moyennes des profils proviennent du notebook (les dépenses, les visites et les rayons sont des totaux sur deux ans, moyennés au sein du segment) ; les noms et les actions sont ceux de l’analyste.</p>
 <div id="tbl-kmeans-segments" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-kmeans-segments-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Table&nbsp;2: Les segments à K=5 sur les données d’achats alimentaires, issus du notebook associé.
+Table&nbsp;3: Les segments à K=5 sur les données d’achats alimentaires, issus du notebook associé.
 </figcaption>
 <div aria-describedby="tbl-kmeans-segments-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <table class="caption-top table">
@@ -778,33 +797,14 @@ Table&nbsp;2: Les segments à K=5 sur les données d’achats alimentaires, issu
 </div>
 </figure>
 </div>
-<p>Les noms sont des raccourcis ; chaque ligne constitue la fiche d’action. C’est ce tableau qu’il faut remettre à l’équipe marketing pour vérifier les possibilités d’action décrites ci-dessous : si deux lignes recevraient la même campagne, fusionnez-les.</p>
-<p>Le regroupement numérique gomme encore le sens des produits. Avec des variables d’entrée comme la fréquence, les dépenses, la récence, la diversité des catégories et la dépendance aux remises, deux clients peuvent sembler similaires même si les produits qu’ils achètent sont très différents. Pour saisir ce sens, intégrez directement le texte des produits dans la segmentation.</p>
+<p>Les noms des segments sont des raccourcis ; l’équipe marketing travaille à partir des colonnes Profil et Action. C’est ce tableau qu’il faut lui remettre pour la vérification des possibilités d’action décrite ci-dessous.</p>
 </section>
 <section id="sec-embedding" class="level2">
-<h2 class="anchored" data-anchor-id="sec-embedding">Segmentation fondée sur les plongements vectoriels avec BERTopic</h2>
-<p>Pour saisir ce que les clients achètent réellement, traitez l’historique d’achats de chaque client comme du texte : concaténez les descriptions des produits achetés en une seule chaîne de caractères (le document client), puis utilisez un modèle de plongement vectoriel pour convertir cette chaîne en un vecteur dense. Dans cet espace vectoriel, les bougies d’anniversaire et les assiettes de fête sont proches, tandis qu’une théière ancienne est éloignée. Le regroupement des vecteurs sépare donc les clients selon le sens de leurs achats, et pas seulement selon leur volume d’achats.</p>
-<p>Les exemples utilisent le jeu de données UCI Online Retail II, qui contient environ un million de transactions d’un détaillant britannique d’articles cadeaux, dont les descriptions de produits en texte libre sont précisément ce que lit un modèle de plongement vectoriel. Nous exécutons toute la chaîne de traitement avec BERTopic.</p>
-<div id="fig-umap-clusters" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Projection UMAP des plongements vectoriels des documents clients : chaque point représente un client, coloré selon le segment découvert par BERTopic.">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-umap-clusters-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part4/sec4.1/umap_clusters.png" class="fig-md img-fluid figure-img" alt="Projection UMAP des plongements vectoriels des documents clients : chaque point représente un client, coloré selon le segment découvert par BERTopic.">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-umap-clusters-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;3: Documents clients dans l’espace des plongements vectoriels.
-</figcaption>
-</figure>
-</div>
-<section id="why-bertopic" class="level3">
-<h3 class="anchored" data-anchor-id="why-bertopic">Pourquoi BERTopic ?</h3>
-<p>Construire cette chaîne à la main revient à enchaîner quatre bibliothèques : SentenceTransformers pour vectoriser les documents, UMAP pour réduire les dimensions, HDBSCAN pour former les groupes, et du code personnalisé pour lire le résultat. BERTopic réunit les quatre derrière une seule API et ajoute les éléments qui rendent la sortie exploitable : c-TF-IDF pour extraire les mots-clés distinctifs de chaque segment, <code>reduce_outliers()</code> pour les clients que HDBSCAN laisse sans affectation, <code>transform()</code> pour attribuer un segment à de nouveaux clients sans réajuster le modèle, et une étape facultative utilisant un LLM pour nommer les segments. Le reste de cette section suit cette chaîne de traitement.</p>
-</section>
-<section id="constructing-the-customer-document" class="level3">
-<h3 class="anchored" data-anchor-id="constructing-the-customer-document">Construire le document client</h3>
-<p>Par exemple, le document d’un client pourrait ressembler à ceci :</p>
+<h2 class="anchored" data-anchor-id="sec-embedding">Lorsque le sens des produits compte</h2>
+<p>Les variables numériques décrivent comment les clients achètent, pas ce qu’ils achètent. Lorsque la décision porte sur le marketing par catégorie, les ventes croisées ou la création publicitaire, le signal se trouve dans les produits eux-mêmes ; il vous faut donc le texte des produits. Cette section est donc une voie distincte plutôt que l’étape qui suit K-Means, et elle s’exécute sur d’autres données. Le jeu de données UCI Online Retail II, environ un million de transactions d’un détaillant britannique d’articles cadeaux, contient les descriptions de produits en texte libre qu’un modèle de plongement vectoriel peut lire.</p>
+<p>Traitez l’historique d’achats de chaque client comme du texte : concaténez les descriptions des produits achetés en une seule chaîne de caractères (le document client), puis utilisez un modèle de plongement vectoriel pour convertir cette chaîne en un vecteur dense. Dans cet espace vectoriel, les bougies d’anniversaire et les assiettes de fête sont séparées par une courte distance, tandis qu’une théière ancienne est éloignée des deux ; le regroupement des vecteurs réunit donc les clients selon ce qu’ils achètent plutôt que selon combien ils dépensent. Par exemple :</p>
 <p><code>red retrospot cake stand, party bunting, paper cups, birthday candles, cake cases</code></p>
-<p>Un modèle numérique peut ne voir dans ce client qu’un acheteur fréquent ou un gros acheteur. Le modèle de plongement vectoriel saisit le sens des produits : articles de fête et achats liés aux célébrations.</p>
-<p>Pour construire un document, on regroupe et concatène les éléments du journal des transactions :</p>
+<p>Les variables numériques placent ce client dans un niveau d’acheteur fréquent à fortes dépenses. Le plongement vectoriel le place près des autres acheteurs d’articles de fête. Construire le document revient à regrouper et concaténer les éléments du journal des transactions :</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Keep each customer's top-N products by revenue, then join the descriptions</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>prod_rev <span class="op">=</span> (</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    df.groupby([<span class="st">"CustomerID"</span>, <span class="st">"Description"</span>])[<span class="st">"Revenue"</span>].<span class="bu">sum</span>()</span>
@@ -818,15 +818,8 @@ Figure&nbsp;3: Documents clients dans l’espace des plongements vectoriels.
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    .<span class="bu">apply</span>(<span class="kw">lambda</span> d: <span class="st">", "</span>.join(d))</span>
 <span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    .reset_index(name<span class="op">=</span><span class="st">"doc"</span>)</span>
 <span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copier vers le presse-papier" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Trois décisions pratiques déterminent la qualité des segments plus que tout le reste.</p>
-<p>Quels produits inclure. Les N articles les plus achetés (selon la fréquence ou le chiffre d’affaires) donnent généralement de meilleurs résultats que l’historique d’achats complet. La liste complète ajoute du bruit provenant des achats ponctuels ; les articles principaux captent les habitudes réelles du client.</p>
-<p>Faut-il pondérer par le chiffre d’affaires ? Inclure une fois un article de forte valeur et une fois un article de faible valeur peut donner une image trompeuse de ce qui compte pour le client. La pondération par le chiffre d’affaires (répéter les mentions des produits proportionnellement aux dépenses) précise les segments pour les clients aux paniers mixtes. Plafonnez les poids ou utilisez une pondération par le logarithme des dépenses lorsque les écarts de prix entre produits sont importants ; sinon, un seul achat de luxe peut dominer le document.</p>
-<p>Filtrer les produits génériques. Les articles comme « Carte cadeau », « Frais de port » ou les références produit génériques sont du bruit : ils apparaissent dans tous les segments et diluent les mots-clés. Filtrez-les à l’aide de motifs dans StockCode ou maintenez une courte liste d’exclusion. Cette seule étape fait souvent la différence entre des segments qui ont un sens et des segments qui n’en ont aucun.</p>
-<p>Un modèle léger de plongement vectoriel de phrases suffit pour la plupart des catalogues de vente au détail. La qualité de vos segments dépend beaucoup plus de la façon dont vous concevez et validez le document client que du modèle de plongement vectoriel choisi. Le notebook utilise un modèle SentenceTransformers local pour assurer la reproductibilité, mais le même processus peut aussi utiliser des modèles de plongement vectoriel accessibles par API, comme ceux d’OpenAI.</p>
-</section>
-<section id="reading-the-output" class="level3">
-<h3 class="anchored" data-anchor-id="reading-the-output">Lire les résultats</h3>
-<p>L’ajustement à l’origine de cette carte tient en un seul appel. Un modèle de plongement vectoriel local convertit chaque document en vecteur, et BERTopic se charge du regroupement et de l’extraction des mots-clés :</p>
+<p>Conservez les principaux produits de chaque client plutôt que l’historique complet, filtrez les articles génériques comme « Postage » qui apparaissent dans tous les segments, et plafonnez le poids de tout achat coûteux isolé. Ces choix comptent davantage que le choix du modèle de plongement vectoriel.</p>
+<p>BERTopic exécute le reste de la chaîne de traitement en un seul appel : un modèle local de plongement vectoriel de phrases convertit chaque document en vecteur, puis BERTopic regroupe les vecteurs et extrait les mots-clés distinctifs de chaque groupe.</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> bertopic <span class="im">import</span> BERTopic</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sentence_transformers <span class="im">import</span> SentenceTransformer</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -837,105 +830,104 @@ Figure&nbsp;3: Documents clients dans l’espace des plongements vectoriels.
 <span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>topics, probs <span class="op">=</span> topic_model.fit_transform(</span>
 <span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    customer_docs[<span class="st">"doc"</span>].tolist(), embeddings<span class="op">=</span>embeddings</span>
 <span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copier vers le presse-papier" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Le notebook associé configure explicitement les sous-modèles UMAP, HDBSCAN et c-TF-IDF ; il s’agit ici de la même chaîne de traitement avec les paramètres par défaut. Le résultat est une signature de mots-clés pour chaque segment :</p>
-<div id="fig-bertopic-barchart" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Principaux mots-clés distinctifs par segment issus des plongements vectoriels des descriptions de produits, que le regroupement numérique RFM ne peut pas révéler.">
+<div id="fig-umap-clusters" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Projection UMAP des plongements vectoriels des documents clients : chaque point représente un client, coloré selon le segment découvert par BERTopic.">
 <figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-bertopic-barchart-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part4/sec4.1/bertopic_barchart.png" class="fig-md img-fluid figure-img" alt="Principaux mots-clés distinctifs par segment issus des plongements vectoriels des descriptions de produits, que le regroupement numérique RFM ne peut pas révéler.">
+<div aria-describedby="fig-umap-clusters-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.1/umap_clusters.png" class="fig-md img-fluid figure-img" alt="Projection UMAP des plongements vectoriels des documents clients : chaque point représente un client, coloré selon le segment découvert par BERTopic.">
 </div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-bertopic-barchart-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;4: Principaux mots-clés distinctifs par segment.
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-umap-clusters-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4: Documents clients dans l’espace des plongements vectoriels.
 </figcaption>
 </figure>
 </div>
-<p>Remettez ces graphiques à un spécialiste du marketing : il devrait rapidement voir quelles catégories, quelles campagnes et quelles créations publicitaires conviennent à chaque groupe.</p>
-</section>
-<section id="when-one-theme-dominates" class="level3">
-<h3 class="anchored" data-anchor-id="when-one-theme-dominates">Lorsqu’un thème domine</h3>
-<p>Les catalogues réels présentent souvent un thème large couvrant la plupart des clients et, en périphérie, une série de niches bien définies. HDBSCAN fait ressortir les deux, mais après la réduction des valeurs atypiques, le thème large enfle jusqu’à devenir un seul méga-thème, trop vaste pour être traité comme un segment unique. La correction est ciblée : appliquez K-Means <strong>uniquement aux plongements vectoriels du méga-thème</strong> et divisez-le en sous-segments de taille adaptée aux campagnes, tout en conservant les petits thèmes de niche comme résultats exploratoires. Cela applique le principe « HDBSCAN pour la découverte, K-Means pour les opérations » à l’intérieur du groupe dominant, et non à l’ensemble de la clientèle. Le notebook associé le fait automatiquement dès qu’un thème dépasse 50% de la clientèle.</p>
-</section>
-<section id="the-llm-naming-trap" class="level3">
-<h3 class="anchored" data-anchor-id="the-llm-naming-trap">Le piège des noms donnés par un LLM</h3>
-<p>Nommer les segments avec l’aide d’un LLM peut les rendre plus crédibles qu’ils ne le sont réellement. Donnez n’importe quel groupe à un LLM, même un groupe aléatoire, et demandez-lui un nom et un persona : vous obtiendrez une description soignée et convaincante. Le récit paraît plausible, que le groupe ait un sens ou non.</p>
-<p>Deux garde-fous :</p>
+<p><a href="#fig-bertopic-barchart" class="quarto-xref">Figure&nbsp;<span>5</span></a> montre les sept thèmes que BERTopic a trouvés, et les mots-clés nomment directement les niches : bougies et lanternes de fête, articles de pâtisserie à pois chocolat, kits de feutrine, sacs style compagnie aérienne.</p>
+<div id="fig-bertopic-barchart" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Principaux mots-clés distinctifs de sept thèmes issus des plongements vectoriels des descriptions de produits, un petit diagramme à barres par thème.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-bertopic-barchart-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.1/bertopic_barchart.png" class="fig-md img-fluid figure-img" alt="Principaux mots-clés distinctifs de sept thèmes issus des plongements vectoriels des descriptions de produits, un petit diagramme à barres par thème.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-bertopic-barchart-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5: Principaux mots-clés distinctifs par thème.
+</figcaption>
+</figure>
+</div>
+<p>Ce que les signatures ne montrent pas, c’est la répartition de la clientèle entre elles, et sur ce catalogue c’est là le résultat. Le thème large (décoration, bougies, couronnes) regroupe 92% des clients une fois réintégrés ceux que HDBSCAN avait laissés sans affectation ; les six niches réunies en regroupent environ 8%. Le notebook divise le thème large avec K-Means en six sous-segments, mais un nouvel ajustement sur une période ultérieure ne les reproduit pas : l’indice de Rand ajusté est proche de zéro, contre environ 0,14 pour un K-Means RFM sur les mêmes clients. Neuf des douze noms attribués par un LLM sont des variations sur le même thème de la décoration intérieure. Lisez cette segmentation comme une exploration, une description de ce que le catalogue vend et à qui, et gardez le <code>segment_id</code> du CRM sur la segmentation comportementale.</p>
+<p>Les mots-clés sont aussi le garde-fou contre l’attribution de noms assistée par LLM. Donnez n’importe quel groupe à un LLM, même un groupe aléatoire, et demandez-lui un nom et un persona : vous obtiendrez une description soignée et convaincante. Deux garde-fous :</p>
 <ul>
-<li>Validez les éléments fournis par les mots-clés avant de lire le récit du LLM. Si vous ne pouvez pas vous-même discerner un thème clair dans les principaux mots-clés, le nom proposé par le LLM est une fiction.</li>
-<li>Testez le nom auprès de l’équipe marketing. Si elle rédigerait le même brief de campagne pour deux segments portant des noms différents, les noms sont décoratifs, pas informatifs.</li>
+<li>Lisez les principaux mots-clés avant la description du LLM. Si vous ne pouvez pas vous-même discerner un thème clair, le nom n’est pas étayé par les données.</li>
+<li>Testez les noms auprès de l’équipe marketing. Si deux segments recevraient la même campagne, les séparer n’apporte guère de valeur pour cette décision.</li>
 </ul>
-<p><strong>Notebooks associés :</strong> le code complet et fonctionnel est réparti entre deux notebooks, chacun utilisant le jeu de données adapté à sa méthode.</p>
-<ul>
-<li><code>sec4.1_traditional_segmentation.ipynb</code> : déciles, RFM et K-Means sur le jeu de données Dunnhumby « The Complete Journey », également utilisé dans le chapitre sur la CLV, ce qui permet de conserver l’appartenance aux segments d’un chapitre à l’autre. <a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_traditional_segmentation.ipynb">Voir sur GitHub</a></li>
-<li><code>sec4.1_semantic_segmentation.ipynb</code> : la chaîne de traitement par plongements vectoriels (construction des documents clients, filtrage des produits génériques, plongement vectoriel, regroupement BERTopic, extraction des mots-clés et attribution de noms assistée par LLM) sur le jeu de données UCI Online Retail II, qui possède les descriptions de produits riches dont cette méthode a besoin. L’étape facultative d’attribution de noms par LLM est actuellement configurée pour Anthropic et nécessite le paquet <code>litellm</code> ainsi qu’une <code>ANTHROPIC_API_KEY</code> ; sans cette clé, la cellule est ignorée et le reste s’exécute quand même. <a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_semantic_segmentation.ipynb">Voir sur GitHub</a></li>
-</ul>
-</section>
 </section>
 <section id="sec-segment-validation" class="level2">
 <h2 class="anchored" data-anchor-id="sec-segment-validation">Votre segmentation est-elle de bonne qualité ?</h2>
-<p>Trois vérifications, par ordre de priorité.</p>
-<p>La possibilité d’agir est ce qui compte le plus. Présentez les profils des segments à votre équipe marketing. Pour chaque paire de segments, demandez : « Utiliseriez-vous un message, un canal, une offre ou une fréquence différents ? » Si la réponse est « Je ferais la même chose pour les deux », la segmentation ne permet pas d’actions distinctes, aussi rigoureuses que paraissent les mathématiques. Le responsable habituel est un segment moyen sur tous les critères ; fusionnez-le avec un segment voisin ou revoyez votre sélection de variables.</p>
-<p>La stabilité. Relancez le regroupement sur deux périodes sans chevauchement et vérifiez que les clients se retrouvent majoritairement dans les mêmes segments. L’indice de Rand ajusté (ARI) quantifie cette stabilité ; si trop de clients changent de segment entre les périodes, vous ne pouvez pas vous appuyer sur ces segments pour vos campagnes. Les notebooks associés présentent les deux vérifications : le calcul de l’ARI dans le notebook sémantique et une matrice de migration dans le notebook traditionnel.</p>
-<p>Sur les données d’achats alimentaires, la matrice de migration classe les clients par quintile de chiffre d’affaires chaque année au lieu de les regrouper à nouveau : 70% du quintile supérieur et 61% du quintile inférieur restent en place d’une année à l’autre, tandis que les trois quintiles intermédiaires ne conservent qu’environ 40% de leurs clients. C’est au milieu de la clientèle que les affectations aux segments sont les moins fiables ; c’est donc là qu’une campagne fondée sur ces affectations doit prévoir le plus de souplesse.</p>
-<div id="fig-segment-heatmap" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Carte thermique des profils des segments : les lignes sont les segments, les colonnes les variables de base, et la couleur indique l’écart à la moyenne de la population.">
+<p>Vérifiez trois choses, dans cet ordre : les possibilités d’action, la stabilité et la taille.</p>
+<p>Les possibilités d’action comptent le plus. Présentez les profils des segments à votre équipe marketing et, pour chaque paire de segments, demandez si elle utiliserait un message, un canal, une offre ou une fréquence différents. Si ce n’est pas le cas, la segmentation ne permet pas d’agir, aussi bons que soient ses indicateurs de regroupement. La cause habituelle est un segment moyen sur tous les critères ; fusionnez-le avec un segment voisin ou revoyez votre sélection de variables.</p>
+<p>La deuxième vérification est la stabilité. Relancez la segmentation sur deux périodes sans chevauchement et vérifiez que les clients se retrouvent majoritairement dans les mêmes segments ; l’indice de Rand ajusté (ARI) quantifie cela. Sur les données d’achats alimentaires, le notebook vérifie le classement par valeur plutôt que les groupes : il place les ménages dans des quintiles de chiffre d’affaires chaque année et suit leurs déplacements.</p>
+<div id="fig-migration-matrix" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Matrice de migration des quintiles de chiffre d’affaires entre les deux années, 70 pour cent du groupe supérieur et 61 pour cent du groupe inférieur restant en place.">
 <figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-segment-heatmap-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part4/sec4.1/bertopic_segment_heatmap.png" class="fig-md img-fluid figure-img" alt="Carte thermique des profils des segments : les lignes sont les segments, les colonnes les variables de base, et la couleur indique l’écart à la moyenne de la population.">
+<div aria-describedby="fig-migration-matrix-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part4/sec4.1/migration_matrix.png" class="fig-md img-fluid figure-img" alt="Matrice de migration des quintiles de chiffre d’affaires entre les deux années, 70 pour cent du groupe supérieur et 61 pour cent du groupe inférieur restant en place.">
 </div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-segment-heatmap-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;5: Carte thermique des profils des segments.
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-migration-matrix-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;6: Migration entre quintiles de chiffre d’affaires, de la première année à la seconde.
 </figcaption>
 </figure>
 </div>
-<p>La taille. Chaque segment doit être assez grand pour permettre une action, mais le minimum approprié dépend de l’entreprise et de la campagne : il n’existe pas de seuil universel. À titre indicatif, évitez les segments si petits que vous ne pouvez pas y mener une campagne utile ; pour un ciblage large, cela signifie souvent environ 10 pour cent de la clientèle, tandis qu’une niche réellement à forte valeur peut constituer une exception délibérée. En pratique, une poignée de segments, souvent 4 à 8, suffit.</p>
-<p>Les segments sont construits à partir de différences comportementales, mais les campagnes qui leur sont affectées doivent tout de même être testées. Reportez-vous à la <a href="../part3/sec3.2-ab-testing.html">conception des tests A/B</a> avant de crier victoire.</p>
+<p>Les quintiles supérieur et inférieur restent pour l’essentiel en place (70% et 61%), tandis que les trois quintiles intermédiaires ne conservent qu’environ 40% de leurs clients ; une campagne fondée sur le milieu de la clientèle a donc besoin de la plus grande marge de manœuvre. Cela indique à quel point le classement par valeur est stable, pas à quel point les cinq segments le sont. Réajuster le K-Means sur une seconde période est la vérification à effectuer avant que le <code>segment_id</code> ne pilote une campagne.</p>
+<p>La troisième vérification est la taille. Chaque segment doit être assez grand pour permettre une action, mais il n’existe pas de seuil universel. Pour un ciblage large, cela signifie souvent environ 10 pour cent de la clientèle ; une niche réellement à forte valeur peut constituer une exception délibérée.</p>
 </section>
-<section id="sec-method-cheat-sheet" class="level2">
-<h2 class="anchored" data-anchor-id="sec-method-cheat-sheet">Aide-mémoire des méthodes</h2>
-<div id="tbl-method-cheat-sheet" class="quarto-float quarto-figure quarto-figure-center anchored">
+<section id="sec-segment-id" class="level2">
+<h2 class="anchored" data-anchor-id="sec-segment-id">Des segments à un segment_id</h2>
+<p>Ce qui sort du projet, c’est une ligne par client. Le notebook associé écrit 2 500 lignes dans <code>segment_assignments.csv</code>, dont trois figurent ci-dessous, et le chapitre sur la CLV joint ce fichier pour attribuer une valeur à chaque segment.</p>
+<div id="tbl-segment-export" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
-<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-method-cheat-sheet-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Table&nbsp;3: Choisissez la méthode selon la question à laquelle elle répond, et non selon son degré de sophistication.
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-segment-export-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;4: Les premières lignes de l’export CRM, avec les noms de segments de <a href="#tbl-kmeans-segments" class="quarto-xref">Table&nbsp;<span>3</span></a>.
 </figcaption>
-<div aria-describedby="tbl-method-cheat-sheet-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div aria-describedby="tbl-segment-export-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <table class="caption-top table">
 <thead>
 <tr class="header">
-<th style="text-align: left;">Question</th>
-<th style="text-align: left;">Méthode</th>
-<th style="text-align: left;">Entrée</th>
-<th style="text-align: left;">Sortie</th>
+<th style="text-align: right;">household_key</th>
+<th style="text-align: left;">decile</th>
+<th style="text-align: right;">km_segment</th>
+<th style="text-align: left;">Segment</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td style="text-align: left;">Quels clients méritent davantage d’attention maintenant ?</td>
-<td style="text-align: left;">Déciles / RFM</td>
-<td style="text-align: left;">Journal des transactions</td>
-<td style="text-align: left;">Niveaux de valeur ou scores R/F/M</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">D3</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: left;">Petits paniers fréquents</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">Quels comportements existent au-delà des niveaux de valeur ?</td>
-<td style="text-align: left;">K-Means</td>
-<td style="text-align: left;">Variables comportementales numériques</td>
-<td style="text-align: left;">Étiquettes de segments comportementaux</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: left;">D6</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: left;">Gros paniers occasionnels</td>
 </tr>
 <tr class="odd">
-<td style="text-align: left;">Qu’achètent réellement les clients ?</td>
-<td style="text-align: left;">Regroupement fondé sur les plongements vectoriels</td>
-<td style="text-align: left;">Documents clients issus des descriptions de produits</td>
-<td style="text-align: left;">Segments fondés sur le sens des achats, avec signatures de mots-clés</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: left;">D5</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: left;">Amateurs de remises</td>
 </tr>
 </tbody>
 </table>
 </div>
 </figure>
 </div>
+<p>Conservez la fiche de chaque segment à côté du fichier et versionnez le fichier : une appartenance qui change silencieusement d’une campagne à l’autre est pire que l’absence de segmentation. Les segments décrivent des différences entre clients ; ils ne montrent pas qu’un message fonctionne pour l’un d’eux. Une fois le traitement choisi, testez-le : les méthodes de la <a href="../part3/sec3.2-ab-testing.html">conception des tests A/B</a> s’appliquent aux campagnes par segment autant qu’à toute autre.</p>
+<p><strong>Notebooks associés :</strong> <code>sec4.1_traditional_segmentation.ipynb</code> reproduit les déciles, RFM, K-Means et l’export sur les données Dunnhumby. <a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_traditional_segmentation.ipynb">Voir sur GitHub</a><br>
+<code>sec4.1_semantic_segmentation.ipynb</code> reproduit les documents clients, l’ajustement BERTopic, la vérification de stabilité et l’attribution de noms par LLM sur UCI Online Retail II. <a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_semantic_segmentation.ipynb">Voir sur GitHub</a></p>
 </section>
 <section id="key-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="key-takeaways">Points clés à retenir</h2>
 <ul>
-<li>Construisez les segments à partir des comportements, puis ajoutez les caractéristiques démographiques pour décrire et toucher chaque groupe. Le livrable est un <code>segment_id</code> que votre CRM et vos plateformes publicitaires peuvent utiliser, pas un diaporama.</li>
-<li>Validez d’abord les possibilités d’action, puis la stabilité et la taille. Si deux segments recevraient la même campagne, fusionnez-les.</li>
-<li>Un nom de segment convaincant n’est pas une preuve. Un LLM en produira un pour n’importe quel groupe, y compris un groupe aléatoire ; lisez donc vous-même les principaux mots-clés avant de vous fier à l’étiquette.</li>
+<li>Choisissez la segmentation selon la décision qu’elle sert. Les déciles et RFM classent la valeur, K-Means trouve des groupes comportementaux et les plongements vectoriels saisissent ce que les clients achètent ; une méthode plus bas dans le tableau répond à une question différente et ne raffine pas les segments de la précédente.</li>
+<li>Construisez les segments à partir des comportements et validez d’abord les possibilités d’action, puis la stabilité et la taille. Si deux segments recevraient la même campagne, fusionnez-les.</li>
+<li>Un LLM produira un nom convaincant pour n’importe quel groupe, y compris un groupe aléatoire ; lisez donc vous-même les principaux mots-clés avant de vous fier à l’étiquette.</li>
 </ul>
 
 

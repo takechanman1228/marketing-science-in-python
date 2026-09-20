@@ -646,7 +646,7 @@ window.Quarto = {
 <p><strong>Über die deutsche Ausgabe</strong><br>
 Diese Seite ist eine KI-Übersetzung der englischen Ausgabe von <em>Marketing Science in Python</em>. Die englische Ausgabe ist maßgeblich und hat bei Abweichungen Vorrang. Code, Notebooks und Text in Abbildungen bleiben auf Englisch. <a href="../../part5/sec5.2-assortment-optimization.html" class="translation-source-link">Englische Ausgabe lesen</a></p>
 </div>
-<p>Die Kategorieüberprüfung steht im Kalender: Das Planogramm-Team will Regalfläche zurück, und der Category Manager muss die SKUs benennen, die aufgegeben werden. Ein leistungsschwaches Produkt nimmt nicht nur Platz weg: Es bindet Lagerbestand, verkompliziert die Lieferkette und macht das Regal schwerer zu überblicken. Die Entscheidung lautet, welche Produkte gestrichen und welche behalten werden und wie diese Entscheidungen validiert werden, bevor sie über die ganze Kette ausgerollt werden.</p>
+<p>Eine Kategorieüberprüfung fragt, welche SKUs aus dem Regal genommen werden. Eine umsatzschwache SKU verursacht Kosten über die Regalfläche hinaus: gebundenen Lagerbestand, eine zusätzliche Position in der Lieferkette und mehr Optionen, die der Käufer überblicken muss. Die Entscheidung lautet, welche Produkte gestrichen und welche behalten werden und wie diese Entscheidungen validiert werden, bevor sie über die ganze Kette ausgerollt werden.</p>
 <p>Dieses Kapitel führt diese Entscheidung auf zwei Jahren Lebensmitteltransaktionen durch: den Long Tail nach Umsatz sichten, prüfen, ob die Nachfrage im Laden bleiben würde, und eine Shortlist zurückgeben, sortiert danach, wie sicher jede SKU zu testen ist.</p>
 <p><strong>Begleit-Notebook:</strong> <code>sec5.2_assortment_optimization.ipynb</code> reproduziert die Umsatz-ABC-Sichtung, die Substitutionsprüfung und die Zuweisung der Maßnahmen auf dem Dunnhumby Complete Journey Lebensmitteldatensatz.<br>
 <a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part5-commercial-analytics/sec5.2_assortment_optimization.ipynb">Auf GitHub ansehen</a></p>
@@ -674,15 +674,15 @@ Diese Seite ist eine KI-Übersetzung der englischen Ausgabe von <em>Marketing Sc
 <li><strong>Sichtung → Kandidatenpool.</strong> Welche Produkte tragen wenig Umsatz bei und sitzen im Long Tail?</li>
 <li><strong>Substitutionsprüfung → Sicherheitsbewertung.</strong> Für jeden Kandidaten: Wenn wir ihn entfernen, bleibt die Nachfrage in unserem Laden?</li>
 </ol>
-<p>Ein Kandidat mit plausiblen Substituten unter leistungsstärkeren Produkten ist ein Testkandidat mit geringerem Risiko. Ohne sie: erst testen, dann handeln. Nichts gilt als sicher, bis ein Test in gematchten Filialen es bestätigt hat.</p>
+<p>Ein Kandidat mit plausiblen Substituten unter leistungsstärkeren Produkten ist ein Testkandidat mit geringerem Risiko. Ohne sie braucht der Kandidat mehr Vorsicht, und in beiden Fällen ist es ein Test in gematchten Filialen, der bestätigt, dass die Streichung sicher ist.</p>
 <section id="step-1-screening-skus-by-revenue" class="level3">
 <h3 class="anchored" data-anchor-id="step-1-screening-skus-by-revenue">Schritt 1: SKUs nach Umsatz sichten</h3>
 <p>Bevor wir entscheiden, was entfernt wird, müssen wir das SKU-Universum eingrenzen. Ein Lebensmittelgeschäft kann Tausende Produkte führen, aber ein kleiner Bruchteil treibt den Großteil des Umsatzes, während die Artikel im Long Tail jeweils sehr wenig einbringen. Aus diesem Long Tail kommen die Streichkandidaten.</p>
 <p>Handelsteams verwenden oft ein Pareto-artiges Ranking namens <strong>ABC-Analyse</strong>. Produkte werden nach ihrem Beitrag sortiert, meist Umsatzwert oder Marge, manchmal auch Stückzahlen, und dann in drei Stufen aufgeteilt.</p>
 <ul>
-<li><strong>A-Artikel</strong> (obere ~20%): die wenigen Wichtigen. Sie treiben rund 80% der gewählten Kennzahl. Diese schützen, überwachen und optimieren.</li>
-<li><strong>B-Artikel</strong> (nächste ~30%): die wichtige Mitte. Verlässliche Beitragsbringer, die weniger Aufmerksamkeit brauchen.</li>
-<li><strong>C-Artikel</strong> (untere ~50%): der Long Tail. Einzeln klein, zusammen verrauscht. Kandidaten für die Bereinigung.</li>
+<li><strong>A-Artikel</strong> (obere ~20%): rund 80% der gewählten Kennzahl. Diese schützen, überwachen und optimieren.</li>
+<li><strong>B-Artikel</strong> (nächste ~30%): verlässliche Beitragsbringer, die weniger Aufmerksamkeit brauchen.</li>
+<li><strong>C-Artikel</strong> (untere ~50%): der Long Tail, jede SKU so klein, dass ihre Verkaufsreihe wenig Signal trägt. Kandidaten für die Bereinigung.</li>
 </ul>
 <p>Bei den Produkten mit C-Rang beginnen Sie Ihren Kandidatenpool aufzubauen. Nicht jeder C-Artikel sollte entfernt werden, aber jedes Produkt, dessen Streichung Sie erwägen, sollte aus dieser Gruppe stammen.</p>
 <p>Im Code werden SKUs nach kumuliertem Umsatzanteil geordnet, in A/B/C-Stufen geschnitten und der Long Tail mit C-Rang als Kandidatenpool übernommen:</p>
@@ -696,7 +696,7 @@ Diese Seite ist eine KI-Übersetzung der englischen Ausgabe von <em>Marketing Sc
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Candidate pool = C-rank by revenue (the long tail)</span></span>
 <span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>candidates <span class="op">=</span> sku_summary[sku_summary[<span class="st">"abc_revenue"</span>] <span class="op">==</span> <span class="st">"C"</span>]</span></code></pre></div><button title="In die Zwischenablage kopieren" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Die vollständige Funktion, einschließlich Filterung von Null- und Negativumsätzen und NaN-sicherer Klasseneinteilung, steht im Begleit-Notebook.</p>
-<p><a href="#fig-revenue-pareto" class="quarto-xref">Abbildung&nbsp;<span>1</span></a> zeigt die Umsatz-Pareto-Kurve für rund 39,000 Dunnhumby-Lebensmittel-SKUs (nach Ausschluss von 38 ohne Umsatz). Der Umsatz ist stark konzentriert: Weniger als 20% der SKUs erzeugen 80% des Umsatzes, während der C-Pool (<code>abc_revenue == "C"</code>) 63% der SKUs, aber nur 5% des Umsatzes enthält. Dieser Long Tail bildet den Kandidatenpool. Er verdient es, geprüft zu werden, nicht allein aufgrund des Volumens verteidigt.</p>
+<p><a href="#fig-revenue-pareto" class="quarto-xref">Abbildung&nbsp;<span>1</span></a> zeigt die Umsatz-Pareto-Kurve für rund 39,000 Dunnhumby-Lebensmittel-SKUs (nach Ausschluss von 38 ohne Umsatz). Der Umsatz ist stark konzentriert: Weniger als 20% der SKUs erzeugen 80% des Umsatzes, während der C-Pool (<code>abc_revenue == "C"</code>) 63% der SKUs, aber nur 5% des Umsatzes enthält. Dieser Long Tail bildet den Kandidatenpool. Geringes Volumen allein bringt eine SKU in diesen Pool; es entscheidet nicht über das Ergebnis.</p>
 <div id="fig-revenue-pareto" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Umsatz-Pareto-Kurve für ~39,000 SKUs: Weniger als 20% der SKUs treiben 80% des Umsatzes.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-revenue-pareto-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -712,10 +712,10 @@ Abbildung&nbsp;1: Kumulierter Umsatzanteil nach SKU.
 <section id="step-2-substitution-check-will-the-demand-stay" class="level3">
 <h3 class="anchored" data-anchor-id="step-2-substitution-check-will-the-demand-stay">Schritt 2: Substitutionsprüfung, “Bleibt die Nachfrage?”</h3>
 <p>Für jeden C-Kandidaten lautet die Frage: Wenn wir ihn entfernen, kaufen die Kunden etwas anderes bei uns oder verlassen sie den Laden?</p>
-<p>Innerhalb derselben Unterkategorie können Produkte, die selten im selben Warenkorb auftauchen, Substitute sein. Käufer kaufen meist eine Joghurtmarke, nicht drei. Wir verwenden geringes gemeinsames Auftreten im Warenkorb, gemessen als Lift, als Proxy für Substitution:</p>
+<p>Innerhalb derselben Unterkategorie können Produkte, die selten im selben Warenkorb auftauchen, Substitute sein. Ein Käufer kauft pro Einkauf typischerweise eine Joghurtmarke. Wir verwenden geringes gemeinsames Auftreten im Warenkorb, gemessen als Lift, als Proxy für Substitution:</p>
 <p><span class="math display">\[\text{Lift}(A, B) = \frac{P(A \cap B)}{P(A) \times P(B)}\]</span></p>
 <p>Lift &gt; 1 bedeutet, dass zwei Produkte tendenziell zusammen gekauft werden (Komplemente); Lift &lt; 1 bedeutet, dass sie es selten werden, was innerhalb einer Unterkategorie darauf hindeutet, dass sie einander ersetzen, und Lift = 0 (nie im selben Warenkorb) ist das stärkste Signal. Die Beschränkung auf dieselbe Unterkategorie ist wichtig: Über Kategorien hinweg bedeutet geringes gemeinsames Auftreten nur, dass die Produkte unterschiedliche Bedürfnisse bedienen (Müsli vs.&nbsp;Pasta), nicht, dass sie einander ersetzen.</p>
-<p>Das ist ein Proxy, kein Beweis. Geringes gemeinsames Auftreten kann auch unterschiedliche Einkaufsanlässe oder Kundensegmente widerspiegeln.</p>
+<p>Geringes gemeinsames Auftreten ist mit Substitution vereinbar, belegt sie aber nicht: Es kann auch unterschiedliche Einkaufsanlässe oder Kundensegmente widerspiegeln.</p>
 <p>Für jeden C-Kandidaten durchsucht die Prüfung seine Nachbarn in derselben Unterkategorie (beschränkt auf SKUs mit A/B-Umsatz, die groß genug sind, um umgeleitete Nachfrage aufzunehmen) und markiert diejenigen mit niedrigem Lift:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>co_occur <span class="op">=</span> <span class="bu">len</span>(cand_baskets <span class="op">&amp;</span> peer_baskets)</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> co_occur <span class="op">==</span> <span class="dv">0</span>:                       <span class="co"># never bought together → strongest signal</span></span>
@@ -729,7 +729,7 @@ Abbildung&nbsp;1: Kumulierter Umsatzanteil nach SKU.
 </section>
 <section id="the-output-a-scored-candidate-list" class="level3">
 <h3 class="anchored" data-anchor-id="the-output-a-scored-candidate-list">Das Ergebnis: eine bewertete Kandidatenliste</h3>
-<p>Der Long Tail ist zu groß, um ihn ganz zu bewerten, daher bewertet das Notebook 150 C-SKUs: die 100 am häufigsten gekauften plus die C-SKUs in denselben Unterkategorien, alle mit mindestens 30 Warenkörben über die zwei Jahre. Eine SKU, die ein Dutzend Mal gekauft wurde, kann in keine Richtung ein Substitutionssignal tragen. Schritt 1 und 2 weisen dann eine von drei Maßnahmen zu. <a href="#tbl-scored-candidates" class="quarto-xref">Tabelle&nbsp;<span>1</span></a> zeigt einen realen Kandidaten pro Maßnahme (Unterkategorie-Bezeichnungen zur besseren Lesbarkeit bereinigt):</p>
+<p>Der Long Tail ist zu groß, um ihn ganz zu bewerten, daher bewertet das Notebook 150 C-SKUs: die 100 am häufigsten gekauften plus die C-SKUs in denselben Unterkategorien, alle mit mindestens 30 Warenkörben über die zwei Jahre. Das Notebook verwendet 30 Warenkörbe als Screening-Schwelle, um das Rauschen kleiner Zählungen zu reduzieren; das ist eine Faustregel, keine statistische Garantie. Schritt 1 und 2 weisen dann eine von drei Maßnahmen zu. <a href="#tbl-scored-candidates" class="quarto-xref">Tabelle&nbsp;<span>1</span></a> zeigt einen realen Kandidaten pro Maßnahme (Unterkategorie-Bezeichnungen zur besseren Lesbarkeit bereinigt):</p>
 <div id="tbl-scored-candidates" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-scored-candidates-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -742,7 +742,7 @@ Tabelle&nbsp;1: Ein bewerteter Kandidat pro Maßnahme, aus dem Begleit-Notebook.
 <th style="text-align: left;">Kandidat (Unterkategorie)</th>
 <th style="text-align: right;">Umsatz, 2 Jahre</th>
 <th style="text-align: right;">Warenkörbe</th>
-<th style="text-align: center;">Klares Substitut?</th>
+<th style="text-align: center;">Mögliches Substitut?</th>
 <th style="text-align: center;">Halo?</th>
 <th style="text-align: left;">Maßnahme</th>
 </tr>
@@ -777,21 +777,21 @@ Tabelle&nbsp;1: Ein bewerteter Kandidat pro Maßnahme, aus dem Begleit-Notebook.
 </div>
 </figure>
 </div>
-<p>Über die 150 verteilen sich die Maßnahmen 105 / 28 / 17. Der größte Teil des geprüften Tails hat ein Substitut in der Kategorie und keine besondere Warenkorbrolle, und für diese ist null gemeinsames Auftreten (ein Lift von 0.0, das stärkste Substitutionssignal in Transaktionsdaten) der Normalfall. Das ist keine Streichliste. Es ist eine Shortlist, sortiert danach, wie sicher jeder Kandidat zuerst zu testen ist.</p>
-<p>Ein Kandidat mit einem klaren Substitut in der Kategorie ist am sichersten auf Streichung zu testen. Die 17 ohne klares Substitut sind der Gegenfall: Weniger als fünf Nachbarn mit A/B-Umsatz könnten die Nachfrage aufnehmen, sodass sie den Laden verlassen könnte. Behalten Sie das Produkt vorerst und suchen Sie nach Wegen, seine Kosten zu senken, etwa kleinere Packungen oder bessere Lieferantenkonditionen, oder testen Sie vorsichtig, bevor Sie es entfernen.</p>
-<p>Die 28 in der Mitte sind eine Leitplanke für Halo-Effekte. Eine günstige SKU, die oft zusammen mit höherwertigen Artikeln auftaucht, kann helfen, diese Warenkörbe anzuziehen, sodass ihre Streichung den Umsatz anderswo senken könnte. Untersuchen Sie diese Fälle vor dem Streichen, statt sich allein auf den Umsatz zu verlassen. In dichten Lebensmitteldaten tritt fast jede SKU mit irgendetwas gemeinsam auf, verwenden Sie dieses Flag also nur für die klarsten Fälle. Außerdem gehört nicht jede umsatzschwache SKU in den Kandidatenpool. Manche Produkte verdienen ihre Regalfläche, weil sie Ladenbesuche auslösen, das Preisimage verankern oder Kategoriekompetenz signalisieren, Rollen, die Umsatz und Lift nicht erfassen.</p>
+<p>Über die 150 verteilen sich die Maßnahmen 105 / 28 / 17. Der größte Teil des geprüften Tails hat ein mögliches Substitut in der Kategorie und keine besondere Warenkorbrolle, und für diese ist null gemeinsames Auftreten (ein Lift von 0.0, das stärkste Substitutionssignal in Transaktionsdaten) der Normalfall. Das Ergebnis ist eine Shortlist zum Testen, sortiert danach, wie sicher jeder Kandidat zuerst zu testen ist.</p>
+<p>Eine SKU mit einem möglichen Substitut in ihrer Unterkategorie ist am sichersten auf Streichung zu testen. Die 17 ohne mögliches Substitut sind der Gegenfall: Weniger als fünf Nachbarn mit A/B-Umsatz könnten die Nachfrage aufnehmen, sodass sie den Laden verlassen könnte. Behalten Sie das Produkt vorerst und suchen Sie nach Wegen, seine Kosten zu senken, etwa kleinere Packungen oder bessere Lieferantenkonditionen, oder testen Sie vorsichtig, bevor Sie es entfernen.</p>
+<p>Die 28 in der Mitte sind eine Leitplanke für Halo-Effekte. Eine günstige SKU, die oft zusammen mit höherwertigen Artikeln auftaucht, kann helfen, diese Warenkörbe anzuziehen, sodass ihre Streichung den Umsatz anderswo senken könnte. Untersuchen Sie diese Fälle vor dem Streichen, statt sich allein auf den Umsatz zu verlassen. In dichten Lebensmitteldaten tritt fast jede SKU mit irgendetwas gemeinsam auf, verwenden Sie dieses Flag also nur für die klarsten Fälle. Außerdem gehört nicht jede umsatzschwache SKU in den Kandidatenpool. Manche SKUs haben Rollen, die Umsatz und Lift nicht erfassen, etwa Ladenbesuche auszulösen, das Preisimage der Kategorie zu verankern oder Kategoriekompetenz zu signalisieren.</p>
 </section>
 </section>
 <section id="validate-before-scaling" class="level2">
 <h2 class="anchored" data-anchor-id="validate-before-scaling">Validieren, bevor Sie skalieren</h2>
-<p>Die bewertete Liste ist eine Menge von Hypothesen, keine Streichliste. Bevor Sie eine Auslistung ausrollen, führen Sie einen kleinen Test in gematchten Filialen durch: Entfernen Sie die SKU in den Treatment-Filialen, lassen Sie vergleichbare Kontrollfilialen unverändert und beobachten Sie Unterkategorie-Umsatz, Umsatz pro Warenkorb und Anzahl der Warenkörbe.</p>
+<p>Jede Zeile der bewerteten Liste ist eine Hypothese, die zu testen ist. Bevor Sie eine Auslistung ausrollen, führen Sie einen kleinen Test in gematchten Filialen durch: Entfernen Sie die SKU in den Treatment-Filialen, lassen Sie vergleichbare Kontrollfilialen unverändert und beobachten Sie Unterkategorie-Umsatz, Umsatz pro Warenkorb und Anzahl der Warenkörbe.</p>
 <p>Bewerten Sie nicht die Verkäufe der entfernten SKU selbst; sie sind per Konstruktion null. Die Frage ist, ob die Nachfrage in der Kategorie und im Warenkorb bleibt. Ist das Ergebnis nicht eindeutig, skalieren Sie die Streichung nicht.</p>
 </section>
 <section id="key-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="key-takeaways">Das Wichtigste in Kürze</h2>
 <ul>
-<li>Die Umsatz-ABC-Analyse erzeugt Kandidaten, keine Entscheidungen. Geringes gemeinsames Auftreten innerhalb derselben Unterkategorie ist ein Proxy für Substitution, kein Beweis, und eine günstige SKU, die wertvolle Warenkörbe verankert, kann es wert sein, behalten zu werden.</li>
-<li>Rollen Sie nie ohne Test in gematchten Filialen aus. Messen Sie Unterkategorie-Umsatz, Umsatz pro Warenkorb und Anzahl der Warenkörbe, nicht die Verkäufe der entfernten SKU selbst. Ein nicht eindeutiges Ergebnis ist kein grünes Licht.</li>
+<li>Die Umsatz-ABC-Analyse grenzt das SKU-Universum auf einen Kandidatenpool ein, und geringes gemeinsames Auftreten innerhalb derselben Unterkategorie ordnet diese Kandidaten nach Substitutionsrisiko; eine günstige SKU, die wertvolle Warenkörbe verankert, kann es trotzdem wert sein, behalten zu werden.</li>
+<li>Rollen Sie nie ohne Test in gematchten Filialen aus. Messen Sie Unterkategorie-Umsatz, Umsatz pro Warenkorb und Anzahl der Warenkörbe, nicht die Verkäufe der entfernten SKU selbst. Ist der Test nicht eindeutig, skalieren Sie die Streichung nicht.</li>
 </ul>
 
 

@@ -669,7 +669,7 @@ window.Quarto = {
 </header>
 
 
-<p>Most marketing teams focus on Cost Per Acquisition (CPA), often used interchangeably with CAC (Customer Acquisition Cost): lower CPA means a better campaign. Customer Lifetime Value (CLV), often called LTV in analytics and SaaS contexts, reframes the question. Instead of asking how cheaply you can acquire a customer, it asks how much each customer is worth over time, and uses that answer to set the CPA ceiling.</p>
+<p>Most marketing teams focus on Cost Per Acquisition (CPA), often used interchangeably with CAC (Customer Acquisition Cost): lower CPA means a better campaign. Customer Lifetime Value (CLV), often called LTV in analytics and SaaS contexts, reframes the question. It estimates how much each customer is worth over time, and that estimate sets the CPA ceiling for the segment.</p>
 <p>This chapter shows how to predict CLV at the individual level using probabilistic BTYD models (BG/NBD + Gamma-Gamma with PyMC-Marketing), and how to turn those predictions into budget decisions.</p>
 <section id="why-clv-changes-the-decision" class="level2">
 <h2 class="anchored" data-anchor-id="why-clv-changes-the-decision">Why CLV Changes the Decision</h2>
@@ -688,7 +688,7 @@ Figure&nbsp;1: First-purchase comparison: students vs.&nbsp;professionals.
 </figcaption>
 </figure>
 </div>
-<p>On day-one ROAS, the choice looks obvious: put more budget into students. But the long-run picture flips it. College students churn after the first transaction, so their lifetime spend stays near $100. Working professionals return and spend more over time, with an average lifetime spend of $400. Suddenly, the “expensive” segment is actually the bargain.</p>
+<p>Day-one ROAS favors the student, but lifetime spend reverses the ranking. College students churn after the first transaction, so their lifetime spend stays near $100. Working professionals return and spend more over time, with an average lifetime spend of $400.</p>
 <div id="fig-long-term-comparison" class="fig-sm quarto-float quarto-figure quarto-figure-center anchored" alt="After repeat purchases, the professional produces twice the return on ad spend while the student customer churns.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-long-term-comparison-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -731,7 +731,7 @@ Figure&nbsp;3: Fixed CPA (left) vs.&nbsp;CLV-scaled CPA (right).
 <p><span class="math display">\[
 \text{CLV} = \text{Average Order Value} \times \text{Purchase Frequency} \times \text{Customer Lifespan}
 \]</span></p>
-<p>For a fashion brand where customers spend $100 per order, shop 4 times a year, and stay loyal for 3 years: <span class="math inline">\(\text{CLV} = 100 \times 4 \times 3 = \$1{,}200\)</span>. Simple, intuitive, and useful for rough business sizing, but too coarse for customer-level decisions. It collapses on three points.</p>
+<p>For a fashion brand where customers spend $100 per order, shop 4 times a year, and stay loyal for 3 years: <span class="math inline">\(\text{CLV} = 100 \times 4 \times 3 = \$1{,}200\)</span>. This is useful for rough business sizing but too coarse for customer-level decisions, for three reasons.</p>
 <div id="fig-limitations" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="The three limitations of the traditional CLV formula: customer heterogeneity, differences in first-purchase timing, and the &quot;dead or alive&quot; ambiguity.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-limitations-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -782,7 +782,7 @@ Table&nbsp;1: The average CLV of $1,090 misrepresents both groups.
 </div>
 </figure>
 </div>
-<p>The $1,090 average exists in the data and describes no one. You need CLV at the individual level.</p>
+<p>The overall average of $1,090 hides the difference between the two groups. You need CLV at the individual level.</p>
 <p>Limitation 2: Different first-purchase timing. A customer who started a year ago has a full year of observable data; one who started three months ago has much less. Raw frequency counts conflate “low engagement” with “new arrival” unless you adjust for tenure.</p>
 <div id="fig-tenure" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Customers who start purchasing at different times have different observable windows, making raw frequency counts misleading.">
 <figure class="quarto-float quarto-float-fig figure">
@@ -794,22 +794,22 @@ Figure&nbsp;5: Tenure bias in observable customer windows.
 </figcaption>
 </figure>
 </div>
-<p>Limitation 3: Dead or alive? In subscriptions, churn is observable: the customer cancels. In retail and e-commerce, it is not. Whether a customer counts as “alive” depends on their own pattern. Someone who buys monthly going silent for three months is a red flag; someone who buys every six months skipping three is normal.</p>
+<p>Limitation 3: churn is not observed. In subscriptions, churn is observable: the customer cancels. In retail and e-commerce, it is not. Whether a customer counts as “alive” depends on their own pattern. Someone who buys monthly going silent for three months is a red flag; someone who buys every six months skipping three is normal.</p>
 <div id="fig-dead-or-alive" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="The same gap since a customer's last purchase can indicate temporary inactivity or permanent dropout, which is not directly observed.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-dead-or-alive-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="../images/part4/sec4.2/dead_or_alive.png" class="fig-md img-fluid figure-img" alt="The same gap since a customer's last purchase can indicate temporary inactivity or permanent dropout, which is not directly observed.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-dead-or-alive-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;6: Dead-or-alive ambiguity in purchase patterns.
+Figure&nbsp;6: Unobserved churn in purchase patterns.
 </figcaption>
 </figure>
 </div>
-<p>All three problems have the same root: a single average cannot represent a heterogeneous customer base. The fix is to model CLV at the individual level, which is exactly what BTYD does.</p>
+<p>The model has to account for differences in buying behavior between customers, for the time since each customer’s first purchase, and for the possibility that a customer has stopped buying. BTYD builds all three into one individual-level model.</p>
 </section>
 <section id="sec-btyd" class="level2">
 <h2 class="anchored" data-anchor-id="sec-btyd">BTYD: The BG/NBD + Gamma-Gamma Framework</h2>
-<p>Buy-Till-You-Die (BTYD) modeling is two probabilistic models stitched together:</p>
+<p>Buy-Till-You-Die (BTYD) modeling combines two probabilistic models:</p>
 <ol type="1">
 <li>BG/NBD predicts the probability a customer is still active and their future transaction count.</li>
 <li>Gamma-Gamma estimates their average order value.</li>
@@ -901,7 +901,7 @@ Figure&nbsp;9: P(alive) decays between purchases and resets.
 </section>
 <section id="sec-implementation" class="level2">
 <h2 class="anchored" data-anchor-id="sec-implementation">Implementation with PyMC-Marketing</h2>
-<p><a href="https://github.com/pymc-labs/pymc-marketing">PyMC-Marketing</a> is built on <a href="https://www.pymc.io/">PyMC</a> and replaces the <code>lifetimes</code> library (now in maintenance mode). The headline feature is built-in uncertainty quantification: every CLV estimate comes with HDI bounds, so you can see how confident the model is for each customer.</p>
+<p><a href="https://github.com/pymc-labs/pymc-marketing">PyMC-Marketing</a> is built on <a href="https://www.pymc.io/">PyMC</a> and replaces the <code>lifetimes</code> library (now in maintenance mode). The headline feature is built-in uncertainty quantification: every CLV estimate comes with HDI bounds, so you can see how much uncertainty surrounds each customer’s estimate.</p>
 <p>The CLV model needs only sales transactions: customer ID, transaction date, transaction value. Two to three years of history is usually enough.</p>
 <div id="fig-required-data" class="fig-sm quarto-float quarto-figure quarto-figure-center anchored" alt="CLV modeling starts from transaction-level records containing a customer identifier, transaction date, and transaction value.">
 <figure class="quarto-float quarto-float-fig figure">
@@ -1002,12 +1002,12 @@ Table&nbsp;2: RFM-T metrics used in the BTYD model.
 <span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    discount_rate<span class="op">=</span><span class="fl">0.01</span>,</span>
 <span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    time_unit<span class="op">=</span><span class="st">"D"</span>,</span>
 <span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>The output includes not just point estimates but HDI (Highest Density Interval) bounds. In this API, <code>future_t</code> is measured in months, while <code>time_unit="D"</code> tells the model that the RFM-T inputs are measured in days. The model tells you how confident it is for each customer, though only about purchase timing: the spend posterior is summarized to its mean before discounting, so treat the bounds as a lower bound on the real uncertainty.</p>
-<p>The horizon is a decision, not a default. This dataset covers about 23 months, so a 120-month projection runs roughly five times past the observed window. The estimate does not run away, because BG/NBD builds customer dropout into the projection, but that dropout rate is itself estimated from those 23 months. The companion notebook re-discounts the same posterior at 3, 5, and 10 years. On this dataset, customer ranking barely moves across the three, so rank-based targeting is insensitive to these tested horizons; the median 10-year estimate is about 2.23 times the 3-year estimate, so anything that turns CLV into a dollar ceiling has to state the horizon it used.</p>
+<p>The output includes not just point estimates but HDI (Highest Density Interval) bounds. In this API, <code>future_t</code> is measured in months, while <code>time_unit="D"</code> tells the model that the RFM-T inputs are measured in days. The bounds quantify uncertainty in purchase timing only: the spend posterior is summarized to its mean before discounting, so treat them as a lower bound on the real uncertainty.</p>
+<p>Choose the horizon explicitly; <code>future_t=120</code> is not a default to accept. This dataset covers about 23 months, so a 120-month projection runs roughly five times past the observed window. The estimate stays bounded, because BG/NBD builds customer dropout into the projection, but that dropout rate is itself estimated from those 23 months. The companion notebook re-discounts the same posterior at 3, 5, and 10 years. On this dataset, customer ranking barely moves across the three, so rank-based targeting is insensitive to these tested horizons; the median 10-year estimate is about 2.23 times the 3-year estimate, so anything that turns CLV into a dollar ceiling has to state the horizon it used.</p>
 </section>
 <section id="probability-alive-matrix" class="level3">
 <h3 class="anchored" data-anchor-id="probability-alive-matrix">Probability Alive Matrix</h3>
-<p>A quick way to see what the BG/NBD model has learned is the Probability Alive matrix. Recency on one axis, frequency on the other, color showing P(alive). Remember that recency here is the BTYD definition from the table above, the span from first to last purchase, so high recency means the customer was still buying recently, the opposite of how marketing RFM uses the word. Four corners tell four stories: loyal repeaters (high frequency, high recency, frequent and still active), at-risk loyalists (high frequency, low recency, they used to buy a lot and then went quiet), one-time passersby (low frequency, low recency, a purchase or two right after acquisition and then silence), and thin-history customers (low frequency, high recency, too few purchases to be sure but the most recent one is fresh, so the model gives them the benefit of the doubt; the figure labels this corner new customers).</p>
+<p>A quick way to see what the BG/NBD model has learned is the Probability Alive matrix. Recency on one axis, frequency on the other, color showing P(alive). Remember that recency here is the BTYD definition from the table above, the span from first to last purchase, so high recency means the customer was still buying recently, the opposite of how marketing RFM uses the word. Read the four corners separately. Loyal repeaters (high frequency, high recency) buy often and are still active. At-risk loyalists (high frequency, low recency) used to buy a lot and then went quiet. One-time passersby (low frequency, low recency) made a purchase or two right after acquisition and then stopped. Thin-history customers (low frequency, high recency) have too few purchases to be sure, but the most recent one is fresh, so P(alive) comes out high; the figure labels this corner new customers.</p>
 <div id="fig-prob-alive-matrix" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Probability-alive matrix over purchase frequency (x) and recency (y); color shows P(alive) for each customer position.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-prob-alive-matrix-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -1029,7 +1029,7 @@ Figure&nbsp;11: The Probability Alive matrix.
 </section>
 <section id="combining-segments-and-clv" class="level3">
 <h3 class="anchored" data-anchor-id="combining-segments-and-clv">Combining Segments and CLV</h3>
-<p>Join the <code>segment_id</code> from the segmentation chapter (Chapter 4.1) with each customer’s CLV estimate. This gives you the operating table the part has been building toward: what kind of customer this is, what they are worth, and what the business should do for them.</p>
+<p>Join the <code>segment_id</code> from <a href="sec4.1-segmentation.html">Section 4.1</a> with each customer’s CLV estimate. This gives you the operating table the part has been building toward: what kind of customer this is, what they are worth, and what the business should do for them.</p>
 <p>Demographics can still help describe or reach a segment, but the main decision layer is behavioral segment × predicted value. The companion notebook joins CLV estimates with the Dunnhumby <code>hh_demographic.csv</code> so you can profile each segment along demographic dimensions such as income: useful for picking creative and channel, less so for setting budget.</p>
 <div class="callout callout-style-default callout-tip callout-titled">
 <div class="callout-header d-flex align-content-center">
@@ -1048,7 +1048,7 @@ Figure&nbsp;11: The Probability Alive matrix.
 </section>
 <section id="sec-using-clv" class="level2">
 <h2 class="anchored" data-anchor-id="sec-using-clv">Putting CLV to Work</h2>
-<p>Once you have a <code>clv_estimate</code> per customer, three applications come almost for free. These patterns work for any CLV score: downstream systems only need a customer ID and a number.</p>
+<p>Once you have a <code>clv_estimate</code> per customer, three applications need no further modeling, though each needs more than the score. A CPA ceiling needs the margin conversion above and a stated horizon; a churn alert needs a CRM join on customer ID and a threshold; a cohort forecast needs each customer’s acquisition date and finance’s planning horizon. The patterns work for any CLV score.</p>
 <ol type="1">
 <li>CPA ceilings for ad bidding</li>
 </ol>
@@ -1060,11 +1060,11 @@ Figure&nbsp;11: The Probability Alive matrix.
 <ol start="2" type="1">
 <li>Churn alerts for CRM</li>
 </ol>
-<p>Flag customers whose P(alive) drops more than 30 points in 30 days. The signal is the rate of change, not the absolute level. A customer whose P(alive) fell from 0.85 to 0.40 in a month is far more urgent than one who has been steady at 0.35 for six months. The first is disengaging; the second is just a low-frequency buyer.</p>
+<p>Flag customers whose P(alive) drops more than 30 points in 30 days. The signal is the rate of change, not the absolute level. A customer whose P(alive) fell from 0.85 to 0.40 in a month is far more urgent than one who has been steady at 0.35 for six months. The first customer is moving away from a previously high engagement level; the second has been a low-frequency buyer all along.</p>
 <ol start="3" type="1">
 <li>Cohort forecasts for Finance</li>
 </ol>
-<p>Finance plans on budget cycles, not lifetimes, so aggregate individual CLV estimates by acquisition cohort and project revenue at 12, 24, and 36 months. Include HDI bounds so Finance knows these are probabilistic estimates, not fixed targets. This is how you answer “What is the expected return on our Q3 acquisition spend?” without making the CFO learn BG/NBD.</p>
+<p>Finance plans on budget cycles, not lifetimes, so aggregate individual CLV estimates by acquisition cohort and project revenue at 12, 24, and 36 months. Include HDI bounds so Finance knows these are probabilistic estimates, not fixed targets. This answers the finance question of expected return on a quarter’s acquisition spend, in the units and the time frame finance plans in.</p>
 <div class="callout callout-style-default callout-tip callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -1082,8 +1082,8 @@ Figure&nbsp;11: The Probability Alive matrix.
 <section id="key-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="key-takeaways">Key Takeaways</h2>
 <ul>
-<li>CLV replaces a uniform CPA target with spend proportional to what each customer is worth. The average exists in the data and describes no one.</li>
-<li>In non-contractual settings, BG/NBD models future purchases and Gamma-Gamma models spend, from transaction data alone. Every customer gets a credible interval, so bid against a conservative lower bound rather than the mean.</li>
+<li>CLV replaces a uniform CPA target with spend proportional to what each customer is worth; a single ceiling overpays for low-value customers and underpays for high-value ones.</li>
+<li>In non-contractual settings, BG/NBD models future purchases and Gamma-Gamma models spend, from transaction data alone. Every customer gets a credible interval, so set the bid from a conservative lower bound of the interval.</li>
 <li>Convert revenue CLV to profit CLV before it sets a CPA ceiling, and state the horizon: the median ten-year estimate runs about 2.23 times the three-year one, though the ranking barely moves.</li>
 </ul>
 

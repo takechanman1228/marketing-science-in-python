@@ -625,12 +625,12 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 <p><strong>关于中文版</strong><br>
 本页是英文版 <em>Marketing Science in Python</em> 的AI翻译。英文版为正式版本，如有出入，以英文版为准。代码、Notebook 和图片中的文字保持英文。 <a href="../../part3/sec3.3-quasi-experiments.html" class="translation-source-link">阅读英文版</a></p>
 </div>
-<p>A/B 测试是测量因果关系的黄金标准。随机决定谁接受处理，对照组就能告诉你没有处理时本会发生什么。但你并不总能做 A/B 测试。正如<a href="../part3/sec3.1-thinking-causally.html#limitations-of-ab-testing">第 3.1 节</a>所述，有很多原因会让 A/B 测试不可行。</p>
-<p>当你无法随机化时，就要用准实验。准实验在没有随机分配的情况下估计因果关系。它利用业务流程留下的任何比较：一个阈值、一次跳过了某些单位的推广、一个上线日期。最后这一点正是关键所在。非随机的推广并不自动成为可用的准实验。它必须留下一个你能为其假设辩护的比较，而本章中的每种设计都附带着一个你必须辩护的假设。</p>
-<p>本章介绍三种设计：断点回归设计（RDD）、双重差分（DiD）和合成控制。每一种都需要未接受处理的单位作为比较对象：一组没有安装陈列的对照门店，或者一批可以混合成一个比较对象的门店。第四种设计 CausalImpact 用于根本没有未处理单位的情况。它放在<a href="sec3.4-causal-impact.html">下一章</a>。</p>
+<p>A/B 测试是测量因果关系的黄金标准。随机决定谁接受处理，对照组就能告诉你没有处理时本会发生什么。不过，你并不总能做 A/B 测试：<a href="../part3/sec3.1-thinking-causally.html#limitations-of-ab-testing">第 3.1 节</a>已经讲过 A/B 测试可能不可行的种种原因。</p>
+<p>当你无法随机化时，就要用准实验。准实验在没有随机分配的情况下估计因果关系。它利用业务流程留下的任何比较：一个阈值、一次跳过了某些单位的推广、一个上线日期。但非随机的推广并不会自动给你一个可用的替代方案。它必须留下一个你能为其假设辩护的比较，而本章中的每种设计都附带着一个你必须辩护的假设。</p>
+<p>本章介绍三种设计：断点回归设计（RDD）、双重差分（DiD）和合成控制。每一种都需要未接受处理的单位作为比较对象：一组没有安装陈列的对照门店，或者一批可以混合成一个比较对象的门店。第四种设计 CausalImpact 用于根本没有未处理单位的情况。这种设计将在<a href="sec3.4-causal-impact.html">下一章</a>介绍。</p>
 <section id="which-design-fits-your-situation" class="level2">
 <h2 class="anchored" data-anchor-id="which-design-fits-your-situation">哪种设计适合你的情况？</h2>
-<p>四种设计已经不少了，而且名字并不能告诉你需要哪一种。所以让我们把它们全都放到同一个具体问题上。一家零售商有 100 家门店。它推出了一种新的店内陈列，想知道这种陈列对品类销售额产生了什么影响。</p>
+<p>设计的名字并不能告诉你哪一种合适，所以这里把四种设计放到同一个具体问题上比较：一家有 100 家门店的零售商推出了一种新的店内陈列，想知道这种陈列对品类销售额产生了什么影响。</p>
 <p>第一个问题永远相同：陈列是随机分配的吗？如果是，未安装陈列的门店就是你的对照组，你回到了<a href="sec3.2-ab-testing.html">第 3.2 节</a>。如果不是，分配的方式决定了设计。</p>
 <div id="tbl-hundred-stores" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
@@ -677,25 +677,25 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 </div>
 </figure>
 </div>
-<p>每一行都是同样的 100 家门店。变化的是陈列的分配方式，而这决定了设计和你需要的数据：RDD 需要驱动变量，DiD 需要前后对比的面板数据，合成控制需要较长的事前时期和一批未处理门店。随机选出的 50 家门店和销售团队选出的 50 家门店可以产生同样的电子表格，但只有前者是实验。这就是整章的规则。分配决定设计。数据再决定设计是否可信。</p>
-<p>那张表是一家零售商的五个选项。<a href="#fig-method-decision-tree" class="quarto-xref">图&nbsp;<span>1</span></a> 把它变成了适用于任何推广的决策路由：两个是非问题，然后是一个取决于你还剩多少未处理数据的选择。</p>
+<p>每一行都是同样的 100 家门店。变化的是陈列的分配方式，而这决定了设计和你需要的数据：RDD 需要驱动变量，DiD 需要前后对比的面板数据，合成控制需要较长的事前时期和一批未处理门店。随机选出的 50 家门店和销售团队选出的 50 家门店可以产生同样的电子表格，但只有随机划分支持实验式的解读。所以分配机制决定设计，数据再决定这种设计是否可信。</p>
+<p>那张表是一家零售商的五个选项。<a href="#fig-method-decision-tree" class="quarto-xref">图&nbsp;<span>1</span></a> 把这张表一般化到任何推广场景：两个是非问题，然后是一个取决于你还剩多少未处理数据的选择。</p>
 <div id="fig-method-decision-tree" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="两道关卡（随机分配，然后是阈值规则），之后是一架从对照组到捐赠池再到预测的三级阶梯。">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-method-decision-tree-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="../images/part3/sec3.3/method_decision_tree.png" class="fig-lg img-fluid figure-img" alt="两道关卡（随机分配，然后是阈值规则），之后是一架从对照组到捐赠池再到预测的三级阶梯。">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-method-decision-tree-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-图&nbsp;1: 选择一个可信的比较
+图&nbsp;1: 按分配机制选择设计。
 </figcaption>
 </figure>
 </div>
-<p>这四种设计也不是四个互不相关的技巧。其中一种，RDD，只用一个阈值，别无其他。另外三种构成一架阶梯。DiD 借用对照门店的趋势。当没有任何单个门店足以胜任时，合成控制把对照门店混合成一个更好的比较对象。当根本没有对照门店时，CausalImpact 通过预测得到比较对象。每上一级，对模型的依赖就更重一分。本章介绍 RDD 和前两级。</p>
+<p>这四种设计彼此相关。其中一种，RDD，只用一个阈值，别无其他。另外三种构成一个序列，每一步对模型的依赖都更重。DiD 使用对照门店的趋势。当没有任何单个门店足以胜任时，合成控制把对照门店混合成一个更好的比较对象。当根本没有对照门店时，CausalImpact 通过预测得到比较对象。本章介绍 RDD、DiD 和合成控制。</p>
 </section>
 <section id="regression-discontinuity-rdd" class="level2">
 <h2 class="anchored" data-anchor-id="regression-discontinuity-rdd">断点回归设计（RDD）</h2>
 <p><strong>核心思路：</strong>在阈值附近，分配几乎等同于随机。</p>
-<p>从 <a href="#tbl-hundred-stores" class="quarto-xref">表&nbsp;<span>1</span></a> 的第二行开始。销售团队没有挑选门店，而是写下了一条规则：年销售额超过 $1M 的每家门店都安装新陈列。这样一来，试点门店按构造就是最大的门店。把它们与其余门店比较，只会测出“成为大店是什么样”。</p>
-<p>但看看靠近分界线的门店。一家做到 $1.02M 的门店和一家做到 $0.98M 的门店规模大致相同，服务相似的顾客，开展相似的促销。它们落在 $1M 的哪一边，近乎抛硬币。RDD 就把它当作抛硬币来处理。它比较略高于阈值与略低于阈值的结果，如果品类销售额在 $1M 处出现跳跃，这个跳跃就是陈列的效应。同样的逻辑也适用于客户：如果过去消费至少 $500 的客户会收到优惠券，就把消费 $502 的客户与消费 $498 的客户进行比较。</p>
+<p>从 <a href="#tbl-hundred-stores" class="quarto-xref">表&nbsp;<span>1</span></a> 的第二行开始。销售团队没有挑选门店，而是写下了一条规则：年销售额超过 $1M 的每家门店都安装新陈列。这样一来，试点门店按构造就是最大的门店。把它们与其余门店比较，测出的是门店规模，而不是陈列。</p>
+<p>靠近阈值的门店则是另一回事。一家做到 $1.02M 的门店和一家做到 $0.98M 的门店规模大致相同，服务相似的顾客，开展相似的促销。它们落在 $1M 的哪一边，近乎抛硬币。RDD 就把它当作抛硬币来处理。它比较略高于阈值与略低于阈值的结果，如果品类销售额在 $1M 处出现跳跃，这个跳跃就是陈列的效应。同样的逻辑也适用于客户：如果过去消费至少 $500 的客户会收到优惠券，就把消费 $502 的客户与消费 $498 的客户进行比较。</p>
 <section id="when-rdd-doesnt-work" class="level3">
 <h3 class="anchored" data-anchor-id="when-rdd-doesnt-work">RDD 何时不适用</h3>
 <p>RDD 需要阈值附近有大量单位，因为它只用这些单位。100 家门店中，也许只有十家落在 $1M 上下百分之几的范围内，这太少了，不足以在两侧各拟合一条直线并从噪声中看出跳跃。而 $500 附近有 20,000 名客户时就不是问题。这就是为什么在营销中 RDD 主要是一个客户层面的工具：基于过去消费的优惠券或积分，销售外联的线索评分阈值。<a href="#fig-rdd-discontinuity" class="quarto-xref">图&nbsp;<span>2</span></a> 展示的就是这个版本。</p>
@@ -709,17 +709,15 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 </figcaption>
 </figure>
 </div>
-<p>还有两个限制。效应是局部的：$500 处的跳跃说明的是优惠券对消费约 $500 的客户起了什么作用，而不是对消费 $5,000 的客户。而且单位不能有办法自己跨过分界线。如果一个会员计划在 $1,000 处把客户升到下一等级，而客户知道这一点，有些人就会在十二月多买一次以跨过门槛。如果店长达到 $1M 就能拿到奖金，那么十一月还在 $0.97M 的门店会想办法以 $1.01M 收官。无论哪种情况，刚好高于阈值的单位都是那些更努力的单位，而 RDD 会把这读成处理的效应。驱动变量的直方图在阈值上方刚好堆起一堆，就是破绽所在。在这样的阈值上，RDD 不能使用。</p>
+<p>还有两个限制。效应是局部的：$500 处的跳跃说明的是优惠券对消费约 $500 的客户起了什么作用，而不是对消费 $5,000 的客户。而且单位不能有办法自己跨过分界线。如果一个会员计划在 $1,000 处把客户升到下一等级，而客户知道这一点，有些人就会在十二月多买一次以跨过门槛。如果店长达到 $1M 就能拿到奖金，那么十一月还在分界线附近的门店就有动力把年末销售额推过线。无论哪种情况，刚好高于阈值的单位都与刚好低于阈值的单位存在系统性差异，而这种差异会作为处理效应进入估计。画出驱动变量的直方图：阈值上方刚好堆起一堆，就说明存在操纵。在这样的阈值上，RDD 不能使用。</p>
 </section>
 </section>
 <section id="difference-in-differences-did" class="level2">
 <h2 class="anchored" data-anchor-id="difference-in-differences-did">双重差分（DiD）</h2>
 <p><strong>核心思路：</strong>比较变化量，而不是水平值。对照组随时间的变化，代表了实验组在没有处理时本会发生的变化。</p>
 <p>现在看 <a href="#tbl-hundred-stores" class="quarto-xref">表&nbsp;<span>1</span></a> 的第三行：销售团队为新陈列挑选了 50 家门店，另外 50 家可比门店保留标准的货架布局。你手里有两组门店在推广前后的每店品类销售额。</p>
-<p>试点门店从 $42k 增长到 $48k。所以陈列每店值 $6k？</p>
-<p>大概不是。对比门店在完全没有陈列的情况下从 $40k 增长到 $43k。有某种因素把整个品类抬高了大约 $3k：季节性、客流、竞争对手缺货。只看试点门店的前后比较，会把这部分市场增长记作陈列效应。</p>
-<p>那就改为比较推广后的两组。$48k 对 $43k，差 $5k。这是效应吗？</p>
-<p>也不是。在任何事情发生之前，试点门店就已经领先 $2k，即 $42k 对 $40k。销售团队不是随机挑选的，而推广后时期的实验组对对照组比较会把这段领先记作陈列效应。</p>
+<p>试点门店从 $42k 增长到 $48k。这 $6k 并不是陈列效应，因为对比门店在完全没有陈列的情况下从 $40k 增长到 $43k。有某种因素把整个品类抬高了大约 $3k：季节性、客流、竞争对手缺货。只看试点门店的前后比较，会把这部分市场增长记作陈列效应。</p>
+<p>那就改为比较推广后的两组：$48k 对 $43k，差 $5k。这个差距也不是效应，因为在任何事情发生之前，试点门店就已经领先 $2k，即 $42k 对 $40k。销售团队不是随机挑选的，而推广后时期的实验组对对照组比较会把这段领先记作陈列效应。</p>
 <p>每一种朴素比较都败在不同的混杂上。前后比较中了共同的时间趋势。实验组对对照组比较中了两组之间原本存在的差距。取这两个差分的差，二者都会抵消：</p>
 <table class="caption-top table">
 <thead>
@@ -766,7 +764,7 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 <p>DiD 适合营销中大多数“有些单位变了，其他没变”的情形：店内陈列试点、货架重置、按区域推广的促销、在选定市场的价格调整、先在一个平台上线的 App 功能。</p>
 <section id="the-parallel-trends-assumption" class="level3">
 <h3 class="anchored" data-anchor-id="the-parallel-trends-assumption">平行趋势假设</h3>
-<p>DiD 建立在平行趋势（也称共同趋势）之上：如果没有处理，两组本会沿着相同的<em>趋势</em>发展。是趋势，不是水平。两组可以从不同的销售水平出发，就像试点门店那样。重要的是，对比组在推广后的变化能公平地代表试点门店靠自己本会发生的变化。</p>
+<p>DiD 建立在平行趋势（也称共同趋势）之上：如果没有处理，两组本会沿着相同的<em>趋势</em>发展。这个假设关乎的是趋势，而不是水平。两组可以从不同的销售水平出发，就像试点门店那样。重要的是，对比组在推广后的变化能公平地代表试点门店靠自己本会发生的变化。</p>
 <p>你永远无法完全验证这一点，因为你观察不到没有陈列的试点门店。但你可以检查推广之前的时期。</p>
 <div id="fig-did-parallel-trends" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="双重差分：事前趋势平行，干预后出现分化；差距就是因果效应。">
 <figure class="quarto-float quarto-float-fig figure">
@@ -778,15 +776,15 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 </figcaption>
 </figure>
 </div>
-<p>把两组随时间的走势画出来，看陈列之前的那一段。如果两条线同步移动，DiD 就是可信的。干净的事前趋势是一项可信度检查，而不是证明，但这是每个人都会要求看的检查。</p>
+<p>把两组随时间的走势画出来，看陈列之前的那一段。如果两条线同步移动，DiD 就是可信的。干净的事前趋势支持这个假设但不能证明它，而这是审阅者都会要求看的检查。</p>
 </section>
 <section id="when-did-doesnt-work" class="level3">
 <h3 class="anchored" data-anchor-id="when-did-doesnt-work">DiD 何时不适用</h3>
-<p>当销售团队按增长势头挑选时，DiD 就会失效。如果他们选的是本来就增长更快的门店，两组就不共享同一趋势，DiD 估计会把本来就要到来的增长归功于陈列。你会在事前时期的图上看到这一点：在陈列之前两条线就已经在分化。遇到这种情况，不要硬套 DiD。更仔细地匹配两组，给对比门店加权，或者转向合成控制。</p>
+<p>当销售团队按增长势头挑选时，DiD 就会失效。如果他们选的是本来就增长更快的门店，两组就不共享同一趋势，DiD 估计中就会包含本来就会发生的增长。你会在事前时期的图上看到这一点：在陈列之前两条线就已经在分化。遇到这种情况，更仔细地匹配两组，给对比门店加权，或者转向合成控制。</p>
 </section>
 <section id="estimating-did-with-a-regression" class="level3">
 <h3 class="anchored" data-anchor-id="estimating-did-with-a-regression">用回归估计 DiD</h3>
-<p>这张二乘二的表格表达的是思路。它不是你要汇报的东西，原因有二。它不给出标准误，所以你无法说 +$3k 是否与零可区分。而且真实数据不是两个时期，而是 100 家门店 24 个月的销售额。回归版本同时处理这两点。每家门店每个月一行，每家门店一个固定效应，每个月一个固定效应，再加上一个处理门店在推广后时期的交互项。门店效应吸收了门店之间所有固定的差异。月份效应吸收了当月冲击所有门店的每一个趋势和冲击。交互项<em>就是</em> DiD 估计。</p>
+<p>这张二乘二的表格展示了逻辑，但它不是你要汇报的东西，原因有二。它不给出标准误，所以你无法说 +$3k 是否与零可区分。而且真实数据不是两个时期，而是 100 家门店 24 个月的销售额。回归版本同时处理这两点。每家门店每个月一行，每家门店一个固定效应，每个月一个固定效应，再加上一个处理门店在推广后时期的交互项。门店效应吸收了门店之间所有固定的差异。月份效应吸收了当月冲击所有门店的每一个趋势和冲击。交互项就是 DiD 估计。</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> statsmodels.formula.api <span class="im">as</span> smf</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co"># df: one row per store-month (store_id, period, treated, post, category_sales)</span></span>
@@ -803,8 +801,8 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 <section id="synthetic-control" class="level2">
 <h2 class="anchored" data-anchor-id="synthetic-control">合成控制</h2>
 <p><strong>核心思路：</strong>当没有任何单个对照单位匹配时，用多个单位混合出一个来。</p>
-<p>DiD 之所以奏效，是因为 50 家对照门店给了你一条令人信服、可以借用的趋势。现在看 <a href="#tbl-hundred-stores" class="quarto-xref">表&nbsp;<span>1</span></a> 的第四行：只有纽约门店安装了陈列。其余 99 家门店中哪一家是合适的比较对象？它们在规模、品类构成和本地竞争上各不相同，没有任何一家门店能令人信服地替代纽约。</p>
-<p>合成控制不挑选某一家。它把其余 99 家门店当作一个<strong>捐赠池</strong>（donor pool），并用它们的加权混合构造出一个“合成纽约”，权重的选择使得这个混合在陈列安装之前尽可能贴近纽约的销售额。在配套 Notebook 中，混合的结果是波士顿门店占 36%，费城占 28%，芝加哥占 22%，另有百分之几分散在其他四家门店上。陈列安装之后，真实纽约与其合成孪生体之间的差距就是估计的效应。</p>
+<p>DiD 之所以奏效，是因为 50 家对照门店给了你一条令人信服的趋势。现在看 <a href="#tbl-hundred-stores" class="quarto-xref">表&nbsp;<span>1</span></a> 的第四行：只有纽约门店安装了陈列。其余 99 家门店中哪一家是合适的比较对象？它们在规模、品类构成和本地竞争上各不相同，没有任何一家门店能令人信服地替代纽约。</p>
+<p>合成控制不挑选单独某一家门店作为比较对象。它把其余 99 家门店当作一个<strong>捐赠池</strong>（donor pool），并用它们的加权混合构造出一个“合成纽约”，权重的选择使得这个混合在陈列安装之前尽可能贴近纽约的销售额。在配套 Notebook 中，混合的结果是波士顿门店占 36%，费城占 28%，芝加哥占 22%，另有百分之几分散在其他四家门店上。陈列安装之后，真实纽约与合成序列之间的差距就是估计的效应。</p>
 <div id="fig-synthetic-control" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="合成控制：真实值与合成反事实：干预前两条线重合，干预后的差距就是效应。">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-synthetic-control-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -818,26 +816,26 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 <p>每当一个单位接受处理而许多相似单位没有时，它就是自然的设计：一家门店翻新，一个都会区投放户外广告，一个 SKU 调价并以其同类 SKU 作为捐赠者。这些地理层面的设计会在<a href="../part6/sec6.3-incrementality-experiments.html">第 6.3 节</a>作为地理实验的稳健性检查再次出现，并在<a href="../part6/sec6.4-mmm-calibration.html">第 6.4 节</a>作为媒体组合模型的校准锚点再次出现。</p>
 <section id="when-synthetic-control-doesnt-work" class="level3">
 <h3 class="anchored" data-anchor-id="when-synthetic-control-doesnt-work">合成控制何时不适用</h3>
-<p>可信度检查看的是事前时期的拟合。如果 99 家门店的任何混合都无法重现纽约在陈列之前的历史，就不要相信之后的差距。捐赠者也必须未受影响：纽约的陈列不会改变芝加哥的销售额，但纽约的电视广告可能会触达新泽西，一个沾上了处理的捐赠者会把合成孪生体拖向处理路径。而且它做不了单个客户。单个客户的每周消费大多是零和噪声，其他客户的任何混合都无法追踪它。客户层面的问题需要许多客户，那是 DiD 或 RDD 的领域。</p>
+<p>可信度检查看的是事前时期的拟合。如果 99 家门店的任何混合都无法重现纽约在陈列之前的历史，就不要相信之后的差距。捐赠者也必须未受影响：纽约的陈列不会改变芝加哥的销售额，但纽约的电视广告可能会触达新泽西，一个部分暴露于处理的捐赠者会把合成序列拉向处理路径。它在客户层面也行不通：单个客户的每周消费大多是零和噪声，其他客户的任何混合都无法追踪它。客户层面的问题需要许多客户，这就又回到了 DiD 或 RDD。</p>
 </section>
 </section>
 <section id="when-there-is-no-control-group" class="level2">
 <h2 class="anchored" data-anchor-id="when-there-is-no-control-group">当没有对照组时</h2>
-<p>DiD 从对照门店借用趋势。当没有单个门店合适时，合成控制把对照门店混合起来。RDD 把刚好低于分界线的门店与刚好高于分界线的门店进行比较。三者都从行动未触及的单位那里借来比较对象，当行动触及了所有人时，它们都无能为力：</p>
+<p>DiD 使用对照门店的趋势。当没有单个门店合适时，合成控制把对照门店混合起来。RDD 把刚好低于分界线的门店与刚好高于分界线的门店进行比较。三者都是用行动未触及的单位来构建比较对象，所以当行动触及了所有人时，它们都不适用：</p>
 <ul>
 <li>新陈列在同一天进入了全部 100 家门店。</li>
 <li>营销活动在每个区域都投放了，而不是只在少数几个。</li>
 <li>优惠券发给了每一位客户。</li>
 </ul>
-<p>没有未处理的门店、区域或客户可供比较。所以比较对象必须靠预测得到：依据该序列在行动之前的走势，以及行动无法触及的其他序列在行动之后的走势。这是阶梯的最后一级，CausalImpact，它就在<a href="sec3.4-causal-impact.html">下一章</a>。</p>
+<p>没有未处理的门店、区域或客户可供比较。所以比较对象必须靠预测得到：依据该序列在行动之前的走势，以及行动无法触及的其他序列在行动之后的走势。这种设计就是 CausalImpact，将在<a href="sec3.4-causal-impact.html">下一章</a>介绍。</p>
 <p><strong>配套 Notebook：</strong> <code>sec3.3_quasi_experiments.ipynb</code> 用 <code>statsmodels</code> 和 <code>scipy</code> 在合成数据上完整演示了 RDD、DiD（表格、回归和事前趋势检查）以及合成控制。<br>
 <a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.3_quasi_experiments.ipynb">在 GitHub 上查看</a></p>
 </section>
 <section id="key-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="key-takeaways">要点</h2>
 <ul>
-<li>分配决定设计。随机化，你就有了 A/B 测试；阈值给出 RDD；其他情况则沿着从 DiD 到合成控制再到 CausalImpact 的阶梯向上走，每上一级对模型的依赖就更重。</li>
-<li>准实验的可信度只取决于其识别假设的可信度。事前趋势图或事前时期拟合可以暴露薄弱的设计，但通过检查只是一项可信度检查，而不是证明。</li>
+<li>分配机制决定设计：随机化给出 A/B 测试，阈值给出 RDD，其他情况则依次转向 DiD、合成控制或 CausalImpact，对模型的依赖逐级加重。</li>
+<li>准实验的可信度只取决于其识别假设的可信度。事前趋势图或事前时期拟合可以暴露薄弱的设计，但通过检查只是支持了这个假设，并不能验证它。</li>
 </ul>
 
 

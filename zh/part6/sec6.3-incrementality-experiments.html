@@ -656,8 +656,8 @@ window.Quarto = {
 </div>
 <section id="sec-what-is-incrementality" class="level2">
 <h2 class="anchored" data-anchor-id="sec-what-is-incrementality">什么是增量效应？</h2>
-<p>MMM 的优化器想把 Google Search 削减 30%，一直削到它的约束下限，而模型无法为这一举动辩护：Search 的边际 ROAS 区间从 0.4 延伸到 9.5，宽得无法据此行动。<a href="sec6.2-mmm-fundamentals.html">第 6.2 节</a>就结束在那里。原因在历史数据里。三年来，Search 一直以几乎不变的周预算常开投放，所以模型从未见过它的支出变动，估计值大体上就是它起步时的先验。基于这样的估计削减一个渠道，是一场赌博，而不是一个决策。在全国范围削减之前，我们需要知道 Search 支出的最后 30% 到底买到了什么。</p>
-<p>那个数字就是增量效应。<strong>增量效应</strong>（incrementality）是指没有广告就不会发生的成果：如果一次活动录得 $120,000 的销售额，而其中 $100,000 本来也会到账，那么增量收入就是 $20,000。归因对那 $100,000 无话可说，而 MMM 只能从历史中的变动来估计它，Search 恰恰没有这种变动。要得到这个数字，我们必须改变数据：做一次实验，由我们来控制什么在变、在哪里变。</p>
+<p>MMM 的优化器想把 Google Search 削减 30%，一直削到它的约束下限，但模型无法支撑这一举动：Search 的边际 ROAS 区间从 0.4 延伸到 9.5，宽得无法据此行动。原因在于<a href="sec6.2-mmm-fundamentals.html">第 6.2 节</a>模型所拟合的历史数据。三年来，Search 一直以几乎不变的周预算常开投放，所以模型从未见过它的支出变动，估计值大体上就是它起步时的先验。这样的估计不足以为削减提供依据。在全国范围削减之前，我们需要知道 Search 支出的最后 30% 到底买到了什么。</p>
+<p>那个数字就是增量效应。<strong>增量效应</strong>（incrementality）是指没有广告就不会发生的成果：如果一次活动录得 $120,000 的销售额，而其中 $100,000 本来也会到账，那么增量收入就是 $20,000。归因对那 $100,000 无话可说，而 MMM 只能从历史中的变动来估计它，Search 恰恰没有这种变动。这个数字无法从现有数据中得出，所以我们需要一次实验，在选定的市场里有意改变 Search 支出。</p>
 </section>
 <section id="sec-experimental-unit" class="level2">
 <h2 class="anchored" data-anchor-id="sec-experimental-unit">选择实验单元</h2>
@@ -722,13 +722,13 @@ window.Quarto = {
 </figcaption>
 </figure>
 </div>
-<p><a href="#fig-geo-experiment-flow" class="quarto-xref">图&nbsp;<span>2</span></a> 是本章余下部分的地图：构建市场-周历史数据，设计测试并冻结决策规则，运行测试，然后相对于一个可信的反事实测量提升，并应用规则。接下来的四节各对应一个步骤。</p>
+<p>本章余下部分遵循 <a href="#fig-geo-experiment-flow" class="quarto-xref">图&nbsp;<span>2</span></a> 中的四个步骤：构建市场-周历史数据，设计测试并冻结决策规则，运行测试，然后相对于一个可信的反事实测量提升，并应用规则。接下来的四节各对应一个步骤。</p>
 <p><strong>配套 Notebook：</strong><code>sec6.3_geo_experiment.ipynb</code> 在一个包含 40 个市场的合成面板上运行完整实验，其 Search 的经济特性与<a href="sec6.2-mmm-fundamentals.html">第 6.2 节</a>的模型一致，并植入了真实值，因此下文的每一个估计都可以对照真实值核验。<br>
 <a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part6-media-optimization/sec6.3_geo_experiment.ipynb">在 GitHub 上查看</a></p>
 </section>
 <section id="sec-geo-historical-data" class="level2">
 <h2 class="anchored" data-anchor-id="sec-geo-historical-data">第 1 步：历史数据</h2>
-<p>下游的一切都来自一张表：每个市场每周一行，包含收入、Search 支出，以及测试期间可能变动的任何其他本地媒体。这里的面板有 40 个市场，测试窗口之前有 96 周的历史；两年很充裕，如果结果的季节性不强，一年也可行。收入必须来自公司自己的系统，并且要在媒体真正可以被控制的地理粒度上。如果 Search 活动只能按州设置，那么州就是你的市场。支出必须是你真正会改变的支出，而不是计划数字。而历史上有已知冲击的市场，比如去年开了一个配送中心的市场，现在就要剔除，因为它无法作为任何东西的对照。</p>
+<p>下游的一切都来自一张表：每个市场每周一行，包含收入、Search 支出，以及测试期间可能变动的任何其他本地媒体。这里的面板有 40 个市场，测试窗口之前有 96 周的历史；两年很充裕，如果结果的季节性不强，一年也可行。收入必须来自公司自己的系统，并且要在媒体真正可以被控制的地理粒度上。如果 Search 活动只能按州设置，那么州就是你的市场。支出必须是你真正会改变的支出，而不是计划数字。而历史上有已知冲击的市场，比如去年开了一个配送中心的市场，现在就要剔除，因为它无法充当对照。</p>
 </section>
 <section id="sec-geo-pretest-design" class="level2">
 <h2 class="anchored" data-anchor-id="sec-geo-pretest-design">第 2 步：测试前设计</h2>
@@ -754,11 +754,11 @@ window.Quarto = {
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="co"># contrast is negative, and the power-simulation grid: durations, spend</span></span>
 <span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="co"># levels, candidate lifts, and the significance level.</span></span>
 <span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
-<p>为什么削减而不是加量？因为削减才是摆在桌面上的政策。缩减测量的是当前预算 70% 到 100% 之间那一段支出的回报，也就是优化器提议移除的部分；加量测量的则是其上方的那一段，在弯曲的响应曲线上是另一个量。我们把测得的这个量称为所测削减的回报，而把“边际 ROAS”留给模型在当前支出水平上的斜率；<a href="sec6.4-mmm-calibration.html">第 6.4 节</a>会把两者联系起来。</p>
+<p>测试选择削减支出而不是加量，因为削减才是正在考虑的政策。缩减测量的是当前预算 70% 到 100% 之间那一段支出的回报，也就是优化器提议移除的部分；加量测量的则是其上方的那一段，在弯曲的响应曲线上是另一个量。我们把测得的这个量称为所测削减的回报，而把“边际 ROAS”留给模型在当前支出水平上的斜率；<a href="sec6.4-mmm-calibration.html">第 6.4 节</a>会把两者联系起来。</p>
 <section id="market-selection-and-assignment" class="level3">
 <h3 class="anchored" data-anchor-id="market-selection-and-assignment">市场筛选与分配</h3>
-<p>只使用历史结果。Notebook 根据每个市场与业务整体的相关性、规模和趋势为 40 个市场打分，保留最强的 16 个候选。它按规模把相邻的市场配对，检查每对内部的趋势平衡，然后在每对内部抛硬币选出测试市场。筛选降低噪声；随机化才是让比较具有因果性的关键。看过结果之后再挑选测试市场，或者因为“那些市场很典型”而手工挑选，会摧毁这一区别。</p>
-<p>溢出效应是一个市场筛选问题，事后没有任何估计量能修复它。通勤者在一个市场购物、在另一个市场居住，本地电视跨越边界，全国性促销则处处推动需求。使用互不重叠、媒体真正可控的单元，并让所选市场的其他本地活动保持稳定。一个接收到部分处理的对照市场会把估计值向零偏移，而这在任何拟合统计量里都看不出来。</p>
+<p>只使用历史结果。Notebook 根据每个市场与业务整体的相关性、规模和趋势为 40 个市场打分，保留最强的 16 个候选。它按规模把相邻的市场配对，检查每对内部的趋势平衡，然后在每对内部抛硬币选出测试市场。筛选降低噪声；随机化才是让比较具有因果性的关键。看过结果之后再挑选测试市场，或者因为它们看起来很典型而手工挑选，会去掉因果解读所依赖的随机化。</p>
+<p>溢出效应只能在市场筛选阶段预防；事后没有任何估计量能修复它。常见的途径有：通勤者在一个市场购物、在另一个市场居住，本地电视跨越市场边界，以及全国性促销处处推动需求。使用互不重叠、媒体真正可控的单元，并让所选市场的其他本地活动保持稳定。一个接收到部分处理的对照市场会把估计值向零偏移，而这在任何拟合统计量里都看不出来。</p>
 </section>
 <section id="power-and-mde-by-simulation" class="level3">
 <h3 class="anchored" data-anchor-id="power-and-mde-by-simulation">用模拟确定统计功效与 MDE</h3>
@@ -773,11 +773,11 @@ window.Quarto = {
 </figcaption>
 </figure>
 </div>
-<p>在 <a href="#fig-mde-by-duration" class="quarto-xref">图&nbsp;<span>3</span></a> 中，八周内削减 30% 可以检测约 0.40 及以上的回报，而四周则需要 0.50。这些数字属于这个面板。四到八周内 20-50% 的支出变动是常见的起点，不是规则；在你自己的历史数据上做模拟才是规则。</p>
+<p>在 <a href="#fig-mde-by-duration" class="quarto-xref">图&nbsp;<span>3</span></a> 中，八周内削减 30% 可以检测约 0.40 及以上的回报，而四周则需要 0.50。这些数字属于这个面板。四到八周内 20-50% 的支出变动是常见的起点，但测试时长和削减幅度应当来自在你自己的历史数据上做的模拟。</p>
 </section>
 <section id="sec-geo-decision-rule" class="level3">
 <h3 class="anchored" data-anchor-id="sec-geo-decision-rule">决策规则与设计冻结</h3>
-<p>MDE 说的是测试能把什么与零区分开。CFO 问的是另一件事：Search 赚得够不够多，值得保住它的钱？“够”是有数字的。在边际贡献率为 <span class="math inline">\(m\)</span> 时，一美元支出带回 <span class="math inline">\(1/m\)</span> 的收入才能保本，所以在 40% 的边际贡献率下，一美元 Search 支出必须带回 $2.50。这个门槛是业务输入，不是统计输入，它只裁定一件事：这一段支出到底该不该留在媒体预算里。钱应该改投到哪里，则是横跨全部五个渠道的比较，而那项比较是<a href="sec6.4-mmm-calibration.html">第 6.4 节</a>的工作。</p>
+<p>MDE 说的是测试能把什么与零区分开。业务问题则不同：Search 赚得够不够多，值得保住它的预算？这个门槛可以设定为一个数字。在边际贡献率为 <span class="math inline">\(m\)</span> 时，一美元支出带回 <span class="math inline">\(1/m\)</span> 的收入才能保本，所以在 40% 的边际贡献率下，一美元 Search 支出必须带回 $2.50。这个门槛是业务输入，不是统计输入，它只裁定一件事：这一段支出到底该不该留在媒体预算里。钱应该改投到哪里，则是横跨全部五个渠道的比较，而那项比较是<a href="sec6.4-mmm-calibration.html">第 6.4 节</a>的工作。</p>
 <p>所以我们在启动前就写下规则。如果所测削减回报的 95% 置信区间整体位于 2.50 之上，保留预算。如果整体位于其下，按优化器的提议削减。如果跨越 2.50，维持全国计划并设计后续测试；看到结果之后再延长这次测试，会把它变成另一次测试。当回报远低于门槛时，这个设计有充裕的功效给出削减裁定；当回报刚好在门槛之下时功效很小；而在这些规模下，给出保留裁定的功效为零。Notebook 用决策本身的单位展示了这三种情况，模拟的是裁定而不是 p 值：</p>
 <table class="caption-top table">
 <thead>
@@ -815,16 +815,16 @@ window.Quarto = {
 </tr>
 </tbody>
 </table>
-<p>现在冻结一切：市场清单、日期、支出计划、估计量、日历排除项、门槛、随机种子。不要让黑色星期五这样的重大事件横跨测试边界。在没人知道哪个选择会让答案更好看的时候，设计纪律最容易守住。</p>
+<p>现在冻结一切：市场清单、日期、支出计划、估计量、日历排除项、门槛、随机种子。不要让黑色星期五这样的重大事件横跨测试边界。看到结果之后再改设计，就留下了把答案引向自己偏好方向的余地，所以一切都在任何结果出现之前固定下来。</p>
 </section>
 </section>
 <section id="sec-geo-run" class="level2">
 <h2 class="anchored" data-anchor-id="sec-geo-run">第 3 步：运行地理测试</h2>
-<p>这是分析师要做的事最少、要守护的东西最多的一步。在启动日，八个测试市场的 Search 支出下降 30% 并保持不变；对照市场照常运行。本地没有任何其他变动：没有市场层面的促销，没有其他媒体调进来补偿，也没有在对照市场里“顺便也试点别的”。按市场和周记录实际投放的支出，因为第四步的分母是实验移除的支出，而不是计划中的支出。支出没有按计划下降的市场按原分配留在分析中，一对市场只能因为事先定好的理由退出，比如结果数据丢失。而且不要每周去看结果：一个八周的测试在第三周就读数，是一个噪声更大、假阳性率更高的测试。</p>
+<p>这一步分析师要做的事不多，但必须确保测试按设计运行。在启动日，八个测试市场的 Search 支出下降 30% 并保持不变；对照市场照常运行。本地没有任何其他变动：没有市场层面的促销，没有其他媒体调进来补偿，对照市场里也没有其他举措。按市场和周记录实际投放的支出，因为第四步的分母是实验移除的支出，而不是计划中的支出。支出没有按计划下降的市场按原分配留在分析中，一对市场只能因为事先定好的理由退出，比如结果数据丢失。而且不要每周去看结果：一个八周的测试在第三周就读数，是一个噪声更大、假阳性率更高的测试。</p>
 </section>
 <section id="sec-geo-measurement" class="level2">
 <h2 class="anchored" data-anchor-id="sec-geo-measurement">第 4 步：测试后测量</h2>
-<p>无论你算不算，利益相关方都会先算出这个数字：测试期间测试市场的收入，对比测试前的八周。在 Notebook 里，这一比较给出的回报是 <strong>0.44</strong>：测试市场的收入下滑了，但每移除一美元 Search 支出只下滑了约 44 美分，所以削减看起来几乎是免费的。每位广告经理都听过这个论调，后面通常跟着一句“那就再多砍一点”。它在这里是错的，因为进入测试窗口时每个市场的收入都在上升，对照市场也不例外，季节掩盖了削减代价的大部分。这正是我们在第二步选择对照市场的原因。</p>
+<p>最简单的比较是测试期间测试市场的收入对比测试前的八周。在 Notebook 里，这一比较给出的回报是 <strong>0.44</strong>：测试市场的收入下滑了，但每移除一美元 Search 支出只下滑了约 44 美分，所以削减看起来几乎是免费的。这个数字是错的。进入测试窗口时每个市场的收入都在上升，对照市场也不例外，季节性上涨掩盖了削减代价的大部分。这正是第二步选择对照市场的原因。</p>
 <p>估计量要跟随分配机制，原则与<a href="../part3/sec3.3-quasi-experiments.html">第 3.3 节</a>相同。匹配对内部的随机化是设计，配对的双重差分就是与之匹配的估计量。基本的交互项是：</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> smf.ols(<span class="st">"revenue ~ treat * post"</span>, data<span class="op">=</span>analysis).fit(</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    cov_type<span class="op">=</span><span class="st">"cluster"</span>,</span>
@@ -834,9 +834,9 @@ window.Quarto = {
 <p>与设计一致的估计值是 <strong>1.500</strong>，标准误 <strong>0.257</strong>，95% 置信区间 <strong>[0.892, 2.109]</strong>，按八个匹配对聚类，因为配对才是被随机化的单元，并使用 t 分布，因为只有八对。它恢复了植入的真实值 1.500。每移除一美元 Search 支出，原本大约买到 $1.50 的收入，是前后对比所暗示的三倍还多。</p>
 <section id="does-the-result-hold-up" class="level3">
 <h3 class="anchored" data-anchor-id="does-the-result-hold-up">结果站得住吗？</h3>
-<p>来自一个估计量的一个估计值只是一个主张；下面的检查才把它变成一个结果。</p>
+<p>三项检查用来检验这个估计是否建立在设计的假设之上。</p>
 <p>第一，测试前期间。Notebook 里的事件研究图把每对市场对齐到启动前一周，测试前期间的差异在零附近波动而不是漂移。如果它们漂移了，配对就不平行，DiD 测的就会是漂移。</p>
-<p>第二，另一个反事实。合成控制把八个测试市场汇总起来，用未处理的捐赠单元构建一个加权组合，权重非负、和为一，并使测试前误差最小。测试前期间的紧密拟合是入场券。这里它拟合得很好（<a href="#fig-actual-vs-synthetic-gap" class="quarto-xref">图&nbsp;<span>4</span></a>），合成控制的估计值是 <strong>1.486</strong>，接近 DiD，也接近真实值。两个以不同方式压缩未处理信息的估计量仍然一致，这是有信息量的；但它不是把各种方法平均到心仪数字出现为止的许可证。</p>
+<p>第二，另一个反事实。合成控制把八个测试市场汇总起来，用未处理的捐赠单元构建一个加权组合，权重非负、和为一，并使测试前误差最小。如果测试前期间拟合不紧密，合成控制就不能使用。这里它拟合得很好（<a href="#fig-actual-vs-synthetic-gap" class="quarto-xref">图&nbsp;<span>4</span></a>），合成控制的估计值是 <strong>1.486</strong>，接近 DiD，也接近真实值。两个以不同方式使用未处理信息的估计量彼此一致，这是有信息量的。不建议把多种方法平均成一个数字。</p>
 <div id="fig-actual-vs-synthetic-gap" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="受处理的汇总序列与其加权合成控制在启动前走势紧密贴合，随后受处理序列在测试期间落到其反事实之下。">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-actual-vs-synthetic-gap-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -863,10 +863,10 @@ window.Quarto = {
 </section>
 <section id="sec-geo-lift-to-decision" class="level2">
 <h2 class="anchored" data-anchor-id="sec-geo-lift-to-decision">从提升到决策</h2>
-<p>现在应用我们冻结的规则。门槛是 2.50，而区间上限 2.109 位于其下。规则说：削减。每移除一美元原本买到 $1.50 的收入，在 40% 边际贡献率下是 60 美分的贡献，无论怎么解读不确定性，都无法让这一美元回到一美元。</p>
-<p>注意这个决策没有依赖什么。效应的显著性已达到这个设计所能达到的极致：256 种安慰剂分配中只有两种，区间以很大的余量排除了零。读到“ROAS 1.5，p 小于 0.01”的利益相关方会听成 Search 有效，而这两半都是真的。预算仍然要削，因为问题从来不是广告是否推动了收入。问题是最后这 $421,906 推动的收入是否足以覆盖自身成本，而 $1.50 的收入只是 60 美分的毛利。把会议开成“它显著吗”，Search 就保住了钱。把会议开在门槛上，同样的数字说：削减。一次测试可以确立一个效应，却仍然无法为这笔支出辩护。</p>
-<p>还有一个数字要带到下一章。按十六个市场而不是八对聚类很常见，它把标准误从 0.257 收窄到 0.176，区间变为 [1.126, 1.875]。但它也把同一次抛硬币的两半当作相互独立，而它们并不独立，所以按配对的读数才是我们预先指定的那个。两种方式的裁定相同，因为两个区间都止步于 2.50 之前，但配对区间离它只有不到 0.4。两个宽度都要送到<a href="sec6.4-mmm-calibration.html">第 6.4 节</a>。</p>
-<p>我们所知道的既精确又狭窄：这次 30% 削减的效应，在这些市场，在这八周窗口内。它是响应曲线上的一个点，交接时要保留这一范围。</p>
+<p>现在应用我们冻结的规则。门槛是 2.50，而区间上限 2.109 位于其下。规则说：削减。每移除一美元原本买到 $1.50 的收入，在 40% 边际贡献率下是 60 美分的贡献，即便是区间上限 2.109，也达不到 2.50 的盈亏平衡点。</p>
+<p>这个决策并不依赖统计显著性。效应的显著性已达到这个设计所能达到的极致：256 种安慰剂分配中只有两种，区间以很大的余量排除了零。Search 显然推动了收入。预算仍然要削，因为显著的效应（p = 0.008）和大到足以覆盖自身成本的效应（回报达到 2.50 或以上）是两个不同的标准，而这个结果满足第一个，不满足第二个。最后这 $421,906 推动了收入，但每美元只有 $1.50，也就是 60 美分的毛利。一次测试可以确立一个效应，却仍然无法为这笔支出辩护。</p>
+<p>还有一个数字对<a href="sec6.4-mmm-calibration.html">第 6.4 节</a>的校准很重要。按十六个市场而不是八对聚类很常见，它把标准误从 0.257 收窄到 0.176，区间变为 [1.126, 1.875]。但它也把同一次抛硬币的两半当作相互独立，而它们并不独立，所以按配对的读数才是我们预先指定的那个。两种方式的裁定相同，因为两个区间都止步于 2.50 之前，但配对区间离它只有不到 0.4。两个宽度在那里都会用到。</p>
+<p>这个结果仅限于在这八个市场、这八周窗口内削减 30% 的效应。它是响应曲线上的一个点，交接给模型时要保留这一范围。</p>
 <table class="caption-top table">
 <thead>
 <tr class="header">

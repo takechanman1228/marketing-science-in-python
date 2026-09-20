@@ -641,11 +641,11 @@ window.Quarto = {
 </header>
 
 
-<p>It is late September. Sales are up 7.3% year to date, but the annual target requires 8.0%. Thirteen weeks remain, including the Black Friday to Christmas stretch, when this business does a disproportionate share of its year. The planning team needs to decide whether the current plan is enough or whether additional action is needed.</p>
+<p>At the end of September, sales are up 7.3% year to date, against an annual target of 8.0%. Thirteen weeks remain, including the Black Friday to Christmas stretch, when this business does a disproportionate share of its year. The planning team needs to decide whether the current plan is enough or whether additional action is needed.</p>
 <div id="tbl-where-we-stand" class="quarto-float quarto-figure quarto-figure-center anchored" data-tbl-colwidths="[62,38]">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-where-we-stand-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Table&nbsp;1: Where the year stands at the end of fiscal week 39 (FY2019)
+Table&nbsp;1: Year-to-date sales and annual target at fiscal week 39 (FY2019)
 </figcaption>
 <div aria-describedby="tbl-where-we-stand-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <table class="caption-top table">
@@ -690,7 +690,7 @@ Table&nbsp;1: Where the year stands at the end of fiscal week 39 (FY2019)
 </figure>
 </div>
 <p>To make that decision, we need two things: where sales are likely to land under the current plan, and how much an additional marketing action could move that outcome. The first is a forecasting question. The second is a causal one, and its answer comes from the measurement chapters of this book, not from the forecast.</p>
-<p>Three terms carry the chapter. The <strong>target</strong> is a fixed threshold chosen by the business. The <strong>baseline</strong> is a forecast of the remaining weeks if the current plan continues, with the recurring promotions, prices, and media that shaped the history still in place. The <strong>increment</strong> is what an additional marketing action adds on top of that baseline. For a scenario <span class="math inline">\(s\)</span>, the year-end outcome is</p>
+<p>The chapter uses three terms. The <strong>target</strong> is a fixed threshold chosen by the business. The <strong>baseline</strong> is a forecast of the remaining weeks if the current plan continues, with the recurring promotions, prices, and media that shaped the history still in place. The <strong>increment</strong> is what an additional marketing action adds on top of that baseline. For a scenario <span class="math inline">\(s\)</span>, the year-end outcome is</p>
 <p><span class="math display">\[
 Y^{(s)}_{\text{year-end}} = Y_{\text{so far}} + R_{\text{baseline}} + \Delta_s
 \]</span></p>
@@ -723,7 +723,7 @@ Figure&nbsp;2: Six fiscal years of weekly sales
 </div>
 <p>So we need a model for the remaining weeks. Two benchmarks set the floor, and four candidates compete against them on the same history.</p>
 <ul>
-<li><strong>Naive.</strong> Repeat the last observed week. It is blind to the season about to start.</li>
+<li><strong>Naive.</strong> Repeat the last observed week. It carries no seasonal term, so it flattens the holiday peak.</li>
 <li><strong>Seasonal naive.</strong> Repeat the same fiscal week of last year. This is “apply last year’s pattern” made explicit.</li>
 <li><strong>ETS (exponential smoothing).</strong> Level, trend, and seasonality as explicit components, in two versions, with and without the 52-week seasonal term.</li>
 <li><strong>Prophet.</strong> A changing trend, a yearly season, and calendar effects, fitted as separate additive pieces.</li>
@@ -749,7 +749,7 @@ Figure&nbsp;3: What each model predicts for the same 13 weeks
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>        seasonal<span class="op">=</span>seasonal, seasonal_periods<span class="op">=</span><span class="dv">52</span> <span class="cf">if</span> seasonal <span class="cf">else</span> <span class="va">None</span>,</span>
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    )</span>
 <span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> model.fit(disp<span class="op">=</span><span class="va">False</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>The seven paths disagree by a wide margin over the peak, and nothing in the chart says which one to believe. The candidate that beats the benchmarks in a backtest becomes the baseline. Being popular or being recent does not qualify a model.</p>
+<p>The seven paths differ by a wide margin over the peak, and the chart alone cannot rank them. The candidate that beats the benchmarks in a backtest becomes the baseline; a model’s popularity or release date does not enter the selection.</p>
 <section id="sec-rolling-backtest" class="level3">
 <h3 class="anchored" data-anchor-id="sec-rolling-backtest">Validating with a Rolling-Origin Backtest</h3>
 <p>The usual approach is a random train/test split. On this data, that gives LightGBM a WAPE of 4.5%. That number is misleading for two reasons. Shuffling lets the model train on weeks that come after the ones it predicts, and with lagged features most test rows have adjacent weeks in the training set. And a random split scores one-row-at-a-time interpolation: it cannot even produce the object the decision needs, a 13-week path from a fixed origin.</p>
@@ -842,7 +842,7 @@ Table&nbsp;2: Rolling-origin backtest over the three September replicas (total e
 </div>
 </figure>
 </div>
-<p>Seasonality drives the quarter. The seasonal ETS has the lowest error in both columns and becomes the baseline. It is also the only candidate here whose fitted model can simulate many 13-week paths with their uncertainty, which the next step needs. TimesFM matched it on the 13-week total with nothing but the raw series. Prophet barely improved on the seasonal naive’s 13-week total, because its yearly season is a 365.25-day cycle while this business plans in fixed 52-week years. On one synthetic series, neither result ranks the methods. The LightGBM row carries the validation lesson: 12.3% from the rolling origin against 4.5% from the random split is the size of the leakage.</p>
+<p>The seasonal term accounts for most of the difference between the models on this quarter. The seasonal ETS has the lowest error in both columns and becomes the baseline. It is also the only candidate here whose fitted model can simulate many 13-week paths with their uncertainty, which the next step needs. TimesFM matched it on the 13-week total with nothing but the raw series. Prophet barely improved on the seasonal naive’s 13-week total, because its yearly season is a 365.25-day cycle while this business plans in fixed 52-week years. On one synthetic series, neither result ranks the methods. The LightGBM row shows the size of the leakage: 12.3% from the rolling origin against 4.5% from the random split.</p>
 </section>
 </section>
 <section id="sec-target-probability" class="level2">
@@ -864,17 +864,18 @@ Figure&nbsp;5: Year-end pacing under the current plan
 </figcaption>
 </figure>
 </div>
-<p>The median year-end forecast is $10.91M, with an 80% interval from $10.79M to $11.05M. The median is what usually appears in presentations, but it is not a commitment. The $11.12M target sits just above the P90, so the chance of reaching it under the current plan is 4%. That is not impossible, but it is clearly unlikely, and the team now has a number for how unlikely.</p>
-<p>The 4% comes from a simulated distribution, so the distribution needs a check of its own, on the quantity we decide on: the 13-week total. Replaying the same procedure at past origins and asking whether the realized total fell inside the 80% band is the check. Across 15 non-overlapping 13-week windows, it did so 12 times, close to the nominal 80%, and the three September replicas covered 2 of 3. That supports the spread of the band, not its tail: the target sits beyond the P90, where 15 windows cannot certify a number as small as 4%. Read the answer as low single digits, and plan against “clearly unlikely” rather than 4.0%.</p>
+<p>The median year-end forecast is $10.91M, with an 80% interval from $10.79M to $11.05M. Presentations usually show the median, which has about a 50% chance of being exceeded. The $11.12M target sits just above the P90, so the chance of reaching it under the current plan is 4%. That is not impossible, but it is clearly unlikely, and the team now has a number for how unlikely.</p>
+<p>The 4% comes from a simulated distribution, so the distribution needs a check of its own, on the quantity we decide on: the 13-week total. Replaying the same procedure at past origins and asking whether the realized total fell inside the 80% band is the check. Across 15 non-overlapping 13-week windows, it did so 12 times, close to the nominal 80%, and the three September replicas covered 2 of 3. The check covers the body of the distribution. The target sits beyond the P90, where 15 windows cannot verify a tail probability as small as 4%, so treat the answer as low single digits and plan on that reading.</p>
 </section>
 <section id="sec-marketing-scenarios" class="level2">
 <h2 class="anchored" data-anchor-id="sec-marketing-scenarios">Marketing Scenarios Need Measured Increments</h2>
 <p>The baseline distribution says where the current plan is likely to land. The next question in every planning meeting is whether an additional campaign would change the answer.</p>
-<p>Last year’s holiday promotion weeks ran about 22% above the surrounding weeks, so it is tempting to pencil in +22% for an extra campaign. That gap is not a campaign effect. Promotions are timed for the strongest weeks, so part of the 22% is seasonality. The baseline already carries the average effect of the recurring promotions, so most of the rest is already in the forecast. Whatever remains is a mix of the promotion and everything else the model missed. A forecast says what is likely to happen, not what happened because of marketing. So <span class="math inline">\(\Delta_s\)</span> comes from outside the forecast, and it needs two things before it can enter the simulation: a reference condition, meaning what it is an increment over, and an uncertainty distribution.</p>
+<p>Last year’s holiday promotion weeks ran about 22% above the surrounding weeks, so it is tempting to pencil in +22% for an extra campaign. That gap mixes seasonality, the recurring promotions already in the baseline, and the campaign itself. Promotions are timed for the strongest weeks, so part of the 22% is seasonality. The baseline already carries the average effect of the recurring promotions, so most of the rest is already in the forecast. Whatever remains is a mix of the promotion and everything else the model missed.</p>
+<p>A forecast estimates the level of sales, not the share of it caused by marketing, so <span class="math inline">\(\Delta_s\)</span> has to come from a measurement outside the forecast. It needs two things before it can enter the simulation: a reference condition, meaning what it is an increment over, and an uncertainty distribution.</p>
 <div id="tbl-scenarios" class="quarto-float quarto-figure quarto-figure-center anchored" data-tbl-colwidths="[24,38,38]">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-scenarios-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Table&nbsp;3: Scenario increments and their sources
+Table&nbsp;3: Scenario increments and their sources (illustrative inputs)
 </figcaption>
 <div aria-describedby="tbl-scenarios-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <table class="caption-top table">
@@ -984,7 +985,7 @@ Figure&nbsp;6: Simulated year-end sales under each scenario
 </figcaption>
 </figure>
 </div>
-<p>The campaign moves the median from $10.91M to $11.00M. The table holds the improved odds and the remaining gap at once, which a point forecast cannot.</p>
+<p>The campaign moves the median from $10.91M to $11.00M. The table shows both the improved probability and the remaining gap, which a single point forecast cannot.</p>
 </section>
 <section id="sec-forecast-to-decision" class="level2">
 <h2 class="anchored" data-anchor-id="sec-forecast-to-decision">From Forecast to Decision</h2>
@@ -992,7 +993,7 @@ Figure&nbsp;6: Simulated year-end sales under each scenario
 <div id="tbl-reverse" class="quarto-float quarto-figure quarto-figure-center anchored" data-tbl-colwidths="[62,38]">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-reverse-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Table&nbsp;5: What it would take, next to what has happened
+Table&nbsp;5: Required uplift against the largest historical September upside
 </figcaption>
 <div aria-describedby="tbl-reverse-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <table class="caption-top table">
@@ -1029,14 +1030,14 @@ Table&nbsp;5: What it would take, next to what has happened
 </figure>
 </div>
 <p>Hitting the target requires a quarter 7.2% above the baseline median. None of the three September replicas came close; the largest upside was 6.0%, and even both increments together add about 5%. The campaign improves the odds from 4% to 13%, but the target remains unlikely.</p>
-<p>The team now has a choice: invest more, change the operating plan, or revise expectations. Whichever it picks, the gap is a number it can plan around in September. It rests on a baseline validated at the horizon the decision uses, and on increments measured outside the forecast.</p>
+<p>The team now has a choice: invest more, change the operating plan, or revise expectations. Whichever it picks, the gap is a number it can plan around in September. Both inputs are checkable: the baseline was validated at a 13-week horizon, and each increment names the measurement it has to come from.</p>
 </section>
 <section id="key-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="key-takeaways">Key Takeaways</h2>
 <ul>
-<li>Validate the baseline at the horizon and calendar point the decision uses, with only the information available at each origin. A random split answers a different question.</li>
-<li>Decide from the distribution, not the point. Simulating complete paths over the horizon turns a median forecast into a 4% chance of hitting the target, which reads as low single digits, not a precise frequency.</li>
-<li>A scenario is the baseline plus a separately measured increment, each with a reference condition and an uncertainty. Promotion-week sales are not an increment.</li>
+<li>Validate the baseline at the horizon and calendar point the decision uses, with only the information available at each origin. A random split scores week-by-week interpolation and never produces the 13-week path.</li>
+<li>Decide from the simulated distribution of the 13-week total, not from the median path: only the distribution gives the probability of hitting the target, 4% here, which reads as low single digits rather than a precise frequency.</li>
+<li>A scenario is the baseline plus a separately measured increment, each with a reference condition and an uncertainty. Promotion-week sales include seasonality and the promotions already in the baseline, so they overstate the increment.</li>
 </ul>
 
 

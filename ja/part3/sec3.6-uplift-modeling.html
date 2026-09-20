@@ -643,12 +643,12 @@ window.Quarto = {
 <p><strong>日本語版について</strong><br>
 このページは英語版 <em>Marketing Science in Python</em> のAI翻訳です。英語版を正本とし、差異がある場合は英語版を優先してください。コード、Notebook、画像内の文字は英語のままです。 <a href="../../part3/sec3.6-uplift-modeling.html" class="translation-source-link">英語版を読む</a></p>
 </div>
-<p>次のキャンペーンは、どの顧客へ届けるべきでしょうか。多くのチームは反応モデルで答えます。購入可能性で顧客を順位づけし、リスト上位をターゲットにします。問題は、購入可能性の高い顧客の多くが、連絡の有無にかかわらずコンバージョンすることです。その顧客へ支出しても成果は変わりません。アップリフトモデリングは、連絡によって行動がどれだけ変わると予想されるかで顧客を順位づけします。どちらにしても購入した人ではなく、連絡したから購入する人を対象にします。接触にコストがかかる場合に価値があるのは、このためです。すでに起きるはずの売上に便乗するところではなく、アウトカムを変えるところへ予算を使うべきです。</p>
+<p>次のキャンペーンは、どの顧客へ届けるべきでしょうか。多くのチームは反応モデルで答えます。購入可能性で顧客を順位づけし、リスト上位をターゲットにします。問題は、購入可能性の高い顧客の多くが、連絡の有無にかかわらずコンバージョンすることです。その顧客へ支出しても増分コンバージョンは生じません。アップリフトモデリングは、連絡によって行動がどれだけ変わると予想されるかで顧客を順位づけします。どちらにしても購入した人ではなく、連絡したから購入する人を対象にします。接触にコストがかかる場合、予算は、接触によってアウトカムが変わるところへ使うべきです。</p>
 <ul>
 <li>反応モデルが予測するもの：<span class="math inline">\(P(\text{purchase})\)</span></li>
 <li>アップリフトモデルが予測するもの：<span class="math inline">\(P(\text{purchase} \mid \text{treated}) - P(\text{purchase} \mid \text{not treated})\)</span></li>
 </ul>
-<p>2つ目の量が顧客ごとの処置効果であるCATEです。 §3.5で推定方法を扱いました。このスコアは測定の手順にすぎません。次に、ターゲティング方針へ変換し、順位に基づく行動が実際に価値を生むかをホールドアウトデータで確認します。</p>
+<p>2つ目の量が顧客ごとの処置効果であるCATEです。 §3.5で推定方法を扱いました。スコアは測定の手順です。次の手順では、ターゲティング方針へ変換し、順位に基づく行動が実際に価値を生むかをホールドアウトデータで確認します。</p>
 <div id="fig-uplift-targeting" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="アップリフトモデリングは予測処置効果で顧客を順位づけし、キャンペーンによって行動が変わる可能性の高い人を優先できるようにする">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-uplift-targeting-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -676,14 +676,14 @@ window.Quarto = {
 <li>Persuadables（説得可能層）：連絡した場合だけ購入します。理想的なターゲットです。メールが行動を変え、リターンはすべてこの層から生じます。</li>
 <li>Sure Things（確実購入層）：どちらにしても購入します。連絡しても増分売上はなく、予算だけを使います。</li>
 <li>Lost Causes（見込みなし層）：決して購入しません。連絡が無駄になります。</li>
-<li>Sleeping Dogs（逆効果層）：何もしなければ購入しますが、連絡すると離れます。接触すると積極的に損失が生じます。</li>
+<li>Sleeping Dogs（逆効果層）：何もしなければ購入しますが、連絡すると離れます。連絡するとコンバージョンが減ります。</li>
 </ul>
-<p>購入可能性を追う反応モデルのリストは、Sure Thingsで埋まります。処置効果を追うアップリフトモデルはPersuadablesを狙い、残りを避けます。この違いが重要です。</p>
+<p>反応モデルは購入可能性で順位づけするため、リストはSure Things（確実購入層）で埋まります。アップリフトモデルは処置効果で順位づけするため、リストはPersuadables（説得可能層）に集中します。</p>
 <p>アップリフトには2つの手法群があります。§3.5のメタラーナーと、アップリフトを直接分割基準とする決定木です。後者には、複数の処置群を同時に扱える利点があります（5%、10%、20%のオファーを一つのモデルで比較できます）。この章ではメタラーナーを使い、§3.5と同様にEconMLで学習し、scikit-upliftで順位を評価します。UberのライブラリであるCausalMLは、木ベースの手法の定番です。</p>
 </section>
 <section id="the-dataset" class="level2">
 <h2 class="anchored" data-anchor-id="the-dataset">データセット</h2>
-<p>§3.5の半合成MineThatDataの例を再利用します。Kevin Hillstromの無作為化メール実験を、男性向けメール群とメールなし群に限定します（42,613人の顧客をほぼ50対50に分割）。顧客特徴量と処置割り当ては実データで、アウトカムだけをシミュレーションしています。そのため、各顧客の真の効果が分かり、すべての手順でモデルを評価できます。埋め込んだ平均効果は約11パーセントポイントで、男性向け商品の購入者、最近活動した顧客、複数チャネルの買い物客で大きくなります。</p>
+<p>§3.5の半合成MineThatDataの例を再利用します。Kevin Hillstromの無作為化メール実験を、男性向けメール群とメールなし群に限定します（42,613人の顧客をほぼ50対50に分割）。顧客特徴量と処置割り当ては実データで、アウトカムだけをシミュレーションしています。そのため、各顧客の真の効果が分かり、すべての手順でモデルを確認できます。埋め込んだ平均効果は約11パーセントポイントで、男性向け商品の購入者、最近活動した顧客、複数チャネルの買い物客で大きくなります。</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> msbook.data <span class="im">import</span> load_minethatdata</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> load_minethatdata()</span>
@@ -730,7 +730,7 @@ window.Quarto = {
 </section>
 <section id="training-the-uplift-model" class="level2">
 <h2 class="anchored" data-anchor-id="training-the-uplift-model">アップリフトモデルを学習する</h2>
-<p>アップリフトスコアはCATEそのものです。 §3.5のメタラーナーを再度当てはめ、ホールドアウトセットで真の効果を最もうまく復元するものを選びます。Sラーナーであり、その推定値と真値の相関は0.77です（完全な比較は§3.5の <a href="sec3.5-meta-learners.html#tbl-cate-recovery" class="quarto-xref">表&nbsp;<span>1</span></a>）。予測CATEがアップリフトスコアになります。当てはめは§3.5と同じEconML呼び出しなので、新しくインストールするものはありません。</p>
+<p>アップリフトスコアはCATEそのものです。 §3.5のメタラーナーを再度当てはめ、ホールドアウトセットで真の効果を最もうまく復元するものを選びます。Sラーナーであり、その推定値と真値の相関は0.77です（完全な比較は§3.5の <a href="sec3.5-meta-learners.html#tbl-cate-recovery" class="quarto-xref">表&nbsp;<span>1</span></a>）。この選び方ができるのは、データが半合成だからです。実データでは真の効果を観測できないため、無作為化ホールドアウトでのQiniまたはデシル別の観測アップリフトでラーナーを選びます。その手順は、後述の評価の節で扱います。ラーナーの選択に使うホールドアウトと、選んだ順位が無作為より優れているかを後から確認するための新しいホールドアウトは別のものです。予測CATEがアップリフトスコアになります。当てはめは§3.5と同じEconML呼び出しなので、新しくインストールするものはありません。</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> econml.metalearners <span class="im">import</span> SLearner</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> lightgbm <span class="im">import</span> LGBMRegressor</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -783,7 +783,7 @@ window.Quarto = {
 </figure>
 </div>
 <p>各デシルには約1,300人しかいないため、個々の行、特に観測アップリフト列にはノイズがあります。それでも順位は機能しています。上位デシルの観測・真のアップリフト（平均11ポイントに対して約17ポイント）は、下位デシルを大きく上回ります。必要なのはこの順序です。すべてのデシルが完全に単調である必要はありません。末尾の個々の行ではなく、順位の上位に注目します。</p>
-<p>デシル表は局所的な見方です。全体を診断するのがQini曲線です。 顧客をアップリフトの高い順に並べ、リストのより深い部分まで対象を広げたときの、処置比率で正規化した累積増分コンバージョンをプロットします。真のシグナルを持つ順位は、顧客へ無作為に連絡した場合の対角線より上に曲がります。（通常のアップリフト曲線も、正規化していない尺度で同じ形を示します。Qini曲線は、順位内で処置比率が変わっても信頼性を維持するため、アップリフトモデルを比較する標準です。）</p>
+<p>デシル表は局所的な見方です。全体を診断するのがQini曲線です。 顧客をアップリフトの高い順に並べ、リストのより深い部分まで対象を広げたときの、処置比率で正規化した累積増分コンバージョンをプロットします。順位に真のシグナルがあれば、曲線は無作為に連絡した場合の対角線より上に位置します。（通常のアップリフト曲線も、正規化していない尺度で同じ形を示します。Qini曲線は、順位内で処置比率が変わっても信頼性を維持するため、アップリフトモデルを比較する標準です。）</p>
 <div id="fig-qini-curve" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="アップリフト順位のQini曲線が、ホールドアウト顧客全体で無作為ターゲティングの対角線より上にある">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-qini-curve-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -794,7 +794,7 @@ window.Quarto = {
 </figcaption>
 </figure>
 </div>
-<p>ここでは、曲線は最初から無作為の線を大きく上回ります。順位上位30%をターゲットにすると、増分コンバージョンの約42%（無作為ターゲティングでは30%）を捉え、上位半分では約62%を捉えます。そのため、この順位に基づいて行動する価値があります。</p>
+<p>ここでは、曲線は最初から無作為の線を大きく上回ります。順位上位30%をターゲットにすると、増分コンバージョンの約42%（無作為ターゲティングでは30%）を捉え、上位半分では約62%を捉えます。</p>
 <p>2つの要約面積はいずれもプラスであり、形式的には、この順位が無作為ターゲティングを上回ることを意味します。</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklift.metrics <span class="im">import</span> uplift_auc_score, qini_auc_score</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -806,7 +806,7 @@ window.Quarto = {
 </section>
 <section id="extracting-the-target-list" class="level2">
 <h2 class="anchored" data-anchor-id="extracting-the-target-list">ターゲットリストを抽出する</h2>
-<p>スコアは、ビジネス指標へ結びつけて初めて行動に使えます。増分コンバージョン1件の利益が$30、顧客への連絡コストが$3だとします。その場合、損益分岐点となるアップリフト10%を超える顧客だけを処置すべきです。各顧客の期待正味価値は、アップリフトにコンバージョン価値を掛け、連絡コストを引いたものです。</p>
+<p>スコアに基づいて行動するには、顧客当たりの期待価値へ変換します。増分コンバージョン1件の利益が$30、顧客への連絡コストが$3だとします。その場合、損益分岐点となるアップリフト10%を超える顧客だけを処置すべきです。各顧客の期待正味価値は、アップリフトにコンバージョン価値を掛け、連絡コストを引いたものです。</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>value_per_conversion <span class="op">=</span> <span class="fl">30.0</span>   <span class="co"># $ margin per incremental conversion</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>treatment_cost <span class="op">=</span> <span class="fl">3.0</span>          <span class="co"># $ per contacted customer (email + offer)</span></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -859,12 +859,12 @@ window.Quarto = {
 </tr>
 </tbody>
 </table>
-<p>増分コンバージョン当たり$30の利益と$3の連絡コストでは、損益分岐アップリフトは10%です。最初の5デシルは予測アップリフトがこの閾値を超えるため、方針はリストの上位半分を対象とし、残りを除外することです。具体的な定数は例にすぎません。重要なのはルールです。アップリフトを期待価値へ変換し、連絡コストを引き、結果がプラスのところだけを対象にします。それが顧客リストになります。この実行では、予測列と観測列が完全には一致しません。観測正味価値は、予測上の閾値から2デシル下までプラスです。この境界領域でこそ、予算を確定する前に新しい無作為化ホールドアウトを用意する価値があります。</p>
+<p>増分コンバージョン当たり$30の利益と$3の連絡コストでは、損益分岐アップリフトは10%です。最初の5デシルは予測アップリフトがこの閾値を超えるため、方針はリストの上位半分を対象とし、残りを除外することです。ここでの定数は例示です。手順は、アップリフトを期待価値へ変換し、連絡コストを引き、結果がプラスのところだけを対象にすることです。それが顧客リストになります。この実行では、予測列と観測列が完全には一致しません。観測正味価値は、予測上の閾値から2デシル下までプラスです。この境界領域では、予算を確定する前に新しい無作為化ホールドアウトを実施します。</p>
 </section>
 <section id="key-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="key-takeaways">要点</h2>
 <ul>
-<li>アップリフトは、顧客を購入しそうな順ではなく、接触によって行動がどれほど変わるかで順位づけする。これによりSure Thingsへ予算を使わず、Sleeping Dogsを避けられる。</li>
+<li>アップリフトは、顧客を購入しそうな順ではなく、接触によって行動がどれほど変わるかで順位づけする。これによりSure Things（確実購入層）へ予算を使わず、Sleeping Dogs（逆効果層）を避けられる。</li>
 <li>新しい無作為化ホールドアウトで順位が無作為を上回ることを確認し、アップリフトを期待正味価値へ変換する。アップリフトとコンバージョン価値の積が連絡コストを上回る場合だけを対象にする。</li>
 </ul>
 

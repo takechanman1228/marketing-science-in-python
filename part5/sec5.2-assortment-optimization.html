@@ -642,7 +642,7 @@ window.Quarto = {
 </header>
 
 
-<p>The category review is on the calendar: the planogram team wants shelf space back, and the category manager has to name the SKUs to give up. An underperforming product does more than take up room: it ties up inventory, complicates the supply chain, and makes the shelf harder to shop. The decision is which products to cut, which to keep, and how to validate those calls before scaling them across the chain.</p>
+<p>A category review asks which SKUs to drop from the shelf. A low-selling SKU carries costs beyond shelf space: held inventory, an extra supply-chain line, and more options for the shopper to scan. The decision is which products to cut, which to keep, and how to validate those calls before scaling them across the chain.</p>
 <p>This chapter runs that decision on two years of grocery transactions: screen the long tail by revenue, check whether the demand would stay in the store, and hand back a shortlist ranked by how safe each SKU is to test.</p>
 <p><strong>Companion notebook:</strong> <code>sec5.2_assortment_optimization.ipynb</code> reproduces the revenue ABC screen, substitution check, and action assignment on the Dunnhumby Complete Journey grocery dataset.<br>
 <a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part5-commercial-analytics/sec5.2_assortment_optimization.ipynb">View on GitHub</a></p>
@@ -670,15 +670,15 @@ window.Quarto = {
 <li><strong>Screening → candidate pool.</strong> Which products contribute little revenue and sit in the long tail?</li>
 <li><strong>Substitution check → safety assessment.</strong> For each candidate, if we remove it, does the demand stay in our store?</li>
 </ol>
-<p>A candidate with plausible substitutes among higher-performing products is a lower-risk test candidate. Without them, test before acting. Nothing is confirmed safe until a matched-store test validates it.</p>
+<p>A candidate with plausible substitutes among higher-performing products is a lower-risk test candidate. Without them, the candidate needs more caution, and in either case a matched-store test is what confirms that the removal is safe.</p>
 <section id="step-1-screening-skus-by-revenue" class="level3">
 <h3 class="anchored" data-anchor-id="step-1-screening-skus-by-revenue">Step 1: Screening SKUs by Revenue</h3>
 <p>Before deciding what to remove, we need to narrow the SKU universe down. A grocery store may carry thousands of products, but a small fraction drives most of the revenue, while the long-tail items each bring in very little. That long tail is where removal candidates come from.</p>
 <p>Retail teams often use a Pareto-style ranking called <strong>ABC analysis</strong>. Products are sorted by their contribution, usually sales value or margin, though sometimes by units, and then split into three tiers.</p>
 <ul>
-<li><strong>A items</strong> (top ~20%): the vital few. They drive roughly 80% of the chosen metric. Protect, monitor, and optimize these.</li>
-<li><strong>B items</strong> (next ~30%): the important middle. Steady contributors that need less attention.</li>
-<li><strong>C items</strong> (bottom ~50%): the long tail. Individually small, collectively noisy. Candidates for rationalization.</li>
+<li><strong>A items</strong> (top ~20%): roughly 80% of the chosen metric. Protect, monitor, and optimize these.</li>
+<li><strong>B items</strong> (next ~30%): steady contributors that need less attention.</li>
+<li><strong>C items</strong> (bottom ~50%): the long tail, each SKU small enough that its sales series carries little signal. Candidates for rationalization.</li>
 </ul>
 <p>C-rank products are where you start building your candidate pool. Not every C-rank item should be removed, but any product you consider cutting should come from this group.</p>
 <p>In code, rank SKUs by cumulative revenue share, cut into A/B/C tiers, and take the C-rank long tail as the candidate pool:</p>
@@ -692,7 +692,7 @@ window.Quarto = {
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Candidate pool = C-rank by revenue (the long tail)</span></span>
 <span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>candidates <span class="op">=</span> sku_summary[sku_summary[<span class="st">"abc_revenue"</span>] <span class="op">==</span> <span class="st">"C"</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>The full function, covering zero/negative-sales filtering and NaN-safe binning, is in the companion notebook.</p>
-<p><a href="#fig-revenue-pareto" class="quarto-xref">Figure&nbsp;<span>1</span></a> shows the revenue Pareto curve for about 39,000 Dunnhumby grocery SKUs (after dropping 38 with no sales). Revenue is highly concentrated: fewer than 20% of SKUs generate 80% of sales, while the C-rank pool (<code>abc_revenue == "C"</code>) contains 63% of SKUs but only 5% of revenue. This long tail forms the candidate pool. It is worth examining, not defending, based on volume alone.</p>
+<p><a href="#fig-revenue-pareto" class="quarto-xref">Figure&nbsp;<span>1</span></a> shows the revenue Pareto curve for about 39,000 Dunnhumby grocery SKUs (after dropping 38 with no sales). Revenue is highly concentrated: fewer than 20% of SKUs generate 80% of sales, while the C-rank pool (<code>abc_revenue == "C"</code>) contains 63% of SKUs but only 5% of revenue. This long tail forms the candidate pool. Low volume alone puts a SKU in this pool; it does not decide the outcome.</p>
 <div id="fig-revenue-pareto" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Revenue Pareto curve for ~39,000 SKUs: fewer than 20% of SKUs drive 80% of revenue.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-revenue-pareto-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -708,10 +708,10 @@ Figure&nbsp;1: Cumulative revenue share by SKU.
 <section id="step-2-substitution-check-will-the-demand-stay" class="level3">
 <h3 class="anchored" data-anchor-id="step-2-substitution-check-will-the-demand-stay">Step 2: Substitution check, “Will the demand stay?”</h3>
 <p>For each C-rank candidate, the question is: if we remove it, will customers buy something else from us, or leave the store?</p>
-<p>Within the same sub-category, products that rarely appear in the same basket may be substitutes. Shoppers usually buy one brand of yogurt, not three. We use low basket co-occurrence, measured by Lift, as a proxy for substitution:</p>
+<p>Within the same sub-category, products that rarely appear in the same basket may be substitutes. A shopper typically buys one brand of yogurt per trip. We use low basket co-occurrence, measured by Lift, as a proxy for substitution:</p>
 <p><span class="math display">\[\text{Lift}(A, B) = \frac{P(A \cap B)}{P(A) \times P(B)}\]</span></p>
 <p>Lift &gt; 1 means two products tend to be bought together (complements); Lift &lt; 1 means they rarely are, which within a sub-category suggests they substitute for each other, and Lift = 0 (never in the same basket) is the strongest signal. The same-subcategory constraint matters: across categories, low co-occurrence just means the products serve different needs (cereal vs.&nbsp;pasta), not that they substitute.</p>
-<p>This is a proxy, not proof. Low co-occurrence can also reflect different shopping occasions or customer segments.</p>
+<p>Low co-occurrence is consistent with substitution but does not establish it: it can also reflect different shopping occasions or customer segments.</p>
 <p>For each C-rank candidate, the check scans its same-subcategory peers (restricted to A/B-revenue SKUs that are large enough to absorb redirected demand) and flags the ones with low Lift:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>co_occur <span class="op">=</span> <span class="bu">len</span>(cand_baskets <span class="op">&amp;</span> peer_baskets)</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> co_occur <span class="op">==</span> <span class="dv">0</span>:                       <span class="co"># never bought together → strongest signal</span></span>
@@ -725,7 +725,7 @@ Figure&nbsp;1: Cumulative revenue share by SKU.
 </section>
 <section id="the-output-a-scored-candidate-list" class="level3">
 <h3 class="anchored" data-anchor-id="the-output-a-scored-candidate-list">The output: a scored candidate list</h3>
-<p>The long tail is too big to score whole, so the notebook scores 150 C-rank SKUs: the 100 bought most often plus the C-rank SKUs in the same sub-categories, all with at least 30 baskets over the two years. A SKU bought a dozen times cannot carry a substitution signal either way. Steps 1 and 2 then assign one of three actions. <a href="#tbl-scored-candidates" class="quarto-xref">Table&nbsp;<span>1</span></a> shows one real candidate per action (sub-category labels cleaned up for reading):</p>
+<p>The long tail is too big to score whole, so the notebook scores 150 C-rank SKUs: the 100 bought most often plus the C-rank SKUs in the same sub-categories, all with at least 30 baskets over the two years. The notebook uses 30 baskets as a screening cutoff to reduce noise from sparse counts; it is a rule of thumb, not a statistical guarantee. Steps 1 and 2 then assign one of three actions. <a href="#tbl-scored-candidates" class="quarto-xref">Table&nbsp;<span>1</span></a> shows one real candidate per action (sub-category labels cleaned up for reading):</p>
 <div id="tbl-scored-candidates" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-scored-candidates-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -738,7 +738,7 @@ Table&nbsp;1: One scored candidate per action, from the companion notebook.
 <th style="text-align: left;">Candidate (sub-category)</th>
 <th style="text-align: right;">Revenue, 2 yrs</th>
 <th style="text-align: right;">Baskets</th>
-<th style="text-align: center;">Clear substitute?</th>
+<th style="text-align: center;">Substitute candidate?</th>
 <th style="text-align: center;">Halo?</th>
 <th style="text-align: left;">Action</th>
 </tr>
@@ -773,21 +773,21 @@ Table&nbsp;1: One scored candidate per action, from the companion notebook.
 </div>
 </figure>
 </div>
-<p>Across the 150, the actions split 105 / 28 / 17. Most of the examined tail has an in-category substitute and no special basket role, and for these zero co-occurrence (a Lift of 0.0, the strongest substitution signal in transaction data) is the common case. This is not a remove list. It is a shortlist, sorted by how safe each candidate is to test first.</p>
-<p>A candidate with a clear in-category substitute is the safest to test for removal. The 17 with no clear substitute are the opposite case: fewer than five A/B-revenue peers could absorb the demand, so it may leave the store. Keep the product for now and look for ways to lower its cost, such as smaller packs or better supplier terms, or test carefully before removing.</p>
-<p>The 28 in the middle are a guardrail for halo effects. A low-priced SKU that often appears with higher-value items may help attract those baskets, so removing it could reduce sales elsewhere. Investigate these cases before cutting, rather than relying on revenue alone. In dense grocery data, almost every SKU co-occurs with something, so use this flag only for the clearest cases. Also, not every low-revenue SKU should be in the candidate pool. Some products earn their shelf space by driving store trips, anchoring price image, or signaling category credibility, roles that revenue and Lift do not capture.</p>
+<p>Across the 150, the actions split 105 / 28 / 17. Most of the examined tail has an in-category substitute candidate and no special basket role, and for these zero co-occurrence (a Lift of 0.0, the strongest substitution signal in transaction data) is the common case. The output is a shortlist for testing, sorted by how safe each candidate is to test first.</p>
+<p>A SKU with a substitute candidate in its sub-category is the safest to test for removal. The 17 with no substitute candidate are the opposite case: fewer than five A/B-revenue peers could absorb the demand, so it may leave the store. Keep the product for now and look for ways to lower its cost, such as smaller packs or better supplier terms, or test carefully before removing.</p>
+<p>The 28 in the middle are a guardrail for halo effects. A low-priced SKU that often appears with higher-value items may help attract those baskets, so removing it could reduce sales elsewhere. Investigate these cases before cutting, rather than relying on revenue alone. In dense grocery data, almost every SKU co-occurs with something, so use this flag only for the clearest cases. Also, not every low-revenue SKU should be in the candidate pool. Some SKUs have roles that revenue and Lift do not capture, such as driving store trips, anchoring the category’s price image, or signaling category credibility.</p>
 </section>
 </section>
 <section id="validate-before-scaling" class="level2">
 <h2 class="anchored" data-anchor-id="validate-before-scaling">Validate before scaling</h2>
-<p>The scored list is a set of hypotheses, not a removal list. Before rolling out a deletion, run a small matched-store test: remove the SKU in treatment stores, keep comparable control stores unchanged, and monitor sub-category revenue, revenue per basket, and basket count.</p>
+<p>Each row on the scored list is a hypothesis to test. Before rolling out a deletion, run a small matched-store test: remove the SKU in treatment stores, keep comparable control stores unchanged, and monitor sub-category revenue, revenue per basket, and basket count.</p>
 <p>Do not evaluate the removed SKU’s own sales; they will be zero by construction. The question is whether demand stays in the category and in the basket. If the result is inconclusive, do not scale the removal.</p>
 </section>
 <section id="key-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="key-takeaways">Key Takeaways</h2>
 <ul>
-<li>Revenue ABC produces candidates, not decisions. Low same-subcategory co-occurrence is a proxy for substitution, not proof, and a cheap SKU that anchors valuable baskets can be worth keeping.</li>
-<li>Never roll out without a matched-store test. Measure sub-category revenue, revenue per basket, and basket count, not the removed SKU’s own sales. An inconclusive result is not a green light.</li>
+<li>Revenue ABC narrows the SKU universe to a candidate pool, and low same-subcategory co-occurrence ranks those candidates by substitution risk; a cheap SKU that anchors valuable baskets can still be worth keeping.</li>
+<li>Never roll out without a matched-store test. Measure sub-category revenue, revenue per basket, and basket count, not the removed SKU’s own sales. If the test is inconclusive, do not scale the removal.</li>
 </ul>
 
 

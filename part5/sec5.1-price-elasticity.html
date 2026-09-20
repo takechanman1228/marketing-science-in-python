@@ -643,15 +643,12 @@ window.Quarto = {
 </header>
 
 
-<p>What is the right price?</p>
-<p>The sales team wants a lower price. They are closest to the customer, and they can see the obvious effect: when price drops, units move.</p>
-<p>The finance team wants a higher margin. Looking at the same tradeoff from the other side, they can see that revenue can go up while profit disappears if the extra volume is bought too cheaply.</p>
-<p>Marketing sits between these views, but not by averaging them. Its job is to connect customer response, brand position, and commercial objectives: when to chase units or revenue, when to protect margin, and when price itself sends a positioning signal.</p>
-<p>Both sides are partly right. Price affects volume, but volume is not always the main goal. Sometimes the business wants revenue, sometimes margin, sometimes traffic or share, or even just to clear inventory or defend a price position. The real missing piece is not the objective. It is understanding how much volume actually changes when price moves.</p>
-<p>That is what price elasticity gives us. It does not decide the business goal. It gives the response curve that lets us compare pricing decisions against the goal, whether that goal is units, revenue, margin, or positioning.</p>
+<p>A price decision has to reconcile two effects that point in opposite directions: a lower price sells more units, and a higher price earns more margin per unit. Which one wins depends on how much volume actually changes when the price moves.</p>
+<p>Marketing owns the decision that connects customer response, brand position, and the commercial objective: when to chase units or revenue, when to protect margin, and when price itself sends a positioning signal. Sometimes the objective is traffic or share, clearing inventory, or defending a price position. Whatever the objective, the quantity to estimate first is the size of the volume response to a price change.</p>
+<p>Price elasticity supplies that response curve. The business still chooses the goal, whether units, revenue, margin, or positioning, and the curve lets you compare candidate prices against it.</p>
 <section id="sec-price-elasticity-definition" class="level2">
 <h2 class="anchored" data-anchor-id="sec-price-elasticity-definition">What Is Price Elasticity?</h2>
-<p>Imagine you are deciding whether to raise the price of a top-selling cereal by 10%. Will you lose 5% of units, or 20%? That difference decides whether the price change improves sales, revenue, or margin, or whether it simply pushes shoppers away.</p>
+<p>Raising the price of a top-selling cereal by 10% can cost 5% of units or 20%, and the two cases lead to opposite decisions. The size of that loss decides whether the price change improves sales, revenue, or margin, or whether it simply pushes shoppers away.</p>
 <p>Price elasticity of demand measures the sensitivity of quantity sold to a change in price:</p>
 <p><span class="math display">\[
 \varepsilon = \frac{\% \Delta \text{Quantity}}{\% \Delta \text{Price}}
@@ -689,7 +686,7 @@ window.Quarto = {
 Q = b_0 \times P^{b_1}
 \]</span></p>
 <p>where <span class="math inline">\(Q\)</span> is quantity, <span class="math inline">\(P\)</span> is price, <span class="math inline">\(b_0\)</span> is a scale parameter, and <span class="math inline">\(b_1\)</span> is the elasticity. For normal goods, <span class="math inline">\(b_1\)</span> is negative. Taking logs gives a linear relationship, <span class="math inline">\(\log Q = \log b_0 + b_1 \log P\)</span>, so <span class="math inline">\(b_1\)</span> is the slope in log-log space. The model assumes elasticity is constant across the price range. That is a strong assumption, but it is a reasonable starting point for many consumer goods.</p>
-<p>Fit the curve in the original, non-log, space with <code>scipy.optimize.curve_fit</code> to avoid the retransformation bias that comes from fitting in log-space and converting back.</p>
+<p>Fit the curve in the original, non-log, space with <code>scipy.optimize.curve_fit</code> to avoid the retransformation bias that comes from fitting in log-space and converting back. The model uses price and units only, with no terms for seasonality, promotions, competitors, or reference price, so the elasticity it returns is a starting estimate under those conditions.</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> scipy.optimize <span class="im">import</span> curve_fit</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -745,7 +742,7 @@ Figure&nbsp;2: Fitted power-law demand curves for eight products.
 </figcaption>
 </figure>
 </div>
-<p>In practice, an elasticity in the range <span class="math inline">\(-0.5\)</span> to <span class="math inline">\(-5\)</span> with <span class="math inline">\(R^2 &gt; 0.4\)</span> and several distinct price points is usable for pricing decisions. Estimates outside that range are often data problems: too few prices, a single promotional discount dominating the fit, or too short a window. If the elasticity is not believable, neither is any pricing recommendation built on it.</p>
+<p>In practice, an elasticity in the range <span class="math inline">\(-0.5\)</span> to <span class="math inline">\(-5\)</span> with <span class="math inline">\(R^2 &gt; 0.4\)</span> and several distinct price points is usable as a starting estimate; the pitfalls at the end of this chapter say when it is not. The <span class="math inline">\(R^2\)</span> threshold is a heuristic for fit quality and says nothing about whether the estimate is causally valid. Estimates outside that range are often data problems: too few prices, a single promotional discount dominating the fit, or too short a window. If the elasticity is not believable, neither is any pricing recommendation built on it.</p>
 </section>
 <section id="sec-margin-maximizing-price" class="level2">
 <h2 class="anchored" data-anchor-id="sec-margin-maximizing-price">Optimizing for Contribution Margin</h2>
@@ -755,15 +752,15 @@ Figure&nbsp;2: Fitted power-law demand curves for eight products.
 \text{Revenue}(P) = P \times Q(P)
 \]</span></p>
 <p>This is often the most intuitive starting point because it requires only price and units. But under a constant-elasticity curve, revenue maximization is degenerate: when demand is elastic (<span class="math inline">\(|b_1| &gt; 1\)</span>, as it is for every product in this chapter), revenue keeps rising as the price falls, so the revenue-maximizing price is simply the lowest one you are willing to set. If reliable variable cost is not available, revenue may still serve as a first-pass metric, but treat it as a direction (cut), not an interior optimum.</p>
-<p>But revenue is not profit. If variable cost is available, we can ask the stronger question: which price maximizes contribution margin?</p>
+<p>Revenue ignores variable cost. If variable cost is available, we can ask the stronger question: which price maximizes contribution margin?</p>
 <p><span class="math display">\[
 \text{Contribution Margin}(P) = (P - C) \times Q(P)
 \]</span></p>
 <p>where <span class="math inline">\(C\)</span> is variable cost per unit and <span class="math inline">\(Q(P) = b_0 \times P^{b_1}\)</span>.</p>
-<p>The two answers can differ. A lower price can sell more units and increase revenue while reducing total margin. A higher price can reduce revenue but improve margin if the remaining units are profitable enough. The point is not that margin is always the only objective. The point is that the objective must be explicit before choosing the price.</p>
+<p>The two answers can differ. A lower price can sell more units and increase revenue while reducing total margin. A higher price can reduce revenue but improve margin if the remaining units are profitable enough. Margin is not always the objective, but the objective has to be named before the price is chosen, because revenue and contribution margin can favor different prices.</p>
 <section id="worked-example-a-private-label-cereal" class="level3">
 <h3 class="anchored" data-anchor-id="worked-example-a-private-label-cereal">Worked example: a private-label cereal</h3>
-<p>Take a private-label cereal with these parameters:</p>
+<p>Take a private-label cereal with these parameters, keeping in mind that every result below is conditional on the constant-elasticity demand curve holding across the price range shown:</p>
 <ol type="1">
 <li>Current price: $3.99</li>
 <li>Variable cost: $2.20</li>
@@ -811,8 +808,8 @@ Figure&nbsp;2: Fitted power-law demand curves for eight products.
 </tr>
 </tbody>
 </table>
-<p>The table shows the core tradeoff. Within this range, revenue is highest at the lowest price, and under constant elasticity it would keep climbing with every further cut. Margin behaves differently: it has an interior optimum at <span class="math inline">\(P^* = C \cdot |b_1| / (|b_1| - 1)\)</span>, about $5.87 for these parameters, which is why total margin is still rising at the top of the table, at $2,903. At 10% higher, revenue falls 5.5% while margin rises 5.1%. Revenue and margin point in opposite directions. This is the discount trap: the discount boosts revenue while eroding total contribution margin.</p>
-<p><a href="#fig-margin-curves" class="quarto-xref">Figure&nbsp;<span>3</span></a> visualizes the same logic for five real Dunnhumby products. In every panel, revenue keeps climbing as the price falls, while contribution margin turns over at an interior price, so the two objectives genuinely point to different decisions. For these highly elastic private-label dairy items, the margin-maximizing price is consistently lower than the current price because the extra volume from a price cut is large enough to lift total margin. Same formula, opposite direction: what flips it is whether that interior optimum lands above or below today’s price, which the elasticity and the cost ratio decide together.</p>
+<p>The table shows the core tradeoff. Within this range, revenue is highest at the lowest price, and under constant elasticity it would keep climbing with every further cut. Margin behaves differently: it has an interior optimum at <span class="math inline">\(P^* = C \cdot |b_1| / (|b_1| - 1)\)</span>, about $5.87 for these parameters, which is why total margin is still rising at the top of the table, at $2,903. At 10% higher, revenue falls 5.5% while margin rises 5.1%. Revenue and margin point in opposite directions. A discount in this range raises revenue and lowers total contribution margin at the same time.</p>
+<p><a href="#fig-margin-curves" class="quarto-xref">Figure&nbsp;<span>3</span></a> visualizes the same logic for five real Dunnhumby products. In every panel, revenue keeps climbing as the price falls, while contribution margin turns over at an interior price, so the two objectives genuinely point to different decisions. For these highly elastic private-label dairy items, the margin-maximizing price is consistently lower than the current price because the extra volume from a price cut is large enough to lift total margin. The formula is the same in both cases; the direction of the recommendation depends on whether the interior optimum is above or below today’s price, which the elasticity and the cost ratio decide together.</p>
 <div id="fig-margin-curves" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Revenue vs. contribution-margin curves for five products, marking the current and margin-maximizing prices.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-margin-curves-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -842,7 +839,7 @@ Figure&nbsp;3: Revenue vs.&nbsp;contribution-margin curves.
 <span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>optimal_margin <span class="op">=</span> <span class="op">-</span>result.fun</span>
 <span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Optimal price: $</span><span class="sc">{</span>optimal_price<span class="sc">:.2f}</span><span class="ss">"</span>)</span>
 <span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Max weekly margin: $</span><span class="sc">{</span>optimal_margin<span class="sc">:,.0f}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>One caveat carries over from the constant-elasticity assumption: the margin curve has that interior optimum only when demand is elastic (<span class="math inline">\(|b_1| &gt; 1\)</span>). For an inelastic item the model implies margin keeps rising with price, so a bounded optimizer simply returns the upper bound: a signal to re-check the fit, not a price to set. The companion notebook therefore optimizes only items with a Usable verdict and <span class="math inline">\(b_1 &lt; -1\)</span>.</p>
+<p>One caveat carries over from the constant-elasticity assumption: the margin curve has that interior optimum only when demand is elastic (<span class="math inline">\(|b_1| &gt; 1\)</span>). For an inelastic item the model implies margin keeps rising with price, so a bounded optimizer simply returns the upper bound. That value is an artifact of the search bounds, so re-check the fit rather than using it as a price. The companion notebook therefore optimizes only items with a Usable verdict and <span class="math inline">\(b_1 &lt; -1\)</span>.</p>
 <p><strong>Companion notebook:</strong> <code>sec5.1_price_elasticity.ipynb</code> covers data loading, quality checks, two-pass elasticity estimation, and the sensitivity table.<br>
 <a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part5-commercial-analytics/sec5.1_price_elasticity.ipynb">View on GitHub</a></p>
 </section>
@@ -850,7 +847,7 @@ Figure&nbsp;3: Revenue vs.&nbsp;contribution-margin curves.
 <section id="sec-segment-elasticity" class="level2">
 <h2 class="anchored" data-anchor-id="sec-segment-elasticity">Elasticity Varies by Product Role</h2>
 <p>The same category can contain products with very different shopper roles. In Fluid Milk Products, a gallon of white milk, a single-serve chocolate milk, and a quart of coffee creamer are not interchangeable pricing decisions. They may sit in the same broad commodity, but shoppers buy them for different occasions and compare them against different alternatives.</p>
-<p>That is why SKU-level estimates should be aggregated only into comparable SKU groups, such as the same sub-commodity. The goal is not to create as many segments as possible. The goal is to avoid averaging together products whose price response should be different.</p>
+<p>That is why SKU-level estimates should be aggregated only into comparable SKU groups, such as the same sub-commodity. Group SKUs only when they share a shopper role, so that products with genuinely different price responses are not averaged together.</p>
 <div id="fig-product-role-elasticity" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Units-weighted mean price elasticity by product role within Fluid Milk, ranging from highly elastic to nearly inelastic.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-product-role-elasticity-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -861,21 +858,21 @@ Figure&nbsp;4: Mean price elasticity by product role.
 </figcaption>
 </figure>
 </div>
-<p>Before applying one pricing rule across a category, check whether major product roles respond differently. If they do, the average elasticity is not a pricing rule. It is a warning that the category needs to be split more carefully.</p>
+<p>Before applying one pricing rule across a category, check whether major product roles respond differently. If they do, the category average is too coarse to price against, and the category has to be split into role-level groups first.</p>
 </section>
 <section id="sec-elasticity-pitfalls" class="level2">
 <h2 class="anchored" data-anchor-id="sec-elasticity-pitfalls">Common Pitfalls in Price Elasticity</h2>
 <p><strong>Endogeneity.</strong> Prices are not set at random. If a retailer raises prices during high-demand periods like back-to-school, the observed elasticity is biased toward zero because high prices and high demand co-occur for reasons unrelated to pricing. This is the same selection bias problem from Part 3. Address it with instrumental variables, randomized price experiments, or quasi-experimental designs.</p>
 <p><strong>Shared time structure.</strong> Price and units both carry seasonality, promotion calendars, and trend, so a regression on raw weekly series can pick up that shared structure instead of a price response. Two series that merely share a calendar can correlate strongly enough to look like a demand curve. Put the calendar inside the model: week or month indicators, promotion flags, and a trend term, so the price coefficient is estimated against them rather than through them. The two-variable fit in this chapter does none of that, so treat its elasticities as exposed to this bias until a specification carrying the calendar agrees.</p>
 <p><strong>Reference price effects.</strong> Customers remember what they paid before. Raising the price usually causes a bigger drop in volume than lowering the price brings in new buyers. The JCPenney “Fair and Square” case is the famous example: switching from promotions to everyday low prices at the same average level led to a sales collapse because customers lost their price anchor.</p>
-<p><strong>Competitor reaction.</strong> A price cut only works if competitors hold. In concentrated categories, competitors typically match. Everyone sells about the same volume, but at lower margins. Game theory matters more than demand curves there.</p>
+<p><strong>Competitor reaction.</strong> A price cut only works if competitors hold. In concentrated categories, competitors typically match. Everyone sells about the same volume, but at lower margins. In those categories, model the competitor’s likely response before acting on the demand curve.</p>
 </section>
 <section id="key-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="key-takeaways">Key Takeaways</h2>
 <ul>
-<li>Elasticity gives the response curve; it does not choose the objective. Decide whether you are optimizing units, revenue, or contribution margin. Under a constant-elasticity fit, only elastic demand gives margin an interior optimum.</li>
+<li>Elasticity gives the response curve; the business decides whether to optimize units, revenue, or contribution margin. Under a constant-elasticity fit, only elastic demand gives margin an interior optimum.</li>
 <li>Fit at the grain the decision uses, SKU by week by default, and check whether product roles respond differently before applying one pricing rule everywhere.</li>
-<li>An estimated elasticity is an observational result, not a universal property of the product. Endogeneity, promotions, and stockouts can make a price response curve look more reliable than it is.</li>
+<li>A fitted elasticity describes the observed price-volume relationship, not a guaranteed causal response: endogeneity, promotions, and stockouts can make it a poor guide to what a price change would do.</li>
 </ul>
 
 

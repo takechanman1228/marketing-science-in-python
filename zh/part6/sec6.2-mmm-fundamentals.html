@@ -718,7 +718,6 @@ y_t = \beta_0 + \sum_{c=1}^{C} \beta_c \cdot \text{Saturation}\bigl(\text{Adstoc
 \text{Hill}(x) = \frac{x^S}{x^S + K^S}
 \]</span></p>
 <p>其中 <span class="math inline">\(K\)</span>（半饱和点，常称为 EC50）是渠道达到其最大效果 50% 时的支出水平，<span class="math inline">\(S\)</span>（斜率）控制曲线弯折的陡峭程度。</p>
-<p>关于 <span class="math inline">\(K\)</span> 的一点实践说明：Meridian 用它自己的单位来度量它，媒体按其中位数缩放，广告滞留权重归一化为总和为一，因此一个持续投放的渠道在该尺度上位于 1 附近。演示为饱和效应设置了一个宽的、与渠道无关的先验，偏向弯曲平缓的曲线；在广告滞留效应上保留了按漏斗层级设定的结构；并在 notebook 中展示了对于一个数据无法识别的渠道，这一选择决定了什么。</p>
 <p>正是这种曲率使预算重新分配有价值。在 <a href="#fig-saturation-reallocation" class="quarto-xref">图&nbsp;<span>5</span></a> 中，渠道 X 深处于饱和区，而渠道 Y 仍有上升空间。削减 X 的预算会损失 $1M 的销售额，而把这笔预算加到 Y 上则能获得 $3M：在总支出不变的情况下净增 $2M。把预算从饱和的渠道转移到投资不足的渠道，可以提高总回报，即使饱和渠道的平均 ROAS 看起来更高。平均 ROAS 是渠道的总增量收入除以其总支出；边际 ROAS 是渠道当前所处位置上曲线的斜率，它才是下一美元能赚到的回报。</p>
 <div id="fig-saturation-reallocation" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="两条饱和曲线：减少饱和渠道 X 的预算损失 $1M 销售额，而增加未饱和渠道 Y 的预算获得 $3M，净变化为 +$2M。">
 <figure class="quarto-float quarto-float-fig figure">
@@ -801,9 +800,9 @@ y_t = \beta_0 + \sum_{c=1}^{C} \beta_c \cdot \text{Saturation}\bigl(\text{Adstoc
 </section>
 <section id="the-bayesian-angle" class="level2">
 <h2 class="anchored" data-anchor-id="the-bayesian-angle">贝叶斯视角</h2>
-<p>在逐步讲解实现之前，有一个设计选择值得注意：现代 MMM 以贝叶斯方法为主。原因是实践层面的，而非哲学层面的。</p>
+<p>在逐步讲解实现之前，有一个设计选择值得注意：现代 MMM 以贝叶斯方法为主。原因是实践层面的。</p>
 <ol type="1">
-<li><strong>先验编码领域知识。</strong> 如果你的团队从过去的实验中知道电视的 ROAS 大约是 2.0，你可以把它编码为先验。模型会用数据更新这一信念。没有先验，模型可能仅仅因为多重共线性就产出不合理的估计。这种便利的另一面值得说明一次：对于一个数据无法识别的渠道，模型返回的数字就是你放进先验的数字。演示中就有这样一个渠道，<a href="sec6.3-incrementality-experiments.html">第 6.3 节</a>会去实际测量它。</li>
+<li><strong>先验编码领域知识。</strong> 如果你的团队从过去的实验中知道电视的 ROAS 大约是 2.0，你可以把它编码为先验。模型会用数据更新这一信念。没有先验，模型可能仅仅因为多重共线性就产出不合理的估计。不过，对于一个数据无法识别的渠道，模型返回的数字就是你放进先验的数字。演示中的 Google Search 就是这样的渠道，<a href="sec6.3-incrementality-experiments.html">第 6.3 节</a>会用一次实验来测量它。</li>
 <li><strong>可信区间，而非点估计。</strong> 你得到的不是“电视 ROAS = 2.3”，而是“电视 ROAS：中位数 2.3，90% CI [1.1, 3.8]”。区间很宽意味着，基于该估计做大幅预算调整时你应当谨慎。</li>
 <li><strong>与实验的自然结合。</strong> 当你运行一个地理增量测试并估计出某个渠道的增量效应时，可以把这一证据作为信息先验输入 MMM。这会收紧后验并改善可识别性，我们会在<a href="sec6.4-mmm-calibration.html">第 6.4 节</a>详细展开这一工作流程。</li>
 </ol>
@@ -886,6 +885,7 @@ y_t = \beta_0 + \sum_{c=1}^{C} \beta_c \cdot \text{Saturation}\bigl(\text{Adstoc
 <span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>    .with_controls(df, control_cols<span class="op">=</span>control_cols)</span>
 <span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>    .build()</span>
 <span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>饱和效应与广告滞留效应的先验。</strong> Meridian 用它自己的单位来度量半饱和点 <span class="math inline">\(K\)</span>：媒体按其中位数缩放，广告滞留权重归一化为总和为一，因此一个持续投放的渠道在该尺度上位于 1 附近。演示为饱和效应设置了一个宽的、与渠道无关的先验，偏向弯曲平缓的曲线；在广告滞留效应上保留了按漏斗层级设定的结构；并在 notebook 中展示了对于一个数据无法识别的渠道，这一选择决定了什么。</p>
 <p><strong>模型训练。</strong> Meridian 使用 No-U-Turn Sampler（NUTS）进行 MCMC。我们先从先验抽样做合理性检查，然后再对后验抽样。</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>mmm <span class="op">=</span> model.Meridian(input_data<span class="op">=</span>data, model_spec<span class="op">=</span>model_spec)</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>mmm.sample_prior(<span class="dv">500</span>)</span>
@@ -904,7 +904,7 @@ y_t = \beta_0 + \sum_{c=1}^{C} \beta_c \cdot \text{Saturation}\bigl(\text{Adstoc
 </figcaption>
 </figure>
 </div>
-<p><strong>模型拟合。</strong> 随机留出 25% 的周作为验证集，演示得到的样本内 R² ≈ 0.97，样本外 R² ≈ 0.97。样本内外差距很小在这里是意料之中的：合成数据加上随机（插值式）留出集，接近最理想的情况。在带有真实噪声、趋势断裂期和不规则促销活动的生产数据上，样本外 R² 落在 0.6 到 0.7 之间是常见且可以接受的。要相信媒体估计的方向，而不只是表面的拟合指标。</p>
+<p><strong>模型拟合。</strong> 随机留出 25% 的周作为验证集，演示得到的样本内 R² ≈ 0.97，样本外 R² ≈ 0.97。样本内外差距很小在这里是意料之中的：合成数据加上随机（插值式）留出集，接近最理想的情况。在带有真实噪声、趋势断裂期和不规则促销活动的生产数据上，样本外 R² 落在 0.6 到 0.7 之间是常见且可以接受的。高 R² 并不能验证媒体估计；要单独检查它们的方向和大小。</p>
 <p>既然<a href="../part5/sec5.3-sales-forecasting.html#sec-rolling-backtest">第 5.3 节</a>断然拒绝随机划分，这里为什么用随机留出？预测必须外推到训练窗口之外，所以要从一个固定的起点向前评分。而 MMM 是在它已观测到的时期内为销售额分配功劳，所以分散的留出集问的正是有用的问题：拟合出的结构在似然从未见过的那些周上是否依然成立。把这个数字读作插值诊断，而不是模型能预测下个季度的证据。</p>
 <div id="fig-in-sample-fit" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="训练期间预测销售额紧跟观测销售额的总体趋势，但错过了一些短期的峰值和低谷。">
 <figure class="quarto-float quarto-float-fig figure">
@@ -926,7 +926,7 @@ y_t = \beta_0 + \sum_{c=1}^{C} \beta_c \cdot \text{Saturation}\bigl(\text{Adstoc
 </figcaption>
 </figure>
 </div>
-<p><strong>媒体洞察。</strong> 模型为每个渠道给出带可信区间的 ROAS 估计。区间宽意味着存在真实的不确定性：这是特性，不是缺陷。单看点估计可能产生误导；可信区间显示了你应当对结果抱有多大信心。</p>
+<p><strong>媒体洞察。</strong> 模型为每个渠道给出带可信区间的 ROAS 估计。区间宽意味着数据尚未确定该渠道的效应。单看点估计会掩盖这一点；区间显示了这个估计能承受多大的分量。</p>
 <div id="fig-roi-estimates" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="每个媒体渠道的 ROAS 估计及 90% 可信区间。区间宽表示估计的不确定性高。">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-roi-estimates-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -967,8 +967,8 @@ y_t = \beta_0 + \sum_{c=1}^{C} \beta_c \cdot \text{Saturation}\bigl(\text{Adstoc
 </div>
 <p>优化器提供了同样便捷的报告功能：<code>optimization_results.output_optimization_summary(...)</code> 会生成一份关于推荐重新分配方案的两页 HTML 报告（<a href="https://marketing-science-in-python.com/notebooks/part6-media-optimization/optimization_output.html">optimization_output.html</a>）。</p>
 <p>在演示中，优化器在五个建模渠道（TV/CTV、OOH、Google Search、Meta 和 TikTok）之间重新分配支出，把预算从边际响应曲线更平坦的渠道转向剩余上升空间更大的渠道。总预算保持不变；只有组合发生变化。团队首次实施 MMM 时，仅靠重新分配就让媒体驱动的（增量）销售额提升 5–10% 是很常见的；本演示显示约 +3%，折合总销售额大约 +1.2%。</p>
-<p>在优化器和计划之间还有一条规则。优化器根据后验均值移动预算；计划则应当根据模型真正知道的东西来移动。因此 notebook 对优化器所用的量，即边际 ROAS，施加了一条防护线：如果一个渠道 90% 区间的相对半宽超过 0.8（区间宽度的一半除以估计值），无论推荐的调整幅度多大，都维持其当前支出。区间很宽，就是模型在说它尚未识别出该渠道，而对此的回应是拿出证据，而不是下更大的注。这是一条示例性的治理规则，不是普适的统计阈值。在演示中，它放行了推荐调整量的 74%，并冻结了一个渠道。</p>
-<p>把优化器的输出当作规划的起点，而不是最终的媒体计划。模型没有考虑合同、最低支出水平、运营前置时间等现实约束。这些需要另外叠加进去。而且在本演示中，它给出了一条自己无法辩护的建议。notebook 展示了支撑它的依据有多薄弱：只改动饱和先验，从这里使用的那个换成 Meridian 的默认值，Search 的建议调整就会从削减 30% 反转为增加 30%，而两次拟合都不能通过宽度规则。历史数据不能决定方向；这项建议的削减需要实验证据。</p>
+<p>在优化器和计划之间还有一条规则。优化器根据后验均值移动预算；计划则应当根据模型真正知道的东西来移动。因此 notebook 对优化器所用的量，即边际 ROAS，施加了一条防护线：如果一个渠道 90% 区间的相对半宽超过 0.8（区间宽度的一半除以估计值），无论推荐的调整幅度多大，都维持其当前支出。区间很宽的渠道就是数据尚未识别出的渠道，所以在移动它的预算之前先去测量它。这是一条示例性的治理规则，不是普适的统计阈值。在演示中，它放行了推荐调整量的 74%，并冻结了一个渠道。</p>
+<p>把优化器的输出当作规划的起点，而不是最终的媒体计划。模型没有考虑合同、最低支出水平、运营前置时间等现实约束。这些需要另外叠加进去。而且在本演示中，它给出了一条自己无法辩护的建议。notebook 展示了支撑它的依据有多薄弱：只改动饱和先验，从这里使用的那个换成 Meridian 的默认值，Search 的建议调整就会从削减 30% 反转为增加 30%，而两次拟合都不能通过宽度规则。仅凭历史数据无法判定 Search 应该削减还是增加，所以这项建议的削减需要经过测试。</p>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -1003,7 +1003,7 @@ y_t = \beta_0 + \sum_{c=1}^{C} \beta_c \cdot \text{Saturation}\bigl(\text{Adstoc
 </tr>
 </tbody>
 </table>
-<p>预测在此刻、在任何结果出现之前就已记录下来，这样实验既能给渠道打分，也能给模型打分。由于响应曲线是基于观测数据构建的，下一步就是验证这一条。<a href="sec6.3-incrementality-experiments.html">第 6.3 节</a>设计并分析该实验；<a href="sec6.4-mmm-calibration.html">第 6.4 节</a>把结果反馈回模型。</p>
+<p>模型的预测在实验运行之前就已记录下来，这样结果就可以与之比较，在检验渠道回报的同时检验模型的准确性。由于响应曲线是基于观测数据构建的，下一步就是验证这一条。<a href="sec6.3-incrementality-experiments.html">第 6.3 节</a>设计并分析该实验；<a href="sec6.4-mmm-calibration.html">第 6.4 节</a>把结果反馈回模型。</p>
 </section>
 <section id="key-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="key-takeaways">要点</h2>
