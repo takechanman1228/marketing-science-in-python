@@ -31,7 +31,7 @@ N_PAIRS = 8
 TEST_WEEKS = 8
 START_DATE = "2022-04-04"
 SPEND_MULTIPLIER = 0.70
-#: Return on the tested cut. Keep equal to GOOGLE_PULLBACK_ROAS in
+#: iROAS of the 30% cut. Keep equal to GOOGLE_PULLBACK_ROAS in
 #: mmm_data_generation.py; test_geo_experiment.py checks the committed CSVs agree.
 TRUE_PULLBACK_ROAS = 1.50
 
