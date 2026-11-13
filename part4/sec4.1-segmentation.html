@@ -618,6 +618,8 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 
 <p>A segmentation project should produce something the team can put into a campaign. The deliverable is a <code>segment_id</code> that connects directly to your CRM and ad platforms, plus a concise brief for each segment: who they are, why they matter, and what actions your team should take.</p>
 <p>Segmentation is not one method. Deciles, RFM, K-Means, and embedding-based clustering each answer a different question. The question comes from the decision the segments have to support: who gets the retention budget, which message goes to whom, which product story to tell.</p>
+<p><strong>Companion notebooks:</strong> <code>sec4.1_traditional_segmentation.ipynb</code> reproduces deciles, RFM, K-Means, and the export on the Dunnhumby data. <a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_traditional_segmentation.ipynb">View on GitHub</a><br>
+<code>sec4.1_semantic_segmentation.ipynb</code> reproduces the customer documents, BERTopic fit, stability check, and LLM naming on UCI Online Retail II. <a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_semantic_segmentation.ipynb">View on GitHub</a></p>
 <section id="sec-method-cheat-sheet" class="level2">
 <h2 class="anchored" data-anchor-id="sec-method-cheat-sheet">Choose the Segmentation by the Question</h2>
 <p>Match the decision to a row.</p>
@@ -669,10 +671,10 @@ Table&nbsp;1: Segmentation methods by the question each one answers.
 <section id="sec-value-tiers" class="level2">
 <h2 class="anchored" data-anchor-id="sec-value-tiers">Value Tiers: Deciles and RFM</h2>
 <p>The fastest segmentation is a ranking. Decile analysis splits customers into ten equal groups by revenue, and the grocery data shows the usual concentration: the top two deciles hold 53% of revenue.</p>
-<div id="fig-decile-distribution" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Customer value is concentrated in the highest deciles, with the top 20 percent contributing more than half of revenue.">
+<div id="fig-decile-distribution" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Customer value is concentrated in the highest deciles, with the top 20 percent contributing more than half of revenue.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-decile-distribution-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part4/sec4.1/decile_distribution.png" class="fig-md img-fluid figure-img" alt="Customer value is concentrated in the highest deciles, with the top 20 percent contributing more than half of revenue.">
+<img src="../images/part4/sec4.1/decile_distribution.png" class="fig-lg img-fluid figure-img" alt="Customer value is concentrated in the highest deciles, with the top 20 percent contributing more than half of revenue.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-decile-distribution-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Figure&nbsp;1: A typical customer-value decile distribution.
@@ -735,10 +737,10 @@ Figure&nbsp;2: Elbow plot for choosing K.
 </figure>
 </div>
 <p>On the grocery data, with K=5 the segments differ in purchase pattern as well as in spending. <a href="#fig-kmeans-heatmap" class="quarto-xref">Figure&nbsp;<span>3</span></a> is the profile behind that fit: one row per segment, one column per behavioral feature, colored by the segment mean against the population.</p>
-<div id="fig-kmeans-heatmap" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Heatmap of five K-Means segments across nine behavioral features, colored by z-score against the population mean, with segment means printed in each cell.">
+<div id="fig-kmeans-heatmap" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Heatmap of five K-Means segments across nine behavioral features, colored by z-score against the population mean, with segment means printed in each cell.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-kmeans-heatmap-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part4/sec4.1/segment_heatmap.png" class="fig-md img-fluid figure-img" alt="Heatmap of five K-Means segments across nine behavioral features, colored by z-score against the population mean, with segment means printed in each cell.">
+<img src="../images/part4/sec4.1/segment_heatmap.png" class="fig-lg img-fluid figure-img" alt="Heatmap of five K-Means segments across nine behavioral features, colored by z-score against the population mean, with segment means printed in each cell.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-kmeans-heatmap-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Figure&nbsp;3: K-Means segment profiles on the grocery data.
@@ -804,36 +806,31 @@ Table&nbsp;3: The K=5 segments on the grocery data, from the companion notebook.
 <p>Numeric features describe how customers shop, not what they buy. When the decision is about category marketing, cross-sell, or creative, the signal is in the products themselves, so you need product text. This section is therefore a separate route rather than the next step after K-Means, and it runs on different data. The UCI Online Retail II dataset, about a million transactions from a UK gift retailer, has the free-text product descriptions an embedding model can read.</p>
 <p>Treat each customer’s purchase history as text: concatenate their purchased product descriptions into a single string (the customer document), then use an embedding model to turn that string into a dense vector. In this embedding space, birthday candles and party plates have a short distance between them and an antique teapot is far from both, so clustering the vectors groups customers by what they buy rather than by how much they spend. For example:</p>
 <p><code>red retrospot cake stand, party bunting, paper cups, birthday candles, cake cases</code></p>
-<p>Numeric features place this customer in a frequent, high-spend tier. The embedding places them near other buyers of party supplies. Building the document is a group-and-concatenate over the transaction log:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Keep each customer's top-N products by revenue, then join the descriptions</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>prod_rev <span class="op">=</span> (</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    df.groupby([<span class="st">"CustomerID"</span>, <span class="st">"Description"</span>])[<span class="st">"Revenue"</span>].<span class="bu">sum</span>()</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    .reset_index()</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    .sort_values([<span class="st">"CustomerID"</span>, <span class="st">"Revenue"</span>], ascending<span class="op">=</span>[<span class="va">True</span>, <span class="va">False</span>])</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>top_products <span class="op">=</span> prod_rev.groupby(<span class="st">"CustomerID"</span>).head(TOP_N)</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>customer_docs <span class="op">=</span> (</span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    top_products.groupby(<span class="st">"CustomerID"</span>)[<span class="st">"Description"</span>]</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    .<span class="bu">apply</span>(<span class="kw">lambda</span> d: <span class="st">", "</span>.join(d))</span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    .reset_index(name<span class="op">=</span><span class="st">"doc"</span>)</span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Numeric features place this customer in a frequent, high-spend tier. The embedding places them near other buyers of party supplies. Building the document is a group-and-concatenate over the transaction log, keeping each customer’s 20 highest-revenue products:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># df: one row per purchased item</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>product_revenue <span class="op">=</span> (</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    df.groupby([<span class="st">"CustomerID"</span>, <span class="st">"Description"</span>], as_index<span class="op">=</span><span class="va">False</span>)[<span class="st">"Revenue"</span>].<span class="bu">sum</span>()</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    .sort_values(<span class="st">"Revenue"</span>, ascending<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>top_products <span class="op">=</span> product_revenue.groupby(<span class="st">"CustomerID"</span>).head(<span class="dv">20</span>)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co"># One comma-separated string of product names per customer</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>customer_docs <span class="op">=</span> top_products.groupby(<span class="st">"CustomerID"</span>)[<span class="st">"Description"</span>].agg(<span class="st">", "</span>.join)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Keep each customer’s top products rather than the full history, filter generic items such as “Postage” that appear in every segment, and cap the weight of any single expensive purchase. These choices matter more than the choice of embedding model.</p>
 <p>BERTopic runs the rest of the pipeline in one call: a local sentence-embedding model turns each document into a vector, and BERTopic clusters the vectors and extracts each cluster’s distinctive keywords.</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> bertopic <span class="im">import</span> BERTopic</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sentence_transformers <span class="im">import</span> SentenceTransformer</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>embedding_model <span class="op">=</span> SentenceTransformer(<span class="st">"all-MiniLM-L6-v2"</span>)   <span class="co"># local, lightweight</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>embeddings <span class="op">=</span> embedding_model.encode(customer_docs[<span class="st">"doc"</span>].tolist())</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>topic_model <span class="op">=</span> BERTopic(embedding_model<span class="op">=</span>embedding_model)</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>topics, probs <span class="op">=</span> topic_model.fit_transform(</span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    customer_docs[<span class="st">"doc"</span>].tolist(), embeddings<span class="op">=</span>embeddings</span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div id="fig-umap-clusters" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="UMAP projection of customer-document embeddings, each point a customer, colored by the segment BERTopic discovered.">
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>docs <span class="op">=</span> customer_docs.tolist()</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>embedding_model <span class="op">=</span> SentenceTransformer(<span class="st">"all-MiniLM-L6-v2"</span>)   <span class="co"># runs locally</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>embeddings <span class="op">=</span> embedding_model.encode(docs)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>topic_model <span class="op">=</span> BERTopic(embedding_model<span class="op">=</span>embedding_model)</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>topics, probs <span class="op">=</span> topic_model.fit_transform(docs, embeddings<span class="op">=</span>embeddings)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="fig-umap-clusters" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="UMAP projection of customer-document embeddings, each point a customer, colored by the segment BERTopic discovered.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-umap-clusters-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part4/sec4.1/umap_clusters.png" class="fig-md img-fluid figure-img" alt="UMAP projection of customer-document embeddings, each point a customer, colored by the segment BERTopic discovered.">
+<img src="../images/part4/sec4.1/umap_clusters.png" class="fig-lg img-fluid figure-img" alt="UMAP projection of customer-document embeddings, each point a customer, colored by the segment BERTopic discovered.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-umap-clusters-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Figure&nbsp;4: Customer documents in embedding space.
@@ -841,10 +838,10 @@ Figure&nbsp;4: Customer documents in embedding space.
 </figure>
 </div>
 <p><a href="#fig-bertopic-barchart" class="quarto-xref">Figure&nbsp;<span>5</span></a> shows the seven topics BERTopic found, and the keywords name the niches directly: party candles and lanterns, chocolate-spot cakeware, feltcraft kits, airline bags.</p>
-<div id="fig-bertopic-barchart" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Top distinctive keywords for seven topics from product-description embeddings, one small bar chart per topic.">
+<div id="fig-bertopic-barchart" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Top distinctive keywords for seven topics from product-description embeddings, one small bar chart per topic.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-bertopic-barchart-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part4/sec4.1/bertopic_barchart.png" class="fig-md img-fluid figure-img" alt="Top distinctive keywords for seven topics from product-description embeddings, one small bar chart per topic.">
+<img src="../images/part4/sec4.1/bertopic_barchart.png" class="fig-lg img-fluid figure-img" alt="Top distinctive keywords for seven topics from product-description embeddings, one small bar chart per topic.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-bertopic-barchart-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Figure&nbsp;5: Top distinctive keywords per topic.
@@ -919,8 +916,6 @@ Table&nbsp;4: The first rows of the CRM export, with the segment names from <a h
 </figure>
 </div>
 <p>Keep each segment’s brief next to the file and version the file: a membership that silently changes between campaigns is worse than none. Segments describe differences between customers; they do not show that a message works for one of them. Once a treatment is chosen, test it: the methods in <a href="../part3/sec3.2-ab-testing.html">A/B Test Design</a> apply to segment campaigns as much as to any other.</p>
-<p><strong>Companion notebooks:</strong> <code>sec4.1_traditional_segmentation.ipynb</code> reproduces deciles, RFM, K-Means, and the export on the Dunnhumby data. <a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_traditional_segmentation.ipynb">View on GitHub</a><br>
-<code>sec4.1_semantic_segmentation.ipynb</code> reproduces the customer documents, BERTopic fit, stability check, and LLM naming on UCI Online Retail II. <a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_semantic_segmentation.ipynb">View on GitHub</a></p>
 </section>
 <section id="key-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="key-takeaways">Key Takeaways</h2>

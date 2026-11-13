@@ -622,6 +622,8 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 </div>
 <p>一个客户细分项目应该产出团队能够投入营销活动的东西。交付物是一个可以直接接入你的 CRM 和广告平台的 <code>segment_id</code>，外加每个细分群体的一份简明简报：他们是谁、为什么重要，以及你的团队应该采取什么行动。</p>
 <p>客户细分不是单一的方法。十分位、RFM、K-Means 和基于嵌入向量的聚类各自回答一个不同的问题。这个问题来自细分群体所要支持的决策：谁获得留存预算，哪条信息发给谁，讲哪个产品故事。</p>
+<p><strong>配套 Notebook</strong>：<code>sec4.1_traditional_segmentation.ipynb</code> 在 Dunnhumby 数据上复现十分位、RFM、K-Means 和导出。<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_traditional_segmentation.ipynb">在 GitHub 上查看</a><br>
+<code>sec4.1_semantic_segmentation.ipynb</code> 在 UCI Online Retail II 上复现客户文档、BERTopic 拟合、稳定性检查和 LLM 命名。<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_semantic_segmentation.ipynb">在 GitHub 上查看</a></p>
 <section id="sec-method-cheat-sheet" class="level2">
 <h2 class="anchored" data-anchor-id="sec-method-cheat-sheet">按问题选择细分方法</h2>
 <p>把决策对应到某一行。</p>
@@ -673,10 +675,10 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 <section id="sec-value-tiers" class="level2">
 <h2 class="anchored" data-anchor-id="sec-value-tiers">价值层级：十分位与 RFM</h2>
 <p>最快的细分是一个排名。十分位分析按营收把客户切成十个人数相等的组，食品杂货数据显示出通常的集中现象：最高的两个十分位占了 53% 的营收。</p>
-<div id="fig-decile-distribution" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="客户价值集中在最高的几个十分位，排名前 20% 的客户贡献了超过一半的营收。">
+<div id="fig-decile-distribution" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="客户价值集中在最高的几个十分位，排名前 20% 的客户贡献了超过一半的营收。">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-decile-distribution-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part4/sec4.1/decile_distribution.png" class="fig-md img-fluid figure-img" alt="客户价值集中在最高的几个十分位，排名前 20% 的客户贡献了超过一半的营收。">
+<img src="../images/part4/sec4.1/decile_distribution.png" class="fig-lg img-fluid figure-img" alt="客户价值集中在最高的几个十分位，排名前 20% 的客户贡献了超过一半的营收。">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-decile-distribution-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 图&nbsp;1: 典型的客户价值十分位分布。
@@ -739,10 +741,10 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 </figure>
 </div>
 <p>在食品杂货数据上，取 K=5 时，细分群体不仅在消费水平上、也在购买模式上有所区别。<a href="#fig-kmeans-heatmap" class="quarto-xref">图&nbsp;<span>3</span></a> 是这次拟合背后的画像：每个细分群体一行，每个行为特征一列，按细分群体均值相对总体的高低着色。</p>
-<div id="fig-kmeans-heatmap" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="五个 K-Means 细分群体在九个行为特征上的热力图，按相对总体均值的 z 分数着色，每个单元格中印有细分群体均值。">
+<div id="fig-kmeans-heatmap" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="五个 K-Means 细分群体在九个行为特征上的热力图，按相对总体均值的 z 分数着色，每个单元格中印有细分群体均值。">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-kmeans-heatmap-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part4/sec4.1/segment_heatmap.png" class="fig-md img-fluid figure-img" alt="五个 K-Means 细分群体在九个行为特征上的热力图，按相对总体均值的 z 分数着色，每个单元格中印有细分群体均值。">
+<img src="../images/part4/sec4.1/segment_heatmap.png" class="fig-lg img-fluid figure-img" alt="五个 K-Means 细分群体在九个行为特征上的热力图，按相对总体均值的 z 分数着色，每个单元格中印有细分群体均值。">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-kmeans-heatmap-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 图&nbsp;3: 食品杂货数据上的 K-Means 细分群体画像。
@@ -808,36 +810,31 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 <p>数值特征描述客户怎么购物，而不是买什么。当决策关乎品类营销、交叉销售或创意时，信号在产品本身之中，因此你需要产品文本。所以本节是一条独立的路线，而不是 K-Means 之后的下一步，而且它运行在不同的数据上。UCI Online Retail II 数据集包含一家英国礼品零售商约一百万条交易，拥有嵌入模型可以读取的自由文本产品描述。</p>
 <p>把每位客户的购买历史当作文本来处理：把他们购买过的产品描述拼接成一个字符串（客户文档），然后用嵌入模型把这个字符串转换成一个稠密向量。在这个嵌入空间里，生日蜡烛和派对餐盘之间距离很短，而一把古董茶壶离两者都很远，因此对向量做聚类会按客户买什么而不是花多少钱来分组。例如：</p>
 <p><code>red retrospot cake stand, party bunting, paper cups, birthday candles, cake cases</code></p>
-<p>数值特征把这位客户归入高频、高消费的层级。嵌入向量则把他放在其他派对用品买家的附近。构建客户文档就是对交易日志做一次分组加拼接：</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Keep each customer's top-N products by revenue, then join the descriptions</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>prod_rev <span class="op">=</span> (</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    df.groupby([<span class="st">"CustomerID"</span>, <span class="st">"Description"</span>])[<span class="st">"Revenue"</span>].<span class="bu">sum</span>()</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    .reset_index()</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    .sort_values([<span class="st">"CustomerID"</span>, <span class="st">"Revenue"</span>], ascending<span class="op">=</span>[<span class="va">True</span>, <span class="va">False</span>])</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>top_products <span class="op">=</span> prod_rev.groupby(<span class="st">"CustomerID"</span>).head(TOP_N)</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>customer_docs <span class="op">=</span> (</span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    top_products.groupby(<span class="st">"CustomerID"</span>)[<span class="st">"Description"</span>]</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    .<span class="bu">apply</span>(<span class="kw">lambda</span> d: <span class="st">", "</span>.join(d))</span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    .reset_index(name<span class="op">=</span><span class="st">"doc"</span>)</span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<p>数值特征把这位客户归入高频、高消费的层级。嵌入向量则把他放在其他派对用品买家的附近。构建客户文档就是对交易日志做一次分组加拼接，为每位客户保留销售额最高的 20 个商品：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># df: one row per purchased item</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>product_revenue <span class="op">=</span> (</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    df.groupby([<span class="st">"CustomerID"</span>, <span class="st">"Description"</span>], as_index<span class="op">=</span><span class="va">False</span>)[<span class="st">"Revenue"</span>].<span class="bu">sum</span>()</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    .sort_values(<span class="st">"Revenue"</span>, ascending<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>top_products <span class="op">=</span> product_revenue.groupby(<span class="st">"CustomerID"</span>).head(<span class="dv">20</span>)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co"># One comma-separated string of product names per customer</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>customer_docs <span class="op">=</span> top_products.groupby(<span class="st">"CustomerID"</span>)[<span class="st">"Description"</span>].agg(<span class="st">", "</span>.join)</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
 <p>保留每位客户的头部产品而不是完整历史，过滤掉像“Postage”这样出现在每个细分群体中的通用商品，并给任何一次高价购买的权重设上限。这些选择比选哪个嵌入模型更重要。</p>
 <p>BERTopic 用一次调用运行流水线的其余部分：本地句子嵌入模型把每个文档转换成向量，BERTopic 对向量做聚类并提取每个簇的区分性关键词。</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> bertopic <span class="im">import</span> BERTopic</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sentence_transformers <span class="im">import</span> SentenceTransformer</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>embedding_model <span class="op">=</span> SentenceTransformer(<span class="st">"all-MiniLM-L6-v2"</span>)   <span class="co"># local, lightweight</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>embeddings <span class="op">=</span> embedding_model.encode(customer_docs[<span class="st">"doc"</span>].tolist())</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>topic_model <span class="op">=</span> BERTopic(embedding_model<span class="op">=</span>embedding_model)</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>topics, probs <span class="op">=</span> topic_model.fit_transform(</span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    customer_docs[<span class="st">"doc"</span>].tolist(), embeddings<span class="op">=</span>embeddings</span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
-<div id="fig-umap-clusters" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="客户文档嵌入向量的 UMAP 投影，每个点是一位客户，颜色表示 BERTopic 发现的细分群体。">
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>docs <span class="op">=</span> customer_docs.tolist()</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>embedding_model <span class="op">=</span> SentenceTransformer(<span class="st">"all-MiniLM-L6-v2"</span>)   <span class="co"># runs locally</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>embeddings <span class="op">=</span> embedding_model.encode(docs)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>topic_model <span class="op">=</span> BERTopic(embedding_model<span class="op">=</span>embedding_model)</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>topics, probs <span class="op">=</span> topic_model.fit_transform(docs, embeddings<span class="op">=</span>embeddings)</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="fig-umap-clusters" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="客户文档嵌入向量的 UMAP 投影，每个点是一位客户，颜色表示 BERTopic 发现的细分群体。">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-umap-clusters-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part4/sec4.1/umap_clusters.png" class="fig-md img-fluid figure-img" alt="客户文档嵌入向量的 UMAP 投影，每个点是一位客户，颜色表示 BERTopic 发现的细分群体。">
+<img src="../images/part4/sec4.1/umap_clusters.png" class="fig-lg img-fluid figure-img" alt="客户文档嵌入向量的 UMAP 投影，每个点是一位客户，颜色表示 BERTopic 发现的细分群体。">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-umap-clusters-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 图&nbsp;4: 嵌入空间中的客户文档。
@@ -845,10 +842,10 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 </figure>
 </div>
 <p><a href="#fig-bertopic-barchart" class="quarto-xref">图&nbsp;<span>5</span></a> 展示了 BERTopic 找到的七个主题，关键词直接点出了各个小众群体：派对蜡烛和灯笼、巧克力圆点烘焙器皿、毛毡手工套件、航空风格的包。</p>
-<div id="fig-bertopic-barchart" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="来自产品描述嵌入向量的七个主题的头部区分性关键词，每个主题一张小型条形图。">
+<div id="fig-bertopic-barchart" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="来自产品描述嵌入向量的七个主题的头部区分性关键词，每个主题一张小型条形图。">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-bertopic-barchart-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part4/sec4.1/bertopic_barchart.png" class="fig-md img-fluid figure-img" alt="来自产品描述嵌入向量的七个主题的头部区分性关键词，每个主题一张小型条形图。">
+<img src="../images/part4/sec4.1/bertopic_barchart.png" class="fig-lg img-fluid figure-img" alt="来自产品描述嵌入向量的七个主题的头部区分性关键词，每个主题一张小型条形图。">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-bertopic-barchart-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 图&nbsp;5: 每个主题的头部区分性关键词。
@@ -923,8 +920,6 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 </figure>
 </div>
 <p>把每个细分群体的简报放在文件旁边，并给文件做版本管理：在营销活动之间悄悄变化的归属比没有归属更糟。细分群体描述的是客户之间的差异；它们并不能证明某条信息对其中某个群体有效。一旦选定了处理方式，就去测试它：<a href="../part3/sec3.2-ab-testing.html">A/B 测试设计</a>中的方法对细分群体营销活动同样适用，与任何其他营销活动无异。</p>
-<p><strong>配套 Notebook</strong>：<code>sec4.1_traditional_segmentation.ipynb</code> 在 Dunnhumby 数据上复现十分位、RFM、K-Means 和导出。<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_traditional_segmentation.ipynb">在 GitHub 上查看</a><br>
-<code>sec4.1_semantic_segmentation.ipynb</code> 在 UCI Online Retail II 上复现客户文档、BERTopic 拟合、稳定性检查和 LLM 命名。<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_semantic_segmentation.ipynb">在 GitHub 上查看</a></p>
 </section>
 <section id="key-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="key-takeaways">要点</h2>

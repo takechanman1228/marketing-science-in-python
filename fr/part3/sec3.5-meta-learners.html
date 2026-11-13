@@ -651,6 +651,8 @@ Cette page est une traduction par IA de la version anglaise de <em>Marketing Sci
 </div>
 <p>Un bon de réduction qui augmente les achats de 5 % en moyenne peut avoir des effets très différents selon les clients : certains peuvent réagir par une hausse de 20 %, tandis que d’autres ne présentent aucun effet, voire une baisse. Les méthodes des chapitres précédents estiment un seul nombre pour tout un groupe, l’effet moyen du traitement (ATE), c’est-à-dire l’impact moyen d’un traitement sur l’ensemble des personnes qui l’ont reçu. En marketing, cette moyenne peut être trompeuse. Si vous pouviez identifier les clients qui réagissent réellement, vous pourriez dépenser votre budget bien plus efficacement.</p>
 <p>Les méta-apprenants cherchent à estimer les effets de traitement pour chaque client. La suite de ce chapitre définit la quantité qu’ils estiment et compare les principales approches.</p>
+<p><strong>Notebook associé :</strong> <code>sec3.5_meta_learners.ipynb</code> compare les apprenants S, T, X et DR ainsi que CausalForestDML au véritable CATE connu dans l’expérience semi-synthétique MineThatData.<br>
+<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.5_meta_learners.ipynb">Voir sur GitHub</a></p>
 <section id="treatment-effects-ate-cate-ite" class="level2">
 <h2 class="anchored" data-anchor-id="treatment-effects-ate-cate-ite">Effets de traitement : ATE, CATE, ITE</h2>
 <p>Pour définir l’effet de traitement, nous nous appuyons sur le cadre des résultats potentiels. L’effet de traitement est la différence de résultats causée par un traitement : formellement, <span class="math inline">\(\tau = Y(1) - Y(0)\)</span>, où <span class="math inline">\(Y(1)\)</span> est le résultat sous traitement et <span class="math inline">\(Y(0)\)</span> le résultat en condition témoin. Par exemple, si le taux d’achat potentiel avec un bon de réduction est de 20 % et le taux sans ce bon de 10 %, l’effet de traitement est de 10 %.</p>
@@ -779,8 +781,6 @@ Figure&nbsp;5: Méthodes de méta-apprentissage, des plus simples aux plus compl
 <p>Pour voir comment ces méthodes se comportent, nous avons besoin d’un jeu de données permettant de vérifier leur travail. Dans les données réelles, nous n’observons jamais le véritable effet de traitement d’un client ; nous ne pouvons donc pas savoir si un méta-apprenant a retrouvé la bonne structure ou simplement produit un bruit plausible.</p>
 <p>Nous résolvons ce problème avec un exemple semi-synthétique construit à partir de l’expérience d’e-mailing MineThatData de Kevin Hillstrom, un jeu de données classique en marketing portant sur 64 000 clients répartis aléatoirement entre un e-mail proposant des articles pour hommes, un e-mail proposant des articles pour femmes et aucun e-mail. Nous conservons les caractéristiques réelles des clients (récence, historique d’achat, canal et les autres) ainsi que l’affectation aléatoire réelle pour la comparaison binaire entre e-mail pour hommes et absence d’e-mail. Seuls les résultats sont simulés : nous définissons une probabilité d’achat de base et un effet de traitement <span class="math inline">\(\tau(x)\)</span> plus élevé pour les acheteurs d’articles pour hommes, les clients récemment actifs et les acheteurs multicanaux. Comme nous avons nous-mêmes défini <span class="math inline">\(\tau(x)\)</span>, nous connaissons le véritable CATE de chaque client, et chaque apprenant peut être comparé à celui-ci.</p>
 <p>Ce dispositif est pédagogique : l’objectif est de vérifier si un méta-apprenant retrouve l’hétérogénéité que nous avons introduite, et non de mieux estimer l’effet moyen que ne le fait déjà l’expérience.</p>
-<p><strong>Notebook associé :</strong> <code>sec3.5_meta_learners.ipynb</code> compare les apprenants S, T, X et DR ainsi que CausalForestDML au véritable CATE connu dans l’expérience semi-synthétique MineThatData.<br>
-<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.5_meta_learners.ipynb">Voir sur GitHub</a></p>
 <p>Les cinq apprenants retrouvent l’effet moyen et, ce qui est plus utile, la structure au niveau des segments. Le nuage de points ci-dessous compare le CATE estimé à l’effet véritable pour un apprenant représentatif. Les estimations se concentrent autour de la droite à 45 degrés : les clients sont donc classés dans un ordre globalement correct, avec une dispersion verticale qui reflète le bruit des résultats binaires.</p>
 <div id="fig-true-vs-est" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Un nuage de points du CATE estimé en fonction de l’effet simulé véritable, avec des points concentrés autour de la droite à 45 degrés.">
 <figure class="quarto-float quarto-float-fig figure">
@@ -846,7 +846,7 @@ Table&nbsp;1: Restitution du véritable CATE par apprenant sur l’échantillon 
 </tr>
 <tr class="odd">
 <td style="text-align: left;">Apprenant DR</td>
-<td style="text-align: right;">0.58</td>
+<td style="text-align: right;">0.57</td>
 <td style="text-align: right;">0.049</td>
 <td style="text-align: right;">0.109</td>
 </tr>

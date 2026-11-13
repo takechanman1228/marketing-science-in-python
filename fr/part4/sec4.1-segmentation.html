@@ -622,6 +622,8 @@ Cette page est une traduction par IA de la version anglaise de <em>Marketing Sci
 </div>
 <p>Un projet de segmentation doit produire quelque chose que l’équipe peut mettre dans une campagne. Le livrable est un <code>segment_id</code> directement exploitable dans votre CRM et vos plateformes publicitaires, accompagné d’une fiche synthétique pour chaque segment : qui sont ces clients, pourquoi ils comptent et quelles actions votre équipe doit entreprendre.</p>
 <p>La segmentation n’est pas une méthode unique. Les déciles, la méthode RFM, K-Means et le regroupement fondé sur les plongements vectoriels répondent chacun à une question différente. La question découle de la décision que les segments doivent soutenir : qui reçoit le budget de fidélisation, quel message va à qui, quelle histoire de produit raconter.</p>
+<p><strong>Notebooks associés :</strong> <code>sec4.1_traditional_segmentation.ipynb</code> reproduit les déciles, RFM, K-Means et l’export sur les données Dunnhumby. <a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_traditional_segmentation.ipynb">Voir sur GitHub</a><br>
+<code>sec4.1_semantic_segmentation.ipynb</code> reproduit les documents clients, l’ajustement BERTopic, la vérification de stabilité et l’attribution de noms par LLM sur UCI Online Retail II. <a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_semantic_segmentation.ipynb">Voir sur GitHub</a></p>
 <section id="sec-method-cheat-sheet" class="level2">
 <h2 class="anchored" data-anchor-id="sec-method-cheat-sheet">Choisir la segmentation selon la question</h2>
 <p>Faites correspondre la décision à une ligne.</p>
@@ -673,10 +675,10 @@ Table&nbsp;1: Les méthodes de segmentation selon la question à laquelle chacun
 <section id="sec-value-tiers" class="level2">
 <h2 class="anchored" data-anchor-id="sec-value-tiers">Niveaux de valeur : déciles et RFM</h2>
 <p>La segmentation la plus rapide est un classement. L’analyse par déciles répartit les clients en dix groupes de même taille selon le chiffre d’affaires, et les données d’achats alimentaires montrent la concentration habituelle : les deux déciles supérieurs détiennent 53% du chiffre d’affaires.</p>
-<div id="fig-decile-distribution" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="La valeur client se concentre dans les déciles supérieurs, les 20 pour cent de clients en tête contribuant à plus de la moitié du chiffre d’affaires.">
+<div id="fig-decile-distribution" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="La valeur client se concentre dans les déciles supérieurs, les 20 pour cent de clients en tête contribuant à plus de la moitié du chiffre d’affaires.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-decile-distribution-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part4/sec4.1/decile_distribution.png" class="fig-md img-fluid figure-img" alt="La valeur client se concentre dans les déciles supérieurs, les 20 pour cent de clients en tête contribuant à plus de la moitié du chiffre d’affaires.">
+<img src="../images/part4/sec4.1/decile_distribution.png" class="fig-lg img-fluid figure-img" alt="La valeur client se concentre dans les déciles supérieurs, les 20 pour cent de clients en tête contribuant à plus de la moitié du chiffre d’affaires.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-decile-distribution-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Figure&nbsp;1: Répartition typique de la valeur client par décile.
@@ -721,7 +723,7 @@ Table&nbsp;2: Variables RFM et leur interprétation.
 </figure>
 </div>
 <p>Attribuez à chaque variable un score par quintile et combinez-les : un gros acheteur qui a acheté hier se distingue alors d’un autre resté silencieux pendant un an. Le score combiné compte jusqu’à 125 cases ; regroupez donc les cases qui recevraient le même traitement. PyMC-Marketing, la bibliothèque utilisée dans le <a href="sec4.2-clv-modeling.html">chapitre sur la CLV</a>, effectue ce scoring en un seul appel avec <code>rfm_segments()</code>.</p>
-<p>Les déciles et la méthode RFM mesurent combien et à quelle date récente les clients achètent, pas comment. Deux clients ayant le même score RFM peuvent se comporter très différemment : l’un achète des articles au prix fort dans de nombreuses catégories, l’autre uniquement des articles remisés dans une seule catégorie.</p>
+<p>Les déciles et la méthode RFM mesurent les montants dépensés et la récence des achats, pas les habitudes d’achat. Deux clients ayant le même score RFM peuvent se comporter très différemment : l’un achète des articles au prix fort dans de nombreuses catégories, l’autre uniquement des articles remisés dans une seule catégorie.</p>
 </section>
 <section id="sec-kmeans" class="level2">
 <h2 class="anchored" data-anchor-id="sec-kmeans">Segments comportementaux avec K-Means</h2>
@@ -739,10 +741,10 @@ Figure&nbsp;2: Graphique du coude pour choisir K.
 </figure>
 </div>
 <p>Sur les données d’achats alimentaires, avec K=5 les segments diffèrent par leurs habitudes d’achat et pas seulement par leur niveau de dépenses. <a href="#fig-kmeans-heatmap" class="quarto-xref">Figure&nbsp;<span>3</span></a> est le profil qui sous-tend cet ajustement : une ligne par segment, une colonne par variable comportementale, colorée selon la moyenne du segment par rapport à la population.</p>
-<div id="fig-kmeans-heatmap" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Carte thermique de cinq segments K-Means sur neuf variables comportementales, colorée selon le score z par rapport à la moyenne de la population, avec les moyennes des segments imprimées dans chaque cellule.">
+<div id="fig-kmeans-heatmap" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Carte thermique de cinq segments K-Means sur neuf variables comportementales, colorée selon le score z par rapport à la moyenne de la population, avec les moyennes des segments imprimées dans chaque cellule.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-kmeans-heatmap-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part4/sec4.1/segment_heatmap.png" class="fig-md img-fluid figure-img" alt="Carte thermique de cinq segments K-Means sur neuf variables comportementales, colorée selon le score z par rapport à la moyenne de la population, avec les moyennes des segments imprimées dans chaque cellule.">
+<img src="../images/part4/sec4.1/segment_heatmap.png" class="fig-lg img-fluid figure-img" alt="Carte thermique de cinq segments K-Means sur neuf variables comportementales, colorée selon le score z par rapport à la moyenne de la population, avec les moyennes des segments imprimées dans chaque cellule.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-kmeans-heatmap-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Figure&nbsp;3: Profils des segments K-Means sur les données d’achats alimentaires.
@@ -808,36 +810,31 @@ Table&nbsp;3: Les segments à K=5 sur les données d’achats alimentaires, issu
 <p>Les variables numériques décrivent comment les clients achètent, pas ce qu’ils achètent. Lorsque la décision porte sur le marketing par catégorie, les ventes croisées ou la création publicitaire, le signal se trouve dans les produits eux-mêmes ; il vous faut donc le texte des produits. Cette section est donc une voie distincte plutôt que l’étape qui suit K-Means, et elle s’exécute sur d’autres données. Le jeu de données UCI Online Retail II, environ un million de transactions d’un détaillant britannique d’articles cadeaux, contient les descriptions de produits en texte libre qu’un modèle de plongement vectoriel peut lire.</p>
 <p>Traitez l’historique d’achats de chaque client comme du texte : concaténez les descriptions des produits achetés en une seule chaîne de caractères (le document client), puis utilisez un modèle de plongement vectoriel pour convertir cette chaîne en un vecteur dense. Dans cet espace vectoriel, les bougies d’anniversaire et les assiettes de fête sont séparées par une courte distance, tandis qu’une théière ancienne est éloignée des deux ; le regroupement des vecteurs réunit donc les clients selon ce qu’ils achètent plutôt que selon combien ils dépensent. Par exemple :</p>
 <p><code>red retrospot cake stand, party bunting, paper cups, birthday candles, cake cases</code></p>
-<p>Les variables numériques placent ce client dans un niveau d’acheteur fréquent à fortes dépenses. Le plongement vectoriel le place près des autres acheteurs d’articles de fête. Construire le document revient à regrouper et concaténer les éléments du journal des transactions :</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Keep each customer's top-N products by revenue, then join the descriptions</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>prod_rev <span class="op">=</span> (</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    df.groupby([<span class="st">"CustomerID"</span>, <span class="st">"Description"</span>])[<span class="st">"Revenue"</span>].<span class="bu">sum</span>()</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    .reset_index()</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    .sort_values([<span class="st">"CustomerID"</span>, <span class="st">"Revenue"</span>], ascending<span class="op">=</span>[<span class="va">True</span>, <span class="va">False</span>])</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>top_products <span class="op">=</span> prod_rev.groupby(<span class="st">"CustomerID"</span>).head(TOP_N)</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>customer_docs <span class="op">=</span> (</span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    top_products.groupby(<span class="st">"CustomerID"</span>)[<span class="st">"Description"</span>]</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    .<span class="bu">apply</span>(<span class="kw">lambda</span> d: <span class="st">", "</span>.join(d))</span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    .reset_index(name<span class="op">=</span><span class="st">"doc"</span>)</span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copier vers le presse-papier" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Les variables numériques placent ce client dans un niveau d’acheteur fréquent à fortes dépenses. Le plongement vectoriel le place près des autres acheteurs d’articles de fête. Construire le document revient à regrouper et concaténer les éléments du journal des transactions, en gardant pour chaque client les 20 produits qui génèrent le plus de revenu :</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># df: one row per purchased item</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>product_revenue <span class="op">=</span> (</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    df.groupby([<span class="st">"CustomerID"</span>, <span class="st">"Description"</span>], as_index<span class="op">=</span><span class="va">False</span>)[<span class="st">"Revenue"</span>].<span class="bu">sum</span>()</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    .sort_values(<span class="st">"Revenue"</span>, ascending<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>top_products <span class="op">=</span> product_revenue.groupby(<span class="st">"CustomerID"</span>).head(<span class="dv">20</span>)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co"># One comma-separated string of product names per customer</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>customer_docs <span class="op">=</span> top_products.groupby(<span class="st">"CustomerID"</span>)[<span class="st">"Description"</span>].agg(<span class="st">", "</span>.join)</span></code></pre></div><button title="Copier vers le presse-papier" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Conservez les principaux produits de chaque client plutôt que l’historique complet, filtrez les articles génériques comme « Postage » qui apparaissent dans tous les segments, et plafonnez le poids de tout achat coûteux isolé. Ces choix comptent davantage que le choix du modèle de plongement vectoriel.</p>
 <p>BERTopic exécute le reste de la chaîne de traitement en un seul appel : un modèle local de plongement vectoriel de phrases convertit chaque document en vecteur, puis BERTopic regroupe les vecteurs et extrait les mots-clés distinctifs de chaque groupe.</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> bertopic <span class="im">import</span> BERTopic</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sentence_transformers <span class="im">import</span> SentenceTransformer</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>embedding_model <span class="op">=</span> SentenceTransformer(<span class="st">"all-MiniLM-L6-v2"</span>)   <span class="co"># local, lightweight</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>embeddings <span class="op">=</span> embedding_model.encode(customer_docs[<span class="st">"doc"</span>].tolist())</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>topic_model <span class="op">=</span> BERTopic(embedding_model<span class="op">=</span>embedding_model)</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>topics, probs <span class="op">=</span> topic_model.fit_transform(</span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    customer_docs[<span class="st">"doc"</span>].tolist(), embeddings<span class="op">=</span>embeddings</span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copier vers le presse-papier" class="code-copy-button"><i class="bi"></i></button></div>
-<div id="fig-umap-clusters" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Projection UMAP des plongements vectoriels des documents clients : chaque point représente un client, coloré selon le segment découvert par BERTopic.">
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>docs <span class="op">=</span> customer_docs.tolist()</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>embedding_model <span class="op">=</span> SentenceTransformer(<span class="st">"all-MiniLM-L6-v2"</span>)   <span class="co"># runs locally</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>embeddings <span class="op">=</span> embedding_model.encode(docs)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>topic_model <span class="op">=</span> BERTopic(embedding_model<span class="op">=</span>embedding_model)</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>topics, probs <span class="op">=</span> topic_model.fit_transform(docs, embeddings<span class="op">=</span>embeddings)</span></code></pre></div><button title="Copier vers le presse-papier" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="fig-umap-clusters" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Projection UMAP des plongements vectoriels des documents clients : chaque point représente un client, coloré selon le segment découvert par BERTopic.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-umap-clusters-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part4/sec4.1/umap_clusters.png" class="fig-md img-fluid figure-img" alt="Projection UMAP des plongements vectoriels des documents clients : chaque point représente un client, coloré selon le segment découvert par BERTopic.">
+<img src="../images/part4/sec4.1/umap_clusters.png" class="fig-lg img-fluid figure-img" alt="Projection UMAP des plongements vectoriels des documents clients : chaque point représente un client, coloré selon le segment découvert par BERTopic.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-umap-clusters-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Figure&nbsp;4: Documents clients dans l’espace des plongements vectoriels.
@@ -845,10 +842,10 @@ Figure&nbsp;4: Documents clients dans l’espace des plongements vectoriels.
 </figure>
 </div>
 <p><a href="#fig-bertopic-barchart" class="quarto-xref">Figure&nbsp;<span>5</span></a> montre les sept thèmes que BERTopic a trouvés, et les mots-clés nomment directement les niches : bougies et lanternes de fête, articles de pâtisserie à pois chocolat, kits de feutrine, sacs style compagnie aérienne.</p>
-<div id="fig-bertopic-barchart" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Principaux mots-clés distinctifs de sept thèmes issus des plongements vectoriels des descriptions de produits, un petit diagramme à barres par thème.">
+<div id="fig-bertopic-barchart" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Principaux mots-clés distinctifs de sept thèmes issus des plongements vectoriels des descriptions de produits, un petit diagramme à barres par thème.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-bertopic-barchart-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part4/sec4.1/bertopic_barchart.png" class="fig-md img-fluid figure-img" alt="Principaux mots-clés distinctifs de sept thèmes issus des plongements vectoriels des descriptions de produits, un petit diagramme à barres par thème.">
+<img src="../images/part4/sec4.1/bertopic_barchart.png" class="fig-lg img-fluid figure-img" alt="Principaux mots-clés distinctifs de sept thèmes issus des plongements vectoriels des descriptions de produits, un petit diagramme à barres par thème.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-bertopic-barchart-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Figure&nbsp;5: Principaux mots-clés distinctifs par thème.
@@ -923,8 +920,6 @@ Table&nbsp;4: Les premières lignes de l’export CRM, avec les noms de segments
 </figure>
 </div>
 <p>Conservez la fiche de chaque segment à côté du fichier et versionnez le fichier : une appartenance qui change silencieusement d’une campagne à l’autre est pire que l’absence de segmentation. Les segments décrivent des différences entre clients ; ils ne montrent pas qu’un message fonctionne pour l’un d’eux. Une fois le traitement choisi, testez-le : les méthodes de la <a href="../part3/sec3.2-ab-testing.html">conception des tests A/B</a> s’appliquent aux campagnes par segment autant qu’à toute autre.</p>
-<p><strong>Notebooks associés :</strong> <code>sec4.1_traditional_segmentation.ipynb</code> reproduit les déciles, RFM, K-Means et l’export sur les données Dunnhumby. <a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_traditional_segmentation.ipynb">Voir sur GitHub</a><br>
-<code>sec4.1_semantic_segmentation.ipynb</code> reproduit les documents clients, l’ajustement BERTopic, la vérification de stabilité et l’attribution de noms par LLM sur UCI Online Retail II. <a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.1_semantic_segmentation.ipynb">Voir sur GitHub</a></p>
 </section>
 <section id="key-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="key-takeaways">Points clés à retenir</h2>

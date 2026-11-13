@@ -637,6 +637,7 @@ window.Quarto = {
   <li><a href="#bgnbd-model" id="toc-bgnbd-model" class="nav-link" data-scroll-target="#bgnbd-model">BG/NBD 模型</a></li>
   <li><a href="#gamma-gamma-model" id="toc-gamma-gamma-model" class="nav-link" data-scroll-target="#gamma-gamma-model">Gamma-Gamma 模型</a></li>
   </ul></li>
+  <li><a href="#sec-clv-routing" id="toc-sec-clv-routing" class="nav-link" data-scroll-target="#sec-clv-routing">何时 BTYD 不是合适的工具</a></li>
   <li><a href="#sec-implementation" id="toc-sec-implementation" class="nav-link" data-scroll-target="#sec-implementation">使用 PyMC-Marketing 实现</a>
   <ul class="collapse">
   <li><a href="#data-and-rfm-t-summary" id="toc-data-and-rfm-t-summary" class="nav-link" data-scroll-target="#data-and-rfm-t-summary">数据与 RFM-T 汇总</a></li>
@@ -645,7 +646,13 @@ window.Quarto = {
   <li><a href="#revenue-clv-profit-clv" id="toc-revenue-clv-profit-clv" class="nav-link" data-scroll-target="#revenue-clv-profit-clv">营收 CLV → 利润 CLV</a></li>
   <li><a href="#combining-segments-and-clv" id="toc-combining-segments-and-clv" class="nav-link" data-scroll-target="#combining-segments-and-clv">结合细分群体与 CLV</a></li>
   </ul></li>
-  <li><a href="#sec-using-clv" id="toc-sec-using-clv" class="nav-link" data-scroll-target="#sec-using-clv">让 CLV 发挥作用</a></li>
+  <li><a href="#sec-using-clv" id="toc-sec-using-clv" class="nav-link" data-scroll-target="#sec-using-clv">让 CLV 发挥作用</a>
+  <ul class="collapse">
+  <li><a href="#cpa-ceilings-for-ad-bidding" id="toc-cpa-ceilings-for-ad-bidding" class="nav-link" data-scroll-target="#cpa-ceilings-for-ad-bidding">用于广告出价的 CPA 上限</a></li>
+  <li><a href="#churn-alerts-for-crm" id="toc-churn-alerts-for-crm" class="nav-link" data-scroll-target="#churn-alerts-for-crm">用于 CRM 的流失预警</a></li>
+  <li><a href="#cohort-forecasts-for-finance" id="toc-cohort-forecasts-for-finance" class="nav-link" data-scroll-target="#cohort-forecasts-for-finance">用于财务部门的群组预测</a></li>
+  <li><a href="#monitoring" id="toc-monitoring" class="nav-link" data-scroll-target="#monitoring">监控</a></li>
+  </ul></li>
   <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways">要点</a></li>
   </ul>
 <div class="quarto-code-links"><h2>代码链接</h2><ul><li><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.2_clv_pymc_marketing.ipynb"><i class="bi bi-github"></i>sec4.2_clv_pymc_marketing.ipynb</a></li></ul></div></nav>
@@ -677,8 +684,10 @@ window.Quarto = {
 <p><strong>关于中文版</strong><br>
 本页是英文版 <em>Marketing Science in Python</em> 的AI翻译。英文版为正式版本，如有出入，以英文版为准。代码、Notebook 和图片中的文字保持英文。 <a href="../../part4/sec4.2-clv-modeling.html" class="translation-source-link">阅读英文版</a></p>
 </div>
-<p>大多数营销团队关注的是单次获客成本（CPA），它常与 CAC（客户获取成本）混用：CPA 越低，营销活动越好。客户终身价值（CLV），在分析和 SaaS 语境中常称为 LTV，重新框定了这个问题。它估计每位客户在长期内值多少钱，而这个估计值就设定了该细分群体的 CPA 上限。</p>
+<p>大多数营销团队关注的是单次获客成本（CPA），它常与 CAC（客户获取成本）混用：CPA 越低，营销活动越好。客户终身价值（CLV）在分析和 SaaS 语境中常称为 LTV。它换了一个角度来看这个问题：估计每位客户长期能带来多少价值，再据此设定该细分群体的 CPA 上限。</p>
 <p>本章展示如何使用概率型 BTYD 模型（在 PyMC-Marketing 中用 BG/NBD + Gamma-Gamma）在个体层面预测 CLV，以及如何把这些预测转化为预算决策。</p>
+<p><strong>配套 Notebook</strong>：<code>sec4.2_clv_pymc_marketing.ipynb</code> 在 Dunnhumby 数据集上拟合 BG/NBD 和 Gamma-Gamma 模型，估计 CLV，并分析人口统计细分群体。<br>
+<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.2_clv_pymc_marketing.ipynb">在 GitHub 上查看</a></p>
 <section id="why-clv-changes-the-decision" class="level2">
 <h2 class="anchored" data-anchor-id="why-clv-changes-the-decision">CLV 为何改变决策</h2>
 <p>设想一个通过广告和优惠券获客的时尚电商品牌。假设漏斗中有两个细分群体占主导：大学生和职场人士。首次购买的情况如下：</p>
@@ -718,19 +727,7 @@ window.Quarto = {
 </figcaption>
 </figure>
 </div>
-<div class="callout callout-style-default callout-note callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">注记</span>贯穿客户生命周期的 CLV
-</div>
-</div>
-<div class="callout-body-container callout-body">
 <p>CLV 在每个阶段都有用：在获客阶段，对高价值细分群体投入更多；在增长阶段，优先为高价值客户提供服务和专属优惠；在留存阶段，把挽留客户的营销活动集中在算得过账的地方。</p>
-</div>
-</div>
 <p>CLV 模型的三个目标由此直接得出：（1）在个体层面预测未来价值，（2）识别高 CLV 客户的不同之处，（3）把两者都输入到营销预算决策中。</p>
 </section>
 <section id="sec-limitations" class="level2">
@@ -835,7 +832,7 @@ window.Quarto = {
 </div>
 <section id="bgnbd-model" class="level3">
 <h3 class="anchored" data-anchor-id="bgnbd-model">BG/NBD 模型</h3>
-<p>BG/NBD 模型假设客户生命周期中存在两个潜在过程：</p>
+<p>BG/NBD 模型 <span class="citation" data-cites="fader2005counting">(<a href="../appendix/further-reading.html#ref-fader2005counting" role="doc-biblioref">Fader 等 2005年</a>)</span> 假设客户生命周期中存在两个潜在过程：</p>
 <ul>
 <li>购买过程。客户活跃期间，购买遵循速率为 <span class="math inline">\(\lambda\)</span> 的泊松过程。</li>
 <li>退出过程。每次购买之后，客户有概率 <span class="math inline">\(p\)</span> 永久转为不活跃。</li>
@@ -862,50 +859,55 @@ window.Quarto = {
 </figcaption>
 </figure>
 </div>
-<div class="callout callout-style-default callout-tip callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">提示</span>延伸阅读（BG/NBD）
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>关于包括图模型和似然函数在内的完整推导，参见 <span class="citation" data-cites="fader2005counting">Fader 等 (<a href="../appendix/further-reading.html#ref-fader2005counting" role="doc-biblioref">2005年</a>)</span>。</p>
-</div>
-</div>
 </section>
 <section id="gamma-gamma-model" class="level3">
 <h3 class="anchored" data-anchor-id="gamma-gamma-model">Gamma-Gamma 模型</h3>
-<p>Gamma-Gamma 模型估计平均订单金额。它使用两层贝叶斯层次结构：每位客户一个 Gamma 分布（其自身的消费模式），再在整个客户群上套一个 Gamma 分布（客户之间的差异）。</p>
-<div class="callout callout-style-default callout-tip callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">提示</span>延伸阅读（Gamma-Gamma）
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>完整推导参见 <span class="citation" data-cites="fader2013gammagamma">Fader 和 Hardie (<a href="../appendix/further-reading.html#ref-fader2013gammagamma" role="doc-biblioref">2013年</a>)</span>。</p>
-</div>
-</div>
-<div class="callout callout-style-default callout-tip callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">提示</span>何时 BTYD 不是合适的工具
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>BTYD 假设的是非契约型场景：流失从未被观测到，因此模型从购买间隔中推断它。在 SaaS 和订阅这类契约型场景中，流失是一个明确的取消事件，偏移 Beta-几何（sBG）模型直接使用这一信号；PyMC-Marketing 以 <code>ShiftedBetaGeoModel</code> 的形式提供了它（参见 <a href="https://www.pymc-marketing.io/en/latest/notebooks/clv/sbg.html">sBG notebook</a>）。若要用随时间变化的协变量解释流失驱动因素，请使用生存分析（Cox 比例风险模型）。最后，如果你拥有丰富的行为特征和生产级 ML 流水线，在固定预测期目标上做 ML 回归（例如 LightGBM）在准确性上可能胜过 BTYD；在切换之前，权衡它所需的数据量、重新训练与部署的工作量、特征流水线的维护、可解释性以及不确定性输出。一种实用的混合方案是把 BTYD 的输出（P(alive)、预期购买次数）作为特征喂给 ML 模型；<a href="https://github.com/takechanman1228/marketing-science-in-python/tree/main/notebooks/part4-customer-analytics/lightgbm-companion/"><code>lightgbm-companion/</code></a> 下的配套脚本展示了一个端到端的 LightGBM 实现。</p>
-</div>
-</div>
+<p>Gamma-Gamma 模型 <span class="citation" data-cites="fader2013gammagamma">(<a href="../appendix/further-reading.html#ref-fader2013gammagamma" role="doc-biblioref">Fader 和 Hardie 2013年</a>)</span> 估计平均订单金额。它使用两层贝叶斯层次结构：每位客户一个 Gamma 分布（其自身的消费模式），再在整个客户群上套一个 Gamma 分布（客户之间的差异）。</p>
 </section>
+</section>
+<section id="sec-clv-routing" class="level2">
+<h2 class="anchored" data-anchor-id="sec-clv-routing">何时 BTYD 不是合适的工具</h2>
+<p>BTYD 假设的是非契约型场景：流失从未被观测到，因此模型从购买间隔中推断它。<a href="#tbl-clv-routing" class="quarto-xref">表&nbsp;<span>2</span></a> 列出了其他模型更适合的场景。</p>
+<div id="tbl-clv-routing" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-clv-routing-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+表&nbsp;2: 不同场景下的客户终身价值模型。
+</figcaption>
+<div aria-describedby="tbl-clv-routing-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">场景</th>
+<th style="text-align: left;">流失</th>
+<th style="text-align: left;">模型</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">零售与电商（非契约型）</td>
+<td style="text-align: left;">从购买间隔推断</td>
+<td style="text-align: left;">BG/NBD + Gamma-Gamma</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SaaS 与订阅（契约型）</td>
+<td style="text-align: left;">明确的取消事件</td>
+<td style="text-align: left;">偏移 Beta-几何（sBG）</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">用随时间变化的协变量解释流失驱动因素</td>
+<td style="text-align: left;">可观测，或按规则定义</td>
+<td style="text-align: left;">生存分析（Cox 比例风险模型）</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">丰富的行为特征和生产级 ML 流水线</td>
+<td style="text-align: left;">两者均可</td>
+<td style="text-align: left;">针对固定预测期目标的 ML 回归（例如 LightGBM）</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
 </section>
 <section id="sec-implementation" class="level2">
 <h2 class="anchored" data-anchor-id="sec-implementation">使用 PyMC-Marketing 实现</h2>
@@ -927,7 +929,7 @@ window.Quarto = {
 <div id="tbl-rfmt" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-rfmt-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-表&nbsp;2: BTYD 模型使用的 RFM-T 指标。
+表&nbsp;3: BTYD 模型使用的 RFM-T 指标。
 </figcaption>
 <div aria-describedby="tbl-rfmt-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <table class="caption-top table">
@@ -972,44 +974,35 @@ window.Quarto = {
 <p>在<a href="sec4.1-segmentation.html">第 4.1 节</a>中，最近购买时间指距上次购买的天数。在 BTYD 惯例下（PyMC-Marketing 的 <code>rfm_summary</code> 遵循这一惯例），它是客户首次购买到最近一次购买之间的时间跨度，因此这个值<em>越高</em>，意味着客户越近期仍在活跃。</p>
 </div>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> datetime <span class="im">import</span> datetime, timedelta</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pymc_marketing <span class="im">import</span> clv</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Load Dunnhumby transactions and convert DAY counter to datetime</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co"># (see companion notebook for the full pipeline)</span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>BASE_DATE <span class="op">=</span> datetime(<span class="dv">2012</span>, <span class="dv">1</span>, <span class="dv">1</span>)</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>data[<span class="st">"date"</span>] <span class="op">=</span> data[<span class="st">"DAY"</span>].<span class="bu">apply</span>(<span class="kw">lambda</span> d: BASE_DATE <span class="op">+</span> timedelta(days<span class="op">=</span><span class="bu">int</span>(d) <span class="op">-</span> <span class="dv">1</span>))</span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>data_summary <span class="op">=</span> clv.utils.rfm_summary(</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    data, <span class="st">"CustomerID"</span>, <span class="st">"date"</span>, <span class="st">"TotalSales"</span>, time_unit<span class="op">=</span><span class="st">"D"</span></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>data_summary.index <span class="op">=</span> data_summary[<span class="st">"customer_id"</span>]</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>配套 Notebook</strong>：<code>sec4.2_clv_pymc_marketing.ipynb</code> 在 Dunnhumby 数据集上拟合 BG/NBD 和 Gamma-Gamma 模型，估计 CLV，并分析人口统计细分群体。<br>
-<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.2_clv_pymc_marketing.ipynb">在 GitHub 上查看</a></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pymc_marketing <span class="im">import</span> clv</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>data_summary <span class="op">=</span> clv.utils.rfm_summary(</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    data,                              <span class="co"># one row per purchase</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    customer_id_col<span class="op">=</span><span class="st">"CustomerID"</span>,</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    datetime_col<span class="op">=</span><span class="st">"date"</span>,</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    monetary_value_col<span class="op">=</span><span class="st">"TotalSales"</span>,</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    time_unit<span class="op">=</span><span class="st">"D"</span>,</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="fitting-and-estimating-clv" class="level3">
 <h3 class="anchored" data-anchor-id="fitting-and-estimating-clv">拟合与估计 CLV</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># --- BG/NBD: purchase frequency + P(alive) ---</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># BG/NBD: purchase frequency and P(alive)</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>bgm <span class="op">=</span> clv.BetaGeoModel()</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>bgm.fit(data<span class="op">=</span>data_summary)</span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co"># --- Gamma-Gamma: average order value ---</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>nonzero <span class="op">=</span> data_summary.query(<span class="st">"frequency &gt; 0 and monetary_value &gt; 0"</span>)</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>gg_data <span class="op">=</span> nonzero[[<span class="st">"customer_id"</span>, <span class="st">"frequency"</span>, <span class="st">"monetary_value"</span>]]</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>gg <span class="op">=</span> clv.GammaGammaModel()</span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>gg.fit(data<span class="op">=</span>gg_data)</span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co"># --- Combined CLV estimate (DCF with 1% monthly discount) ---</span></span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>clv_estimate <span class="op">=</span> gg.expected_customer_lifetime_value(</span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    transaction_model<span class="op">=</span>bgm,</span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    data<span class="op">=</span>data_summary[[</span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>        <span class="st">"customer_id"</span>, <span class="st">"frequency"</span>, <span class="st">"recency"</span>, <span class="st">"T"</span>, <span class="st">"monetary_value"</span></span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    ]],</span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    future_t<span class="op">=</span><span class="dv">120</span>,       <span class="co"># 120 months = 10 years</span></span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    discount_rate<span class="op">=</span><span class="fl">0.01</span>,</span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    time_unit<span class="op">=</span><span class="st">"D"</span>,</span>
-<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Gamma-Gamma: average order value, fit on repeat customers only</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>repeat <span class="op">=</span> data_summary.query(<span class="st">"frequency &gt; 0 and monetary_value &gt; 0"</span>)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>gg <span class="op">=</span> clv.GammaGammaModel()</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>gg.fit(data<span class="op">=</span>repeat)</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co"># CLV: expected purchases times expected spend, discounted at 1% a month</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>clv_estimate <span class="op">=</span> gg.expected_customer_lifetime_value(</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    transaction_model<span class="op">=</span>bgm,</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    data<span class="op">=</span>data_summary,</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    future_t<span class="op">=</span><span class="dv">120</span>,       <span class="co"># 120 months = 10 years</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    discount_rate<span class="op">=</span><span class="fl">0.01</span>,</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    time_unit<span class="op">=</span><span class="st">"D"</span>,</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
 <p>输出不仅包含点估计，还包含 HDI（最高密度区间）的上下界。在这个 API 中，<code>future_t</code> 以月为单位，而 <code>time_unit="D"</code> 告诉模型 RFM-T 输入是以天为单位的。这些区间只量化了购买时间方面的不确定性：消费的后验分布在折现之前被汇总为其均值，因此请把它们视为真实不确定性的下界。</p>
 <p>请明确选择预测期（horizon）；<code>future_t=120</code> 不是一个可以照单全收的默认值。这个数据集覆盖大约 23 个月，因此 120 个月的预测大约延伸到观测窗口的五倍之外。估计值保持有界，因为 BG/NBD 把客户退出内置进了预测，但这个退出率本身又是从这 23 个月中估计出来的。配套 Notebook 对同一个后验分别按 3 年、5 年和 10 年重新折现。在这个数据集上，客户排名在三者之间几乎不动，因此基于排名的定向对这些测试过的预测期不敏感；10 年估计值的中位数约为 3 年估计值的 2.23 倍，因此任何把 CLV 转化为美元上限的做法都必须说明所用的预测期。</p>
 </section>
@@ -1038,54 +1031,85 @@ window.Quarto = {
 <section id="combining-segments-and-clv" class="level3">
 <h3 class="anchored" data-anchor-id="combining-segments-and-clv">结合细分群体与 CLV</h3>
 <p>把<a href="sec4.1-segmentation.html">第 4.1 节</a>的 <code>segment_id</code> 与每位客户的 CLV 估计值关联起来。这样你就得到了本部分一直在构建的运营表：这是什么样的客户、他们值多少钱，以及企业应该为他们做什么。</p>
+<p><a href="#tbl-segment-clv" class="quarto-xref">表&nbsp;<span>4</span></a> 展示了食品零售客户家庭的这张表：按 Notebook 假设的 28% 毛利率计算的十年利润 CLV。</p>
+<div id="tbl-segment-clv" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-segment-clv-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+表&nbsp;4: 行为细分群体 × 预测价值，来自配套 Notebook。
+</figcaption>
+<div aria-describedby="tbl-segment-clv-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">细分群体</th>
+<th style="text-align: right;">客户数</th>
+<th style="text-align: right;">平均利润 CLV</th>
+<th style="text-align: right;">保守利润 CLV</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">重度忠诚客户</td>
+<td style="text-align: right;">610</td>
+<td style="text-align: right;">$5,659</td>
+<td style="text-align: right;">$5,368</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">高频小篮客户</td>
+<td style="text-align: right;">567</td>
+<td style="text-align: right;">$2,553</td>
+<td style="text-align: right;">$2,454</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">偶发大篮客户</td>
+<td style="text-align: right;">539</td>
+<td style="text-align: right;">$1,537</td>
+<td style="text-align: right;">$1,515</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">折扣倾向客户</td>
+<td style="text-align: right;">478</td>
+<td style="text-align: right;">$934</td>
+<td style="text-align: right;">$924</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">休眠客户</td>
+<td style="text-align: right;">287</td>
+<td style="text-align: right;">$271</td>
+<td style="text-align: right;">$267</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<p>重度忠诚客户的价值约为休眠客户家庭的二十倍，因此，统一的每客支出上限对下方各行来说过高，对最上方一行来说又过低。在这一上限之内实际花多少，取决于营销活动的增量效果。</p>
 <p>人口统计特征仍然有助于描述或触达一个细分群体，但主要的决策层是行为细分群体 × 预测价值。配套 Notebook 把 CLV 估计值与 Dunnhumby 的 <code>hh_demographic.csv</code> 关联起来，让你可以沿着收入等人口统计维度刻画每个细分群体：这对挑选创意和渠道有用，对设定预算则用处不大。</p>
-<div class="callout callout-style-default callout-tip callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">提示</span>细分群体专属的消费模型
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>PyMC Labs 报告的一种生产实践：当各细分群体的消费分布差异显著时，测试细分群体专属的 Gamma-Gamma 模型，同时让交易模型在全体客户上保持合并。只在校准期上构建细分群体，并在样本外与合并模型比较；否则，由消费金额派生的细分群体会与它们所输入的消费模型共享信息。</p>
-</div>
-</div>
 </section>
 </section>
 <section id="sec-using-clv" class="level2">
 <h2 class="anchored" data-anchor-id="sec-using-clv">让 CLV 发挥作用</h2>
 <p>一旦你有了每位客户的 <code>clv_estimate</code>，三个应用就不再需要进一步建模，不过每个应用需要的都不只是这个得分。CPA 上限需要上文的利润率换算和一个明确说明的预测期；流失预警需要按客户 ID 与 CRM 关联以及一个阈值；群组预测需要每位客户的获客日期和财务部门的规划期。这些模式适用于任何 CLV 得分。</p>
-<ol type="1">
-<li>用于广告出价的 CPA 上限</li>
-</ol>
+<section id="cpa-ceilings-for-ad-bidding" class="level3">
+<h3 class="anchored" data-anchor-id="cpa-ceilings-for-ad-bidding">用于广告出价的 CPA 上限</h3>
 <p>把最大 CPA 设为预测利润 CLV 的一个比例：</p>
 <p><span class="math display">\[
 \text{Allowable CPA} = \text{CLV}_{\text{profit}} \times \text{Target acquisition ratio}
 \]</span></p>
 <p>如果一个细分群体的预测利润 CLV 为 $200，而你的目标获客比率是 33%，那么最大 CPA 就是 $66。在不确定性下出价时，使用预测利润 CLV 的保守下界而不是均值。许多广告平台可以接收价值信号用于基于价值的出价或受众规则，但具体实现取决于平台。</p>
-<ol start="2" type="1">
-<li>用于 CRM 的流失预警</li>
-</ol>
+</section>
+<section id="churn-alerts-for-crm" class="level3">
+<h3 class="anchored" data-anchor-id="churn-alerts-for-crm">用于 CRM 的流失预警</h3>
 <p>标记那些 P(alive) 在 30 天内下降超过 30 个百分点的客户。信号在于变化速率，而不是绝对水平。一位 P(alive) 在一个月内从 0.85 跌到 0.40 的客户，比一位六个月来稳定在 0.35 的客户紧急得多。前一位客户正在从先前较高的参与水平上远离；后一位客户一直都是低频买家。</p>
-<ol start="3" type="1">
-<li>用于财务部门的群组预测</li>
-</ol>
+</section>
+<section id="cohort-forecasts-for-finance" class="level3">
+<h3 class="anchored" data-anchor-id="cohort-forecasts-for-finance">用于财务部门的群组预测</h3>
 <p>财务部门按预算周期而不是按客户生命周期做规划，因此要按获客群组（cohort）汇总个体 CLV 估计值，并预测 12、24 和 36 个月的营收。附上 HDI 区间，让财务部门知道这些是概率性估计，而不是固定目标。这回答了财务部门关于一个季度获客支出预期回报的问题，而且用的是财务部门做规划时所用的单位和时间框架。</p>
-<div class="callout callout-style-default callout-tip callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">提示</span>监控
-</div>
-</div>
-<div class="callout-body-container callout-body">
+</section>
+<section id="monitoring" class="level3">
+<h3 class="anchored" data-anchor-id="monitoring">监控</h3>
 <p>按群组比较 3、6 和 12 个月时的预测营收与实际营收。如果比率偏离超过 ±20%，就重新训练。同时检查 CLV 预测是否对受保护群体存在偏差：在服务不足的细分群体上训练出的模型会通过预测更低的 CLV、设定更低的获客出价而延续这种偏差。</p>
-</div>
-</div>
+</section>
 </section>
 <section id="key-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="key-takeaways">要点</h2>

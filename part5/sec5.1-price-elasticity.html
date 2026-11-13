@@ -616,7 +616,7 @@ window.Quarto = {
   <li><a href="#sec-demand-curve-estimation" id="toc-sec-demand-curve-estimation" class="nav-link" data-scroll-target="#sec-demand-curve-estimation">Estimating the Demand Curve</a></li>
   <li><a href="#sec-margin-maximizing-price" id="toc-sec-margin-maximizing-price" class="nav-link" data-scroll-target="#sec-margin-maximizing-price">Optimizing for Contribution Margin</a>
   <ul class="collapse">
-  <li><a href="#worked-example-a-private-label-cereal" id="toc-worked-example-a-private-label-cereal" class="nav-link" data-scroll-target="#worked-example-a-private-label-cereal">Worked example: a private-label cereal</a></li>
+  <li><a href="#worked-example-a-private-label-cereal" id="toc-worked-example-a-private-label-cereal" class="nav-link" data-scroll-target="#worked-example-a-private-label-cereal">Worked Example: A Private-Label Cereal</a></li>
   </ul></li>
   <li><a href="#sec-segment-elasticity" id="toc-sec-segment-elasticity" class="nav-link" data-scroll-target="#sec-segment-elasticity">Elasticity Varies by Product Role</a></li>
   <li><a href="#sec-elasticity-pitfalls" id="toc-sec-elasticity-pitfalls" class="nav-link" data-scroll-target="#sec-elasticity-pitfalls">Common Pitfalls in Price Elasticity</a></li>
@@ -650,9 +650,11 @@ window.Quarto = {
 <p>A price decision has to reconcile two effects that point in opposite directions: a lower price sells more units, and a higher price earns more margin per unit. Which one wins depends on how much volume actually changes when the price moves.</p>
 <p>Marketing owns the decision that connects customer response, brand position, and the commercial objective: when to chase units or revenue, when to protect margin, and when price itself sends a positioning signal. Sometimes the objective is traffic or share, clearing inventory, or defending a price position. Whatever the objective, the quantity to estimate first is the size of the volume response to a price change.</p>
 <p>Price elasticity supplies that response curve. The business still chooses the goal, whether units, revenue, margin, or positioning, and the curve lets you compare candidate prices against it.</p>
+<p><strong>Companion notebook:</strong> <code>sec5.1_price_elasticity.ipynb</code> covers data loading, quality checks, two-pass elasticity estimation, and the sensitivity table.<br>
+<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part5-commercial-analytics/sec5.1_price_elasticity.ipynb">View on GitHub</a></p>
 <section id="sec-price-elasticity-definition" class="level2">
 <h2 class="anchored" data-anchor-id="sec-price-elasticity-definition">What Is Price Elasticity?</h2>
-<p>Raising the price of a top-selling cereal by 10% can cost 5% of units or 20%, and the two cases lead to opposite decisions. The size of that loss decides whether the price change improves sales, revenue, or margin, or whether it simply pushes shoppers away.</p>
+<p>Raising the price of a top-selling cereal by 10% can cost 5% of units or 20%, and the two cases lead to opposite decisions. The size of that loss decides whether the price change improves units, revenue, or margin, or whether it simply pushes shoppers away.</p>
 <p>Price elasticity of demand measures the sensitivity of quantity sold to a change in price:</p>
 <p><span class="math display">\[
 \varepsilon = \frac{\% \Delta \text{Quantity}}{\% \Delta \text{Price}}
@@ -694,36 +696,20 @@ Q = b_0 \times P^{b_1}
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> scipy.optimize <span class="im">import</span> curve_fit</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> power_model(price, b0, b1):</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Q = b0 * Price^b1"""</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># prices, units: one product's weekly average price and units sold</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> power_model(price, b0, b1):</span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> b0 <span class="op">*</span> np.power(price, b1)</span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>p0 <span class="op">=</span> [df[<span class="st">"units"</span>].mean(), <span class="op">-</span><span class="fl">1.5</span>]</span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>popt, pcov <span class="op">=</span> curve_fit(</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    power_model,</span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    df[<span class="st">"price"</span>].values,</span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    df[<span class="st">"units"</span>].values,</span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    p0<span class="op">=</span>p0,</span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    maxfev<span class="op">=</span><span class="dv">10000</span>,</span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>b0, b1 <span class="op">=</span> popt</span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Scale (b0): </span><span class="sc">{</span>b0<span class="sc">:.1f}</span><span class="ss">"</span>)</span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Elasticity (b1): </span><span class="sc">{</span>b1<span class="sc">:.2f}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>The companion notebook also runs a two-pass estimation: fit once on all data, flag observations where actual divided by predicted units falls outside a sensible band, such as 0.3 to 3.0, and refit without them.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Pass 1: fit on all data</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>popt_1, _ <span class="op">=</span> curve_fit(power_model, prices, units, p0<span class="op">=</span>p0, maxfev<span class="op">=</span><span class="dv">10000</span>)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>p0 <span class="op">=</span> [units.mean(), <span class="op">-</span><span class="fl">1.5</span>]</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>popt, pcov <span class="op">=</span> curve_fit(power_model, prices, units, p0<span class="op">=</span>p0, maxfev<span class="op">=</span><span class="dv">10_000</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>This first fit uses every week for one product. The notebook then flags weeks where actual divided by predicted units falls outside 0.3 to 3.0 and refits without them. Here are those steps directly:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>ratio <span class="op">=</span> units <span class="op">/</span> power_model(prices, <span class="op">*</span>popt)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>mask <span class="op">=</span> (ratio <span class="op">&gt;</span> <span class="fl">0.3</span>) <span class="op">&amp;</span> (ratio <span class="op">&lt;</span> <span class="fl">3.0</span>)</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Identify outliers</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>predicted <span class="op">=</span> power_model(prices, <span class="op">*</span>popt_1)</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>ratio <span class="op">=</span> units <span class="op">/</span> predicted</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>mask <span class="op">=</span> (ratio <span class="op">&gt;</span> <span class="fl">0.3</span>) <span class="op">&amp;</span> (ratio <span class="op">&lt;</span> <span class="fl">3.0</span>)</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Pass 2: refit on clean data</span></span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>popt_2, pcov_2 <span class="op">=</span> curve_fit(</span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    power_model, prices[mask], units[mask], p0<span class="op">=</span>popt_1, maxfev<span class="op">=</span><span class="dv">10000</span></span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>popt, pcov <span class="op">=</span> curve_fit(</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    power_model, prices[mask], units[mask], p0<span class="op">=</span>popt, maxfev<span class="op">=</span><span class="dv">10_000</span>,</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>b0, b1 <span class="op">=</span> popt   <span class="co"># chocolate milk: b1 = -3.92</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Promotional spikes are the usual culprit. Include them blindly, and the model treats promotional volume as normal price response, biasing elasticity away from its true value.</p>
 <div id="fig-elasticity-deep-dive" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Price–quantity scatter with fitted power curve and 95% band for a top Fluid Milk product; the steep slope shows elastic demand.">
 <figure class="quarto-float quarto-float-fig figure">
@@ -735,18 +721,107 @@ Figure&nbsp;1: Price–quantity scatter with a fitted power curve.
 </figcaption>
 </figure>
 </div>
-<p>Across the eight top-selling Fluid Milk items, elasticities range from <span class="math inline">\(-1.2\)</span> for gallon jugs, a staple format with lower elasticity, to <span class="math inline">\(-3.9\)</span> for smaller formats, which are easier to substitute. <a href="#fig-elasticity-grid" class="quarto-xref">Figure&nbsp;<span>2</span></a> shows the fitted curves side by side.</p>
-<div id="fig-elasticity-grid" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Fitted power-law demand curves for eight top Fluid Milk products; higher-R² items fit cleanly, lower-R² ones are noisier.">
+<p><a href="#tbl-elasticity-results" class="quarto-xref">Table&nbsp;<span>1</span></a> lists the fit for each of the eight top-selling Fluid Milk products. The gallon jugs, a staple format, come out least elastic and the smaller formats most elastic, but only the five smaller-format fits pass the notebook’s fit-quality screen.</p>
+<div id="tbl-elasticity-results" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-elasticity-results-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;1: Two-pass fits for the eight top-selling Fluid Milk products, from the companion notebook.
+</figcaption>
+<div aria-describedby="tbl-elasticity-results-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Product</th>
+<th style="text-align: right;">Weeks</th>
+<th style="text-align: right;">Price points</th>
+<th style="text-align: right;">Elasticity</th>
+<th style="text-align: right;"><span class="math inline">\(R^2\)</span></th>
+<th style="text-align: left;">Verdict</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Chocolate milk, private label</td>
+<td style="text-align: right;">102</td>
+<td style="text-align: right;">52</td>
+<td style="text-align: right;">−3.92</td>
+<td style="text-align: right;">0.87</td>
+<td style="text-align: left;">Usable</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">White milk, private label #12</td>
+<td style="text-align: right;">101</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">−2.98</td>
+<td style="text-align: right;">0.80</td>
+<td style="text-align: left;">Usable</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">White milk, private label #13</td>
+<td style="text-align: right;">102</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">−3.57</td>
+<td style="text-align: right;">0.90</td>
+<td style="text-align: left;">Usable</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">White milk, private label #15</td>
+<td style="text-align: right;">101</td>
+<td style="text-align: right;">51</td>
+<td style="text-align: right;">−2.63</td>
+<td style="text-align: right;">0.79</td>
+<td style="text-align: left;">Usable</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">White milk, private label #16</td>
+<td style="text-align: right;">101</td>
+<td style="text-align: right;">59</td>
+<td style="text-align: right;">−3.73</td>
+<td style="text-align: right;">0.92</td>
+<td style="text-align: left;">Usable</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">White milk, private label, gallon #11</td>
+<td style="text-align: right;">102</td>
+<td style="text-align: right;">41</td>
+<td style="text-align: right;">−1.33</td>
+<td style="text-align: right;">0.23</td>
+<td style="text-align: left;">Directional only</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">White milk, private label, gallon #12</td>
+<td style="text-align: right;">102</td>
+<td style="text-align: right;">43</td>
+<td style="text-align: right;">−1.19</td>
+<td style="text-align: right;">0.15</td>
+<td style="text-align: left;">Directional only</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">White milk, private label, gallon #9</td>
+<td style="text-align: right;">102</td>
+<td style="text-align: right;">41</td>
+<td style="text-align: right;">−1.80</td>
+<td style="text-align: right;">0.31</td>
+<td style="text-align: left;">Directional only</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<p><a href="#fig-elasticity-grid" class="quarto-xref">Figure&nbsp;<span>2</span></a> shows two of each kind.</p>
+<div id="fig-elasticity-grid" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Four price-quantity panels: two private-label milk items with tight power-law fits and two gallon jugs whose points scatter around a nearly flat curve.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-elasticity-grid-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part5/sec5.1/elasticity_grid.png" class="fig-lg img-fluid figure-img" alt="Fitted power-law demand curves for eight top Fluid Milk products; higher-R² items fit cleanly, lower-R² ones are noisier.">
+<img src="../images/part5/sec5.1/elasticity_grid.png" class="fig-lg img-fluid figure-img" alt="Four price-quantity panels: two private-label milk items with tight power-law fits and two gallon jugs whose points scatter around a nearly flat curve.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-elasticity-grid-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;2: Fitted power-law demand curves for eight products.
+Figure&nbsp;2: Fitted demand curves: two clean fits, two weak fits.
 </figcaption>
 </figure>
 </div>
-<p>In practice, an elasticity in the range <span class="math inline">\(-0.5\)</span> to <span class="math inline">\(-5\)</span> with <span class="math inline">\(R^2 &gt; 0.4\)</span> and several distinct price points is usable as a starting estimate; the pitfalls at the end of this chapter say when it is not. The <span class="math inline">\(R^2\)</span> threshold is a heuristic for fit quality and says nothing about whether the estimate is causally valid. Estimates outside that range are often data problems: too few prices, a single promotional discount dominating the fit, or too short a window. If the elasticity is not believable, neither is any pricing recommendation built on it.</p>
+<p>The notebook uses three verdicts. Usable means <span class="math inline">\(R^2 &gt; 0.4\)</span> and elasticity between <span class="math inline">\(-5\)</span> and <span class="math inline">\(-0.5\)</span>, inclusive. With <span class="math inline">\(R^2 &gt; 0.4\)</span> but elasticity outside that range, the verdict is Investigate: check the data before interpreting the estimate. If <span class="math inline">\(R^2 \leq 0.4\)</span>, the verdict is Directional only. Neither of the latter two verdicts supports setting a price.</p>
+<p>These labels do not replace the checks on price variation and history above. The <span class="math inline">\(R^2\)</span> threshold is a heuristic for fit quality and says nothing about whether the estimate is causally valid; the pitfalls at the end of this chapter say when even a Usable fit is not. Estimates outside the elasticity range are often data problems: too few prices, a single promotional discount dominating the fit, or too short a window. If the elasticity is not believable, neither is any pricing recommendation built on it.</p>
 </section>
 <section id="sec-margin-maximizing-price" class="level2">
 <h2 class="anchored" data-anchor-id="sec-margin-maximizing-price">Optimizing for Contribution Margin</h2>
@@ -755,7 +830,7 @@ Figure&nbsp;2: Fitted power-law demand curves for eight products.
 <p><span class="math display">\[
 \text{Revenue}(P) = P \times Q(P)
 \]</span></p>
-<p>This is often the most intuitive starting point because it requires only price and units. But under a constant-elasticity curve, revenue maximization is degenerate: when demand is elastic (<span class="math inline">\(|b_1| &gt; 1\)</span>, as it is for every product in this chapter), revenue keeps rising as the price falls, so the revenue-maximizing price is simply the lowest one you are willing to set. If reliable variable cost is not available, revenue may still serve as a first-pass metric, but treat it as a direction (cut), not an interior optimum.</p>
+<p>This is often the most intuitive starting point because it requires only price and units. But under a constant-elasticity curve, revenue has no maximum inside the price range: when demand is elastic (<span class="math inline">\(|b_1| &gt; 1\)</span>, as it is for every product in this chapter), revenue keeps rising as the price falls, so the revenue-maximizing price is simply the lowest one you are willing to set. If reliable variable cost is not available, revenue may still serve as a first-pass metric, but treat it as a direction (cut), not an interior optimum.</p>
 <p>Revenue ignores variable cost. If variable cost is available, we can ask the stronger question: which price maximizes contribution margin?</p>
 <p><span class="math display">\[
 \text{Contribution Margin}(P) = (P - C) \times Q(P)
@@ -763,7 +838,7 @@ Figure&nbsp;2: Fitted power-law demand curves for eight products.
 <p>where <span class="math inline">\(C\)</span> is variable cost per unit and <span class="math inline">\(Q(P) = b_0 \times P^{b_1}\)</span>.</p>
 <p>The two answers can differ. A lower price can sell more units and increase revenue while reducing total margin. A higher price can reduce revenue but improve margin if the remaining units are profitable enough. Margin is not always the objective, but the objective has to be named before the price is chosen, because revenue and contribution margin can favor different prices.</p>
 <section id="worked-example-a-private-label-cereal" class="level3">
-<h3 class="anchored" data-anchor-id="worked-example-a-private-label-cereal">Worked example: a private-label cereal</h3>
+<h3 class="anchored" data-anchor-id="worked-example-a-private-label-cereal">Worked Example: A Private-Label Cereal</h3>
 <p>Take a private-label cereal with these parameters, keeping in mind that every result below is conditional on the constant-elasticity demand curve holding across the price range shown:</p>
 <ol type="1">
 <li>Current price: $3.99</li>
@@ -813,7 +888,7 @@ Figure&nbsp;2: Fitted power-law demand curves for eight products.
 </tbody>
 </table>
 <p>The table shows the core tradeoff. Within this range, revenue is highest at the lowest price, and under constant elasticity it would keep climbing with every further cut. Margin behaves differently: it has an interior optimum at <span class="math inline">\(P^* = C \cdot |b_1| / (|b_1| - 1)\)</span>, about $5.87 for these parameters, which is why total margin is still rising at the top of the table, at $2,903. At 10% higher, revenue falls 5.5% while margin rises 5.1%. Revenue and margin point in opposite directions. A discount in this range raises revenue and lowers total contribution margin at the same time.</p>
-<p><a href="#fig-margin-curves" class="quarto-xref">Figure&nbsp;<span>3</span></a> visualizes the same logic for five real Dunnhumby products. In every panel, revenue keeps climbing as the price falls, while contribution margin turns over at an interior price, so the two objectives genuinely point to different decisions. For these highly elastic private-label dairy items, the margin-maximizing price is consistently lower than the current price because the extra volume from a price cut is large enough to lift total margin. The formula is the same in both cases; the direction of the recommendation depends on whether the interior optimum is above or below today’s price, which the elasticity and the cost ratio decide together.</p>
+<p><a href="#fig-margin-curves" class="quarto-xref">Figure&nbsp;<span>3</span></a> visualizes the same logic for five real Dunnhumby products, at an assumed variable cost of 55% of average price (the dataset has no cost data). In every panel, revenue keeps climbing as the price falls, while contribution margin turns over at an interior price, so the two objectives genuinely point to different decisions. For these highly elastic private-label dairy items, the margin-maximizing price is consistently lower than the current price because the extra volume from a price cut is large enough to lift total margin. The cereal example pointed to a higher price and these items point to a lower one. The formula is the same; the optimum sits above today’s price in one case and below it in the other, depending on the elasticity and the cost ratio.</p>
 <div id="fig-margin-curves" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Revenue vs. contribution-margin curves for five products, marking the current and margin-maximizing prices.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-margin-curves-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -827,25 +902,22 @@ Figure&nbsp;3: Revenue vs.&nbsp;contribution-margin curves.
 <p>The optimization itself is a one-dimensional search. <code>scipy.optimize.minimize_scalar</code> over the negative margin function does the job in a few lines, and the companion notebook walks through it.</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> scipy.optimize <span class="im">import</span> minimize_scalar</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> neg_margin(price, b0, b1, variable_cost):</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Negative contribution margin (for minimization)."""</span></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    quantity <span class="op">=</span> b0 <span class="op">*</span> price <span class="op">**</span> b1</span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">-</span>(price <span class="op">-</span> variable_cost) <span class="op">*</span> quantity</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>result <span class="op">=</span> minimize_scalar(</span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    neg_margin,</span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    bounds<span class="op">=</span>(<span class="fl">2.50</span>, <span class="fl">6.00</span>),</span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    method<span class="op">=</span><span class="st">"bounded"</span>,</span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    args<span class="op">=</span>(b0_fitted, b1_fitted, <span class="fl">2.20</span>),</span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>optimal_price <span class="op">=</span> result.x</span>
-<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>optimal_margin <span class="op">=</span> <span class="op">-</span>result.fun</span>
-<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Optimal price: $</span><span class="sc">{</span>optimal_price<span class="sc">:.2f}</span><span class="ss">"</span>)</span>
-<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Max weekly margin: $</span><span class="sc">{</span>optimal_margin<span class="sc">:,.0f}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>avg_price <span class="op">=</span> prices.mean()</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>variable_cost <span class="op">=</span> avg_price <span class="op">*</span> <span class="fl">0.55</span>   <span class="co"># assumed: the data has no cost</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> neg_contribution_margin(price, b0, b1, variable_cost):</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    quantity <span class="op">=</span> b0 <span class="op">*</span> price <span class="op">**</span> b1</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">-</span>(price <span class="op">-</span> variable_cost) <span class="op">*</span> quantity</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>result <span class="op">=</span> minimize_scalar(</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    neg_contribution_margin,</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    bounds<span class="op">=</span>(variable_cost <span class="op">*</span> <span class="fl">1.05</span>, avg_price <span class="op">*</span> <span class="dv">3</span>),</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    method<span class="op">=</span><span class="st">"bounded"</span>,</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    args<span class="op">=</span>(b0, b1, variable_cost),</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>optimal_price <span class="op">=</span> result.x</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>optimal_margin <span class="op">=</span> <span class="op">-</span>result.fun</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>One caveat carries over from the constant-elasticity assumption: the margin curve has that interior optimum only when demand is elastic (<span class="math inline">\(|b_1| &gt; 1\)</span>). For an inelastic item the model implies margin keeps rising with price, so a bounded optimizer simply returns the upper bound. That value is an artifact of the search bounds, so re-check the fit rather than using it as a price. The companion notebook therefore optimizes only items with a Usable verdict and <span class="math inline">\(b_1 &lt; -1\)</span>.</p>
-<p><strong>Companion notebook:</strong> <code>sec5.1_price_elasticity.ipynb</code> covers data loading, quality checks, two-pass elasticity estimation, and the sensitivity table.<br>
-<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part5-commercial-analytics/sec5.1_price_elasticity.ipynb">View on GitHub</a></p>
 </section>
 </section>
 <section id="sec-segment-elasticity" class="level2">
@@ -867,7 +939,7 @@ Figure&nbsp;4: Mean price elasticity by product role.
 <section id="sec-elasticity-pitfalls" class="level2">
 <h2 class="anchored" data-anchor-id="sec-elasticity-pitfalls">Common Pitfalls in Price Elasticity</h2>
 <p><strong>Endogeneity.</strong> Prices are not set at random. If a retailer raises prices during high-demand periods like back-to-school, the observed elasticity is biased toward zero because high prices and high demand co-occur for reasons unrelated to pricing. This is the same selection bias problem from Part 3. Address it with instrumental variables, randomized price experiments, or quasi-experimental designs.</p>
-<p><strong>Shared time structure.</strong> Price and units both carry seasonality, promotion calendars, and trend, so a regression on raw weekly series can pick up that shared structure instead of a price response. Two series that merely share a calendar can correlate strongly enough to look like a demand curve. Put the calendar inside the model: week or month indicators, promotion flags, and a trend term, so the price coefficient is estimated against them rather than through them. The two-variable fit in this chapter does none of that, so treat its elasticities as exposed to this bias until a specification carrying the calendar agrees.</p>
+<p><strong>Shared time structure.</strong> Price and units both carry seasonality, promotion calendars, and trend, so a regression on raw weekly series can pick up that shared structure instead of a price response. Two series that merely share a calendar can correlate strongly enough to look like a demand curve. Put the calendar inside the model: week or month indicators, promotion flags, and a trend term, so the price coefficient reflects the price changes the calendar does not explain. The two-variable fit in this chapter does none of that, so treat its elasticities as exposed to this bias until a specification carrying the calendar agrees.</p>
 <p><strong>Reference price effects.</strong> Customers remember what they paid before. Raising the price usually causes a bigger drop in volume than lowering the price brings in new buyers. The JCPenney “Fair and Square” case is the famous example: switching from promotions to everyday low prices at the same average level led to a sales collapse because customers lost their price anchor.</p>
 <p><strong>Competitor reaction.</strong> A price cut only works if competitors hold. In concentrated categories, competitors typically match. Everyone sells about the same volume, but at lower margins. In those categories, model the competitor’s likely response before acting on the demand curve.</p>
 </section>

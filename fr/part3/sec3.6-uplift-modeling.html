@@ -663,6 +663,8 @@ Figure&nbsp;1: La modélisation de l’uplift établit les priorités selon l’
 </figcaption>
 </figure>
 </div>
+<p><strong>Notebook associé :</strong> <code>sec3.6_uplift_modeling.ipynb</code> construit le score d’uplift de l’apprenant S sur MineThatData et l’évalue à l’aide des courbes d’uplift et de Qini, de l’uplift par décile et d’une règle de ciblage fondée sur la valeur nette.<br>
+<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.6_uplift_modeling.ipynb">Voir sur GitHub</a></p>
 <section id="understanding-the-customers-to-target" class="level2">
 <h2 class="anchored" data-anchor-id="understanding-the-customers-to-target">Comprendre les clients à cibler</h2>
 <p>Pour bien appliquer la modélisation de l’uplift, il est utile de se représenter quatre types de clients, définis par leur réaction au contact.</p>
@@ -729,12 +731,10 @@ Figure&nbsp;2: Les quatre segments de clients selon l’uplift.
 </tr>
 </tbody>
 </table>
-<p><strong>Notebook associé :</strong> <code>sec3.6_uplift_modeling.ipynb</code> construit le score d’uplift de l’apprenant S sur MineThatData et l’évalue à l’aide des courbes d’uplift et de Qini, de l’uplift par décile et d’une règle de ciblage fondée sur la valeur nette.<br>
-<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.6_uplift_modeling.ipynb">Voir sur GitHub</a></p>
 </section>
 <section id="training-the-uplift-model" class="level2">
 <h2 class="anchored" data-anchor-id="training-the-uplift-model">Entraîner le modèle d’uplift</h2>
-<p>Le score d’uplift est simplement le CATE. Nous réajustons les méta-apprenants de la section §3.5 et conservons celui qui retrouve le mieux l’effet véritable sur l’échantillon réservé à l’évaluation : l’apprenant S, dont les estimations présentent une corrélation de 0,77 avec la vérité (la comparaison complète figure dans <a href="sec3.5-meta-learners.html#tbl-cate-recovery" class="quarto-xref">Table&nbsp;<span>1</span></a>, en §3.5). Ce choix n’est possible que parce que les données sont semi-synthétiques ; sur des données réelles, l’effet véritable n’est jamais observé, et l’apprenant est donc choisi sur un échantillon randomisé réservé à l’évaluation, d’après le Qini ou l’uplift observé par décile, ce que la section d’évaluation ci-dessous présente. L’échantillon réservé qui sert à choisir l’apprenant est distinct du nouvel échantillon réservé utilisé ensuite pour confirmer que le classement retenu fait mieux que le hasard. Le CATE qu’il prédit est le score d’uplift, et l’ajustement utilise le même appel à EconML qu’en §3.5 ; il n’y a donc rien de nouveau à installer :</p>
+<p>Le score d’uplift est simplement le CATE. Nous réajustons les méta-apprenants de la section §3.5 et conservons celui qui retrouve le mieux l’effet véritable sur l’échantillon réservé à l’évaluation : l’apprenant S, dont les estimations présentent une corrélation de 0,77 avec la vérité (la comparaison complète figure dans <a href="sec3.5-meta-learners.html#tbl-cate-recovery" class="quarto-xref">Table&nbsp;<span>1</span></a>, en §3.5). Ce choix n’est possible que parce que les données sont semi-synthétiques ; sur des données réelles, l’effet véritable n’est jamais observé, et l’apprenant est donc choisi sur un échantillon randomisé réservé à l’évaluation, d’après le Qini ou l’uplift observé par décile, ce que la section d’évaluation ci-dessous présente. L’échantillon réservé qui sert à choisir l’apprenant est distinct du nouvel échantillon réservé utilisé ensuite pour confirmer que le classement retenu fait mieux que le hasard. Le CATE prédit par l’apprenant S est le score d’uplift, et l’ajustement utilise le même appel à EconML que le notebook de la section §3.5 ; il n’y a donc rien de nouveau à installer :</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> econml.metalearners <span class="im">import</span> SLearner</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> lightgbm <span class="im">import</span> LGBMRegressor</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>

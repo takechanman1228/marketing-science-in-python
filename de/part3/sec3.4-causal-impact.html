@@ -634,10 +634,12 @@ Diese Seite ist eine KI-Übersetzung der englischen Ausgabe von <em>Marketing Sc
 </div>
 <p>Eine nationale TV-Kampagne lief acht Wochen lang in jedem Markt, und der Umsatz stieg. Da jeder Markt exponiert war, gibt es keinen unbehandelten Markt zum Vergleich, und jedes quasi-experimentelle Design im <a href="sec3.3-quasi-experiments.html">vorherigen Kapitel</a> setzt einen voraus. Wie hoch wäre der Umsatz ohne die Kampagne gewesen?</p>
 <p>Dieses Kapitel hat eine einzige Aufgabe: diesen fehlenden Pfad ohne Kampagne zu konstruieren und zu entscheiden, ob er glaubwürdig genug ist, um die Kampagne daran zu messen. Ihn zu konstruieren braucht etwa fünfzehn Zeilen Code; ihn zu validieren braucht den Rest des Kapitels.</p>
+<p><strong>Begleit-Notebook:</strong> <code>sec3.4_causal_impact.ipynb</code> konstruiert das Kontrafaktum, validiert es an Placebo-Daten, auditiert sein Intervall über zweihundert Ziehungen und bricht es dann absichtlich.<br>
+<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.4_causal_impact.ipynb">Auf GitHub ansehen</a></p>
 <section id="sec-counterfactual-recipe" class="level2">
 <h2 class="anchored" data-anchor-id="sec-counterfactual-recipe">Das Kontrafaktum konstruieren</h2>
 <p><strong>Kernidee:</strong> Prognostizieren Sie den Umsatz, den Sie ohne die Kampagne gesehen hätten. Der Effekt ist der beobachtete Umsatz minus dieser Prognose.</p>
-<p>Ohne Kontrollgruppe muss der Vergleich aus der eigenen Historie der Zeitreihe konstruiert werden. Passen Sie ein Zeitreihenmodell an den Umsatz <em>vor</em> der Kampagne an, damit die Kampagne nicht hineinsickern kann. Projizieren Sie das Modell über das Kampagnenfenster nach vorn. Diese Projektion ist das Kontrafaktum, und die Lücke zwischen ihr und dem, was tatsächlich passiert ist, ist der geschätzte Effekt.</p>
+<p>Ohne Kontrollgruppe muss der Vergleich aus der eigenen Historie der Zeitreihe konstruiert werden. Passen Sie ein Zeitreihenmodell an den Umsatz <em>vor</em> der Kampagne an, damit die Kampagne die Modellanpassung nicht beeinflusst. Prognostizieren Sie damit den Umsatz im Kampagnenzeitraum. Diese Prognose ist das Kontrafaktum, und die Differenz zum tatsächlichen Umsatz ist der geschätzte Effekt.</p>
 <p>Die Prognose kann trotzdem <strong>Kontrollreihen</strong> verwenden, und es lohnt sich klarzustellen, dass diese keine Kontrollgruppe sind. Eine Kontrollgruppe besteht aus unbehandelten Einheiten derselben Art: Filialen, die das Display nicht bekommen haben. Eine Kontrollreihe ist ein Prädiktor: jede Reihe, die die Kampagne nicht berührt haben kann, etwa ein Nachfrageindex der Kategorie oder eine Schwesterproduktlinie ohne Media. Eine Kontrollreihe wird nicht mit der Marke verglichen; sie geht als Regressor in das Modell ein, der trägt, was der Markt tat, während die Kampagne lief.</p>
 <p>Die bekannteste Implementierung ist <strong>CausalImpact</strong>, das Google als R-Paket veröffentlicht hat und das Brodersen und Kollegen 2015 in einem Paper beschrieben haben. In der Literatur zur Kausalinferenz heißt dasselbe Design unterbrochene Zeitreihe (interrupted time series). Python-Portierungen existieren (<code>tfp-causalimpact</code> sowie <code>InterruptedTimeSeries</code> in <code>CausalPy</code>). Dieses Kapitel baut dieselbe Logik direkt mit <code>statsmodels</code>, damit jede Annahme sichtbar bleibt.</p>
 <p>Die Tabelle unten vergleicht dieses Design mit DiD und der synthetischen Kontrolle danach, was jedes davon voraussetzt:</p>
@@ -673,24 +675,12 @@ Diese Seite ist eine KI-Übersetzung der englischen Ausgabe von <em>Marketing Sc
 </tbody>
 </table>
 <p>Das ausgearbeitete Beispiel ist eine nationale Konsumgütermarke (CPG): vier Jahre wöchentlicher Umsatz, eine achtwöchige TV- und PR-Kampagne und zwanzig Wochen Beobachtung danach. Zwei Kontrollreihen: ein Nachfrageindex der Subkategorie und eine Schwesterproduktlinie, die keine Media bekam. Die Daten sind synthetisch, der wahre Pfad ohne Kampagne ist also bekannt. Vor jedem Code legen Sie das Analyse-Briefing fest:</p>
-<div class="callout callout-style-default callout-note callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Hinweis</span>Analyse-Briefing
-</div>
-</div>
-<div class="callout-body-container callout-body">
 <ul>
 <li><strong>Geschäftsfrage:</strong> Wie viel inkrementellen Umsatz hat die Kampagne erzeugt?</li>
 <li><strong>Zielgröße:</strong> Wöchentlicher nationaler Umsatz.</li>
 <li><strong>Treatment:</strong> Die achtwöchige TV-und-PR-Kampagne, gemessen als eine kombinierte Intervention.</li>
 <li><strong>Estimand:</strong> Kumulierter inkrementeller Umsatz über die 28 Wochen nach dem Start, einschließlich Carryover und jeder späteren Rückzahlung.</li>
 </ul>
-</div>
-</div>
 <p>Der Estimand ist eine Entscheidung, und sie wird hier festgelegt statt nach dem Vorliegen der Ergebnisse. Deshalb läuft die Prognose unten über 28 Wochen, und deshalb ist der Abschnitt zum Berichtsfenster später im Kapitel eine Prüfung und keine Wahl.</p>
 <div id="fig-panel" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Vier Jahre Markenumsatz mit markiertem wahrem unbehandeltem Pfad, darüber ein Nachfrageindex der Subkategorie und eine Schwesterproduktlinie, der achtwöchige Flight schattiert.">
 <figure class="quarto-float quarto-float-fig figure">
@@ -706,28 +696,25 @@ Abbildung&nbsp;1: Die behandelte Marke und ihre zwei Kontrollreihen.
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> statsmodels.tsa.statespace.structural <span class="im">import</span> UnobservedComponents</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Fit on the PRE-period only. The campaign is deliberately absent.</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> UnobservedComponents(</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    np.log(y_pre),</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    level<span class="op">=</span><span class="st">"lltrend"</span>,                                   <span class="co"># level and slope</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    freq_seasonal<span class="op">=</span>[{<span class="st">"period"</span>: <span class="dv">52</span>, <span class="st">"harmonics"</span>: <span class="dv">2</span>}],    <span class="co"># annual shape</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    exog<span class="op">=</span>np.log(x_pre),                                <span class="co"># untouched controls</span></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>res <span class="op">=</span> model.fit(disp<span class="op">=</span><span class="dv">0</span>)</span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Simulate 1,000 no-campaign paths across the 28 post-period weeks</span></span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>horizon, draws <span class="op">=</span> <span class="bu">len</span>(y_post), <span class="dv">1000</span></span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>paths <span class="op">=</span> np.exp(</span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    np.asarray(res.simulate(horizon, repetitions<span class="op">=</span>draws, anchor<span class="op">=</span><span class="st">"end"</span>,</span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>                            exog<span class="op">=</span>np.log(x_post))).reshape(horizon, draws)</span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Effect = observed minus counterfactual. The point estimate and the</span></span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="co">#    interval come from the same draws, so both summarize one distribution.</span></span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>counterfactual <span class="op">=</span> paths.mean(axis<span class="op">=</span><span class="dv">1</span>)</span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>weekly_effect <span class="op">=</span> y_post <span class="op">-</span> counterfactual</span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>cumulative <span class="op">=</span> weekly_effect.<span class="bu">sum</span>()</span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>lo, hi <span class="op">=</span> np.percentile((y_post[:, <span class="va">None</span>] <span class="op">-</span> paths).<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">0</span>), [<span class="fl">2.5</span>, <span class="fl">97.5</span>])</span></code></pre></div><button title="In die Zwischenablage kopieren" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> UnobservedComponents(</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    np.log(y_pre),                                    <span class="co"># pre-period revenue</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    level<span class="op">=</span><span class="st">"lltrend"</span>,                                  <span class="co"># level and slope</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    freq_seasonal<span class="op">=</span>[{<span class="st">"period"</span>: <span class="dv">52</span>, <span class="st">"harmonics"</span>: <span class="dv">2</span>}],   <span class="co"># annual shape</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    exog<span class="op">=</span>np.log(x_pre),                               <span class="co"># the two controls</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>res <span class="op">=</span> model.fit(disp<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="co"># 1,000 no-campaign paths across the 28 post-period weeks, in dollars</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>horizon, draws <span class="op">=</span> <span class="bu">len</span>(y_post), <span class="dv">1000</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>sims <span class="op">=</span> res.simulate(</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    horizon, repetitions<span class="op">=</span>draws, anchor<span class="op">=</span><span class="st">"end"</span>, exog<span class="op">=</span>np.log(x_post)</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>paths <span class="op">=</span> np.exp(np.asarray(sims).reshape(horizon, draws))</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="co"># One total per path: the estimate and the interval share the same draws</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>effects <span class="op">=</span> (y_post[:, <span class="va">None</span>] <span class="op">-</span> paths).<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>cumulative <span class="op">=</span> effects.mean()</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>lo, hi <span class="op">=</span> np.percentile(effects, [<span class="fl">2.5</span>, <span class="fl">97.5</span>])</span></code></pre></div><button title="In die Zwischenablage kopieren" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Drei Entscheidungen in diesem Code zählen. Das Modell wird nur auf der Vorperiode angepasst, damit die Kampagne ihre eigene Baseline nicht kontaminieren kann. Der Umsatz wird in Logarithmen modelliert, weil ein Kampagnen-Lift und Saisonalität beide multiplikativ sind, und die simulierten Pfade werden in Dollar zurückgerechnet, bevor irgendetwas summiert wird. Und die Kontrollreihen gehen als Regressoren ein, damit die Prognose weiß, was der Markt während der Kampagne tat. Ob das Modell auch einen Trendterm braucht, oder die Kontrollreihen überhaupt, klärt der Backtest im nächsten Abschnitt.</p>
 </section>
 <section id="sec-preperiod-validation" class="level2">
@@ -918,8 +905,6 @@ Abbildung&nbsp;5: Kontrollreihen-Prüfungen auf echten Filialdaten.
 <li><strong>Wenn das Kontrafaktum schwach ist, berichten Sie keine kausale Zahl.</strong> Bei einem Backtest-Fehler von 13.7% ist das Ergebnis eine Prognose, die keine kausale Behauptung tragen kann.</li>
 </ol>
 <p>CausalImpact verwandelt Beobachtungsdaten nicht in ein Experiment. Es gibt Ihnen einen strukturierten Weg zu fragen, ob eine Zeitreihe ein glaubwürdiges Kontrafaktum tragen kann. Wenn sie es nicht kann, wird ein besseres Modell das nicht beheben; planen Sie stattdessen ein Geo-Experiment (<a href="../part6/sec6.3-incrementality-experiments.html">Abschnitt 6.3</a>).</p>
-<p><strong>Begleit-Notebook:</strong> <code>sec3.4_causal_impact.ipynb</code> konstruiert das Kontrafaktum, validiert es an Placebo-Daten, auditiert sein Intervall über zweihundert Ziehungen und bricht es dann absichtlich.<br>
-<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.4_causal_impact.ipynb">Auf GitHub ansehen</a></p>
 </section>
 <section id="key-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="key-takeaways">Das Wichtigste in Kürze</h2>

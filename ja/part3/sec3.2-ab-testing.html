@@ -700,6 +700,8 @@ window.Quarto = {
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>stat, p_value <span class="op">=</span> proportions_ztest(conversions, users, alternative<span class="op">=</span><span class="st">"two-sided"</span>)</span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"p-value: </span><span class="sc">{</span>p_value<span class="sc">:.2f}</span><span class="ss">"</span>)     <span class="co"># 0.43</span></span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 <p>p値だけを見たチームは、再設計に効果がないと結論づけて次へ進みます。その結論はデータに裏づけられていません。p値0.43が示しているのは、このテストでは小さな効果と偶然のノイズを区別できなかったということだけです。差の95%信頼区間は−0.36から+0.84ポイントであり、データは小さな損失とも大きな改善とも矛盾しません。処置群の方が本当に良い可能性はありますが、このサンプルサイズでは示せません。区間には導入する価値のあるリフトがまだ含まれているので、この結果は結論が出ていません。</p>
+<p><strong>付属Notebook：</strong> <code>sec3.2_ab_test_figures.ipynb</code> は、サンプルサイズと検出力の図を再現し、この章のCUPEDシミュレーションを実行します。<br>
+<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.2_ab_test_figures.ipynb">GitHubで見る</a></p>
 <section id="statistical-power" class="level2">
 <h2 class="anchored" data-anchor-id="statistical-power">統計的検出力</h2>
 <p>統計的検出力とは、特定の大きさの効果が本当に存在する場合に、テストがその効果を検出する確率です。多くのチームは検出力80%を目指しますが、その大きさの効果を見逃す確率が依然として20%残ります。</p>
@@ -781,30 +783,49 @@ window.Quarto = {
 <p>形式的には、<span class="math inline">\(Y\)</span> をアウトカム、<span class="math inline">\(X\)</span> を実験前の共変量（例：過去30日間の購入）とします。調整後のアウトカムは次のとおりです。</p>
 <p><span class="math display">\[Y_{\text{CUPED}} = Y - \theta \cdot (X - \bar{X})\]</span></p>
 <p>ここで、<span class="math inline">\(\theta = \text{Cov}(Y, X) / \text{Var}(X)\)</span> です。調整後のアウトカムの分散は <span class="math inline">\(\text{Var}(Y_{\text{CUPED}}) = \text{Var}(Y)(1 - \rho^2)\)</span> まで減少します。<span class="math inline">\(\rho\)</span> は <span class="math inline">\(X\)</span> と <span class="math inline">\(Y\)</span> のピアソン相関です。<span class="math inline">\(\rho = 0.7\)</span> なら、CUPEDは分散のおよそ半分を取り除き、サンプルを2倍にした場合と同程度の精度を得られます。その後Netflixは、大規模オンライン実験で同程度の分散削減を報告するケーススタディを公開しました<span class="citation" data-cites="xie2016netflix">(<a href="../appendix/further-reading.html#ref-xie2016netflix" role="doc-biblioref">Xie と Aurisset 2016年</a>)</span>。最も一般的な共変量は、実験前期間に測定した同じ指標であり、通常これが最も強い相関を示します。</p>
-<p>コードでは、調整は数行だけです。事前期間の支出と実験中の支出の相関が約0.75となるシミュレーション上のキャンペーンでは、リフトの標準誤差を約3分の1削減します。</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co"># df: one row per customer — pre_spend (prior 30 days), campaign_spend, treatment (0/1)</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>theta <span class="op">=</span> np.cov(df[<span class="st">"campaign_spend"</span>], df[<span class="st">"pre_spend"</span>])[<span class="dv">0</span>, <span class="dv">1</span>] <span class="op">/</span> df[<span class="st">"pre_spend"</span>].var()</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>df[<span class="st">"cuped_spend"</span>] <span class="op">=</span> df[<span class="st">"campaign_spend"</span>] <span class="op">-</span> theta <span class="op">*</span> (</span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    df[<span class="st">"pre_spend"</span>] <span class="op">-</span> df[<span class="st">"pre_spend"</span>].mean()</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> metric <span class="kw">in</span> [<span class="st">"campaign_spend"</span>, <span class="st">"cuped_spend"</span>]:</span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    t <span class="op">=</span> df.loc[df[<span class="st">"treatment"</span>] <span class="op">==</span> <span class="dv">1</span>, metric]</span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    c <span class="op">=</span> df.loc[df[<span class="st">"treatment"</span>] <span class="op">==</span> <span class="dv">0</span>, metric]</span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    se <span class="op">=</span> np.sqrt(t.var() <span class="op">/</span> <span class="bu">len</span>(t) <span class="op">+</span> c.var() <span class="op">/</span> <span class="bu">len</span>(c))</span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span>metric<span class="sc">:15s}</span><span class="ss"> lift=</span><span class="sc">{</span>t<span class="sc">.</span>mean() <span class="op">-</span> c<span class="sc">.</span>mean()<span class="sc">:.2f}</span><span class="ss">  SE=</span><span class="sc">{</span>se<span class="sc">:.3f}</span><span class="ss">"</span>)</span>
-<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="co"># campaign_spend  lift=0.97  SE=0.549</span></span>
-<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="co"># cuped_spend     lift=1.07  SE=0.364   (33.7% smaller SE — like a much bigger sample)</span></span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+<p>コードでは、調整は2行です。</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># df: one row per customer; pre_spend covers the 30 days before the test</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>spend, pre <span class="op">=</span> df[<span class="st">"campaign_spend"</span>], df[<span class="st">"pre_spend"</span>]</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>theta <span class="op">=</span> spend.cov(pre) <span class="op">/</span> pre.var()</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>df[<span class="st">"cuped_spend"</span>] <span class="op">=</span> spend <span class="op">-</span> theta <span class="op">*</span> (pre <span class="op">-</span> pre.mean())</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+<p>事前期間の支出と実験中の支出の相関が約0.75となるシミュレーション上のキャンペーンでは、元の列の代わりに調整後の列で処置群と対照群を比べると、リフトの標準誤差が約3分の1小さくなります。</p>
+<div id="tbl-cuped-result" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-cuped-result-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+表&nbsp;1: 同じシミュレーション上のテストを、CUPED調整の前後で比べた結果。
+</figcaption>
+<div aria-describedby="tbl-cuped-result-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">アウトカム</th>
+<th style="text-align: right;">リフト</th>
+<th style="text-align: right;">標準誤差</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">元の支出</td>
+<td style="text-align: right;">0.97</td>
+<td style="text-align: right;">0.549</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">CUPED調整後の支出</td>
+<td style="text-align: right;">1.07</td>
+<td style="text-align: right;">0.364</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
 <p>点推定値はわずかに変化します（0.97 → 1.07）。CUPEDは、群間の事前期間に偶然生じた不均衡による生の差を取り除くため、同じ真の効果を対象としたまま区間が狭くなります。付属Notebookでは <code>df</code> を最初から最後までシミュレーションし、p値（ここでは0.08から0.003へ低下）も報告します。相関を変えて、精度の向上が小さくなったり大きくなったりする様子を確認できます。</p>
 </section>
 <section id="when-a-test-is-inconclusive" class="level2">
 <h2 class="anchored" data-anchor-id="when-a-test-is-inconclusive">テストで結論が出ない場合</h2>
 <p>決済ページのテストへ戻ります。p値が0.05を下回ったかを問う代わりに、導入する価値のある効果を除外できるほどテストが精密だったかを問います。</p>
 <p>観測されたリフトは+0.24ポイントで、95%区間は−0.36から+0.84ポイントです。このテストでは結論が出ません。区間が広すぎて、どちらの結論も支えられないからです。区間が狭く、導入する価値のあるリフトをすべて除外している場合に限り、その処置を見送ることが妥当になります。結論が出ない結果は、テストが小さすぎた、ノイズが多すぎた、または異常な時期に実施されたというだけかもしれません。</p>
-<p><strong>付属Notebook：</strong> <code>sec3.2_ab_test_figures.ipynb</code> は、サンプルサイズと検出力の図を再現し、この章のCUPEDシミュレーションを実行します。<br>
-<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.2_ab_test_figures.ipynb">GitHubで見る</a></p>
 </section>
 <section id="key-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="key-takeaways">要点</h2>

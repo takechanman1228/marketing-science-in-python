@@ -663,6 +663,8 @@ Abbildung&nbsp;1: Uplift-Modeling priorisiert nach Treatment-Effekt.
 </figcaption>
 </figure>
 </div>
+<p><strong>Begleit-Notebook:</strong> <code>sec3.6_uplift_modeling.ipynb</code> baut den S-Learner-Uplift-Score auf MineThatData und bewertet ihn mit Uplift- und Qini-Kurven, Dezil-Uplift und einer Targeting-Regel nach Nettowert.<br>
+<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.6_uplift_modeling.ipynb">Auf GitHub ansehen</a></p>
 <section id="understanding-the-customers-to-target" class="level2">
 <h2 class="anchored" data-anchor-id="understanding-the-customers-to-target">Die anzusprechenden Kunden verstehen</h2>
 <p>Um Uplift-Modeling gut anzuwenden, hilft es, sich vier Arten von Kunden vorzustellen, definiert danach, wie sie auf den Kontakt reagieren.</p>
@@ -729,12 +731,10 @@ Abbildung&nbsp;2: Die vier Uplift-Kundensegmente.
 </tr>
 </tbody>
 </table>
-<p><strong>Begleit-Notebook:</strong> <code>sec3.6_uplift_modeling.ipynb</code> baut den S-Learner-Uplift-Score auf MineThatData und bewertet ihn mit Uplift- und Qini-Kurven, Dezil-Uplift und einer Targeting-Regel nach Nettowert.<br>
-<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.6_uplift_modeling.ipynb">Auf GitHub ansehen</a></p>
 </section>
 <section id="training-the-uplift-model" class="level2">
 <h2 class="anchored" data-anchor-id="training-the-uplift-model">Das Uplift-Modell trainieren</h2>
-<p>Der Uplift-Score ist einfach der CATE. Wir passen die Meta-Learner aus §3.5 erneut an und behalten den, der den wahren Effekt auf dem Holdout-Set am besten wiederfindet: den S-Learner, dessen Schätzungen mit 0.77 mit der Wahrheit korrelieren (der vollständige Vergleich ist <a href="sec3.5-meta-learners.html#tbl-cate-recovery" class="quarto-xref">Tabelle&nbsp;<span>1</span></a> in §3.5). Diese Wahl ist nur möglich, weil die Daten semisynthetisch sind; auf echten Daten wird der wahre Effekt nie beobachtet, also wird der Learner auf einem randomisierten Holdout nach Qini oder nach beobachtetem Uplift pro Dezil gewählt, was der Evaluationsabschnitt unten behandelt. Das Holdout, mit dem der Learner gewählt wird, ist vom frischen Holdout getrennt, mit dem anschließend bestätigt wird, dass die gewählte Reihung besser als Zufall ist. Sein vorhergesagter CATE ist der Uplift-Score, und die Anpassung ist derselbe EconML-Aufruf wie in §3.5, es gibt also nichts Neues zu installieren:</p>
+<p>Der Uplift-Score ist einfach der CATE. Wir passen die Meta-Learner aus §3.5 erneut an und behalten den, der den wahren Effekt auf dem Holdout-Set am besten wiederfindet: den S-Learner, dessen Schätzungen mit 0.77 mit der Wahrheit korrelieren (der vollständige Vergleich ist <a href="sec3.5-meta-learners.html#tbl-cate-recovery" class="quarto-xref">Tabelle&nbsp;<span>1</span></a> in §3.5). Diese Wahl ist nur möglich, weil die Daten semisynthetisch sind; auf echten Daten wird der wahre Effekt nie beobachtet, also wird der Learner auf einem randomisierten Holdout nach Qini oder nach beobachtetem Uplift pro Dezil gewählt, was der Evaluationsabschnitt unten behandelt. Das Holdout, mit dem der Learner gewählt wird, ist vom frischen Holdout getrennt, mit dem anschließend bestätigt wird, dass die gewählte Reihung besser als Zufall ist. Der vorhergesagte CATE des S-Learners ist der Uplift-Score, und die Anpassung ist derselbe EconML-Aufruf wie im Notebook zu §3.5, es gibt also nichts Neues zu installieren:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> econml.metalearners <span class="im">import</span> SLearner</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> lightgbm <span class="im">import</span> LGBMRegressor</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>

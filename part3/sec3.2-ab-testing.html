@@ -696,6 +696,8 @@ window.Quarto = {
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>stat, p_value <span class="op">=</span> proportions_ztest(conversions, users, alternative<span class="op">=</span><span class="st">"two-sided"</span>)</span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"p-value: </span><span class="sc">{</span>p_value<span class="sc">:.2f}</span><span class="ss">"</span>)     <span class="co"># 0.43</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>A team reading only the p-value concludes that the redesign doesn’t work and moves on. That conclusion isn’t backed up by the data. A p-value of 0.43 says only that the test couldn’t separate a small effect from random noise. The 95% confidence interval for the difference runs from −0.36 to +0.84 points, so the data are consistent with a small loss and with a sizable win. The treatment might really be better, but this sample size can’t show it. The interval still includes a lift worth shipping, so the result is inconclusive.</p>
+<p><strong>Companion notebook:</strong> <code>sec3.2_ab_test_figures.ipynb</code> reproduces the sample-size and power figures and runs the CUPED simulation from this chapter.<br>
+<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.2_ab_test_figures.ipynb">View on GitHub</a></p>
 <section id="statistical-power" class="level2">
 <h2 class="anchored" data-anchor-id="statistical-power">Statistical Power</h2>
 <p>Statistical power is the chance your test will detect an effect of a specific size if that effect truly exists. Most teams aim for 80% power, which still leaves a 20% chance of missing an effect that large.</p>
@@ -777,30 +779,49 @@ Figure&nbsp;3: CUPED variance reduction, step by step.
 <p>Formally, let <span class="math inline">\(Y\)</span> be the outcome and <span class="math inline">\(X\)</span> a pre-experiment covariate (e.g., purchases in the prior 30 days). The adjusted outcome is:</p>
 <p><span class="math display">\[Y_{\text{CUPED}} = Y - \theta \cdot (X - \bar{X})\]</span></p>
 <p>where <span class="math inline">\(\theta = \text{Cov}(Y, X) / \text{Var}(X)\)</span>. The variance of the adjusted outcome reduces to <span class="math inline">\(\text{Var}(Y_{\text{CUPED}}) = \text{Var}(Y)(1 - \rho^2)\)</span>, where <span class="math inline">\(\rho\)</span> is the Pearson correlation between <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span>. If <span class="math inline">\(\rho = 0.7\)</span>, CUPED removes about half the variance, as much precision as doubling the sample would buy. Netflix later published case studies reporting similar variance reductions across its large-scale online experiments <span class="citation" data-cites="xie2016netflix">(<a href="../appendix/further-reading.html#ref-xie2016netflix" role="doc-biblioref">Xie and Aurisset 2016</a>)</span>. The most common covariate is the same metric measured in the pre-experiment period, which usually gives the strongest correlation.</p>
-<p>In code, the adjustment is only a few lines. On a simulated campaign where pre-period spend correlates with in-experiment spend at about 0.75, it cuts the standard error of the lift by about a third:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co"># df: one row per customer — pre_spend (prior 30 days), campaign_spend, treatment (0/1)</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>theta <span class="op">=</span> np.cov(df[<span class="st">"campaign_spend"</span>], df[<span class="st">"pre_spend"</span>])[<span class="dv">0</span>, <span class="dv">1</span>] <span class="op">/</span> df[<span class="st">"pre_spend"</span>].var()</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>df[<span class="st">"cuped_spend"</span>] <span class="op">=</span> df[<span class="st">"campaign_spend"</span>] <span class="op">-</span> theta <span class="op">*</span> (</span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    df[<span class="st">"pre_spend"</span>] <span class="op">-</span> df[<span class="st">"pre_spend"</span>].mean()</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> metric <span class="kw">in</span> [<span class="st">"campaign_spend"</span>, <span class="st">"cuped_spend"</span>]:</span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    t <span class="op">=</span> df.loc[df[<span class="st">"treatment"</span>] <span class="op">==</span> <span class="dv">1</span>, metric]</span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    c <span class="op">=</span> df.loc[df[<span class="st">"treatment"</span>] <span class="op">==</span> <span class="dv">0</span>, metric]</span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    se <span class="op">=</span> np.sqrt(t.var() <span class="op">/</span> <span class="bu">len</span>(t) <span class="op">+</span> c.var() <span class="op">/</span> <span class="bu">len</span>(c))</span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span>metric<span class="sc">:15s}</span><span class="ss"> lift=</span><span class="sc">{</span>t<span class="sc">.</span>mean() <span class="op">-</span> c<span class="sc">.</span>mean()<span class="sc">:.2f}</span><span class="ss">  SE=</span><span class="sc">{</span>se<span class="sc">:.3f}</span><span class="ss">"</span>)</span>
-<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="co"># campaign_spend  lift=0.97  SE=0.549</span></span>
-<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="co"># cuped_spend     lift=1.07  SE=0.364   (33.7% smaller SE — like a much bigger sample)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>In code, the adjustment is two lines:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># df: one row per customer; pre_spend covers the 30 days before the test</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>spend, pre <span class="op">=</span> df[<span class="st">"campaign_spend"</span>], df[<span class="st">"pre_spend"</span>]</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>theta <span class="op">=</span> spend.cov(pre) <span class="op">/</span> pre.var()</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>df[<span class="st">"cuped_spend"</span>] <span class="op">=</span> spend <span class="op">-</span> theta <span class="op">*</span> (pre <span class="op">-</span> pre.mean())</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>On a simulated campaign where pre-period spend correlates with in-experiment spend at about 0.75, comparing treatment and control on the adjusted column instead of the raw one cuts the standard error of the lift by about a third:</p>
+<div id="tbl-cuped-result" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-cuped-result-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;1: The same simulated test, before and after the CUPED adjustment.
+</figcaption>
+<div aria-describedby="tbl-cuped-result-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Outcome</th>
+<th style="text-align: right;">Lift</th>
+<th style="text-align: right;">Standard error</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Raw spend</td>
+<td style="text-align: right;">0.97</td>
+<td style="text-align: right;">0.549</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">CUPED-adjusted spend</td>
+<td style="text-align: right;">1.07</td>
+<td style="text-align: right;">0.364</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
 <p>The point estimate shifts slightly (0.97 → 1.07): CUPED removes the part of the raw gap caused by a chance pre-period imbalance between the groups, so it still targets the same true effect while the interval tightens. The companion notebook simulates <code>df</code> end to end (reporting p-values, which here drop from 0.08 to 0.003) so you can change the correlation and watch the precision gain shrink or grow.</p>
 </section>
 <section id="when-a-test-is-inconclusive" class="level2">
 <h2 class="anchored" data-anchor-id="when-a-test-is-inconclusive">When a Test Is Inconclusive</h2>
 <p>Return to the checkout test. Instead of asking whether the p-value fell below 0.05, ask whether the test was precise enough to rule out an effect worth shipping.</p>
 <p>The observed lift was +0.24 points, with a 95% interval from −0.36 to +0.84 points. That test is inconclusive: the interval is too wide to support either conclusion. Only when the interval is narrow and excludes any lift worth shipping can you reasonably set a treatment aside. An inconclusive result may simply mean the test was too small, too noisy, or run during an unusual period.</p>
-<p><strong>Companion notebook:</strong> <code>sec3.2_ab_test_figures.ipynb</code> reproduces the sample-size and power figures and runs the CUPED simulation from this chapter.<br>
-<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.2_ab_test_figures.ipynb">View on GitHub</a></p>
 </section>
 <section id="key-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="key-takeaways">Key Takeaways</h2>

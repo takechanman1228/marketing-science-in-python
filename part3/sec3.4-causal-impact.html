@@ -585,20 +585,20 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
   <li><a href="#sec-counterfactual-recipe" id="toc-sec-counterfactual-recipe" class="nav-link active" data-scroll-target="#sec-counterfactual-recipe">Building the Counterfactual</a></li>
   <li><a href="#sec-preperiod-validation" id="toc-sec-preperiod-validation" class="nav-link" data-scroll-target="#sec-preperiod-validation">Validating the Counterfactual Before Measuring</a>
   <ul class="collapse">
-  <li><a href="#backtesting-the-forecast" id="toc-backtesting-the-forecast" class="nav-link" data-scroll-target="#backtesting-the-forecast">Backtesting the forecast</a></li>
-  <li><a href="#placebo-interventions" id="toc-placebo-interventions" class="nav-link" data-scroll-target="#placebo-interventions">Placebo interventions</a></li>
-  <li><a href="#checking-that-the-controls-help" id="toc-checking-that-the-controls-help" class="nav-link" data-scroll-target="#checking-that-the-controls-help">Checking that the controls help</a></li>
+  <li><a href="#backtesting-the-forecast" id="toc-backtesting-the-forecast" class="nav-link" data-scroll-target="#backtesting-the-forecast">Backtesting the Forecast</a></li>
+  <li><a href="#placebo-interventions" id="toc-placebo-interventions" class="nav-link" data-scroll-target="#placebo-interventions">Placebo Interventions</a></li>
+  <li><a href="#checking-that-the-controls-help" id="toc-checking-that-the-controls-help" class="nav-link" data-scroll-target="#checking-that-the-controls-help">Checking That the Controls Help</a></li>
   </ul></li>
   <li><a href="#sec-reading-the-campaign" id="toc-sec-reading-the-campaign" class="nav-link" data-scroll-target="#sec-reading-the-campaign">Estimating the Campaign Effect</a>
   <ul class="collapse">
-  <li><a href="#choosing-the-reporting-window" id="toc-choosing-the-reporting-window" class="nav-link" data-scroll-target="#choosing-the-reporting-window">Choosing the reporting window</a></li>
-  <li><a href="#sec-two-uncertainties" id="toc-sec-two-uncertainties" class="nav-link" data-scroll-target="#sec-two-uncertainties">How much to trust the interval</a></li>
+  <li><a href="#choosing-the-reporting-window" id="toc-choosing-the-reporting-window" class="nav-link" data-scroll-target="#choosing-the-reporting-window">Choosing the Reporting Window</a></li>
+  <li><a href="#sec-two-uncertainties" id="toc-sec-two-uncertainties" class="nav-link" data-scroll-target="#sec-two-uncertainties">How Much to Trust the Interval</a></li>
   </ul></li>
   <li><a href="#sec-failure-modes" id="toc-sec-failure-modes" class="nav-link" data-scroll-target="#sec-failure-modes">When Not to Trust the Estimate</a>
   <ul class="collapse">
-  <li><a href="#the-campaign-touched-a-control" id="toc-the-campaign-touched-a-control" class="nav-link" data-scroll-target="#the-campaign-touched-a-control">The campaign touched a control</a></li>
-  <li><a href="#the-pre-period-relationship-broke" id="toc-the-pre-period-relationship-broke" class="nav-link" data-scroll-target="#the-pre-period-relationship-broke">The pre-period relationship broke</a></li>
-  <li><a href="#sec-real-data-check" id="toc-sec-real-data-check" class="nav-link" data-scroll-target="#sec-real-data-check">The forecast was never good enough</a></li>
+  <li><a href="#the-campaign-touched-a-control" id="toc-the-campaign-touched-a-control" class="nav-link" data-scroll-target="#the-campaign-touched-a-control">The Campaign Touched a Control</a></li>
+  <li><a href="#the-pre-period-relationship-broke" id="toc-the-pre-period-relationship-broke" class="nav-link" data-scroll-target="#the-pre-period-relationship-broke">The Pre-Period Relationship Broke</a></li>
+  <li><a href="#sec-real-data-check" id="toc-sec-real-data-check" class="nav-link" data-scroll-target="#sec-real-data-check">The Forecast Was Never Good Enough</a></li>
   </ul></li>
   <li><a href="#sec-intervention-checklist" id="toc-sec-intervention-checklist" class="nav-link" data-scroll-target="#sec-intervention-checklist">A Practical Workflow</a></li>
   <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways">Key Takeaways</a></li>
@@ -628,8 +628,10 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 </header>
 
 
-<p>A national TV campaign ran for eight weeks in every market, and sales went up. With every market exposed, there’s no untreated market to compare against, and every quasi-experimental design in <a href="sec3.3-quasi-experiments.html">the previous chapter</a> requires one. What would sales have been without the campaign?</p>
+<p>A national TV campaign ran for eight weeks in every market, and sales went up. With every market exposed, there’s no untreated market to compare against, and every quasi-experimental design in <a href="sec3.3-quasi-experiments.html">Section 3.3</a> requires one. What would sales have been without the campaign?</p>
 <p>This chapter has one job: build that missing no-campaign path, and decide whether it’s credible enough to measure the campaign against. Building it takes about fifteen lines of code; validating it takes the rest of the chapter.</p>
+<p><strong>Companion notebook:</strong> <code>sec3.4_causal_impact.ipynb</code> builds the counterfactual, validates it on placebo dates, audits its interval across two hundred draws, and then breaks it on purpose.<br>
+<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.4_causal_impact.ipynb">View on GitHub</a></p>
 <section id="sec-counterfactual-recipe" class="level2">
 <h2 class="anchored" data-anchor-id="sec-counterfactual-recipe">Building the Counterfactual</h2>
 <p><strong>Core idea:</strong> forecast the sales you would have seen without the campaign. The effect is observed sales minus that forecast.</p>
@@ -669,24 +671,12 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 </tbody>
 </table>
 <p>The worked example is a national CPG brand: four years of weekly revenue, an eight-week TV and PR campaign, and twenty weeks of observation after it. Two control series: a subcategory demand index and a sibling product line that got no media. The data is synthetic, so the true no-campaign path is known. Before any code, fix the analysis brief:</p>
-<div class="callout callout-style-default callout-note callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Note</span>Analysis brief
-</div>
-</div>
-<div class="callout-body-container callout-body">
 <ul>
 <li><strong>Business question:</strong> How much incremental revenue did the campaign generate?</li>
 <li><strong>Outcome:</strong> Weekly national revenue.</li>
 <li><strong>Treatment:</strong> The eight-week TV-and-PR campaign, measured as one combined intervention.</li>
 <li><strong>Estimand:</strong> Cumulative incremental revenue over the 28 weeks after launch, including carryover and any later payback.</li>
 </ul>
-</div>
-</div>
 <p>The estimand is a decision, and it’s fixed here rather than after the results are in. It’s why the forecast below runs 28 weeks, and why the reporting-window section later in the chapter is a check rather than a choice.</p>
 <div id="fig-panel" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Four years of brand revenue with the true untreated path marked, above a subcategory demand index and a sibling product line, with the eight-week flight shaded.">
 <figure class="quarto-float quarto-float-fig figure">
@@ -702,35 +692,32 @@ Figure&nbsp;1: The treated brand and its two controls.
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> statsmodels.tsa.statespace.structural <span class="im">import</span> UnobservedComponents</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Fit on the PRE-period only. The campaign is deliberately absent.</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> UnobservedComponents(</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    np.log(y_pre),</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    level<span class="op">=</span><span class="st">"lltrend"</span>,                                   <span class="co"># level and slope</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    freq_seasonal<span class="op">=</span>[{<span class="st">"period"</span>: <span class="dv">52</span>, <span class="st">"harmonics"</span>: <span class="dv">2</span>}],    <span class="co"># annual shape</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    exog<span class="op">=</span>np.log(x_pre),                                <span class="co"># untouched controls</span></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>res <span class="op">=</span> model.fit(disp<span class="op">=</span><span class="dv">0</span>)</span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Simulate 1,000 no-campaign paths across the 28 post-period weeks</span></span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>horizon, draws <span class="op">=</span> <span class="bu">len</span>(y_post), <span class="dv">1000</span></span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>paths <span class="op">=</span> np.exp(</span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    np.asarray(res.simulate(horizon, repetitions<span class="op">=</span>draws, anchor<span class="op">=</span><span class="st">"end"</span>,</span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>                            exog<span class="op">=</span>np.log(x_post))).reshape(horizon, draws)</span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Effect = observed minus counterfactual. The point estimate and the</span></span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="co">#    interval come from the same draws, so both summarize one distribution.</span></span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>counterfactual <span class="op">=</span> paths.mean(axis<span class="op">=</span><span class="dv">1</span>)</span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>weekly_effect <span class="op">=</span> y_post <span class="op">-</span> counterfactual</span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>cumulative <span class="op">=</span> weekly_effect.<span class="bu">sum</span>()</span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>lo, hi <span class="op">=</span> np.percentile((y_post[:, <span class="va">None</span>] <span class="op">-</span> paths).<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">0</span>), [<span class="fl">2.5</span>, <span class="fl">97.5</span>])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> UnobservedComponents(</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    np.log(y_pre),                                    <span class="co"># pre-period revenue</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    level<span class="op">=</span><span class="st">"lltrend"</span>,                                  <span class="co"># level and slope</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    freq_seasonal<span class="op">=</span>[{<span class="st">"period"</span>: <span class="dv">52</span>, <span class="st">"harmonics"</span>: <span class="dv">2</span>}],   <span class="co"># annual shape</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    exog<span class="op">=</span>np.log(x_pre),                               <span class="co"># the two controls</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>res <span class="op">=</span> model.fit(disp<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="co"># 1,000 no-campaign paths across the 28 post-period weeks, in dollars</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>horizon, draws <span class="op">=</span> <span class="bu">len</span>(y_post), <span class="dv">1000</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>sims <span class="op">=</span> res.simulate(</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    horizon, repetitions<span class="op">=</span>draws, anchor<span class="op">=</span><span class="st">"end"</span>, exog<span class="op">=</span>np.log(x_post)</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>paths <span class="op">=</span> np.exp(np.asarray(sims).reshape(horizon, draws))</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="co"># One total per path: the estimate and the interval share the same draws</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>effects <span class="op">=</span> (y_post[:, <span class="va">None</span>] <span class="op">-</span> paths).<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>cumulative <span class="op">=</span> effects.mean()</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>lo, hi <span class="op">=</span> np.percentile(effects, [<span class="fl">2.5</span>, <span class="fl">97.5</span>])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Three choices in that code matter. The model is fit on the pre-period only, so the campaign can’t contaminate its own baseline. Sales are modelled in logs, because a campaign lift and seasonality are both multiplicative, and the simulated paths are converted back to dollars before anything is summed. And the controls enter as regressors, so the forecast knows what the market did during the campaign. Whether the model also needs a trend term, or the controls at all, is settled by the backtest in the next section.</p>
 </section>
 <section id="sec-preperiod-validation" class="level2">
 <h2 class="anchored" data-anchor-id="sec-preperiod-validation">Validating the Counterfactual Before Measuring</h2>
 <p>The effect you’ll report is observed minus forecast, so forecast error passes through one-for-one into the estimated effect. That makes this step mandatory. Before using the forecast to measure the campaign, you have to show it can predict a period where nothing happened. Three checks do that, and all three run on the pre-period alone.</p>
 <section id="backtesting-the-forecast" class="level3">
-<h3 class="anchored" data-anchor-id="backtesting-the-forecast">Backtesting the forecast</h3>
+<h3 class="anchored" data-anchor-id="backtesting-the-forecast">Backtesting the Forecast</h3>
 <p>The first check is whether the model can forecast a period where nothing happened. Pretend the campaign started at some earlier date inside the pre-period. Fit on the data before that date, forecast the next twenty-eight weeks, and compare to what actually happened. Repeat this from several dates. The horizon is twenty-eight weeks because that’s the estimand in the brief, and a model that looks fine over eight weeks can fall apart over twenty-eight. The results below select the specification.</p>
 <table class="caption-top table">
 <caption>Rolling-origin validation over nine pre-period windows where nothing happened.</caption>
@@ -772,7 +759,7 @@ Figure&nbsp;1: The treated brand and its two controls.
 <p>Trend plus controls has the lowest error and the smallest bias, so that’s the specification we use, with two details worth noting. The controls cut the error in half, so on this data they earn their place. And the trend term matters at this horizon: the brand grows faster than its subcategory, and a model without a slope would attribute that gap to the campaign.</p>
 </section>
 <section id="placebo-interventions" class="level3">
-<h3 class="anchored" data-anchor-id="placebo-interventions">Placebo interventions</h3>
+<h3 class="anchored" data-anchor-id="placebo-interventions">Placebo Interventions</h3>
 <p>The second check is what the design returns when nothing happened. Pick a date in the pre-period, say week 120, when there was no campaign. Pretend one started that week and run the full analysis. The correct answer is zero, so any non-zero result measures what this design returns from noise alone. That’s a <strong>placebo intervention</strong>, and the nine backtest windows above double as nine placebos. The largest placebo effect here was $636k, and one of the nine returned an interval that excluded zero. Record both numbers, and require the campaign estimate to clear them.</p>
 <div id="fig-validation" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Left, forecast error by specification over pre-period windows; right, the spread of cumulative effects the design returns on dates where nothing happened.">
 <figure class="quarto-float quarto-float-fig figure">
@@ -786,7 +773,7 @@ Figure&nbsp;2: Validation and placebo checks before the campaign.
 </div>
 </section>
 <section id="checking-that-the-controls-help" class="level3">
-<h3 class="anchored" data-anchor-id="checking-that-the-controls-help">Checking that the controls help</h3>
+<h3 class="anchored" data-anchor-id="checking-that-the-controls-help">Checking That the Controls Help</h3>
 <p>Do the controls actually improve the forecast? The backtest already said yes on this data, and it’s worth seeing what that buys. In a calm world the controls narrow the interval by a factor of twelve. When a category-wide dip hits three weeks of the campaign, the estimate with controls lands within 1.3% of the truth, because the counterfactual dips with the market. Without controls the same dip is attributed to the campaign, and the estimate lands 21% below the truth. A useful control series carries the shocks that hit the whole market, so the counterfactual moves with them instead of leaving them in the estimated effect.</p>
 <p>It only works if the campaign didn’t touch the control. That’s the assumption that can’t be tested from the data, and it gets its own section, <a href="#sec-failure-modes">When Not to Trust the Estimate</a>.</p>
 </section>
@@ -805,7 +792,7 @@ Figure&nbsp;3: Observed, weekly effect, and cumulative effect.
 </figure>
 </div>
 <section id="choosing-the-reporting-window" class="level3">
-<h3 class="anchored" data-anchor-id="choosing-the-reporting-window">Choosing the reporting window</h3>
+<h3 class="anchored" data-anchor-id="choosing-the-reporting-window">Choosing the Reporting Window</h3>
 <p>The brief fixed the estimand at 28 weeks. Look at the cumulative panel: the curve climbs during the eight-week flight, keeps climbing for a few weeks after it as the carryover runs, then turns down as demand that was pulled forward gets paid back. Three windows, each of which sounds reasonable, give three different numbers.</p>
 <table class="caption-top table">
 <caption>The same model and the same campaign, read over three windows.</caption>
@@ -845,7 +832,7 @@ Figure&nbsp;3: Observed, weekly effect, and cumulative effect.
 <p>All three estimates are accurate for the window they cover. Only the last one answers the brief, because only it counts the payback. Stopping at week 12, the peak of the curve, overstates the full answer by 38%. The three numbers come from the same model and differ only in the reporting window, which is why the window is fixed in the brief rather than chosen after the curve is plotted.</p>
 </section>
 <section id="sec-two-uncertainties" class="level3">
-<h3 class="anchored" data-anchor-id="sec-two-uncertainties">How much to trust the interval</h3>
+<h3 class="anchored" data-anchor-id="sec-two-uncertainties">How Much to Trust the Interval</h3>
 <p>The band on the chart holds the fitted model fixed and propagates its noise forward. That makes it a floor on the real uncertainty, not the whole of it. Two things help you read it: the placebo results, and the audit below. The $1,164k estimate is larger than every placebo effect this design produced, and the biggest of those was $636k. Stated in dollars, this is directly comparable to the decision, which a p-value isn’t.</p>
 <div class="callout callout-style-default callout-note callout-titled">
 <div class="callout-header d-flex align-content-center">
@@ -876,15 +863,15 @@ Figure&nbsp;4: Estimates under six control-series scenarios.
 </figure>
 </div>
 <section id="the-campaign-touched-a-control" class="level3">
-<h3 class="anchored" data-anchor-id="the-campaign-touched-a-control">The campaign touched a control</h3>
+<h3 class="anchored" data-anchor-id="the-campaign-touched-a-control">The Campaign Touched a Control</h3>
 <p>A control series is predictive because it moves with the same demand the brand sells into, which is also what makes it likely that the campaign reached it. The subcategory index carries most of the model’s explanatory power, so a national campaign for a large brand in that subcategory is a threat to it. Leak 35% of the brand’s lift into the index and the estimate keeps only 65% of the true effect, with an interval that no longer excludes zero. A campaign that worked is then reported as inconclusive, and no diagnostic catches it: the pre-period fit, the interval width, and the backtest are all unchanged. The assumption is violated outside the data, so no data check can detect it. The only way to check it is to ask the people who ran the campaign what it could have touched.</p>
 </section>
 <section id="the-pre-period-relationship-broke" class="level3">
-<h3 class="anchored" data-anchor-id="the-pre-period-relationship-broke">The pre-period relationship broke</h3>
+<h3 class="anchored" data-anchor-id="the-pre-period-relationship-broke">The Pre-Period Relationship Broke</h3>
 <p>A relationship that held over the four-year pre-period can change in the post-period. Suppose a competitor enters and grows the subcategory by 5% in the post-period, and this brand doesn’t share in it. The controls now say the market got better, the counterfactual rises, and the estimate comes back at negative $460k against a true effect of positive $1,124k. It’s the only scenario in the chapter where the truth falls outside the interval, and it isn’t testable from pre-period data by construction. This is the same discipline DiD demands: the estimate depends entirely on the claim that the controls kept the same relationship to the brand as before.</p>
 </section>
 <section id="sec-real-data-check" class="level3">
-<h3 class="anchored" data-anchor-id="sec-real-data-check">The forecast was never good enough</h3>
+<h3 class="anchored" data-anchor-id="sec-real-data-check">The Forecast Was Never Good Enough</h3>
 <p>The third failure does leave a trace in the data. Run the same machinery on real Dunnhumby store data: take one store’s weekly sales, multiply the final twelve weeks by 1.15, and try to recover the planted lift with four other stores as controls.</p>
 <p>The lift comes back. The planted 1,775 units are recovered as 1,833, with an interval that excludes zero. This could be written up as a successful controlled analysis, but the controls carried no information.</p>
 <div id="fig-reality-check" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Correlation collapsing after an enrollment ramp is trimmed, a flat backtest with and without controls, and a narrower interval that the backtest does not justify.">
@@ -914,8 +901,6 @@ Figure&nbsp;5: Control-series checks on real store data.
 <li><strong>If the counterfactual is weak, don’t report a causal number.</strong> At a 13.7% backtest error, the output is a forecast that can’t support a causal claim.</li>
 </ol>
 <p>CausalImpact doesn’t turn observational data into an experiment. It gives you a structured way to ask whether a time series can support a credible counterfactual. When it can’t, a better model won’t fix that; plan a geo experiment instead (<a href="../part6/sec6.3-incrementality-experiments.html">Section 6.3</a>).</p>
-<p><strong>Companion notebook:</strong> <code>sec3.4_causal_impact.ipynb</code> builds the counterfactual, validates it on placebo dates, audits its interval across two hundred draws, and then breaks it on purpose.<br>
-<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.4_causal_impact.ipynb">View on GitHub</a></p>
 </section>
 <section id="key-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="key-takeaways">Key Takeaways</h2>

@@ -705,7 +705,7 @@ Y^{(s)}_{\text{year-end}} = Y_{\text{so far}} + R_{\text{baseline}} + \Delta_s
 <img src="../images/part5/sec5.3/three_numbers.png" class="fig-lg img-fluid figure-img" alt="Cumulative sales to date, a baseline forecast band with its median path, a dashed scenario path above it, and a line at the annual target.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-three-numbers-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;1: Target, baseline, and increment on one chart
+Figure&nbsp;1: Target, baseline, and increment on one chart.
 </figcaption>
 </figure>
 </div>
@@ -721,7 +721,7 @@ Figure&nbsp;1: Target, baseline, and increment on one chart
 <img src="../images/part5/sec5.3/where_we_stand.png" class="fig-lg img-fluid figure-img" alt="Six years of weekly sales with a holiday peak each year, a marker at the late-September origin, and the last 13 weeks shaded.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-where-we-stand-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;2: Six fiscal years of weekly sales
+Figure&nbsp;2: Six fiscal years of weekly sales.
 </figcaption>
 </figure>
 </div>
@@ -740,19 +740,18 @@ Figure&nbsp;2: Six fiscal years of weekly sales
 <img src="../images/part5/sec5.3/naive_vs_seasonal.png" class="fig-lg img-fluid figure-img" alt="Weekly sales to the late-September origin, then seven 13-week forecast paths that disagree widely over the holiday peak.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-naive-vs-seasonal-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;3: What each model predicts for the same 13 weeks
+Figure&nbsp;3: What each model predicts for the same 13 weeks.
 </figcaption>
 </figure>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> statsmodels.tsa.exponential_smoothing.ets <span class="im">import</span> ETSModel</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> fit_ets(train, seasonal<span class="op">=</span><span class="va">None</span>):</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    model <span class="op">=</span> ETSModel(</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>        pd.Series(np.log(train)),</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>        error<span class="op">=</span><span class="st">"add"</span>, trend<span class="op">=</span><span class="st">"add"</span>, damped_trend<span class="op">=</span><span class="va">True</span>,</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>        seasonal<span class="op">=</span>seasonal, seasonal_periods<span class="op">=</span><span class="dv">52</span> <span class="cf">if</span> seasonal <span class="cf">else</span> <span class="va">None</span>,</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> model.fit(disp<span class="op">=</span><span class="va">False</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> statsmodels.tsa.exponential_smoothing.ets <span class="im">import</span> ETSModel</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co"># y: weekly sales up to the forecast origin, modeled on the log scale</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>spec <span class="op">=</span> <span class="bu">dict</span>(error<span class="op">=</span><span class="st">"add"</span>, trend<span class="op">=</span><span class="st">"add"</span>, damped_trend<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>            seasonal<span class="op">=</span><span class="st">"add"</span>, seasonal_periods<span class="op">=</span><span class="dv">52</span>)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>ets <span class="op">=</span> ETSModel(pd.Series(np.log(y)), <span class="op">**</span>spec).fit(disp<span class="op">=</span><span class="va">False</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>The seven paths differ by a wide margin over the peak, and the chart alone cannot rank them. The candidate that beats the benchmarks in a backtest becomes the baseline; a model’s popularity or release date does not enter the selection.</p>
 <section id="sec-rolling-backtest" class="level3">
 <h3 class="anchored" data-anchor-id="sec-rolling-backtest">Validating with a Rolling-Origin Backtest</h3>
@@ -764,18 +763,17 @@ Figure&nbsp;3: What each model predicts for the same 13 weeks
 <img src="../images/part5/sec5.3/split_vs_rolling_origin.png" class="fig-lg img-fluid figure-img" alt="A shuffled train and test timeline above three origin-anchored rows, each training up to its origin and scoring the next 13 weeks.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-split-vs-rolling-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;4: Random split versus rolling origin
+Figure&nbsp;4: Random split versus rolling origin.
 </figcaption>
 </figure>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>HORIZON <span class="op">=</span> <span class="dv">13</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>SEPT_ORIGINS <span class="op">=</span> [<span class="dv">143</span>, <span class="dv">195</span>, <span class="dv">247</span>]      <span class="co"># end of fiscal week 39, FY2016..FY2018</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> origin <span class="kw">in</span> SEPT_ORIGINS:</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    train <span class="op">=</span> y[:origin]              <span class="co"># nothing after the origin, for any model</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    actual <span class="op">=</span> y[origin:origin <span class="op">+</span> HORIZON]</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> name, forecast <span class="kw">in</span> fit_all_models(train, HORIZON).items():</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>        score(name, origin, actual, forecast)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>wape, total_error <span class="op">=</span> {}, {}</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> origin <span class="kw">in</span> [<span class="dv">143</span>, <span class="dv">195</span>, <span class="dv">247</span>]:      <span class="co"># end of fiscal week 39, FY2016 to FY2018</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    train, actual <span class="op">=</span> y[:origin], y[origin:origin <span class="op">+</span> <span class="dv">13</span>]   <span class="co"># nothing after origin</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    fit <span class="op">=</span> ETSModel(pd.Series(np.log(train)), <span class="op">**</span>spec).fit(disp<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    forecast <span class="op">=</span> np.exp(fit.forecast(<span class="dv">13</span>))                 <span class="co"># back to dollars</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    wape[origin] <span class="op">=</span> np.<span class="bu">abs</span>(actual <span class="op">-</span> forecast).<span class="bu">sum</span>() <span class="op">/</span> actual.<span class="bu">sum</span>()</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    total_error[origin] <span class="op">=</span> forecast.<span class="bu">sum</span>() <span class="op">/</span> actual.<span class="bu">sum</span>() <span class="op">-</span> <span class="dv">1</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Two point metrics are enough to compare the models. Weekly WAPE, <span class="math inline">\(\sum_t |y_t - \hat y_t| / \sum_t |y_t|\)</span>, is the error a planner recognizes. The year-end question depends on the signed error of the 13-week total, because weekly misses partly cancel inside a quarter’s sum. One caveat before the table. Prophet and LightGBM receive the holiday and promotion calendar, and TimesFM receives only the sales history. The series is also synthetic on a 52-week cycle, the shape a seasonal ETS is built to fit.</p>
 <div id="tbl-backtest" class="quarto-float quarto-figure quarto-figure-center anchored" data-tbl-colwidths="[34,22,22,22]">
 <figure class="quarto-float quarto-float-tbl figure">
@@ -852,11 +850,15 @@ Table&nbsp;2: Rolling-origin backtest over the three September replicas (total e
 <section id="sec-target-probability" class="level2">
 <h2 class="anchored" data-anchor-id="sec-target-probability">The Probability of Hitting the Target</h2>
 <p>Now the live version of the procedure the backtest just validated. Fit the seasonal ETS on everything up to late September, simulate 5,000 complete 13-week paths, and add each path’s total to the $8.02M of sales so far.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>result <span class="op">=</span> fit_ets(y[:LIVE_ORIGIN], seasonal<span class="op">=</span><span class="st">"add"</span>)</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>paths <span class="op">=</span> simulate_paths(result, h<span class="op">=</span><span class="dv">13</span>, repetitions<span class="op">=</span><span class="dv">5000</span>)   <span class="co"># centered residual bootstrap</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>year_end <span class="op">=</span> sales_so_far <span class="op">+</span> paths.<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">0</span>)              <span class="co"># one total per path</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>p10, p50, p90 <span class="op">=</span> np.percentile(year_end, [<span class="dv">10</span>, <span class="dv">50</span>, <span class="dv">90</span>])</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>p_hit <span class="op">=</span> (year_end <span class="op">&gt;=</span> target).mean()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># sales_so_far: this year's first 39 weeks; target: the annual target</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>rng <span class="op">=</span> np.random.default_rng(<span class="dv">42</span>)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>resid <span class="op">=</span> ets.resid <span class="op">-</span> ets.resid.mean()         <span class="co"># centered residual bootstrap</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>errors <span class="op">=</span> rng.choice(resid, size<span class="op">=</span>(<span class="dv">13</span>, <span class="dv">5000</span>))</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>paths <span class="op">=</span> np.exp(ets.simulate(<span class="dv">13</span>, repetitions<span class="op">=</span><span class="dv">5000</span>, anchor<span class="op">=</span><span class="st">"end"</span>,</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>                            random_errors<span class="op">=</span>errors))   <span class="co"># 13 weeks x 5,000 paths</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>year_end <span class="op">=</span> sales_so_far <span class="op">+</span> paths.<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">0</span>)  <span class="co"># one total per path</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>p10, p50, p90 <span class="op">=</span> np.percentile(year_end, [<span class="dv">10</span>, <span class="dv">50</span>, <span class="dv">90</span>])</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>p_hit <span class="op">=</span> (year_end <span class="op">&gt;=</span> target).mean()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Weekly forecast errors are correlated over the horizon and quantiles do not add, which is why the code simulates complete paths and sums each one instead of stacking weekly quantiles.</p>
 <div id="fig-year-end-pacing" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Cumulative sales to week 39, then a widening band and median path to week 52, with the annual target just above the band.">
 <figure class="quarto-float quarto-float-fig figure">
@@ -864,7 +866,7 @@ Table&nbsp;2: Rolling-origin backtest over the three September replicas (total e
 <img src="../images/part5/sec5.3/year_end_pacing.png" class="fig-lg img-fluid figure-img" alt="Cumulative sales to week 39, then a widening band and median path to week 52, with the annual target just above the band.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-year-end-pacing-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;5: Year-end pacing under the current plan
+Figure&nbsp;5: Year-end pacing under the current plan.
 </figcaption>
 </figure>
 </div>
@@ -918,12 +920,13 @@ Table&nbsp;3: Scenario increments and their sources (illustrative inputs)
 </div>
 <p>These increments are placeholders shaped like real measurements. Fill each row from the relevant chapter, or leave it out; a Bayesian source such as a calibrated MMM can supply posterior draws directly.</p>
 <p>Units matter when an increment enters the simulation. The campaign effect is <em>relative</em>: it multiplies each path’s own campaign-week sales, so a strong holiday season earns a proportionally larger dollar lift. The media effect arrives in dollars and is added directly.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>beta <span class="op">=</span> rng.normal(<span class="fl">0.08</span>, <span class="fl">0.025</span>, size<span class="op">=</span>n_paths)        <span class="co"># campaign lift per path</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>campaign_base <span class="op">=</span> paths[CAMPAIGN_STEPS, :].<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">0</span>)</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>year_end_campaign <span class="op">=</span> sales_so_far <span class="op">+</span> paths.<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">0</span>) <span class="op">+</span> beta <span class="op">*</span> campaign_base</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>media <span class="op">=</span> rng.normal(<span class="dv">60_000</span>, <span class="dv">25_000</span>, size<span class="op">=</span>n_paths)    <span class="co"># dollars over the quarter</span></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>year_end_media <span class="op">=</span> sales_so_far <span class="op">+</span> paths.<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">0</span>) <span class="op">+</span> media</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>rng <span class="op">=</span> np.random.default_rng(<span class="dv">42</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>lift <span class="op">=</span> rng.normal(<span class="fl">0.08</span>, <span class="fl">0.025</span>, size<span class="op">=</span><span class="dv">5000</span>)      <span class="co"># campaign: +8%, SE 2.5 points</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>campaign_weeks <span class="op">=</span> paths[<span class="dv">7</span>:<span class="dv">11</span>].<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">0</span>)       <span class="co"># fiscal weeks 47 to 50</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>year_end_campaign <span class="op">=</span> year_end <span class="op">+</span> lift <span class="op">*</span> campaign_weeks</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>media <span class="op">=</span> rng.normal(<span class="dv">60_000</span>, <span class="dv">25_000</span>, size<span class="op">=</span><span class="dv">5000</span>)  <span class="co"># dollars, SE $25k</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>year_end_media <span class="op">=</span> year_end <span class="op">+</span> media</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div id="tbl-outcomes" class="quarto-float quarto-figure quarto-figure-center anchored" data-tbl-colwidths="[26,12,12,12,16,22]">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-outcomes-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -985,7 +988,7 @@ Table&nbsp;4: Simulated year-end outcomes against the $11.12M target
 <img src="../images/part5/sec5.3/year_end_scenarios.png" class="fig-md img-fluid figure-img" alt="Three overlapping distributions of simulated year-end sales, one per scenario, with a dashed vertical line at the annual target.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-year-end-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;6: Simulated year-end sales under each scenario
+Figure&nbsp;6: Simulated year-end sales under each scenario.
 </figcaption>
 </figure>
 </div>
@@ -1033,7 +1036,7 @@ Table&nbsp;5: Required uplift against the largest historical September upside
 </div>
 </figure>
 </div>
-<p>Hitting the target requires a quarter 7.2% above the baseline median. None of the three September replicas came close; the largest upside was 6.0%, and even both increments together add about 5%. The campaign improves the odds from 4% to 13%, but the target remains unlikely.</p>
+<p>Hitting the target requires a quarter 7.2% above the baseline median. None of the three September replicas reached it; the largest upside was 6.0%, and even both increments together add about 5%. The campaign improves the odds from 4% to 13%, but the target remains unlikely.</p>
 <p>The team now has a choice: invest more, change the operating plan, or revise expectations. Whichever it picks, the gap is a number it can plan around in September. Both inputs are checkable: the baseline was validated at a 13-week horizon, and each increment names the measurement it has to come from.</p>
 </section>
 <section id="key-takeaways" class="level2">

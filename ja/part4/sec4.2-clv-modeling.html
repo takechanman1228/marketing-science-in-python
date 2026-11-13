@@ -637,6 +637,7 @@ window.Quarto = {
   <li><a href="#bgnbd-model" id="toc-bgnbd-model" class="nav-link" data-scroll-target="#bgnbd-model">BG/NBDモデル</a></li>
   <li><a href="#gamma-gamma-model" id="toc-gamma-gamma-model" class="nav-link" data-scroll-target="#gamma-gamma-model">Gamma-Gammaモデル</a></li>
   </ul></li>
+  <li><a href="#sec-clv-routing" id="toc-sec-clv-routing" class="nav-link" data-scroll-target="#sec-clv-routing">BTYDが適切でない場合</a></li>
   <li><a href="#sec-implementation" id="toc-sec-implementation" class="nav-link" data-scroll-target="#sec-implementation">PyMC-Marketingによる実装</a>
   <ul class="collapse">
   <li><a href="#data-and-rfm-t-summary" id="toc-data-and-rfm-t-summary" class="nav-link" data-scroll-target="#data-and-rfm-t-summary">データとRFM-T要約</a></li>
@@ -645,7 +646,13 @@ window.Quarto = {
   <li><a href="#revenue-clv-profit-clv" id="toc-revenue-clv-profit-clv" class="nav-link" data-scroll-target="#revenue-clv-profit-clv">売上CLV → 利益CLV</a></li>
   <li><a href="#combining-segments-and-clv" id="toc-combining-segments-and-clv" class="nav-link" data-scroll-target="#combining-segments-and-clv">セグメントとCLVを組み合わせる</a></li>
   </ul></li>
-  <li><a href="#sec-using-clv" id="toc-sec-using-clv" class="nav-link" data-scroll-target="#sec-using-clv">CLVを実務で使う</a></li>
+  <li><a href="#sec-using-clv" id="toc-sec-using-clv" class="nav-link" data-scroll-target="#sec-using-clv">CLVを実務で使う</a>
+  <ul class="collapse">
+  <li><a href="#cpa-ceilings-for-ad-bidding" id="toc-cpa-ceilings-for-ad-bidding" class="nav-link" data-scroll-target="#cpa-ceilings-for-ad-bidding">広告入札のCPA上限</a></li>
+  <li><a href="#churn-alerts-for-crm" id="toc-churn-alerts-for-crm" class="nav-link" data-scroll-target="#churn-alerts-for-crm">CRM向けチャーン警告</a></li>
+  <li><a href="#cohort-forecasts-for-finance" id="toc-cohort-forecasts-for-finance" class="nav-link" data-scroll-target="#cohort-forecasts-for-finance">財務向けコホート予測</a></li>
+  <li><a href="#monitoring" id="toc-monitoring" class="nav-link" data-scroll-target="#monitoring">モニタリング</a></li>
+  </ul></li>
   <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways">要点</a></li>
   </ul>
 <div class="quarto-code-links"><h2>コードリンクス</h2><ul><li><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.2_clv_pymc_marketing.ipynb"><i class="bi bi-github"></i>sec4.2_clv_pymc_marketing.ipynb</a></li></ul></div></nav>
@@ -679,6 +686,8 @@ window.Quarto = {
 </div>
 <p>多くのマーケティングチームは顧客獲得単価（CPA）へ注目します。CPAは顧客獲得コスト（CAC）と同じ意味で使われることが多く、CPAが低ければキャンペーンが優れていると考えます。分析やSaaSの文脈ではLTVとも呼ばれる顧客生涯価値（CLV）は、問いを捉え直します。各顧客が時間を通じてどれだけの価値を持つかを推定し、その推定値でセグメントごとのCPA上限を設定します。</p>
 <p>この章では、確率的BTYDモデル（PyMC-MarketingによるBG/NBD＋Gamma-Gamma）を使って個人単位のCLVを予測し、その予測を予算の意思決定へ変える方法を示します。</p>
+<p><strong>付属Notebook：</strong> <code>sec4.2_clv_pymc_marketing.ipynb</code> は、DunnhumbyデータセットにBG/NBDとGamma-Gammaモデルを当てはめ、CLVを推定し、人口統計セグメントを分析します。<br>
+<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.2_clv_pymc_marketing.ipynb">GitHubで見る</a></p>
 <section id="why-clv-changes-the-decision" class="level2">
 <h2 class="anchored" data-anchor-id="why-clv-changes-the-decision">CLVが意思決定を変える理由</h2>
 <p>広告とクーポンで顧客を獲得するファッションEコマースのブランドを考えます。ファネルの中心となる2つのセグメントが、大学生と社会人だとします。初回購入は次のとおりです。</p>
@@ -718,19 +727,7 @@ window.Quarto = {
 </figcaption>
 </figure>
 </div>
-<div class="callout callout-style-default callout-note callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">ノート</span>顧客ライフサイクル全体のCLV
-</div>
-</div>
-<div class="callout-body-container callout-body">
 <p>CLVはあらゆる段階で役立ちます。獲得では高価値セグメントへより多く支出し、成長では高価値顧客へのサービスと限定オファーを優先し、維持では計算上効果が見込める顧客維持キャンペーンへ集中します。</p>
-</div>
-</div>
 <p>CLVモデルの3つの目標は、ここから直接導かれます。(1) 個人単位で将来価値を予測する、(2) CLVの高い顧客が何によって異なるかを特定する、(3) 両方をマーケティング予算の意思決定へ入力することです。</p>
 </section>
 <section id="sec-limitations" class="level2">
@@ -835,7 +832,7 @@ window.Quarto = {
 </div>
 <section id="bgnbd-model" class="level3">
 <h3 class="anchored" data-anchor-id="bgnbd-model">BG/NBDモデル</h3>
-<p>BG/NBDモデルは、顧客のライフサイクルに2つの潜在プロセスを仮定します。</p>
+<p>BG/NBDモデル <span class="citation" data-cites="fader2005counting">(<a href="../appendix/further-reading.html#ref-fader2005counting" role="doc-biblioref">Fader ほか 2005年</a>)</span> は、顧客のライフサイクルに2つの潜在プロセスを仮定します。</p>
 <ul>
 <li>購入プロセス。顧客が活動中である間、購入は率 <span class="math inline">\(\lambda\)</span> のポアソン過程に従います。</li>
 <li>離脱プロセス。各購入後に、顧客が永続的に非活動となる確率 <span class="math inline">\(p\)</span> があります。</li>
@@ -862,50 +859,55 @@ window.Quarto = {
 </figcaption>
 </figure>
 </div>
-<div class="callout callout-style-default callout-tip callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">ヒント</span>参考資料（BG/NBD）
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>グラフィカルモデルと尤度関数を含む完全な導出は、<span class="citation" data-cites="fader2005counting">Fader ほか (<a href="../appendix/further-reading.html#ref-fader2005counting" role="doc-biblioref">2005年</a>)</span> を参照してください。</p>
-</div>
-</div>
 </section>
 <section id="gamma-gamma-model" class="level3">
 <h3 class="anchored" data-anchor-id="gamma-gamma-model">Gamma-Gammaモデル</h3>
-<p>Gamma-Gammaモデルは平均注文金額を推定します。顧客ごとのGamma分布（各顧客自身の支出パターン）と、顧客基盤全体にわたるもう一つのGamma分布（顧客間の変動）という、2層のベイズ階層を使います。</p>
-<div class="callout callout-style-default callout-tip callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">ヒント</span>参考資料（Gamma-Gamma）
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>完全な導出は、<span class="citation" data-cites="fader2013gammagamma">Fader と Hardie (<a href="../appendix/further-reading.html#ref-fader2013gammagamma" role="doc-biblioref">2013年</a>)</span> を参照してください。</p>
-</div>
-</div>
-<div class="callout callout-style-default callout-tip callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">ヒント</span>BTYDが適切でない場合
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>BTYDは非契約型の状況を仮定します。チャーンは観察されないため、モデルが購入間隔から推測します。SaaSやサブスクリプションのような契約型の状況では、チャーンは明示的な解約イベントであり、shifted Beta-Geometric（sBG）モデルがそのシグナルを直接使います。PyMC-Marketingでは <code>ShiftedBetaGeoModel</code> として提供されています（<a href="https://www.pymc-marketing.io/en/latest/notebooks/clv/sbg.html">sBG notebook</a>を参照）。時間依存の共変量でチャーン要因を説明するには、生存時間分析（Cox比例ハザード）を使います。最後に、豊富な行動特徴量と本番用MLパイプラインがあれば、固定期間のターゲットに対するML回帰（例：LightGBM）が精度でBTYDを上回る可能性があります。切り替える前に、必要なデータ量、再学習・デプロイの労力、特徴量パイプラインの保守、説明可能性、不確実性の出力と比較してください。実用的なハイブリッドは、BTYDの出力（P(alive)、期待購入回数）を特徴量としてMLモデルへ入力する方法です。<a href="https://github.com/takechanman1228/marketing-science-in-python/tree/main/notebooks/part4-customer-analytics/lightgbm-companion/"><code>lightgbm-companion/</code></a>配下の付属スクリプトは、LightGBMのエンドツーエンド実装を示します。</p>
-</div>
-</div>
+<p>Gamma-Gammaモデル <span class="citation" data-cites="fader2013gammagamma">(<a href="../appendix/further-reading.html#ref-fader2013gammagamma" role="doc-biblioref">Fader と Hardie 2013年</a>)</span> は平均注文金額を推定します。顧客ごとのGamma分布（各顧客自身の支出パターン）と、顧客基盤全体にわたるもう一つのGamma分布（顧客間の変動）という、2層のベイズ階層を使います。</p>
 </section>
+</section>
+<section id="sec-clv-routing" class="level2">
+<h2 class="anchored" data-anchor-id="sec-clv-routing">BTYDが適切でない場合</h2>
+<p>BTYDは非契約型の状況を仮定します。チャーンは観察されないため、モデルが購入間隔から推測します。<a href="#tbl-clv-routing" class="quarto-xref">表&nbsp;<span>2</span></a> は、別のモデルのほうが合う状況を示します。</p>
+<div id="tbl-clv-routing" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-clv-routing-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+表&nbsp;2: 状況別の生涯価値モデル。
+</figcaption>
+<div aria-describedby="tbl-clv-routing-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">状況</th>
+<th style="text-align: left;">チャーン</th>
+<th style="text-align: left;">モデル</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">小売・EC（非契約型）</td>
+<td style="text-align: left;">購入間隔から推測する</td>
+<td style="text-align: left;">BG/NBD + Gamma-Gamma</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SaaS・サブスクリプション（契約型）</td>
+<td style="text-align: left;">明示的な解約イベント</td>
+<td style="text-align: left;">shifted Beta-Geometric（sBG）</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">時間依存の共変量でチャーン要因を説明する</td>
+<td style="text-align: left;">観察される、またはルールで定義する</td>
+<td style="text-align: left;">生存時間分析（Cox比例ハザード）</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">豊富な行動特徴量と本番用MLパイプラインがある</td>
+<td style="text-align: left;">どちらでも</td>
+<td style="text-align: left;">固定期間のターゲットに対するML回帰（例：LightGBM）</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
 </section>
 <section id="sec-implementation" class="level2">
 <h2 class="anchored" data-anchor-id="sec-implementation">PyMC-Marketingによる実装</h2>
@@ -927,7 +929,7 @@ window.Quarto = {
 <div id="tbl-rfmt" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-rfmt-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-表&nbsp;2: BTYDモデルで使うRFM-T指標。
+表&nbsp;3: BTYDモデルで使うRFM-T指標。
 </figcaption>
 <div aria-describedby="tbl-rfmt-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <table class="caption-top table">
@@ -972,44 +974,35 @@ window.Quarto = {
 <p><a href="sec4.1-segmentation.html">Section 4.1</a>では、Recencyは最終購入からの日数を意味しました。PyMC-Marketingの <code>rfm_summary</code> が従うBTYDの慣例では、顧客の初回購入から直近購入までの期間を意味するため、値が<em>高い</em>ほど最近まで活動していたことになります。</p>
 </div>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> datetime <span class="im">import</span> datetime, timedelta</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pymc_marketing <span class="im">import</span> clv</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Load Dunnhumby transactions and convert DAY counter to datetime</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co"># (see companion notebook for the full pipeline)</span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>BASE_DATE <span class="op">=</span> datetime(<span class="dv">2012</span>, <span class="dv">1</span>, <span class="dv">1</span>)</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>data[<span class="st">"date"</span>] <span class="op">=</span> data[<span class="st">"DAY"</span>].<span class="bu">apply</span>(<span class="kw">lambda</span> d: BASE_DATE <span class="op">+</span> timedelta(days<span class="op">=</span><span class="bu">int</span>(d) <span class="op">-</span> <span class="dv">1</span>))</span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>data_summary <span class="op">=</span> clv.utils.rfm_summary(</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    data, <span class="st">"CustomerID"</span>, <span class="st">"date"</span>, <span class="st">"TotalSales"</span>, time_unit<span class="op">=</span><span class="st">"D"</span></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>data_summary.index <span class="op">=</span> data_summary[<span class="st">"customer_id"</span>]</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>付属Notebook：</strong> <code>sec4.2_clv_pymc_marketing.ipynb</code> は、DunnhumbyデータセットにBG/NBDとGamma-Gammaモデルを当てはめ、CLVを推定し、人口統計セグメントを分析します。<br>
-<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.2_clv_pymc_marketing.ipynb">GitHubで見る</a></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pymc_marketing <span class="im">import</span> clv</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>data_summary <span class="op">=</span> clv.utils.rfm_summary(</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    data,                              <span class="co"># one row per purchase</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    customer_id_col<span class="op">=</span><span class="st">"CustomerID"</span>,</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    datetime_col<span class="op">=</span><span class="st">"date"</span>,</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    monetary_value_col<span class="op">=</span><span class="st">"TotalSales"</span>,</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    time_unit<span class="op">=</span><span class="st">"D"</span>,</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="fitting-and-estimating-clv" class="level3">
 <h3 class="anchored" data-anchor-id="fitting-and-estimating-clv">モデルの当てはめとCLV推定</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># --- BG/NBD: purchase frequency + P(alive) ---</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># BG/NBD: purchase frequency and P(alive)</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>bgm <span class="op">=</span> clv.BetaGeoModel()</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>bgm.fit(data<span class="op">=</span>data_summary)</span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co"># --- Gamma-Gamma: average order value ---</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>nonzero <span class="op">=</span> data_summary.query(<span class="st">"frequency &gt; 0 and monetary_value &gt; 0"</span>)</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>gg_data <span class="op">=</span> nonzero[[<span class="st">"customer_id"</span>, <span class="st">"frequency"</span>, <span class="st">"monetary_value"</span>]]</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>gg <span class="op">=</span> clv.GammaGammaModel()</span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>gg.fit(data<span class="op">=</span>gg_data)</span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co"># --- Combined CLV estimate (DCF with 1% monthly discount) ---</span></span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>clv_estimate <span class="op">=</span> gg.expected_customer_lifetime_value(</span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    transaction_model<span class="op">=</span>bgm,</span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    data<span class="op">=</span>data_summary[[</span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>        <span class="st">"customer_id"</span>, <span class="st">"frequency"</span>, <span class="st">"recency"</span>, <span class="st">"T"</span>, <span class="st">"monetary_value"</span></span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    ]],</span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    future_t<span class="op">=</span><span class="dv">120</span>,       <span class="co"># 120 months = 10 years</span></span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    discount_rate<span class="op">=</span><span class="fl">0.01</span>,</span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    time_unit<span class="op">=</span><span class="st">"D"</span>,</span>
-<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Gamma-Gamma: average order value, fit on repeat customers only</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>repeat <span class="op">=</span> data_summary.query(<span class="st">"frequency &gt; 0 and monetary_value &gt; 0"</span>)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>gg <span class="op">=</span> clv.GammaGammaModel()</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>gg.fit(data<span class="op">=</span>repeat)</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co"># CLV: expected purchases times expected spend, discounted at 1% a month</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>clv_estimate <span class="op">=</span> gg.expected_customer_lifetime_value(</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    transaction_model<span class="op">=</span>bgm,</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    data<span class="op">=</span>data_summary,</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    future_t<span class="op">=</span><span class="dv">120</span>,       <span class="co"># 120 months = 10 years</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    discount_rate<span class="op">=</span><span class="fl">0.01</span>,</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    time_unit<span class="op">=</span><span class="st">"D"</span>,</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 <p>出力には点推定値だけでなく、HDI（最高密度区間）の境界も含まれます。このAPIでは <code>future_t</code> を月単位で測定し、<code>time_unit="D"</code> によってRFM-Tの入力が日単位であることをモデルへ伝えます。この境界が定量化しているのは購入時期の不確実性だけです。支出の事後分布は割引前に平均値へ要約されるため、この境界は実際の不確実性の幅に対する下限として扱います。</p>
 <p>予測期間は明示的に選びます。<code>future_t=120</code> は、そのまま受け入れてよい既定値ではありません。このデータセットは約23カ月を対象とするため、120カ月の予測は観察期間のおよそ5倍先まで進みます。BG/NBDは顧客の離脱を予測へ組み込むため推定値は有界にとどまりますが、その離脱率自体も23カ月から推定されています。付属Notebookでは、同じ事後分布を3年、5年、10年で再度割り引きます。このデータセットでは3つの期間で顧客順位がほとんど変わらないため、順位に基づくターゲティングは、テストした予測期間の影響を受けません。一方、10年推定値の中央値は3年推定値の約2.23倍です。そのため、CLVを金額上限へ変える場合は、使用した予測期間を明示する必要があります。</p>
 </section>
@@ -1038,54 +1031,85 @@ window.Quarto = {
 <section id="combining-segments-and-clv" class="level3">
 <h3 class="anchored" data-anchor-id="combining-segments-and-clv">セグメントとCLVを組み合わせる</h3>
 <p><a href="sec4.1-segmentation.html">Section 4.1</a>の <code>segment_id</code> と、各顧客のCLV推定値を結合します。 これにより、このPartで目指してきた運用表が得られます。どのような顧客か、どれだけの価値があるか、ビジネスとして何をすべきかを示します。</p>
+<p><a href="#tbl-segment-clv" class="quarto-xref">表&nbsp;<span>4</span></a> が、食料品の世帯についてのその表です。10年間の利益CLVで、Notebookが仮定する粗利益率28%を使っています。</p>
+<div id="tbl-segment-clv" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-segment-clv-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+表&nbsp;4: 行動セグメント×予測価値。付属Notebookより。
+</figcaption>
+<div aria-describedby="tbl-segment-clv-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">セグメント</th>
+<th style="text-align: right;">顧客数</th>
+<th style="text-align: right;">利益CLVの平均</th>
+<th style="text-align: right;">保守的な利益CLV</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">高額ロイヤル層</td>
+<td style="text-align: right;">610</td>
+<td style="text-align: right;">$5,659</td>
+<td style="text-align: right;">$5,368</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">頻繁な少額購入層</td>
+<td style="text-align: right;">567</td>
+<td style="text-align: right;">$2,553</td>
+<td style="text-align: right;">$2,454</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ときどき高額購入する層</td>
+<td style="text-align: right;">539</td>
+<td style="text-align: right;">$1,537</td>
+<td style="text-align: right;">$1,515</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">値引き志向層</td>
+<td style="text-align: right;">478</td>
+<td style="text-align: right;">$934</td>
+<td style="text-align: right;">$924</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">休眠層</td>
+<td style="text-align: right;">287</td>
+<td style="text-align: right;">$271</td>
+<td style="text-align: right;">$267</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<p>高額ロイヤル層の世帯は休眠層の世帯のおよそ20倍の価値があるため、顧客1人あたりの支出上限を一つにすると、下の行には高すぎ、一番上の行には低すぎます。その上限の中でいくら使うかは、施策の増分効果で決まります。</p>
 <p>人口統計はセグメントの説明や接触に役立ちますが、主な意思決定層は、行動セグメント×予測価値です。付属Notebookでは、CLV推定値とDunnhumbyの <code>hh_demographic.csv</code> を結合し、所得などの人口統計軸で各セグメントを説明できるようにします。クリエイティブやチャネルの選択には役立ちますが、予算設定にはあまり適しません。</p>
-<div class="callout callout-style-default callout-tip callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">ヒント</span>セグメント別の支出モデル
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>PyMC Labsが報告した本番運用のパターンがあります。支出分布がセグメント間で大きく異なる場合、セグメント別のGamma-Gammaモデルをテストし、取引モデルは母集団全体でプールしたままにします。セグメントはキャリブレーション期間だけで構築し、サンプル外でプールモデルと比較します。そうしなければ、金額から作ったセグメントと、その入力先となる支出モデルが情報を共有してしまいます。</p>
-</div>
-</div>
 </section>
 </section>
 <section id="sec-using-clv" class="level2">
 <h2 class="anchored" data-anchor-id="sec-using-clv">CLVを実務で使う</h2>
 <p>顧客ごとの <code>clv_estimate</code> が得られると、次の3つの用途は追加のモデリングなしで実行できます。ただし、それぞれスコア以外のものが必要です。CPA上限には、上で述べた利益率への換算と、明示した予測期間が必要です。チャーン警告には、顧客IDでのCRMとの結合と、閾値が必要です。コホート予測には、各顧客の獲得日と、財務が計画に使う期間が必要です。このパターンはどのCLVスコアでも使えます。</p>
-<ol type="1">
-<li>広告入札のCPA上限</li>
-</ol>
+<section id="cpa-ceilings-for-ad-bidding" class="level3">
+<h3 class="anchored" data-anchor-id="cpa-ceilings-for-ad-bidding">広告入札のCPA上限</h3>
 <p>予測利益CLVの一定割合として最大CPAを設定します。</p>
 <p><span class="math display">\[
 \text{Allowable CPA} = \text{CLV}_{\text{profit}} \times \text{Target acquisition ratio}
 \]</span></p>
 <p>セグメントの予測利益CLVが$200、目標獲得比率が33%なら、最大CPAは$66です。不確実性の下で入札する場合、予測利益CLVの平均ではなく、保守的な下限を使います。多くの広告プラットフォームは、価値に基づく入札やオーディエンスルールのための価値シグナルを取り込めますが、具体的な実装はプラットフォームによって異なります。</p>
-<ol start="2" type="1">
-<li>CRM向けチャーン警告</li>
-</ol>
+</section>
+<section id="churn-alerts-for-crm" class="level3">
+<h3 class="anchored" data-anchor-id="churn-alerts-for-crm">CRM向けチャーン警告</h3>
 <p>30日間でP(alive)が30ポイントを超えて低下した顧客へフラグをつけます。シグナルは絶対水準ではなく、変化率です。P(alive)が1カ月で0.85から0.40へ低下した顧客は、6カ月間0.35で安定している顧客よりはるかに緊急です。前者は高かった関与度が下がっている顧客で、後者はもともと購入頻度が低い顧客です。</p>
-<ol start="3" type="1">
-<li>財務向けコホート予測</li>
-</ol>
+</section>
+<section id="cohort-forecasts-for-finance" class="level3">
+<h3 class="anchored" data-anchor-id="cohort-forecasts-for-finance">財務向けコホート予測</h3>
 <p>財務は生涯ではなく予算サイクルで計画するため、個人CLV推定値を獲得コホート別に集約し、12、24、36カ月時点の売上を予測します。固定目標ではなく確率的な推定値であることを財務が理解できるよう、HDI境界を含めます。これにより、四半期の顧客獲得支出に対する期待リターンという財務の問いへ、財務が計画に使う単位と期間で答えられます。</p>
-<div class="callout callout-style-default callout-tip callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">ヒント</span>モニタリング
-</div>
-</div>
-<div class="callout-body-container callout-body">
+</section>
+<section id="monitoring" class="level3">
+<h3 class="anchored" data-anchor-id="monitoring">モニタリング</h3>
 <p>3、6、12カ月時点で、コホートごとに予測売上と実績売上を比較します。比率が±20%を超えてずれたら再学習します。また、CLV予測に保護対象グループに対するバイアスがないかも確認します。十分なサービスを受けてこなかったセグメントで学習したモデルは、低いCLVを予測して獲得入札を低く設定し、そのバイアスを固定化します。</p>
-</div>
-</div>
+</section>
 </section>
 <section id="key-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="key-takeaways">要点</h2>

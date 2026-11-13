@@ -654,9 +654,11 @@ Cette page est une traduction par IA de la version anglaise de <em>Marketing Sci
 <p>Une décision de prix doit concilier deux effets qui vont en sens opposés : un prix plus bas vend davantage d’unités, et un prix plus élevé rapporte davantage de marge par unité. Lequel l’emporte dépend de l’ampleur avec laquelle le volume change effectivement lorsque le prix varie.</p>
 <p>Le marketing est responsable de la décision qui relie la réaction des clients, le positionnement de la marque et l’objectif commercial : quand rechercher des volumes ou du chiffre d’affaires, quand protéger la marge et quand le prix lui-même envoie un signal de positionnement. Parfois, l’objectif est le trafic ou la part de marché, l’écoulement des stocks ou la défense d’un positionnement tarifaire. Quel que soit l’objectif, la grandeur à estimer en premier est l’ampleur de la réponse du volume à une variation de prix.</p>
 <p>L’élasticité-prix fournit cette courbe de réponse. C’est toujours l’entreprise qui choisit l’objectif, qu’il s’agisse des unités, du chiffre d’affaires, de la marge ou du positionnement, et la courbe permet de comparer les prix candidats au regard de cet objectif.</p>
+<p><strong>Notebook associé :</strong> <code>sec5.1_price_elasticity.ipynb</code> couvre le chargement des données, les contrôles de qualité, l’estimation de l’élasticité en deux passes et le tableau de sensibilité.<br>
+<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part5-commercial-analytics/sec5.1_price_elasticity.ipynb">Consulter sur GitHub</a></p>
 <section id="sec-price-elasticity-definition" class="level2">
 <h2 class="anchored" data-anchor-id="sec-price-elasticity-definition">Qu’est-ce que l’élasticité-prix ?</h2>
-<p>Augmenter de 10 % le prix de céréales parmi les plus vendues peut coûter 5 % des unités ou 20 %, et les deux cas conduisent à des décisions opposées. L’ampleur de cette perte détermine si le changement de prix améliore les ventes, le chiffre d’affaires ou la marge, ou s’il fait simplement fuir les acheteurs.</p>
+<p>Augmenter de 10 % le prix de céréales parmi les plus vendues peut coûter 5 % des unités ou 20 %, et les deux cas conduisent à des décisions opposées. L’ampleur de cette perte détermine si le changement de prix améliore le volume vendu, le chiffre d’affaires ou la marge, ou s’il fait simplement fuir les acheteurs.</p>
 <p>L’élasticité-prix de la demande mesure la sensibilité de la quantité vendue à une variation du prix :</p>
 <p><span class="math display">\[
 \varepsilon = \frac{\% \Delta \text{Quantity}}{\% \Delta \text{Price}}
@@ -698,36 +700,20 @@ Q = b_0 \times P^{b_1}
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> scipy.optimize <span class="im">import</span> curve_fit</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> power_model(price, b0, b1):</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Q = b0 * Price^b1"""</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># prices, units: one product's weekly average price and units sold</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> power_model(price, b0, b1):</span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> b0 <span class="op">*</span> np.power(price, b1)</span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>p0 <span class="op">=</span> [df[<span class="st">"units"</span>].mean(), <span class="op">-</span><span class="fl">1.5</span>]</span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>popt, pcov <span class="op">=</span> curve_fit(</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    power_model,</span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    df[<span class="st">"price"</span>].values,</span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    df[<span class="st">"units"</span>].values,</span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    p0<span class="op">=</span>p0,</span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    maxfev<span class="op">=</span><span class="dv">10000</span>,</span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>b0, b1 <span class="op">=</span> popt</span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Scale (b0): </span><span class="sc">{</span>b0<span class="sc">:.1f}</span><span class="ss">"</span>)</span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Elasticity (b1): </span><span class="sc">{</span>b1<span class="sc">:.2f}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copier vers le presse-papier" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Le notebook associé effectue aussi une estimation en deux passes : ajuster une première fois sur toutes les données, repérer les observations pour lesquelles le rapport entre unités réelles et prédites sort d’une plage raisonnable, par exemple de 0,3 à 3,0, puis réajuster sans elles.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Pass 1: fit on all data</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>popt_1, _ <span class="op">=</span> curve_fit(power_model, prices, units, p0<span class="op">=</span>p0, maxfev<span class="op">=</span><span class="dv">10000</span>)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>p0 <span class="op">=</span> [units.mean(), <span class="op">-</span><span class="fl">1.5</span>]</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>popt, pcov <span class="op">=</span> curve_fit(power_model, prices, units, p0<span class="op">=</span>p0, maxfev<span class="op">=</span><span class="dv">10_000</span>)</span></code></pre></div><button title="Copier vers le presse-papier" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Le premier ajustement utilise toutes les semaines d’un même produit. Le notebook repère ensuite les semaines où le rapport entre les unités réellement vendues et les unités prédites sort de l’intervalle de 0,3 à 3,0, puis réajuste le modèle sans ces semaines. Voici les étapes :</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>ratio <span class="op">=</span> units <span class="op">/</span> power_model(prices, <span class="op">*</span>popt)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>mask <span class="op">=</span> (ratio <span class="op">&gt;</span> <span class="fl">0.3</span>) <span class="op">&amp;</span> (ratio <span class="op">&lt;</span> <span class="fl">3.0</span>)</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Identify outliers</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>predicted <span class="op">=</span> power_model(prices, <span class="op">*</span>popt_1)</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>ratio <span class="op">=</span> units <span class="op">/</span> predicted</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>mask <span class="op">=</span> (ratio <span class="op">&gt;</span> <span class="fl">0.3</span>) <span class="op">&amp;</span> (ratio <span class="op">&lt;</span> <span class="fl">3.0</span>)</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Pass 2: refit on clean data</span></span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>popt_2, pcov_2 <span class="op">=</span> curve_fit(</span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    power_model, prices[mask], units[mask], p0<span class="op">=</span>popt_1, maxfev<span class="op">=</span><span class="dv">10000</span></span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copier vers le presse-papier" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>popt, pcov <span class="op">=</span> curve_fit(</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    power_model, prices[mask], units[mask], p0<span class="op">=</span>popt, maxfev<span class="op">=</span><span class="dv">10_000</span>,</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>b0, b1 <span class="op">=</span> popt   <span class="co"># chocolate milk: b1 = -3.92</span></span></code></pre></div><button title="Copier vers le presse-papier" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Les pics promotionnels sont les responsables habituels. Si vous les incluez aveuglément, le modèle interprète le volume promotionnel comme une réponse normale au prix, ce qui éloigne l’élasticité estimée de sa valeur réelle.</p>
 <div id="fig-elasticity-deep-dive" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Nuage de points prix–quantité avec une courbe de puissance ajustée et une bande à 95 % pour un lait liquide parmi les plus vendus ; la forte pente indique une demande élastique.">
 <figure class="quarto-float quarto-float-fig figure">
@@ -739,18 +725,107 @@ Figure&nbsp;1: Nuage de points prix–quantité avec une courbe de puissance aju
 </figcaption>
 </figure>
 </div>
-<p>Parmi les huit références de lait liquide les plus vendues, les élasticités vont de <span class="math inline">\(-1.2\)</span> pour les bidons d’un gallon, un format de base à plus faible élasticité, à <span class="math inline">\(-3.9\)</span> pour les petits formats, plus faciles à remplacer. <a href="#fig-elasticity-grid" class="quarto-xref">Figure&nbsp;<span>2</span></a> présente les courbes ajustées côte à côte.</p>
-<div id="fig-elasticity-grid" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Courbes de demande en loi de puissance ajustées pour huit laits liquides parmi les plus vendus ; l’ajustement est net pour les articles à R² élevé et plus bruité pour ceux à R² faible.">
+<p><a href="#tbl-elasticity-results" class="quarto-xref">Table&nbsp;<span>1</span></a> présente l’ajustement de chacun des huit produits les plus vendus de la catégorie des laits liquides. Les bidons d’un gallon, un format de base, sont les moins élastiques, et les petits formats les plus élastiques. Seuls les cinq petits formats passent le contrôle de qualité de l’ajustement du notebook.</p>
+<div id="tbl-elasticity-results" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-elasticity-results-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;1: Ajustements en deux passes pour les huit produits les plus vendus de la catégorie des laits liquides, d’après le notebook associé.
+</figcaption>
+<div aria-describedby="tbl-elasticity-results-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Produit</th>
+<th style="text-align: right;">Semaines</th>
+<th style="text-align: right;">Prix distincts</th>
+<th style="text-align: right;">Élasticité</th>
+<th style="text-align: right;"><span class="math inline">\(R^2\)</span></th>
+<th style="text-align: left;">Verdict</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Lait chocolaté de marque de distributeur</td>
+<td style="text-align: right;">102</td>
+<td style="text-align: right;">52</td>
+<td style="text-align: right;">−3.92</td>
+<td style="text-align: right;">0.87</td>
+<td style="text-align: left;">Exploitable</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Lait nature de marque de distributeur nº 12</td>
+<td style="text-align: right;">101</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">−2.98</td>
+<td style="text-align: right;">0.80</td>
+<td style="text-align: left;">Exploitable</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Lait nature de marque de distributeur nº 13</td>
+<td style="text-align: right;">102</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">−3.57</td>
+<td style="text-align: right;">0.90</td>
+<td style="text-align: left;">Exploitable</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Lait nature de marque de distributeur nº 15</td>
+<td style="text-align: right;">101</td>
+<td style="text-align: right;">51</td>
+<td style="text-align: right;">−2.63</td>
+<td style="text-align: right;">0.79</td>
+<td style="text-align: left;">Exploitable</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Lait nature de marque de distributeur nº 16</td>
+<td style="text-align: right;">101</td>
+<td style="text-align: right;">59</td>
+<td style="text-align: right;">−3.73</td>
+<td style="text-align: right;">0.92</td>
+<td style="text-align: left;">Exploitable</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Lait nature de marque de distributeur, un gallon, nº 11</td>
+<td style="text-align: right;">102</td>
+<td style="text-align: right;">41</td>
+<td style="text-align: right;">−1.33</td>
+<td style="text-align: right;">0.23</td>
+<td style="text-align: left;">Indication de tendance uniquement</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Lait nature de marque de distributeur, un gallon, nº 12</td>
+<td style="text-align: right;">102</td>
+<td style="text-align: right;">43</td>
+<td style="text-align: right;">−1.19</td>
+<td style="text-align: right;">0.15</td>
+<td style="text-align: left;">Indication de tendance uniquement</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Lait nature de marque de distributeur, un gallon, nº 9</td>
+<td style="text-align: right;">102</td>
+<td style="text-align: right;">41</td>
+<td style="text-align: right;">−1.80</td>
+<td style="text-align: right;">0.31</td>
+<td style="text-align: left;">Indication de tendance uniquement</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<p><a href="#fig-elasticity-grid" class="quarto-xref">Figure&nbsp;<span>2</span></a> en montre deux de chaque type.</p>
+<div id="fig-elasticity-grid" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Quatre graphiques prix-quantité montrent deux laits de marque de distributeur bien ajustés par une loi de puissance et deux bidons d’un gallon dont les points se dispersent autour d’une courbe presque plate.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-elasticity-grid-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part5/sec5.1/elasticity_grid.png" class="fig-lg img-fluid figure-img" alt="Courbes de demande en loi de puissance ajustées pour huit laits liquides parmi les plus vendus ; l’ajustement est net pour les articles à R² élevé et plus bruité pour ceux à R² faible.">
+<img src="../images/part5/sec5.1/elasticity_grid.png" class="fig-lg img-fluid figure-img" alt="Quatre graphiques prix-quantité montrent deux laits de marque de distributeur bien ajustés par une loi de puissance et deux bidons d’un gallon dont les points se dispersent autour d’une courbe presque plate.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-elasticity-grid-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;2: Courbes de demande en loi de puissance ajustées pour huit produits.
+Figure&nbsp;2: Courbes de demande : deux bons ajustements, deux faibles.
 </figcaption>
 </figure>
 </div>
-<p>En pratique, une élasticité comprise entre <span class="math inline">\(-0.5\)</span> et <span class="math inline">\(-5\)</span>, avec <span class="math inline">\(R^2 &gt; 0.4\)</span> et plusieurs niveaux de prix distincts, est exploitable comme estimation de départ ; les pièges présentés à la fin de ce chapitre indiquent quand elle ne l’est pas. Le seuil de <span class="math inline">\(R^2\)</span> est une heuristique de qualité d’ajustement et ne dit rien sur la validité causale de l’estimation. Les estimations hors de cette plage signalent souvent des problèmes de données : trop peu de prix, une seule remise promotionnelle dominant l’ajustement ou une fenêtre trop courte. Si l’élasticité n’est pas crédible, aucune recommandation tarifaire fondée sur elle ne l’est non plus.</p>
+<p>Le notebook utilise trois verdicts. « Exploitable » signifie que <span class="math inline">\(R^2 &gt; 0.4\)</span> et que l’élasticité est comprise entre <span class="math inline">\(-5\)</span> et <span class="math inline">\(-0.5\)</span>, bornes incluses. Si <span class="math inline">\(R^2 &gt; 0.4\)</span> mais que l’élasticité sort de cet intervalle, le verdict est « À examiner ». Vérifiez les données avant d’interpréter l’estimation. Si <span class="math inline">\(R^2 \leq 0.4\)</span>, le verdict est « Indication de tendance uniquement ». Ces deux derniers verdicts ne permettent pas de fixer un prix.</p>
+<p>Ces verdicts ne remplacent pas les vérifications précédentes de la variation et de l’historique des prix. Le seuil de <span class="math inline">\(R^2\)</span> est une heuristique de qualité d’ajustement qui ne dit rien sur la validité causale de l’estimation. Les pièges en fin de chapitre montrent quand cette validité peut faire défaut même pour un ajustement jugé exploitable. Une élasticité hors de l’intervalle signale souvent un problème de données : trop peu de prix, une seule remise promotionnelle qui domine l’ajustement ou une période trop courte. Une élasticité peu crédible ne peut fonder une recommandation tarifaire crédible.</p>
 </section>
 <section id="sec-margin-maximizing-price" class="level2">
 <h2 class="anchored" data-anchor-id="sec-margin-maximizing-price">Optimisation de la marge sur coûts variables</h2>
@@ -759,7 +834,7 @@ Figure&nbsp;2: Courbes de demande en loi de puissance ajustées pour huit produi
 <p><span class="math display">\[
 \text{Revenue}(P) = P \times Q(P)
 \]</span></p>
-<p>C’est souvent le point de départ le plus intuitif, car il ne nécessite que le prix et les unités. Mais avec une courbe à élasticité constante, la maximisation du chiffre d’affaires est dégénérée : lorsque la demande est élastique (<span class="math inline">\(|b_1| &gt; 1\)</span>, comme pour tous les produits de ce chapitre), le chiffre d’affaires continue d’augmenter à mesure que le prix baisse. Le prix qui maximise le chiffre d’affaires est donc simplement le plus bas que vous acceptez de fixer. Si le coût variable n’est pas connu de façon fiable, le chiffre d’affaires peut toujours servir de premier indicateur, mais considérez-le comme une direction (baisser le prix), et non comme un optimum intérieur.</p>
+<p>C’est souvent le point de départ le plus intuitif, car il ne nécessite que le prix et les unités. Mais avec une courbe à élasticité constante, le chiffre d’affaires n’atteint pas de maximum à l’intérieur de la plage de prix : lorsque la demande est élastique (<span class="math inline">\(|b_1| &gt; 1\)</span>, comme pour tous les produits de ce chapitre), le chiffre d’affaires continue d’augmenter à mesure que le prix baisse. Le prix qui maximise le chiffre d’affaires est donc simplement le plus bas que vous acceptez de fixer. Si le coût variable n’est pas connu de façon fiable, le chiffre d’affaires peut toujours servir de premier indicateur, mais considérez-le comme une direction (baisser le prix), et non comme un optimum intérieur.</p>
 <p>Le chiffre d’affaires ignore le coût variable. Si le coût variable est disponible, nous pouvons poser une question plus pertinente : quel prix maximise la marge sur coûts variables ?</p>
 <p><span class="math display">\[
 \text{Contribution Margin}(P) = (P - C) \times Q(P)
@@ -817,7 +892,7 @@ Figure&nbsp;2: Courbes de demande en loi de puissance ajustées pour huit produi
 </tbody>
 </table>
 <p>Le tableau illustre l’arbitrage central. Dans cette plage, le chiffre d’affaires est le plus élevé au prix le plus bas et, sous élasticité constante, il continuerait à progresser à chaque baisse supplémentaire. La marge se comporte différemment : elle présente un optimum intérieur à <span class="math inline">\(P^* = C \cdot |b_1| / (|b_1| - 1)\)</span>, soit environ $5.87 pour ces paramètres, ce qui explique pourquoi la marge totale augmente encore au prix le plus élevé du tableau, où elle atteint $2,903. Avec un prix supérieur de 10 %, le chiffre d’affaires baisse de 5,5 % tandis que la marge augmente de 5,1 %. Le chiffre d’affaires et la marge indiquent des directions opposées. Dans cette plage, une remise augmente le chiffre d’affaires et réduit en même temps la marge totale sur coûts variables.</p>
-<p><a href="#fig-margin-curves" class="quarto-xref">Figure&nbsp;<span>3</span></a> illustre la même logique pour cinq produits réels de Dunnhumby. Dans chaque panneau, le chiffre d’affaires continue de progresser à mesure que le prix baisse, tandis que la marge sur coûts variables atteint son maximum à un prix intérieur à la plage, puis diminue. Les deux objectifs conduisent donc bien à des décisions différentes. Pour ces produits laitiers de marque de distributeur à forte élasticité, le prix qui maximise la marge est systématiquement inférieur au prix actuel, car le volume supplémentaire généré par une baisse de prix suffit à accroître la marge totale. La formule est la même dans les deux cas ; la direction de la recommandation dépend de la position de l’optimum intérieur au-dessus ou au-dessous du prix actuel, déterminée conjointement par l’élasticité et le ratio de coût.</p>
+<p><a href="#fig-margin-curves" class="quarto-xref">Figure&nbsp;<span>3</span></a> illustre la même logique pour cinq produits réels de Dunnhumby, avec un coût variable supposé égal à 55 % du prix moyen (le jeu de données ne contient aucun coût). Dans chaque panneau, le chiffre d’affaires continue de progresser à mesure que le prix baisse, tandis que la marge sur coûts variables atteint son maximum à un prix intérieur à la plage, puis diminue. Les deux objectifs conduisent donc bien à des décisions différentes. Pour ces produits laitiers de marque de distributeur à forte élasticité, le prix qui maximise la marge est systématiquement inférieur au prix actuel, car le volume supplémentaire généré par une baisse de prix suffit à accroître la marge totale. L’exemple des céréales indiquait une hausse de prix, tandis que ces produits indiquent une baisse. La formule est la même. Selon l’élasticité et le ratio de coût, l’optimum se situe au-dessus du prix actuel dans un cas et au-dessous dans l’autre.</p>
 <div id="fig-margin-curves" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Courbes de chiffre d’affaires et de marge sur coûts variables pour cinq produits, avec indication des prix actuels et des prix maximisant la marge.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-margin-curves-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -831,25 +906,22 @@ Figure&nbsp;3: Courbes de chiffre d’affaires et de marge sur coûts variables.
 <p>L’optimisation elle-même est une recherche à une dimension. Appliquer <code>scipy.optimize.minimize_scalar</code> à l’opposé de la fonction de marge suffit en quelques lignes, et le notebook associé en détaille les étapes.</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> scipy.optimize <span class="im">import</span> minimize_scalar</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> neg_margin(price, b0, b1, variable_cost):</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Negative contribution margin (for minimization)."""</span></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    quantity <span class="op">=</span> b0 <span class="op">*</span> price <span class="op">**</span> b1</span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">-</span>(price <span class="op">-</span> variable_cost) <span class="op">*</span> quantity</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>result <span class="op">=</span> minimize_scalar(</span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    neg_margin,</span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    bounds<span class="op">=</span>(<span class="fl">2.50</span>, <span class="fl">6.00</span>),</span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    method<span class="op">=</span><span class="st">"bounded"</span>,</span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    args<span class="op">=</span>(b0_fitted, b1_fitted, <span class="fl">2.20</span>),</span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>optimal_price <span class="op">=</span> result.x</span>
-<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>optimal_margin <span class="op">=</span> <span class="op">-</span>result.fun</span>
-<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Optimal price: $</span><span class="sc">{</span>optimal_price<span class="sc">:.2f}</span><span class="ss">"</span>)</span>
-<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Max weekly margin: $</span><span class="sc">{</span>optimal_margin<span class="sc">:,.0f}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copier vers le presse-papier" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>avg_price <span class="op">=</span> prices.mean()</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>variable_cost <span class="op">=</span> avg_price <span class="op">*</span> <span class="fl">0.55</span>   <span class="co"># assumed: the data has no cost</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> neg_contribution_margin(price, b0, b1, variable_cost):</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    quantity <span class="op">=</span> b0 <span class="op">*</span> price <span class="op">**</span> b1</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">-</span>(price <span class="op">-</span> variable_cost) <span class="op">*</span> quantity</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>result <span class="op">=</span> minimize_scalar(</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    neg_contribution_margin,</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    bounds<span class="op">=</span>(variable_cost <span class="op">*</span> <span class="fl">1.05</span>, avg_price <span class="op">*</span> <span class="dv">3</span>),</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    method<span class="op">=</span><span class="st">"bounded"</span>,</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    args<span class="op">=</span>(b0, b1, variable_cost),</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>optimal_price <span class="op">=</span> result.x</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>optimal_margin <span class="op">=</span> <span class="op">-</span>result.fun</span></code></pre></div><button title="Copier vers le presse-papier" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Une réserve découle de l’hypothèse d’élasticité constante : la courbe de marge ne présente cet optimum intérieur que lorsque la demande est élastique (<span class="math inline">\(|b_1| &gt; 1\)</span>). Pour un article à demande inélastique, le modèle implique que la marge continue d’augmenter avec le prix. Un optimiseur borné renvoie donc simplement la borne supérieure. Cette valeur est un artefact des bornes de recherche : revérifiez l’ajustement plutôt que de l’utiliser comme prix. Le notebook associé n’optimise donc que les articles jugés exploitables et pour lesquels <span class="math inline">\(b_1 &lt; -1\)</span>.</p>
-<p><strong>Notebook associé :</strong> <code>sec5.1_price_elasticity.ipynb</code> couvre le chargement des données, les contrôles de qualité, l’estimation de l’élasticité en deux passes et le tableau de sensibilité.<br>
-<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part5-commercial-analytics/sec5.1_price_elasticity.ipynb">Consulter sur GitHub</a></p>
 </section>
 </section>
 <section id="sec-segment-elasticity" class="level2">
@@ -871,7 +943,7 @@ Figure&nbsp;4: Élasticité-prix moyenne selon le rôle du produit.
 <section id="sec-elasticity-pitfalls" class="level2">
 <h2 class="anchored" data-anchor-id="sec-elasticity-pitfalls">Pièges courants de l’élasticité-prix</h2>
 <p><strong>Endogénéité.</strong> Les prix ne sont pas fixés au hasard. Si un distributeur augmente ses prix pendant les périodes de forte demande, comme la rentrée scolaire, l’élasticité observée est biaisée vers zéro, car prix élevés et forte demande coïncident pour des raisons sans rapport avec la tarification. C’est le même problème de biais de sélection que dans la partie 3. Traitez-le à l’aide de variables instrumentales, d’expériences tarifaires randomisées ou de dispositifs quasi expérimentaux.</p>
-<p><strong>Structure temporelle commune.</strong> Le prix et les unités présentent tous deux une saisonnalité, des calendriers promotionnels et une tendance. Une régression sur des séries hebdomadaires brutes peut donc capter cette structure commune plutôt qu’une réponse au prix. Deux séries qui partagent simplement un calendrier peuvent être suffisamment corrélées pour ressembler à une courbe de demande. Intégrez le calendrier au modèle : indicatrices de semaine ou de mois, indicateurs de promotion et terme de tendance, afin que le coefficient de prix soit estimé en tenant compte de ces facteurs plutôt qu’en absorbant leurs effets. L’ajustement à deux variables de ce chapitre ne fait rien de tout cela. Considérez donc ses élasticités comme exposées à ce biais tant qu’une spécification intégrant le calendrier ne les confirme pas.</p>
+<p><strong>Structure temporelle commune.</strong> Le prix et les unités présentent tous deux une saisonnalité, des calendriers promotionnels et une tendance. Une régression sur des séries hebdomadaires brutes peut donc capter cette structure commune plutôt qu’une réponse au prix. Deux séries qui partagent simplement un calendrier peuvent être suffisamment corrélées pour ressembler à une courbe de demande. Intégrez le calendrier au modèle : indicatrices de semaine ou de mois, indicateurs de promotion et terme de tendance, afin que le coefficient de prix reflète les variations de prix que le calendrier n’explique pas. L’ajustement à deux variables de ce chapitre ne fait rien de tout cela. Considérez donc ses élasticités comme exposées à ce biais tant qu’une spécification intégrant le calendrier ne les confirme pas.</p>
 <p><strong>Effets du prix de référence.</strong> Les clients se souviennent du prix payé auparavant. Une hausse de prix provoque généralement une baisse de volume plus importante que le gain de nouveaux acheteurs apporté par une baisse. Le cas « Fair and Square » de JCPenney est l’exemple célèbre : le passage des promotions à des prix bas permanents, au même niveau moyen, a entraîné un effondrement des ventes, car les clients avaient perdu leur point d’ancrage tarifaire.</p>
 <p><strong>Réaction des concurrents.</strong> Une baisse de prix ne fonctionne que si les concurrents maintiennent les leurs. Dans les catégories concentrées, ils s’alignent généralement. Tout le monde vend à peu près le même volume, mais avec des marges plus faibles. Dans ces catégories, modélisez la réaction probable des concurrents avant d’agir sur la base de la courbe de demande.</p>
 </section>

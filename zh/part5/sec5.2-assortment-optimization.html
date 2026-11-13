@@ -664,7 +664,7 @@ window.Quarto = {
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>本章分析的是<strong>收入</strong>，因为公开的 Dunnhumby Complete Journey 数据集不包含产品成本或 COGS。当生产团队拥有成本数据时，同样的流程可以在<strong>毛利</strong>或<strong>边际贡献</strong>上运行；只有业务解读会变，从<em>收入风险管理</em>变为<em>利润优化</em>。</p>
+<p>本章分析的是<strong>收入</strong>，因为公开的 Dunnhumby Complete Journey 数据集不包含产品成本或 COGS。当你的团队有成本数据时，同样的流程可以在<strong>毛利</strong>或<strong>边际贡献</strong>上运行；只有业务解读会变，从<em>收入风险管理</em>变为<em>利润优化</em>。</p>
 </div>
 </div>
 <section id="sec-more-skus-fallacy" class="level2">
@@ -690,17 +690,21 @@ window.Quarto = {
 </ul>
 <p>C 类产品是你开始构建候选池的地方。不是每个 C 类商品都应该下架，但任何你考虑砍掉的产品都应该来自这个组。</p>
 <p>在代码中，按累计收入份额给 SKU 排名，切分成 A/B/C 三档，并把 C 类长尾作为候选池：</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>ranked <span class="op">=</span> sku_summary.sort_values(<span class="st">"revenue"</span>, ascending<span class="op">=</span><span class="va">False</span>)[<span class="st">"revenue"</span>]</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Classify on the cumulative share *before* each SKU, so the SKU that crosses</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># the 80% line still counts toward A (and a single dominant SKU stays A).</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>cum_before <span class="op">=</span> (ranked.cumsum() <span class="op">/</span> ranked.<span class="bu">sum</span>()).shift(fill_value<span class="op">=</span><span class="dv">0</span>)</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>sku_summary[<span class="st">"abc_revenue"</span>] <span class="op">=</span> pd.cut(cum_before, bins<span class="op">=</span>[<span class="dv">0</span>, <span class="fl">0.80</span>, <span class="fl">0.95</span>, <span class="fl">1.0</span>],</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>                                    labels<span class="op">=</span>[<span class="st">"A"</span>, <span class="st">"B"</span>, <span class="st">"C"</span>], right<span class="op">=</span><span class="va">False</span>)</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Candidate pool = C-rank by revenue (the long tail)</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>candidates <span class="op">=</span> sku_summary[sku_summary[<span class="st">"abc_revenue"</span>] <span class="op">==</span> <span class="st">"C"</span>]</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># df: one row per item sold</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>sku_summary <span class="op">=</span> df.groupby(<span class="st">"PRODUCT_ID"</span>).agg(revenue<span class="op">=</span>(<span class="st">"SALES_VALUE"</span>, <span class="st">"sum"</span>))</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>ranked <span class="op">=</span> sku_summary.sort_values(<span class="st">"revenue"</span>, ascending<span class="op">=</span><span class="va">False</span>)[<span class="st">"revenue"</span>]</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Classify on the cumulative share *before* each SKU, so the SKU that crosses</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co"># the 80% line still counts toward A (and a single dominant SKU stays A).</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>cum_before <span class="op">=</span> (ranked.cumsum() <span class="op">/</span> ranked.<span class="bu">sum</span>()).shift(fill_value<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>sku_summary[<span class="st">"abc_revenue"</span>] <span class="op">=</span> pd.cut(cum_before, bins<span class="op">=</span>[<span class="dv">0</span>, <span class="fl">0.80</span>, <span class="fl">0.95</span>, <span class="fl">1.0</span>],</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>                                    labels<span class="op">=</span>[<span class="st">"A"</span>, <span class="st">"B"</span>, <span class="st">"C"</span>], right<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Candidate pool = C-rank by revenue (the long tail)</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>candidates <span class="op">=</span> sku_summary[sku_summary[<span class="st">"abc_revenue"</span>] <span class="op">==</span> <span class="st">"C"</span>]</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
 <p>完整的函数，包括零销售/负销售过滤和对 NaN 安全的分箱，在配套 Notebook 中。</p>
-<p><a href="#fig-revenue-pareto" class="quarto-xref">图&nbsp;<span>1</span></a> 展示了约 39,000 个 Dunnhumby 杂货 SKU（剔除 38 个无销售的之后）的收入帕累托曲线。收入高度集中：不到 20% 的 SKU 产生了 80% 的销售额，而 C 类池（<code>abc_revenue == "C"</code>）包含 63% 的 SKU，却只有 5% 的收入。这条长尾构成了候选池。单凭低销量就能让一个 SKU 进入这个池子；但它不决定结果。</p>
+<p><a href="#fig-revenue-pareto" class="quarto-xref">图&nbsp;<span>1</span></a> 展示了约 39,000 个 Dunnhumby 杂货 SKU（剔除 38 个无销售的之后）的收入帕累托曲线。收入高度集中：不到 20% 的 SKU 产生了 80% 的销售额，而 C 类池（<code>abc_revenue == "C"</code>）包含 63% 的 SKU，却只有 5% 的收入。这条长尾构成了候选池。</p>
 <div id="fig-revenue-pareto" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="约 39,000 个 SKU 的收入帕累托曲线：不到 20% 的 SKU 驱动了 80% 的收入。">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-revenue-pareto-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -722,11 +726,11 @@ window.Quarto = {
 <p>低共现与替代关系相符，但并不能确立它：低共现也可能反映不同的购物场合或客户细分群体。</p>
 <p>对每个 C 类候选，这项检查扫描它的同子品类同伴（限定为收入 A/B 类、体量足以吸收转移需求的 SKU），并标记其中提升度低的那些：</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>co_occur <span class="op">=</span> <span class="bu">len</span>(cand_baskets <span class="op">&amp;</span> peer_baskets)</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> co_occur <span class="op">==</span> <span class="dv">0</span>:                       <span class="co"># never bought together → strongest signal</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> co_occur <span class="op">==</span> <span class="dv">0</span>:                       <span class="co"># never bought together</span></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    subs.append({<span class="st">"substitute"</span>: peer_id, <span class="st">"lift"</span>: <span class="fl">0.0</span>})</span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="cf">else</span>:</span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    lift <span class="op">=</span> (co_occur <span class="op">/</span> total_baskets) <span class="op">/</span> (p_cand <span class="op">*</span> p_peer)</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> lift <span class="op">&lt;</span> lift_threshold:           <span class="co"># low Lift within a sub-category → likely substitute</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> lift <span class="op">&lt;</span> lift_threshold:           <span class="co"># low Lift: likely substitute</span></span>
 <span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>        subs.append({<span class="st">"substitute"</span>: peer_id, <span class="st">"lift"</span>: <span class="bu">round</span>(lift, <span class="dv">3</span>)})</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
 <p>完整的函数，包括子品类分组、收入 A/B 类替代品池和最小购物篮数保护，在配套 Notebook 中。</p>
 <p>还有两个可选的加强手段。交叉价格弹性为正时（如果有的话），支持替代关系。当购物篮数据稀疏时，比如新品或小门店，属性相似度（如品牌、价格档次或使用场景）可以是一个实用的备选方案。</p>
@@ -781,14 +785,14 @@ window.Quarto = {
 </div>
 </figure>
 </div>
-<p>在这 150 个中，行动的分布是 105 / 28 / 17。被检视的长尾大多数都有品类内候选替代品，也没有特殊的购物篮角色，对它们来说零共现（提升度为 0.0，交易数据中最强的替代信号）是常见情形。输出是一份供测试用的短名单，按每个候选优先测试的安全程度排序。</p>
+<p>在这 150 个候选 SKU 中，105 个归为“测试下架”，28 个归为“砍掉前先调查”，17 个归为“保留或谨慎测试”。被检查的长尾商品大多有品类内的候选替代品，在购物篮中也没有特殊作用。这类商品与候选替代品通常从未同时被购买（提升度为 0.0）。最终得到一份测试清单，风险较低的候选排在前面。</p>
 <p>子品类中有候选替代品的 SKU，是最安全的下架测试对象。没有候选替代品的 17 个则是相反的情形：能吸收其需求的收入 A/B 类同伴不到五个，所以需求可能离开这家店。暂时保留该产品，寻找降低其成本的方法，比如更小的包装或更好的供应商条件，或者在下架前谨慎测试。</p>
 <p>中间的 28 个是针对光环效应的一道防线。一个经常与更高价值商品一起出现的低价 SKU，可能有助于吸引那些购物篮，所以下架它可能减少其他地方的销售。对这些情形要先调查再砍，而不是只依赖收入。在密集的杂货数据中，几乎每个 SKU 都会与某些东西共现，所以只对最清晰的情形使用这个标记。另外，不是每个低收入 SKU 都应该进入候选池。有些 SKU 承担着收入和提升度都捕捉不到的角色，比如带动到店、锚定品类的价格形象，或彰显品类可信度。</p>
 </section>
 </section>
 <section id="validate-before-scaling" class="level2">
 <h2 class="anchored" data-anchor-id="validate-before-scaling">推广之前先验证</h2>
-<p>打分后的清单上的每一行都是一个有待测试的假设。在推开一次删除之前，先做一个小规模的匹配门店测试：在实验门店下架该 SKU，保持可比的对照门店不变，并监控子品类收入、每篮收入和购物篮数。</p>
+<p>打分后的清单上，每一行都是一个有待测试的假设。在所有门店下架某个商品之前，先做一个小规模的匹配门店测试：在实验门店下架该 SKU，保持可比的对照门店不变，并监控子品类收入、每篮收入和购物篮数。</p>
 <p>不要评估被下架 SKU 自己的销售；按定义它们会是零。问题是需求是否留在了品类里、留在了购物篮里。如果结果不确定，就不要推广这次下架。</p>
 </section>
 <section id="key-takeaways" class="level2">

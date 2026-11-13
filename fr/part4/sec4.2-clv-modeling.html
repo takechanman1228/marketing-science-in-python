@@ -637,6 +637,7 @@ window.Quarto = {
   <li><a href="#bgnbd-model" id="toc-bgnbd-model" class="nav-link" data-scroll-target="#bgnbd-model">Modèle BG/NBD</a></li>
   <li><a href="#gamma-gamma-model" id="toc-gamma-gamma-model" class="nav-link" data-scroll-target="#gamma-gamma-model">Modèle Gamma-Gamma</a></li>
   </ul></li>
+  <li><a href="#sec-clv-routing" id="toc-sec-clv-routing" class="nav-link" data-scroll-target="#sec-clv-routing">Quand BTYD n’est pas l’outil adapté</a></li>
   <li><a href="#sec-implementation" id="toc-sec-implementation" class="nav-link" data-scroll-target="#sec-implementation">Implémentation avec PyMC-Marketing</a>
   <ul class="collapse">
   <li><a href="#data-and-rfm-t-summary" id="toc-data-and-rfm-t-summary" class="nav-link" data-scroll-target="#data-and-rfm-t-summary">Données et synthèse RFM-T</a></li>
@@ -645,7 +646,13 @@ window.Quarto = {
   <li><a href="#revenue-clv-profit-clv" id="toc-revenue-clv-profit-clv" class="nav-link" data-scroll-target="#revenue-clv-profit-clv">CLV en chiffre d’affaires → CLV en bénéfice</a></li>
   <li><a href="#combining-segments-and-clv" id="toc-combining-segments-and-clv" class="nav-link" data-scroll-target="#combining-segments-and-clv">Combiner segments et CLV</a></li>
   </ul></li>
-  <li><a href="#sec-using-clv" id="toc-sec-using-clv" class="nav-link" data-scroll-target="#sec-using-clv">Mettre la CLV en pratique</a></li>
+  <li><a href="#sec-using-clv" id="toc-sec-using-clv" class="nav-link" data-scroll-target="#sec-using-clv">Mettre la CLV en pratique</a>
+  <ul class="collapse">
+  <li><a href="#cpa-ceilings-for-ad-bidding" id="toc-cpa-ceilings-for-ad-bidding" class="nav-link" data-scroll-target="#cpa-ceilings-for-ad-bidding">Plafonds de CPA pour les enchères publicitaires</a></li>
+  <li><a href="#churn-alerts-for-crm" id="toc-churn-alerts-for-crm" class="nav-link" data-scroll-target="#churn-alerts-for-crm">Alertes d’attrition pour le CRM</a></li>
+  <li><a href="#cohort-forecasts-for-finance" id="toc-cohort-forecasts-for-finance" class="nav-link" data-scroll-target="#cohort-forecasts-for-finance">Prévisions par cohorte pour la direction financière</a></li>
+  <li><a href="#monitoring" id="toc-monitoring" class="nav-link" data-scroll-target="#monitoring">Suivi</a></li>
+  </ul></li>
   <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways">Points clés à retenir</a></li>
   </ul>
 <div class="quarto-code-links"><h2>Liens de code</h2><ul><li><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.2_clv_pymc_marketing.ipynb"><i class="bi bi-github"></i>sec4.2_clv_pymc_marketing.ipynb</a></li></ul></div></nav>
@@ -679,6 +686,8 @@ Cette page est une traduction par IA de la version anglaise de <em>Marketing Sci
 </div>
 <p>La plupart des équipes marketing se concentrent sur le coût par acquisition (CPA), souvent employé indifféremment avec le CAC (coût d’acquisition client) : un CPA plus faible signifie une meilleure campagne. La valeur vie client (CLV), souvent appelée LTV dans les contextes de l’analytique et du SaaS, reformule la question. Elle estime combien chaque client rapporte au fil du temps, et cette estimation fixe le plafond de CPA du segment.</p>
 <p>Ce chapitre montre comment prédire la CLV à l’échelle individuelle à l’aide de modèles probabilistes BTYD (BG/NBD + Gamma-Gamma avec PyMC-Marketing), et comment transformer ces prédictions en décisions budgétaires.</p>
+<p><strong>Notebook complémentaire :</strong> <code>sec4.2_clv_pymc_marketing.ipynb</code> ajuste les modèles BG/NBD et Gamma-Gamma, estime la CLV et analyse les segments démographiques sur le jeu de données Dunnhumby.<br>
+<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.2_clv_pymc_marketing.ipynb">Voir sur GitHub</a></p>
 <section id="why-clv-changes-the-decision" class="level2">
 <h2 class="anchored" data-anchor-id="why-clv-changes-the-decision">Pourquoi la CLV change la décision</h2>
 <p>Prenons une marque de mode en ligne qui acquiert des clients grâce à des publicités et à des bons de réduction. Supposons que deux segments dominent le parcours de conversion : les étudiants et les actifs. Voici ce que donne le premier achat :</p>
@@ -718,19 +727,7 @@ Figure&nbsp;3: CPA fixe (à gauche) et CPA ajusté à la CLV (à droite).
 </figcaption>
 </figure>
 </div>
-<div class="callout callout-style-default callout-note callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Note</span>La CLV tout au long du cycle de vie client
-</div>
-</div>
-<div class="callout-body-container callout-body">
 <p>La CLV est utile à chaque étape : à l’acquisition pour dépenser davantage sur les segments à forte valeur, à la croissance pour accorder la priorité aux clients à forte valeur en matière de service et d’offres exclusives, et à la fidélisation pour concentrer les campagnes de rétention là où les calculs les justifient réellement.</p>
-</div>
-</div>
 <p>Les trois objectifs d’un modèle de CLV en découlent directement : (1) prédire la valeur future à l’échelle individuelle, (2) identifier ce qui distingue les clients à CLV élevée et (3) intégrer ces deux éléments aux décisions budgétaires marketing.</p>
 </section>
 <section id="sec-limitations" class="level2">
@@ -835,7 +832,7 @@ Figure&nbsp;7: Le cadre BTYD : BG/NBD et Gamma-Gamma.
 </div>
 <section id="bgnbd-model" class="level3">
 <h3 class="anchored" data-anchor-id="bgnbd-model">Modèle BG/NBD</h3>
-<p>Le modèle BG/NBD suppose deux processus latents dans le cycle de vie d’un client :</p>
+<p>Le modèle BG/NBD <span class="citation" data-cites="fader2005counting">(<a href="../appendix/further-reading.html#ref-fader2005counting" role="doc-biblioref">Fader et al. 2005</a>)</span> suppose deux processus latents dans le cycle de vie d’un client :</p>
 <ul>
 <li>Processus d’achat. Tant que le client est vivant, les achats suivent un processus de Poisson de taux <span class="math inline">\(\lambda\)</span>.</li>
 <li>Processus de départ. Après chaque achat, le client a une probabilité <span class="math inline">\(p\)</span> de devenir définitivement inactif.</li>
@@ -862,50 +859,55 @@ Figure&nbsp;9: La probabilité d’être actif diminue entre les achats, puis re
 </figcaption>
 </figure>
 </div>
-<div class="callout callout-style-default callout-tip callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Astuce</span>Pour approfondir (BG/NBD)
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Pour une dérivation complète comprenant le modèle graphique et la fonction de vraisemblance, voir <span class="citation" data-cites="fader2005counting">Fader et al. (<a href="../appendix/further-reading.html#ref-fader2005counting" role="doc-biblioref">2005</a>)</span>.</p>
-</div>
-</div>
 </section>
 <section id="gamma-gamma-model" class="level3">
 <h3 class="anchored" data-anchor-id="gamma-gamma-model">Modèle Gamma-Gamma</h3>
-<p>Le modèle Gamma-Gamma estime le montant moyen des commandes. Il utilise une hiérarchie bayésienne à deux niveaux : une loi Gamma par client (ses habitudes de dépenses propres) et une autre loi Gamma sur l’ensemble de la clientèle (la variation entre clients).</p>
-<div class="callout callout-style-default callout-tip callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Astuce</span>Pour approfondir (Gamma-Gamma)
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Pour une dérivation complète, voir <span class="citation" data-cites="fader2013gammagamma">Fader et Hardie (<a href="../appendix/further-reading.html#ref-fader2013gammagamma" role="doc-biblioref">2013</a>)</span>.</p>
-</div>
-</div>
-<div class="callout callout-style-default callout-tip callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Astuce</span>Quand BTYD n’est pas l’outil adapté
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>BTYD suppose un contexte non contractuel : l’attrition n’est jamais observée, le modèle la déduit donc des intervalles entre les achats. Dans les contextes contractuels comme le SaaS et les abonnements, l’attrition correspond à un événement explicite de résiliation, et le modèle Bêta-Géométrique décalé (sBG) exploite directement ce signal ; PyMC-Marketing le propose sous le nom <code>ShiftedBetaGeoModel</code> (voir le <a href="https://www.pymc-marketing.io/en/latest/notebooks/clv/sbg.html">notebook sBG</a>). Pour expliquer les facteurs d’attrition avec des covariables dépendantes du temps, utilisez l’analyse de survie (modèle à risques proportionnels de Cox). Enfin, si vous disposez de variables comportementales riches et d’une chaîne d’apprentissage automatique en production, une régression par apprentissage automatique (par exemple LightGBM) sur une cible à horizon fixe peut surpasser BTYD en précision ; avant de changer d’approche, mettez ce gain en balance avec le volume de données nécessaire, l’effort de réentraînement et de déploiement, la maintenance de la chaîne de préparation des variables, l’explicabilité et la quantification de l’incertitude fournie. Une approche hybride pratique consiste à utiliser les sorties de BTYD (probabilité d’être actif, nombre attendu d’achats) comme variables d’entrée du modèle d’apprentissage automatique ; les scripts complémentaires dans <a href="https://github.com/takechanman1228/marketing-science-in-python/tree/main/notebooks/part4-customer-analytics/lightgbm-companion/"><code>lightgbm-companion/</code></a> présentent une implémentation LightGBM de bout en bout.</p>
-</div>
-</div>
+<p>Le modèle Gamma-Gamma <span class="citation" data-cites="fader2013gammagamma">(<a href="../appendix/further-reading.html#ref-fader2013gammagamma" role="doc-biblioref">Fader et Hardie 2013</a>)</span> estime le montant moyen des commandes. Il utilise une hiérarchie bayésienne à deux niveaux : une loi Gamma par client (ses habitudes de dépenses propres) et une autre loi Gamma sur l’ensemble de la clientèle (la variation entre clients).</p>
 </section>
+</section>
+<section id="sec-clv-routing" class="level2">
+<h2 class="anchored" data-anchor-id="sec-clv-routing">Quand BTYD n’est pas l’outil adapté</h2>
+<p>BTYD suppose un contexte non contractuel : l’attrition n’est jamais observée, le modèle la déduit donc des intervalles entre les achats. <a href="#tbl-clv-routing" class="quarto-xref">Table&nbsp;<span>2</span></a> présente les situations où un autre modèle convient mieux.</p>
+<div id="tbl-clv-routing" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-clv-routing-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;2: Modèles de valeur vie client selon la situation.
+</figcaption>
+<div aria-describedby="tbl-clv-routing-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Situation</th>
+<th style="text-align: left;">Attrition</th>
+<th style="text-align: left;">Modèle</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Commerce de détail et commerce en ligne (non contractuels)</td>
+<td style="text-align: left;">Déduite des intervalles entre les achats</td>
+<td style="text-align: left;">BG/NBD + Gamma-Gamma</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SaaS et abonnements (contractuels)</td>
+<td style="text-align: left;">Un événement explicite de résiliation</td>
+<td style="text-align: left;">Bêta-Géométrique décalé (sBG)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Expliquer les facteurs d’attrition avec des covariables dépendantes du temps</td>
+<td style="text-align: left;">Observée ou définie par une règle</td>
+<td style="text-align: left;">Analyse de survie (modèle à risques proportionnels de Cox)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Variables comportementales riches et chaîne d’apprentissage automatique en production</td>
+<td style="text-align: left;">L’un ou l’autre</td>
+<td style="text-align: left;">Régression par apprentissage automatique (par exemple LightGBM) sur une cible à horizon fixe</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
 </section>
 <section id="sec-implementation" class="level2">
 <h2 class="anchored" data-anchor-id="sec-implementation">Implémentation avec PyMC-Marketing</h2>
@@ -927,7 +929,7 @@ Figure&nbsp;10: Données d’entrée nécessaires à la modélisation de la CLV.
 <div id="tbl-rfmt" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-rfmt-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Table&nbsp;2: Indicateurs RFM-T utilisés dans le modèle BTYD.
+Table&nbsp;3: Indicateurs RFM-T utilisés dans le modèle BTYD.
 </figcaption>
 <div aria-describedby="tbl-rfmt-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <table class="caption-top table">
@@ -972,44 +974,35 @@ Table&nbsp;2: Indicateurs RFM-T utilisés dans le modèle BTYD.
 <p>Dans la <a href="sec4.1-segmentation.html">section 4.1</a>, la récence désignait le nombre de jours depuis le dernier achat. Dans la convention BTYD, suivie par <code>rfm_summary</code> de PyMC-Marketing, il s’agit de la durée entre le premier achat d’un client et son achat le plus récent ; une valeur <em>plus élevée</em> signifie donc une activité plus récente.</p>
 </div>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> datetime <span class="im">import</span> datetime, timedelta</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pymc_marketing <span class="im">import</span> clv</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Load Dunnhumby transactions and convert DAY counter to datetime</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co"># (see companion notebook for the full pipeline)</span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>BASE_DATE <span class="op">=</span> datetime(<span class="dv">2012</span>, <span class="dv">1</span>, <span class="dv">1</span>)</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>data[<span class="st">"date"</span>] <span class="op">=</span> data[<span class="st">"DAY"</span>].<span class="bu">apply</span>(<span class="kw">lambda</span> d: BASE_DATE <span class="op">+</span> timedelta(days<span class="op">=</span><span class="bu">int</span>(d) <span class="op">-</span> <span class="dv">1</span>))</span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>data_summary <span class="op">=</span> clv.utils.rfm_summary(</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    data, <span class="st">"CustomerID"</span>, <span class="st">"date"</span>, <span class="st">"TotalSales"</span>, time_unit<span class="op">=</span><span class="st">"D"</span></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>data_summary.index <span class="op">=</span> data_summary[<span class="st">"customer_id"</span>]</span></code></pre></div><button title="Copier vers le presse-papier" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>Notebook complémentaire :</strong> <code>sec4.2_clv_pymc_marketing.ipynb</code> ajuste les modèles BG/NBD et Gamma-Gamma, estime la CLV et analyse les segments démographiques sur le jeu de données Dunnhumby.<br>
-<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part4-customer-analytics/sec4.2_clv_pymc_marketing.ipynb">Voir sur GitHub</a></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pymc_marketing <span class="im">import</span> clv</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>data_summary <span class="op">=</span> clv.utils.rfm_summary(</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    data,                              <span class="co"># one row per purchase</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    customer_id_col<span class="op">=</span><span class="st">"CustomerID"</span>,</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    datetime_col<span class="op">=</span><span class="st">"date"</span>,</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    monetary_value_col<span class="op">=</span><span class="st">"TotalSales"</span>,</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    time_unit<span class="op">=</span><span class="st">"D"</span>,</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copier vers le presse-papier" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="fitting-and-estimating-clv" class="level3">
 <h3 class="anchored" data-anchor-id="fitting-and-estimating-clv">Ajustement et estimation de la CLV</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># --- BG/NBD: purchase frequency + P(alive) ---</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># BG/NBD: purchase frequency and P(alive)</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>bgm <span class="op">=</span> clv.BetaGeoModel()</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>bgm.fit(data<span class="op">=</span>data_summary)</span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co"># --- Gamma-Gamma: average order value ---</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>nonzero <span class="op">=</span> data_summary.query(<span class="st">"frequency &gt; 0 and monetary_value &gt; 0"</span>)</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>gg_data <span class="op">=</span> nonzero[[<span class="st">"customer_id"</span>, <span class="st">"frequency"</span>, <span class="st">"monetary_value"</span>]]</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>gg <span class="op">=</span> clv.GammaGammaModel()</span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>gg.fit(data<span class="op">=</span>gg_data)</span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co"># --- Combined CLV estimate (DCF with 1% monthly discount) ---</span></span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>clv_estimate <span class="op">=</span> gg.expected_customer_lifetime_value(</span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    transaction_model<span class="op">=</span>bgm,</span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    data<span class="op">=</span>data_summary[[</span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>        <span class="st">"customer_id"</span>, <span class="st">"frequency"</span>, <span class="st">"recency"</span>, <span class="st">"T"</span>, <span class="st">"monetary_value"</span></span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    ]],</span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    future_t<span class="op">=</span><span class="dv">120</span>,       <span class="co"># 120 months = 10 years</span></span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    discount_rate<span class="op">=</span><span class="fl">0.01</span>,</span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    time_unit<span class="op">=</span><span class="st">"D"</span>,</span>
-<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copier vers le presse-papier" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Gamma-Gamma: average order value, fit on repeat customers only</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>repeat <span class="op">=</span> data_summary.query(<span class="st">"frequency &gt; 0 and monetary_value &gt; 0"</span>)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>gg <span class="op">=</span> clv.GammaGammaModel()</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>gg.fit(data<span class="op">=</span>repeat)</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co"># CLV: expected purchases times expected spend, discounted at 1% a month</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>clv_estimate <span class="op">=</span> gg.expected_customer_lifetime_value(</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    transaction_model<span class="op">=</span>bgm,</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    data<span class="op">=</span>data_summary,</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    future_t<span class="op">=</span><span class="dv">120</span>,       <span class="co"># 120 months = 10 years</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    discount_rate<span class="op">=</span><span class="fl">0.01</span>,</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    time_unit<span class="op">=</span><span class="st">"D"</span>,</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copier vers le presse-papier" class="code-copy-button"><i class="bi"></i></button></div>
 <p>La sortie comprend non seulement des estimations ponctuelles, mais aussi les bornes d’un HDI (intervalle de plus haute densité). Dans cette API, <code>future_t</code> se mesure en mois, tandis que <code>time_unit="D"</code> indique au modèle que les données RFM-T en entrée sont mesurées en jours. Ces bornes ne quantifient que l’incertitude sur le calendrier des achats : la distribution a posteriori des dépenses est résumée par sa moyenne avant l’actualisation ; considérez-les donc comme une limite inférieure de l’incertitude réelle.</p>
 <p>Choisissez l’horizon explicitement ; <code>future_t=120</code> n’est pas une valeur par défaut à accepter telle quelle. Ce jeu de données couvre environ 23 mois ; une projection à 120 mois s’étend donc sur une durée d’environ cinq fois la fenêtre observée. L’estimation reste bornée, car BG/NBD intègre le départ des clients dans la projection, mais ce taux de départ est lui-même estimé à partir de ces 23 mois. Le notebook complémentaire applique à nouveau l’actualisation à la même distribution a posteriori sur des horizons de 3, 5 et 10 ans. Sur ce jeu de données, le classement des clients varie à peine entre les trois horizons : le ciblage fondé sur le rang est donc insensible aux horizons testés ; l’estimation médiane à 10 ans représente environ 2,23 fois celle à 3 ans, si bien que toute conversion de la CLV en plafond monétaire doit préciser l’horizon utilisé.</p>
 </section>
@@ -1038,54 +1031,85 @@ Figure&nbsp;11: La matrice de probabilité d’être actif.
 <section id="combining-segments-and-clv" class="level3">
 <h3 class="anchored" data-anchor-id="combining-segments-and-clv">Combiner segments et CLV</h3>
 <p>Rapprochez le <code>segment_id</code> de la <a href="sec4.1-segmentation.html">section 4.1</a> de l’estimation de CLV de chaque client. Vous obtenez ainsi le tableau opérationnel vers lequel cette partie progresse : de quel type de client il s’agit, quelle est sa valeur et ce que l’entreprise devrait faire pour lui.</p>
+<p><a href="#tbl-segment-clv" class="quarto-xref">Table&nbsp;<span>4</span></a> présente ce tableau pour les ménages clients de l’enseigne alimentaire : une CLV en bénéfice sur dix ans, avec la marge brute de 28 % supposée dans le notebook.</p>
+<div id="tbl-segment-clv" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-segment-clv-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;4: Segment comportemental × valeur prédite, d’après le notebook complémentaire.
+</figcaption>
+<div aria-describedby="tbl-segment-clv-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Segment</th>
+<th style="text-align: right;">Clients</th>
+<th style="text-align: right;">CLV moyenne en bénéfice</th>
+<th style="text-align: right;">CLV prudente en bénéfice</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Gros acheteurs fidèles</td>
+<td style="text-align: right;">610</td>
+<td style="text-align: right;">$5,659</td>
+<td style="text-align: right;">$5,368</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Petits paniers fréquents</td>
+<td style="text-align: right;">567</td>
+<td style="text-align: right;">$2,553</td>
+<td style="text-align: right;">$2,454</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Gros paniers occasionnels</td>
+<td style="text-align: right;">539</td>
+<td style="text-align: right;">$1,537</td>
+<td style="text-align: right;">$1,515</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Amateurs de remises</td>
+<td style="text-align: right;">478</td>
+<td style="text-align: right;">$934</td>
+<td style="text-align: right;">$924</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Clients inactifs</td>
+<td style="text-align: right;">287</td>
+<td style="text-align: right;">$271</td>
+<td style="text-align: right;">$267</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<p>Un gros acheteur fidèle vaut environ vingt fois un ménage inactif ; un plafond de dépenses unique par client est donc trop élevé pour les lignes du bas et trop faible pour celle du haut. Le montant à dépenser sous ce plafond dépend de l’effet incrémental de la campagne.</p>
 <p>Les données démographiques peuvent toujours aider à décrire ou à atteindre un segment, mais la décision repose principalement sur le croisement segment comportemental × valeur prédite. Le notebook complémentaire joint les estimations de CLV au fichier Dunnhumby <code>hh_demographic.csv</code> pour dresser le profil de chaque segment selon des dimensions démographiques telles que le revenu : utile pour choisir la création publicitaire et le canal, moins pour fixer le budget.</p>
-<div class="callout callout-style-default callout-tip callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Astuce</span>Modèles de dépenses propres à chaque segment
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Une pratique de production rapportée par PyMC Labs : tester des modèles Gamma-Gamma propres à chaque segment lorsque les distributions de dépenses diffèrent sensiblement entre segments, et conserver un modèle de transaction commun à l’ensemble de la population. Construisez les segments sur la seule période de calibration et comparez-les au modèle commun sur des données hors échantillon ; sinon, les segments dérivés du montant des achats partagent de l’information avec le modèle de dépenses qu’ils alimentent.</p>
-</div>
-</div>
 </section>
 </section>
 <section id="sec-using-clv" class="level2">
 <h2 class="anchored" data-anchor-id="sec-using-clv">Mettre la CLV en pratique</h2>
 <p>Une fois que vous disposez d’un <code>clv_estimate</code> par client, trois applications ne demandent plus aucune modélisation supplémentaire, même si chacune a besoin de plus que le score. Un plafond de CPA a besoin de la conversion en marge décrite ci-dessus et d’un horizon explicite ; une alerte d’attrition a besoin d’une jointure avec le CRM sur l’identifiant client et d’un seuil ; une prévision par cohorte a besoin de la date d’acquisition de chaque client et de l’horizon de planification de la direction financière. Ces approches fonctionnent avec n’importe quel score de CLV.</p>
-<ol type="1">
-<li>Plafonds de CPA pour les enchères publicitaires</li>
-</ol>
+<section id="cpa-ceilings-for-ad-bidding" class="level3">
+<h3 class="anchored" data-anchor-id="cpa-ceilings-for-ad-bidding">Plafonds de CPA pour les enchères publicitaires</h3>
 <p>Fixez le CPA maximal comme une fraction de la CLV prédite en bénéfice :</p>
 <p><span class="math display">\[
 \text{Allowable CPA} = \text{CLV}_{\text{profit}} \times \text{Target acquisition ratio}
 \]</span></p>
 <p>Si un segment a une CLV prédite en bénéfice de $200 et que votre ratio cible d’acquisition est de 33 %, le CPA maximal est de $66. Pour enchérir en situation d’incertitude, utilisez une borne inférieure prudente de la CLV prédite en bénéfice plutôt que la moyenne. De nombreuses plateformes publicitaires peuvent intégrer des signaux de valeur pour des enchères fondées sur la valeur ou des règles d’audience, mais l’implémentation précise dépend de la plateforme.</p>
-<ol start="2" type="1">
-<li>Alertes d’attrition pour le CRM</li>
-</ol>
+</section>
+<section id="churn-alerts-for-crm" class="level3">
+<h3 class="anchored" data-anchor-id="churn-alerts-for-crm">Alertes d’attrition pour le CRM</h3>
 <p>Signalez les clients dont la probabilité d’être actif baisse de plus de 30 points en 30 jours. Le signal réside dans la vitesse de variation, pas dans le niveau absolu. Le cas d’un client dont cette probabilité est passée de 0,85 à 0,40 en un mois est bien plus urgent que celui d’un client dont elle reste stable à 0,35 depuis six mois. Le premier client s’éloigne d’un niveau d’engagement auparavant élevé ; le second a toujours été un acheteur peu fréquent.</p>
-<ol start="3" type="1">
-<li>Prévisions par cohorte pour la direction financière</li>
-</ol>
+</section>
+<section id="cohort-forecasts-for-finance" class="level3">
+<h3 class="anchored" data-anchor-id="cohort-forecasts-for-finance">Prévisions par cohorte pour la direction financière</h3>
 <p>La direction financière planifie selon des cycles budgétaires, pas sur toute la durée de vie des clients : agrégez donc les estimations individuelles de CLV par cohorte d’acquisition et projetez le chiffre d’affaires à 12, 24 et 36 mois. Incluez les bornes HDI pour que la direction financière sache qu’il s’agit d’estimations probabilistes et non d’objectifs fixes. Cela répond à la question financière du retour attendu sur les dépenses d’acquisition d’un trimestre, dans les unités et le cadre temporel selon lesquels la direction financière planifie.</p>
-<div class="callout callout-style-default callout-tip callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Astuce</span>Suivi
-</div>
-</div>
-<div class="callout-body-container callout-body">
+</section>
+<section id="monitoring" class="level3">
+<h3 class="anchored" data-anchor-id="monitoring">Suivi</h3>
 <p>Comparez le chiffre d’affaires prédit au chiffre d’affaires réel par cohorte à 3, 6 et 12 mois. Si le ratio s’écarte de plus de ±20 %, réentraînez le modèle. Vérifiez aussi si les prédictions de CLV présentent un biais à l’encontre de groupes protégés : les modèles entraînés sur des segments insuffisamment servis perpétueront ce biais en prédisant une CLV plus faible et en fixant des enchères d’acquisition plus basses.</p>
-</div>
-</div>
+</section>
 </section>
 <section id="key-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="key-takeaways">Points clés à retenir</h2>

@@ -648,7 +648,7 @@ window.Quarto = {
 <li>A response model predicts: <span class="math inline">\(P(\text{purchase})\)</span></li>
 <li>An uplift model predicts: <span class="math inline">\(P(\text{purchase} \mid \text{treated}) - P(\text{purchase} \mid \text{not treated})\)</span></li>
 </ul>
-<p>This second quantity is the per-customer treatment effect, the CATE; §3.5 covered how to estimate it. The score is the measurement step; the next step is to turn it into a targeting policy, and to check on held-out data whether acting on the ranking actually delivers value.</p>
+<p>This second quantity is the per-customer treatment effect, the CATE; Section 3.5 covered how to estimate it. The score is the measurement step; the next step is to turn it into a targeting policy, and to check on held-out data whether acting on the ranking actually delivers value.</p>
 <div id="fig-uplift-targeting" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Uplift modeling ranks customers by predicted treatment effect so the campaign can prioritize those most likely to change behavior.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-uplift-targeting-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -659,6 +659,8 @@ Figure&nbsp;1: Uplift modeling prioritizes by treatment effect.
 </figcaption>
 </figure>
 </div>
+<p><strong>Companion notebook:</strong> <code>sec3.6_uplift_modeling.ipynb</code> builds the S-Learner uplift score on MineThatData and evaluates it with uplift and Qini curves, decile uplift, and a net-value targeting policy.<br>
+<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.6_uplift_modeling.ipynb">View on GitHub</a></p>
 <section id="understanding-the-customers-to-target" class="level2">
 <h2 class="anchored" data-anchor-id="understanding-the-customers-to-target">Understanding the Customers to Target</h2>
 <p>To apply uplift modeling well, it helps to picture four kinds of customer, defined by how they respond to being contacted.</p>
@@ -679,11 +681,11 @@ Figure&nbsp;2: The four uplift customer segments.
 <li>Sleeping Dogs: would buy on their own, but contact pushes them away. Contacting them reduces conversions.</li>
 </ul>
 <p>A response model ranks on likelihood to buy, so its list fills with Sure Things. An uplift model ranks on the treatment effect, so its list concentrates on Persuadables.</p>
-<p>Uplift has two method families: the meta-learners from §3.5, and decision trees built to split on uplift directly, whose advantage is handling several treatment arms at once (compare 5%, 10%, and 20% offers in one model). This chapter stays on the meta-learner route, using EconML as in §3.5 plus scikit-uplift to evaluate the ranking; CausalML, Uber’s library, is the established home of the tree-based methods.</p>
+<p>Uplift has two method families: the meta-learners from Section 3.5, and decision trees built to split on uplift directly, whose advantage is handling several treatment arms at once (compare 5%, 10%, and 20% offers in one model). This chapter stays on the meta-learner route, using EconML as in Section 3.5 plus scikit-uplift to evaluate the ranking; CausalML, Uber’s library, is the established home of the tree-based methods.</p>
 </section>
 <section id="the-dataset" class="level2">
 <h2 class="anchored" data-anchor-id="the-dataset">The Dataset</h2>
-<p>We reuse the semi-synthetic MineThatData example from §3.5: Kevin Hillstrom’s randomized email experiment, restricted to the men’s email and no-email arms (42,613 customers, split roughly 50/50). The customer features and the treatment assignment are real; only the outcome is simulated, so we know each customer’s true effect and can check the model at every step. The average effect we built in is about 11 percentage points, larger for men’s buyers, recently active customers, and multichannel shoppers.</p>
+<p>We reuse the semi-synthetic MineThatData example from Section 3.5: Kevin Hillstrom’s randomized email experiment, restricted to the men’s email and no-email arms (42,613 customers, split roughly 50/50). The customer features and the treatment assignment are real; only the outcome is simulated, so we know each customer’s true effect and can check the model at every step. The average effect we built in is about 11 percentage points, larger for men’s buyers, recently active customers, and multichannel shoppers.</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> msbook.data <span class="im">import</span> load_minethatdata</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> load_minethatdata()</span>
@@ -725,12 +727,10 @@ Figure&nbsp;2: The four uplift customer segments.
 </tr>
 </tbody>
 </table>
-<p><strong>Companion notebook:</strong> <code>sec3.6_uplift_modeling.ipynb</code> builds the S-Learner uplift score on MineThatData and evaluates it with uplift and Qini curves, decile uplift, and a net-value targeting policy.<br>
-<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.6_uplift_modeling.ipynb">View on GitHub</a></p>
 </section>
 <section id="training-the-uplift-model" class="level2">
 <h2 class="anchored" data-anchor-id="training-the-uplift-model">Training the Uplift Model</h2>
-<p>The uplift score is just the CATE. We re-fit the §3.5 meta-learners and keep the one that best recovers the true effect on the holdout set: the S-Learner, whose estimates correlate 0.77 with the truth (the full comparison is <a href="sec3.5-meta-learners.html#tbl-cate-recovery" class="quarto-xref">Table&nbsp;<span>1</span></a> in §3.5). That choice is possible only because the data are semi-synthetic; on real data the true effect is never observed, so the learner is chosen on a randomized holdout by Qini or by observed uplift per decile, which the evaluation section below covers. The holdout used to choose the learner is separate from the fresh holdout used afterward to confirm that the chosen ranking beats random. Its predicted CATE is the uplift score, and the fit is the same EconML call as in §3.5, so there is nothing new to install:</p>
+<p>The uplift score is just the CATE. We re-fit the Section 3.5 meta-learners and keep the one that best recovers the true effect on the holdout set: the S-Learner, whose estimates correlate 0.77 with the truth (the full comparison is <a href="sec3.5-meta-learners.html#tbl-cate-recovery" class="quarto-xref">Table&nbsp;<span>1</span></a> in Section 3.5). That choice is possible only because the data are semi-synthetic; on real data the true effect is never observed, so the learner is chosen on a randomized holdout by Qini or by observed uplift per decile, which the evaluation section below covers. The holdout used to choose the learner is separate from the fresh holdout used afterward to confirm that the chosen ranking beats random. The S-Learner’s predicted CATE is the uplift score, and the fit is the same EconML call the Section 3.5 notebook uses, so there is nothing new to install:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> econml.metalearners <span class="im">import</span> SLearner</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> lightgbm <span class="im">import</span> LGBMRegressor</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>

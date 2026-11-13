@@ -618,7 +618,7 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 <p><strong>关于中文版</strong><br>
 本页是英文版 <em>Marketing Science in Python</em> 的AI翻译。英文版为正式版本，如有出入，以英文版为准。代码、Notebook 和图片中的文字保持英文。 <a href="../../part6/sec6.4-mmm-calibration.html" class="translation-source-link">阅读英文版</a></p>
 </div>
-<p>现在，Google Search 有两项结果。<a href="sec6.2-mmm-fundamentals.html">第 6.2 节</a>的 MMM 覆盖五个渠道，但对 Search 的估计很不确定。<a href="sec6.3-incrementality-experiments.html">第 6.3 节</a>的实验对 Search 测得较准，但只测了这一个渠道。</p>
+<p>关于 Google Search，我们有两项证据。<a href="sec6.2-mmm-fundamentals.html">第 6.2 节</a>的 MMM 覆盖五个渠道，但对 Search 的估计很不确定。<a href="sec6.3-incrementality-experiments.html">第 6.3 节</a>的实验只测了 Search，估计更精确。</p>
 <p>下一步决策需要两项结果。削减 Search 会腾出预算。要决定把预算转到哪里，就得比较全部五个渠道，这只有 MMM 能做到。因此，我们要把实验中关于 Search 的发现纳入 MMM。</p>
 <section id="what-is-calibration" class="level2">
 <h2 class="anchored" data-anchor-id="what-is-calibration">什么是校准？</h2>
@@ -709,33 +709,26 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 <p><strong>支出规模</strong>和<strong>转换不确定性</strong>会拓宽先验。实验约覆盖全国 Search 支出的五分之一，将结果推广到整个渠道会增加不确定性。由于削减 30% 只能近似下一美元的回报，转换时还要加入相当于中心值 15% 的最低不确定性。</p>
 <p>经过三项调整，实验测得的 1.50（标准误 0.257）转化为 Search 边际 ROAS 的先验，均值为 1.71，标准差为 0.69。这个先验有意比实验结果更宽。实验对所测八个市场的估计较精确，对全国边际 ROAS 的估计则没那么精确，而先验描述的是后者。</p>
 <p>时长和支出规模的调整遵循 <a href="https://developers.google.com/meridian/docs/advanced-modeling/set-custom-priors-past-experiments">Meridian 文档</a>中将实验结果转化为先验的方法。转换不确定性是本书增加的调整，因为 Meridian 的方法假定实验以零支出为对照，而我们只削减了部分支出。</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Imports as in Section 6.2. Both helpers are defined in notebook Step 15.</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>center, se <span class="op">=</span> calibrated_prior_moments(</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    estimate<span class="op">=</span><span class="fl">1.500</span>, standard_error<span class="op">=</span><span class="fl">0.257</span>,</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    capture_proportion<span class="op">=</span><span class="fl">0.8756</span>,       <span class="co"># duration: share of the effect inside 8 weeks</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="co"># taus: duration, spend scale, recency (zero, because the test is recent)</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    taus<span class="op">=</span>[<span class="fl">0.142</span>, <span class="fl">3.606</span>, <span class="fl">0.000</span>],</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    translation_share<span class="op">=</span><span class="fl">0.15</span>,          <span class="co"># translation uncertainty</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>)                                    <span class="co"># -&gt; center 1.71, SE 0.69</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>search_mu, search_sigma <span class="op">=</span> lognormal_from_mean_std(center, se)</span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="co"># mroi_mu, mroi_sigma: one entry per channel. Search gets search_mu and</span></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="co"># search_sigma; the other four keep a weak prior (notebook Step 15).</span></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>calibrated_prior <span class="op">=</span> prior_distribution.PriorDistribution(</span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    mroi_m<span class="op">=</span>tfp.distributions.LogNormal(</span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>        loc<span class="op">=</span>tf.constant(mroi_mu, dtype<span class="op">=</span>tf.float32),</span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>        scale<span class="op">=</span>tf.constant(mroi_sigma, dtype<span class="op">=</span>tf.float32),</span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>        name<span class="op">=</span>constants.MROI_M,</span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    ),</span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    <span class="co"># adstock and saturation priors from Section 6.2</span></span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    alpha_m<span class="op">=</span>prior.alpha_m, ec_m<span class="op">=</span>prior.ec_m,</span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="co"># Same lag and holdout weeks as Section 6.2, so the only change is the prior.</span></span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>calibrated_spec <span class="op">=</span> spec.ModelSpec(</span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>    prior<span class="op">=</span>calibrated_prior, media_prior_type<span class="op">=</span><span class="st">"mroi"</span>, max_lag<span class="op">=</span><span class="dv">12</span>,</span>
-<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>    adstock_decay_spec<span class="op">=</span><span class="st">"geometric"</span>, holdout_id<span class="op">=</span>holdout_id,</span>
-<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> tensorflow <span class="im">as</span> tf</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># LogNormal parameters for a mean of 1.71 and a standard deviation of 0.69</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>sigma <span class="op">=</span> np.sqrt(np.log(<span class="dv">1</span> <span class="op">+</span> (<span class="fl">0.69</span> <span class="op">/</span> <span class="fl">1.71</span>) <span class="op">**</span> <span class="dv">2</span>))</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>mu <span class="op">=</span> np.log(<span class="fl">1.71</span>) <span class="op">-</span> sigma<span class="op">**</span><span class="dv">2</span> <span class="op">/</span> <span class="dv">2</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>weak_mu <span class="op">=</span> <span class="fl">0.2</span> <span class="op">+</span> np.log(<span class="fl">0.5</span>)   <span class="co"># center of the weak prior</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Channel order: TV/CTV, OOH, Google Search, Meta, TikTok</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>loc <span class="op">=</span> tf.constant([weak_mu, weak_mu, mu, weak_mu, weak_mu], dtype<span class="op">=</span>tf.float32)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>scale <span class="op">=</span> tf.constant([<span class="fl">0.9</span>, <span class="fl">0.9</span>, sigma, <span class="fl">0.9</span>, <span class="fl">0.9</span>], dtype<span class="op">=</span>tf.float32)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>calibrated_prior <span class="op">=</span> prior_distribution.PriorDistribution(</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    mroi_m<span class="op">=</span>tfd.LogNormal(loc, scale, name<span class="op">=</span>constants.MROI_M),</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    <span class="co"># prior, tfd, holdout_id: unchanged from Section 6.2</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    alpha_m<span class="op">=</span>prior.alpha_m, ec_m<span class="op">=</span>prior.ec_m,</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>calibrated_spec <span class="op">=</span> spec.ModelSpec(</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    prior<span class="op">=</span>calibrated_prior, media_prior_type<span class="op">=</span><span class="st">"mroi"</span>, max_lag<span class="op">=</span><span class="dv">12</span>,</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    holdout_id<span class="op">=</span>holdout_id,</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
 <p>其余四个渠道保留各自的弱信息先验，然后用同一份数据和同样的设置重新拟合模型。</p>
 </section>
 <section id="sec-calibration-what-changed" class="level2">

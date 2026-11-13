@@ -632,6 +632,8 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 <p>A/B 测试是测量因果关系的黄金标准。随机决定谁接受处理，对照组就能告诉你没有处理时本会发生什么。不过，你并不总能做 A/B 测试：<a href="../part3/sec3.1-thinking-causally.html#limitations-of-ab-testing">第 3.1 节</a>已经讲过 A/B 测试可能不可行的种种原因。</p>
 <p>当你无法随机化时，就要用准实验。准实验在没有随机分配的情况下估计因果关系。它利用业务流程留下的任何比较：一个阈值、一次跳过了某些单位的推广、一个上线日期。但非随机的推广并不会自动给你一个可用的替代方案。它必须留下一个你能为其假设辩护的比较，而本章中的每种设计都附带着一个你必须辩护的假设。</p>
 <p>本章介绍三种设计：断点回归设计（RDD）、双重差分（DiD）和合成控制。每一种都需要未接受处理的单位作为比较对象：一组没有安装陈列的对照门店，或者一批可以混合成一个比较对象的门店。第四种设计 CausalImpact 用于根本没有未处理单位的情况。这种设计将在<a href="sec3.4-causal-impact.html">下一章</a>介绍。</p>
+<p><strong>配套 Notebook：</strong> <code>sec3.3_quasi_experiments.ipynb</code> 用 <code>statsmodels</code> 和 <code>scipy</code> 在合成数据上完整演示了 RDD、DiD（表格、回归和事前趋势检查）以及合成控制。<br>
+<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.3_quasi_experiments.ipynb">在 GitHub 上查看</a></p>
 <section id="which-design-fits-your-situation" class="level2">
 <h2 class="anchored" data-anchor-id="which-design-fits-your-situation">哪种设计适合你的情况？</h2>
 <p>设计的名字并不能告诉你哪一种合适，所以这里把四种设计放到同一个具体问题上比较：一家有 100 家门店的零售商推出了一种新的店内陈列，想知道这种陈列对品类销售额产生了什么影响。</p>
@@ -791,14 +793,13 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 <p>这张二乘二的表格展示了逻辑，但它不是你要汇报的东西，原因有二。它不给出标准误，所以你无法说 +$3k 是否与零可区分。而且真实数据不是两个时期，而是 100 家门店 24 个月的销售额。回归版本同时处理这两点。每家门店每个月一行，每家门店一个固定效应，每个月一个固定效应，再加上一个处理门店在推广后时期的交互项。门店效应吸收了门店之间所有固定的差异。月份效应吸收了当月冲击所有门店的每一个趋势和冲击。交互项就是 DiD 估计。</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> statsmodels.formula.api <span class="im">as</span> smf</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co"># df: one row per store-month (store_id, period, treated, post, category_sales)</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> smf.ols(</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"category_sales ~ C(store_id) + C(period) + treated:post"</span>,</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    data<span class="op">=</span>df,</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>).fit(cov_type<span class="op">=</span><span class="st">"cluster"</span>, cov_kwds<span class="op">=</span>{<span class="st">"groups"</span>: df[<span class="st">"store_id"</span>]})</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>coef, se <span class="op">=</span> model.params[<span class="st">"treated:post"</span>], model.bse[<span class="st">"treated:post"</span>]</span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"DiD estimate: </span><span class="sc">{</span>coef<span class="sc">:.2f}</span><span class="ss"> (SE </span><span class="sc">{</span>se<span class="sc">:.2f}</span><span class="ss">)"</span>)   <span class="co"># DiD estimate: 3.02 (SE 0.04)</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> smf.ols(</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"category_sales ~ C(store_id) + C(period) + treated:post"</span>,</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    data<span class="op">=</span>df,</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>).fit(cov_type<span class="op">=</span><span class="st">"cluster"</span>, cov_kwds<span class="op">=</span>{<span class="st">"groups"</span>: df[<span class="st">"store_id"</span>]})</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>coef, se <span class="op">=</span> model.params[<span class="st">"treated:post"</span>], model.bse[<span class="st">"treated:post"</span>]</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"DiD estimate: </span><span class="sc">{</span>coef<span class="sc">:.2f}</span><span class="ss"> (SE </span><span class="sc">{</span>se<span class="sc">:.2f}</span><span class="ss">)"</span>)   <span class="co"># DiD estimate: 3.02 (SE 0.04)</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
 <p>按门店对标准误做聚类，处理了每家门店的重复测量。同一个回归也可以检查事前趋势：把 <code>treated:post</code> 替换为每个月一个 <code>treated</code> × 月份项，并确认推广前的各项接近于零。配套 Notebook 会带你走完完整的面板数据和这项检查。</p>
 </section>
 </section>
@@ -832,8 +833,6 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 <li>优惠券发给了每一位客户。</li>
 </ul>
 <p>没有未处理的门店、区域或客户可供比较。所以比较对象必须靠预测得到：依据该序列在行动之前的走势，以及行动无法触及的其他序列在行动之后的走势。这种设计就是 CausalImpact，将在<a href="sec3.4-causal-impact.html">下一章</a>介绍。</p>
-<p><strong>配套 Notebook：</strong> <code>sec3.3_quasi_experiments.ipynb</code> 用 <code>statsmodels</code> 和 <code>scipy</code> 在合成数据上完整演示了 RDD、DiD（表格、回归和事前趋势检查）以及合成控制。<br>
-<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.3_quasi_experiments.ipynb">在 GitHub 上查看</a></p>
 </section>
 <section id="key-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="key-takeaways">要点</h2>

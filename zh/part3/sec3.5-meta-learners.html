@@ -651,6 +651,8 @@ window.Quarto = {
 </div>
 <p>一张平均让购买增加 5% 的优惠券，对不同客户的效应可能大不相同：有些客户的提升可能高达 20%，另一些客户则毫无反应，甚至出现下降。前几章的方法为整个群体估计一个数字，即平均处理效应（ATE），也就是一项处理（treatment）对它触及的所有人的平均影响。在营销中，这个平均值可能会误导人。如果你能识别出哪些客户真正会响应，你的预算就能花得高效得多。</p>
 <p>元学习器（meta-learner）试图为每一位客户单独估计处理效应。本章余下的部分定义它们所估计的量，并比较主要的方法。</p>
+<p><strong>配套 Notebook：</strong><code>sec3.5_meta_learners.ipynb</code> 在半合成的 MineThatData 实验上，将 S-、T-、X-、DR-Learner 以及 CausalForestDML 与已知的真实 CATE 进行比较。<br>
+<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.5_meta_learners.ipynb">在 GitHub 上查看</a></p>
 <section id="treatment-effects-ate-cate-ite" class="level2">
 <h2 class="anchored" data-anchor-id="treatment-effects-ate-cate-ite">处理效应：ATE、CATE、ITE</h2>
 <p>要定义处理效应，我们求助于潜在结果框架。处理效应是由处理引起的结果差异：形式上写作 <span class="math inline">\(\tau = Y(1) - Y(0)\)</span>，其中 <span class="math inline">\(Y(1)\)</span> 是接受处理时的结果，<span class="math inline">\(Y(0)\)</span> 是对照条件下的结果。例如，如果有优惠券时的潜在购买率是 20%，没有优惠券时是 10%，那么处理效应就是 10%。</p>
@@ -779,8 +781,6 @@ window.Quarto = {
 <p>要观察这些方法的表现，我们需要一个能核对它们答案的数据集。在真实数据中，我们永远观测不到一位客户的真实处理效应，因此无法判断一个元学习器是找回了正确的模式，还是只是生成了看似合理的噪声。</p>
 <p>我们用一个建立在 Kevin Hillstrom 的 MineThatData 邮件实验之上的半合成示例来解决这个问题。这是一个经典的营销数据集，64,000 名客户被随机分配到男装邮件、女装邮件或不发邮件三组。我们保留真实的客户特征（最近购买时间、购买历史、渠道等等），也保留“男装邮件对比不发邮件”这一二元对照的真实随机分配。只有结果是模拟的：我们定义一个基线购买概率，以及一个处理效应 <span class="math inline">\(\tau(x)\)</span>，它对男装购买者、近期活跃客户和多渠道购物者更大。因为 <span class="math inline">\(\tau(x)\)</span> 是我们自己写的，我们知道每位客户的真实 CATE，每个学习器都可以与之比较。</p>
 <p>这个设定是为了教学：目的是检验元学习器能否找回我们植入的异质性，而不是比实验本身更好地估计平均效应。</p>
-<p><strong>配套 Notebook：</strong><code>sec3.5_meta_learners.ipynb</code> 在半合成的 MineThatData 实验上，将 S-、T-、X-、DR-Learner 以及 CausalForestDML 与已知的真实 CATE 进行比较。<br>
-<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.5_meta_learners.ipynb">在 GitHub 上查看</a></p>
 <p>五个学习器全都找回了平均效应，更有用的是，也找回了细分群体层面的模式。下面的散点图把一个有代表性的学习器估计的 CATE 与真实效应进行比较。估计值聚集在 45 度线附近，因此客户被排在了大致正确的顺序上，纵向的离散则反映了二元结果的噪声。</p>
 <div id="fig-true-vs-est" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="估计 CATE 对真实模拟效应的散点图，点聚集在 45 度线附近。">
 <figure class="quarto-float quarto-float-fig figure">
@@ -846,7 +846,7 @@ window.Quarto = {
 </tr>
 <tr class="odd">
 <td style="text-align: left;">DR-Learner</td>
-<td style="text-align: right;">0.58</td>
+<td style="text-align: right;">0.57</td>
 <td style="text-align: right;">0.049</td>
 <td style="text-align: right;">0.109</td>
 </tr>

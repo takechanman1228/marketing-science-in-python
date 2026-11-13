@@ -651,6 +651,8 @@ Diese Seite ist eine KI-Übersetzung der englischen Ausgabe von <em>Marketing Sc
 </div>
 <p>Ein Coupon, der die Käufe im Durchschnitt um 5% steigert, kann bei verschiedenen Kunden sehr unterschiedlich wirken: Manche reagieren vielleicht mit einem Lift von 20%, während andere keinen Effekt oder sogar einen Rückgang zeigen. Die Methoden der vorherigen Kapitel schätzen eine Zahl für eine ganze Gruppe, den durchschnittlichen Treatment-Effekt (ATE), also die durchschnittliche Wirkung eines Treatments über alle, die es erreicht hat. Im Marketing kann dieser Durchschnitt irreführend sein. Wenn Sie erkennen könnten, welche Kunden tatsächlich reagieren, könnten Sie Ihr Budget deutlich wirksamer einsetzen.</p>
 <p>Meta-Learner versuchen, Treatment-Effekte für jeden einzelnen Kunden zu schätzen. Der Rest dieses Kapitels definiert die Größe, die sie schätzen, und vergleicht die wichtigsten Ansätze.</p>
+<p><strong>Begleit-Notebook:</strong> <code>sec3.5_meta_learners.ipynb</code> vergleicht S-, T-, X- und DR-Learner sowie CausalForestDML mit dem bekannten wahren CATE im semisynthetischen MineThatData-Experiment.<br>
+<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.5_meta_learners.ipynb">Auf GitHub ansehen</a></p>
 <section id="treatment-effects-ate-cate-ite" class="level2">
 <h2 class="anchored" data-anchor-id="treatment-effects-ate-cate-ite">Treatment-Effekte: ATE, CATE, ITE</h2>
 <p>Um den Treatment-Effekt zu definieren, greifen wir auf das Potential-Outcomes-Framework zurück. Der Treatment-Effekt ist der durch ein Treatment verursachte Unterschied in den Ergebnissen: formal <span class="math inline">\(\tau = Y(1) - Y(0)\)</span>, wobei <span class="math inline">\(Y(1)\)</span> das Ergebnis unter Treatment und <span class="math inline">\(Y(0)\)</span> das Ergebnis unter Kontrolle ist. Wenn zum Beispiel die potenzielle Kaufrate mit Coupon 20% und die Rate ohne Coupon 10% beträgt, ist der Treatment-Effekt 10%.</p>
@@ -779,8 +781,6 @@ Abbildung&nbsp;5: Meta-Learner-Methoden, von einfach bis komplex.
 <p>Um zu sehen, wie sich diese Methoden verhalten, brauchen wir einen Datensatz, an dem wir ihre Arbeit überprüfen können. In echten Daten beobachten wir nie den wahren Treatment-Effekt eines Kunden, also können wir nicht sagen, ob ein Meta-Learner das richtige Muster wiedergefunden oder nur plausibles Rauschen erzeugt hat.</p>
 <p>Wir lösen das mit einem semisynthetischen Beispiel auf Basis von Kevin Hillstroms MineThatData-E-Mail-Experiment, einem klassischen Marketing-Datensatz mit 64,000 Kunden, die zufällig einer Herrenartikel-E-Mail, einer Damen-E-Mail oder keiner E-Mail zugewiesen wurden. Wir behalten die echten Kundenmerkmale (Recency, Kaufhistorie, Kanal und die übrigen) und die echte randomisierte Zuweisung für den binären Kontrast Herren-E-Mail gegen keine E-Mail. Nur die Ergebnisse sind simuliert: Wir definieren eine Baseline-Kaufwahrscheinlichkeit und einen Treatment-Effekt <span class="math inline">\(\tau(x)\)</span>, der für Käufer von Herrenartikeln, kürzlich aktive Kunden und Multichannel-Käufer größer ist. Weil wir <span class="math inline">\(\tau(x)\)</span> selbst geschrieben haben, kennen wir den wahren CATE jedes Kunden, und jeder Learner kann daran verglichen werden.</p>
 <p>Dieser Aufbau dient der Lehre: Das Ziel ist zu prüfen, ob ein Meta-Learner die Heterogenität wiederfindet, die wir eingepflanzt haben, nicht, den durchschnittlichen Effekt besser zu schätzen, als es das Experiment ohnehin tut.</p>
-<p><strong>Begleit-Notebook:</strong> <code>sec3.5_meta_learners.ipynb</code> vergleicht S-, T-, X- und DR-Learner sowie CausalForestDML mit dem bekannten wahren CATE im semisynthetischen MineThatData-Experiment.<br>
-<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.5_meta_learners.ipynb">Auf GitHub ansehen</a></p>
 <p>Alle fünf Learner finden den durchschnittlichen Effekt wieder und, nützlicher noch, das Muster auf Segmentebene. Das Streudiagramm unten vergleicht den geschätzten CATE mit dem wahren Effekt für einen repräsentativen Learner. Die Schätzungen sammeln sich um die 45-Grad-Linie, die Kunden werden also in ungefähr der richtigen Reihenfolge gereiht, mit einer vertikalen Streuung, die das Rauschen binärer Ergebnisse widerspiegelt.</p>
 <div id="fig-true-vs-est" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Ein Streudiagramm des geschätzten CATE gegen den wahren simulierten Effekt, mit Punkten, die sich um die 45-Grad-Linie sammeln.">
 <figure class="quarto-float quarto-float-fig figure">
@@ -846,7 +846,7 @@ Tabelle&nbsp;1: Wiederfindung des wahren CATE nach Learner auf dem Holdout-Set.
 </tr>
 <tr class="odd">
 <td style="text-align: left;">DR-Learner</td>
-<td style="text-align: right;">0.58</td>
+<td style="text-align: right;">0.57</td>
 <td style="text-align: right;">0.049</td>
 <td style="text-align: right;">0.109</td>
 </tr>

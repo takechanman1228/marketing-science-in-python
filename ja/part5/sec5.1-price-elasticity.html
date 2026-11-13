@@ -654,6 +654,8 @@ window.Quarto = {
 <p>価格の意思決定では、反対方向を向く2つの効果を折り合わせます。価格を下げれば販売数量が増え、価格を上げれば単位当たり利益が増えます。どちらが勝つかは、価格が動いたときに数量が実際にどれだけ変わるかで決まります。</p>
 <p>顧客の反応、ブランドの位置づけ、コマーシャル目標を結びつける意思決定を、マーケティングが担います。数量や売上を追うとき、利益を守るとき、価格自体がポジショニングのシグナルになるときを判断します。目標が来店客数や市場シェア、在庫処分、価格ポジションの維持であることもあります。目標が何であれ、最初に推定すべきなのは、価格変更に対する数量の反応の大きさです。</p>
 <p>価格弾力性はその反応曲線を与えます。目標（数量、売上、利益、ポジショニング）はビジネスが選び、曲線はその目標に照らして候補価格を比較するために使います。</p>
+<p><strong>付属Notebook：</strong> <code>sec5.1_price_elasticity.ipynb</code> は、データ読み込み、品質確認、2段階の弾力性推定、感度表を扱います。<br>
+<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part5-commercial-analytics/sec5.1_price_elasticity.ipynb">GitHubで見る</a></p>
 <section id="sec-price-elasticity-definition" class="level2">
 <h2 class="anchored" data-anchor-id="sec-price-elasticity-definition">価格弾力性とは何か？</h2>
 <p>売れ筋シリアルを10%値上げしたとき、販売数量が5%減るか20%減るかで、結論は反対になります。その減少の大きさによって、価格変更が販売数量、売上、利益を改善するのか、単に買い物客を遠ざけるのかが決まります。</p>
@@ -698,36 +700,20 @@ Q = b_0 \times P^{b_1}
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> scipy.optimize <span class="im">import</span> curve_fit</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> power_model(price, b0, b1):</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Q = b0 * Price^b1"""</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># prices, units: one product's weekly average price and units sold</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> power_model(price, b0, b1):</span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> b0 <span class="op">*</span> np.power(price, b1)</span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>p0 <span class="op">=</span> [df[<span class="st">"units"</span>].mean(), <span class="op">-</span><span class="fl">1.5</span>]</span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>popt, pcov <span class="op">=</span> curve_fit(</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    power_model,</span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    df[<span class="st">"price"</span>].values,</span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    df[<span class="st">"units"</span>].values,</span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    p0<span class="op">=</span>p0,</span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    maxfev<span class="op">=</span><span class="dv">10000</span>,</span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>b0, b1 <span class="op">=</span> popt</span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Scale (b0): </span><span class="sc">{</span>b0<span class="sc">:.1f}</span><span class="ss">"</span>)</span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Elasticity (b1): </span><span class="sc">{</span>b1<span class="sc">:.2f}</span><span class="ss">"</span>)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
-<p>付属Notebookでは、2段階の推定も行います。最初に全データへ当てはめ、実績数量÷予測数量が0.3〜3.0など妥当な範囲から外れる観測へフラグをつけ、それを除いて再度当てはめます。</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Pass 1: fit on all data</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>popt_1, _ <span class="op">=</span> curve_fit(power_model, prices, units, p0<span class="op">=</span>p0, maxfev<span class="op">=</span><span class="dv">10000</span>)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>p0 <span class="op">=</span> [units.mean(), <span class="op">-</span><span class="fl">1.5</span>]</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>popt, pcov <span class="op">=</span> curve_fit(power_model, prices, units, p0<span class="op">=</span>p0, maxfev<span class="op">=</span><span class="dv">10_000</span>)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+<p>最初の当てはめでは、1商品の全週を使います。次にNotebookでは、実績数量÷予測数量が0.3〜3.0の範囲から外れる週へフラグをつけ、それらを除いて再度当てはめます。その手順を直接書くと、次のようになります。</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>ratio <span class="op">=</span> units <span class="op">/</span> power_model(prices, <span class="op">*</span>popt)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>mask <span class="op">=</span> (ratio <span class="op">&gt;</span> <span class="fl">0.3</span>) <span class="op">&amp;</span> (ratio <span class="op">&lt;</span> <span class="fl">3.0</span>)</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Identify outliers</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>predicted <span class="op">=</span> power_model(prices, <span class="op">*</span>popt_1)</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>ratio <span class="op">=</span> units <span class="op">/</span> predicted</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>mask <span class="op">=</span> (ratio <span class="op">&gt;</span> <span class="fl">0.3</span>) <span class="op">&amp;</span> (ratio <span class="op">&lt;</span> <span class="fl">3.0</span>)</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Pass 2: refit on clean data</span></span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>popt_2, pcov_2 <span class="op">=</span> curve_fit(</span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    power_model, prices[mask], units[mask], p0<span class="op">=</span>popt_1, maxfev<span class="op">=</span><span class="dv">10000</span></span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>popt, pcov <span class="op">=</span> curve_fit(</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    power_model, prices[mask], units[mask], p0<span class="op">=</span>popt, maxfev<span class="op">=</span><span class="dv">10_000</span>,</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>b0, b1 <span class="op">=</span> popt   <span class="co"># chocolate milk: b1 = -3.92</span></span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 <p>通常の原因は、プロモーションによる急増です。無条件に含めると、モデルはプロモーション数量を通常の価格反応として扱い、弾力性を真値から偏らせます。</p>
 <div id="fig-elasticity-deep-dive" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="売れ筋の液体乳製品について、当てはめたべき乗曲線と95%帯を伴う価格と数量の散布図。急な傾きは弾力的な需要を示す">
 <figure class="quarto-float quarto-float-fig figure">
@@ -739,18 +725,107 @@ Q = b_0 \times P^{b_1}
 </figcaption>
 </figure>
 </div>
-<p>売れ筋の液体乳製品8商品では、弾力性は、代替しにくい定番形式であるガロン容器の <span class="math inline">\(-1.2\)</span> から、より代替しやすい小容量形式の <span class="math inline">\(-3.9\)</span> まで広がります。<a href="#fig-elasticity-grid" class="quarto-xref">図&nbsp;<span>2</span></a> は、当てはめた曲線を並べて示します。</p>
-<div id="fig-elasticity-grid" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="売れ筋の液体乳製品8商品の当てはめたべき乗則需要曲線。R²の高い商品はきれいに適合し、低い商品はノイズが多い">
+<p><a href="#tbl-elasticity-results" class="quarto-xref">表&nbsp;<span>1</span></a> に、売れ筋の液体乳製品8商品それぞれの当てはめを示します。定番形態であるガロン容器は最も弾力性が低く、小さな形態は最も弾力性が高くなりますが、Notebookの適合度による判定基準を満たすのは、小さな形態の5つの当てはめだけです。</p>
+<div id="tbl-elasticity-results" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-elasticity-results-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+表&nbsp;1: 売れ筋の液体乳製品8商品の2段階推定。付属Notebookより。
+</figcaption>
+<div aria-describedby="tbl-elasticity-results-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">商品</th>
+<th style="text-align: right;">週数</th>
+<th style="text-align: right;">価格点</th>
+<th style="text-align: right;">弾力性</th>
+<th style="text-align: right;"><span class="math inline">\(R^2\)</span></th>
+<th style="text-align: left;">判定</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">チョコレートミルク、プライベートブランド</td>
+<td style="text-align: right;">102</td>
+<td style="text-align: right;">52</td>
+<td style="text-align: right;">−3.92</td>
+<td style="text-align: right;">0.87</td>
+<td style="text-align: left;">Usable</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">白ミルク、プライベートブランド #12</td>
+<td style="text-align: right;">101</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">−2.98</td>
+<td style="text-align: right;">0.80</td>
+<td style="text-align: left;">Usable</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">白ミルク、プライベートブランド #13</td>
+<td style="text-align: right;">102</td>
+<td style="text-align: right;">49</td>
+<td style="text-align: right;">−3.57</td>
+<td style="text-align: right;">0.90</td>
+<td style="text-align: left;">Usable</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">白ミルク、プライベートブランド #15</td>
+<td style="text-align: right;">101</td>
+<td style="text-align: right;">51</td>
+<td style="text-align: right;">−2.63</td>
+<td style="text-align: right;">0.79</td>
+<td style="text-align: left;">Usable</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">白ミルク、プライベートブランド #16</td>
+<td style="text-align: right;">101</td>
+<td style="text-align: right;">59</td>
+<td style="text-align: right;">−3.73</td>
+<td style="text-align: right;">0.92</td>
+<td style="text-align: left;">Usable</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">白ミルク、プライベートブランド、ガロン #11</td>
+<td style="text-align: right;">102</td>
+<td style="text-align: right;">41</td>
+<td style="text-align: right;">−1.33</td>
+<td style="text-align: right;">0.23</td>
+<td style="text-align: left;">Directional only</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">白ミルク、プライベートブランド、ガロン #12</td>
+<td style="text-align: right;">102</td>
+<td style="text-align: right;">43</td>
+<td style="text-align: right;">−1.19</td>
+<td style="text-align: right;">0.15</td>
+<td style="text-align: left;">Directional only</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">白ミルク、プライベートブランド、ガロン #9</td>
+<td style="text-align: right;">102</td>
+<td style="text-align: right;">41</td>
+<td style="text-align: right;">−1.80</td>
+<td style="text-align: right;">0.31</td>
+<td style="text-align: left;">Directional only</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<p><a href="#fig-elasticity-grid" class="quarto-xref">図&nbsp;<span>2</span></a> は、それぞれの種類を2つずつ示します。</p>
+<div id="fig-elasticity-grid" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="価格と数量の4パネル。プライベートブランドのミルク2品はべき乗則にきれいに当てはまり、ガロン容器2品は点がほぼ平坦な曲線の周りに散らばる。">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-elasticity-grid-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part5/sec5.1/elasticity_grid.png" class="fig-lg img-fluid figure-img" alt="売れ筋の液体乳製品8商品の当てはめたべき乗則需要曲線。R²の高い商品はきれいに適合し、低い商品はノイズが多い">
+<img src="../images/part5/sec5.1/elasticity_grid.png" class="fig-lg img-fluid figure-img" alt="価格と数量の4パネル。プライベートブランドのミルク2品はべき乗則にきれいに当てはまり、ガロン容器2品は点がほぼ平坦な曲線の周りに散らばる。">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-elasticity-grid-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-図&nbsp;2: 8商品の当てはめたべき乗則需要曲線。
+図&nbsp;2: 当てはめた需要曲線：きれいな当てはめ2つと弱い当てはめ2つ。
 </figcaption>
 </figure>
 </div>
-<p>実務では、弾力性が <span class="math inline">\(-0.5\)</span>〜<span class="math inline">\(-5\)</span> の範囲、<span class="math inline">\(R^2 &gt; 0.4\)</span> で、複数の異なる価格点があれば、出発点となる推定値として使えます。使えない場合については、この章の末尾の「よくある罠」の節で説明します。<span class="math inline">\(R^2\)</span> の閾値は適合の良さの目安であり、推定値が因果的に妥当かどうかについては何も語りません。この範囲外の推定値は、価格数が少なすぎる、一つのプロモーション値引きが適合を支配する、期間が短すぎるなど、データの問題であることがよくあります。弾力性を信頼できなければ、それに基づく価格提案も信頼できません。</p>
+<p>Notebookでは3つの判定を使います。Usable（利用可能）は、<span class="math inline">\(R^2 &gt; 0.4\)</span> で、弾力性が <span class="math inline">\(-5\)</span> 以上 <span class="math inline">\(-0.5\)</span> 以下であることを意味します。<span class="math inline">\(R^2 &gt; 0.4\)</span> でも弾力性がその範囲外なら、判定はInvestigate（要調査）です。推定値を解釈する前にデータを確認します。<span class="math inline">\(R^2 \leq 0.4\)</span> なら、判定はDirectional only（方向のみ）です。後者2つの判定はいずれも、価格設定の根拠にはなりません。</p>
+<p>これらのラベルは、先に挙げた価格変動や履歴の確認に代わるものではありません。<span class="math inline">\(R^2\)</span> の閾値は適合の良さの目安であり、推定値が因果的に妥当かどうかについては何も語りません。Usableな当てはめでも使えない場合については、この章の末尾の「よくある罠」の節で説明します。弾力性がこの範囲外となる推定値は、価格数が少なすぎる、一つのプロモーション値引きが適合を支配する、期間が短すぎるなど、データの問題であることがよくあります。弾力性を信頼できなければ、それに基づく価格提案も信頼できません。</p>
 </section>
 <section id="sec-margin-maximizing-price" class="level2">
 <h2 class="anchored" data-anchor-id="sec-margin-maximizing-price">限界利益を最適化する</h2>
@@ -759,7 +834,7 @@ Q = b_0 \times P^{b_1}
 <p><span class="math display">\[
 \text{Revenue}(P) = P \times Q(P)
 \]</span></p>
-<p>価格と数量だけを必要とするため、これは最も直感的な出発点になることがよくあります。しかし、弾力性一定の曲線では、売上最大化は退化します。需要が弾力的な場合（この章の全商品と同様に <span class="math inline">\(|b_1| &gt; 1\)</span>）、価格が下がるほど売上は増え続けるため、売上を最大化する価格は、設定してもよいと考える最低価格にすぎません。信頼できる変動費がなければ、売上を一次的な指標にできますが、内部最適値ではなく方向性（値下げ）として扱います。</p>
+<p>価格と数量だけを必要とするため、これは最も直感的な出発点になることがよくあります。しかし、弾力性一定の曲線では、売上には価格範囲の内側に最大値がありません。需要が弾力的な場合（この章の全商品と同様に <span class="math inline">\(|b_1| &gt; 1\)</span>）、価格が下がるほど売上は増え続けるため、売上を最大化する価格は、設定してもよいと考える最低価格にすぎません。信頼できる変動費がなければ、売上を一次的な指標にできますが、内部最適値ではなく方向性（値下げ）として扱います。</p>
 <p>売上は変動費を含みません。変動費が利用できれば、より強い問いを検討できます。どの価格が限界利益を最大化するか、です。</p>
 <p><span class="math display">\[
 \text{Contribution Margin}(P) = (P - C) \times Q(P)
@@ -817,7 +892,7 @@ Q = b_0 \times P^{b_1}
 </tbody>
 </table>
 <p>表は中心となるトレードオフを示します。この範囲では、最低価格で売上が最大になり、弾力性一定の下では、さらに値下げするたびに増え続けます。利益は異なる動きを示します。<span class="math inline">\(P^* = C \cdot |b_1| / (|b_1| - 1)\)</span> に内部最適値があり、このパラメータでは約$5.87です。そのため、表の最高価格でも総利益は$2,903まで増え続けています。価格を10%上げると、売上は5.5%減りますが、利益は5.1%増えます。売上と利益は反対方向を示します。この範囲の値引きは、売上を増やすと同時に総限界利益を減らします。</p>
-<p><a href="#fig-margin-curves" class="quarto-xref">図&nbsp;<span>3</span></a> は、実際のDunnhumby商品5つについて、同じ論理を可視化します。どのパネルでも、価格が下がるほど売上は増え続ける一方、限界利益は内部の価格で折り返します。そのため、2つの目標は実際に異なる意思決定を示します。弾力性の高いプライベートブランド乳製品では、値下げによる追加数量が総利益を増やすほど大きいため、利益最大化価格は一貫して現在価格より低くなります。式はどちらの場合も同じで、提案の方向は、内部最適値が現在価格より上か下かで決まります。それは弾力性と費用比率が一緒に決めます。</p>
+<p><a href="#fig-margin-curves" class="quarto-xref">図&nbsp;<span>3</span></a> は、実際のDunnhumby商品5つについて、同じ論理を可視化します。変動費は平均価格の55%と仮定しています（このデータセットには原価データがありません）。どのパネルでも、価格が下がるほど売上は増え続ける一方、限界利益は内部の価格で折り返します。そのため、2つの目標は実際に異なる意思決定を示します。弾力性の高いプライベートブランド乳製品では、値下げによる追加数量が総利益を増やすほど大きいため、利益最大化価格は一貫して現在価格より低くなります。シリアルの例では値上げが有利でしたが、これらの商品では値下げが有利です。式は同じです。最適値が現在価格より上になるか下になるかは、弾力性と原価率の組み合わせで決まります。</p>
 <div id="fig-margin-curves" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="5商品について、現在価格と利益最大化価格を示した売上曲線と限界利益曲線">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-margin-curves-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -831,25 +906,22 @@ Q = b_0 \times P^{b_1}
 <p>最適化自体は1次元探索です。負の利益関数に <code>scipy.optimize.minimize_scalar</code> を使えば数行で実行でき、付属Notebookで一通り説明します。</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> scipy.optimize <span class="im">import</span> minimize_scalar</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> neg_margin(price, b0, b1, variable_cost):</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Negative contribution margin (for minimization)."""</span></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    quantity <span class="op">=</span> b0 <span class="op">*</span> price <span class="op">**</span> b1</span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">-</span>(price <span class="op">-</span> variable_cost) <span class="op">*</span> quantity</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>result <span class="op">=</span> minimize_scalar(</span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    neg_margin,</span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    bounds<span class="op">=</span>(<span class="fl">2.50</span>, <span class="fl">6.00</span>),</span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    method<span class="op">=</span><span class="st">"bounded"</span>,</span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    args<span class="op">=</span>(b0_fitted, b1_fitted, <span class="fl">2.20</span>),</span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>optimal_price <span class="op">=</span> result.x</span>
-<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>optimal_margin <span class="op">=</span> <span class="op">-</span>result.fun</span>
-<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Optimal price: $</span><span class="sc">{</span>optimal_price<span class="sc">:.2f}</span><span class="ss">"</span>)</span>
-<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Max weekly margin: $</span><span class="sc">{</span>optimal_margin<span class="sc">:,.0f}</span><span class="ss">"</span>)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>avg_price <span class="op">=</span> prices.mean()</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>variable_cost <span class="op">=</span> avg_price <span class="op">*</span> <span class="fl">0.55</span>   <span class="co"># assumed: the data has no cost</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> neg_contribution_margin(price, b0, b1, variable_cost):</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    quantity <span class="op">=</span> b0 <span class="op">*</span> price <span class="op">**</span> b1</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">-</span>(price <span class="op">-</span> variable_cost) <span class="op">*</span> quantity</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>result <span class="op">=</span> minimize_scalar(</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    neg_contribution_margin,</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    bounds<span class="op">=</span>(variable_cost <span class="op">*</span> <span class="fl">1.05</span>, avg_price <span class="op">*</span> <span class="dv">3</span>),</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    method<span class="op">=</span><span class="st">"bounded"</span>,</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    args<span class="op">=</span>(b0, b1, variable_cost),</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>optimal_price <span class="op">=</span> result.x</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>optimal_margin <span class="op">=</span> <span class="op">-</span>result.fun</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 <p>弾力性一定の仮定から、一つの注意点を引き継ぎます。利益曲線が内部最適値を持つのは、需要が弾力的な場合（<span class="math inline">\(|b_1| &gt; 1\)</span>）だけです。非弾力的な商品では、価格とともに利益が増え続けることをモデルが示すため、有界の最適化は単に上限を返します。この値は探索範囲の境界による値なので、価格として使わず、適合を再確認します。そのため、付属Notebookは「利用可能」と判定され、<span class="math inline">\(b_1 &lt; -1\)</span> となる商品だけを最適化します。</p>
-<p><strong>付属Notebook：</strong> <code>sec5.1_price_elasticity.ipynb</code> は、データ読み込み、品質確認、2段階の弾力性推定、感度表を扱います。<br>
-<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part5-commercial-analytics/sec5.1_price_elasticity.ipynb">GitHubで見る</a></p>
 </section>
 </section>
 <section id="sec-segment-elasticity" class="level2">
@@ -871,7 +943,7 @@ Q = b_0 \times P^{b_1}
 <section id="sec-elasticity-pitfalls" class="level2">
 <h2 class="anchored" data-anchor-id="sec-elasticity-pitfalls">価格弾力性によくある罠</h2>
 <p><strong>内生性。</strong> 価格は無作為に設定されません。新学期前のような需要の高い時期に小売企業が値上げすると、高価格と高需要が価格設定とは無関係な理由で同時に起きるため、観測弾力性はゼロ方向へ偏ります。Part 3と同じセレクションバイアスの問題です。操作変数、無作為化価格実験、準実験デザインで対応します。</p>
-<p><strong>共有された時間構造。</strong> 価格と数量は、どちらも季節性、プロモーションカレンダー、トレンドを持つため、生の週次系列に対する回帰は、価格反応ではなく共有構造を捉える可能性があります。単にカレンダーを共有する2つの系列でも、需要曲線に見えるほど強く相関する場合があります。週または月の指標、プロモーションフラグ、トレンド項をモデルへ入れ、価格係数がそれらを通じてではなく、それらに対して推定されるようにします。この章の2変量適合では、そのどれも行っていません。そのため、カレンダーを組み込んだ仕様でも同じ結果になると確認できるまでは、ここでの弾力性はこのバイアスにさらされているものとして扱います。</p>
+<p><strong>共通の時間的パターン。</strong> 価格と数量は、どちらも季節性、プロモーションカレンダー、トレンドを持つため、生の週次系列に対する回帰は、価格反応ではなく共有構造を捉える可能性があります。単にカレンダーを共有する2つの系列でも、需要曲線に見えるほど強く相関する場合があります。週または月の指標、プロモーションフラグ、トレンド項をモデルへ入れ、価格係数が、カレンダーでは説明できない価格の変化を反映するようにします。この章の2変量適合では、そのどれも行っていません。そのため、カレンダーを組み込んだ仕様でも同じ結果になると確認できるまでは、ここでの弾力性はこのバイアスにさらされているものとして扱います。</p>
 <p><strong>参照価格効果。</strong> 顧客は以前に支払った金額を覚えています。通常、値上げによる数量の減少は、値下げで得られる新規購入者の増加より大きくなります。JCPenneyの「Fair and Square」は有名な例です。同じ平均水準で、プロモーションから常時低価格へ切り替えたところ、顧客が価格の基準を失い、売上が崩壊しました。</p>
 <p><strong>競合の反応。</strong> 値下げは、競合が価格を維持する場合に限って機能します。集中度の高いカテゴリーでは、通常、競合も価格を合わせます。全社がほぼ同じ数量を販売しながら、利益率だけが下がります。このようなカテゴリーでは、需要曲線で判断する前に、競合の想定反応を検討します。</p>
 </section>

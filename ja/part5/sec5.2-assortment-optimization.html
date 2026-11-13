@@ -664,7 +664,7 @@ window.Quarto = {
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>公開されているDunnhumby Complete Journeyデータセットには商品原価や売上原価が含まれないため、この章では<strong>売上</strong>を分析します。本番チームが原価データを持っていれば、同じワークフローを<strong>粗利益</strong>または<strong>限界利益</strong>で実行できます。ビジネス上の解釈が、<em>売上リスク管理</em>から<em>利益最適化</em>へ変わるだけです。</p>
+<p>公開されているDunnhumby Complete Journeyデータセットには商品原価や売上原価が含まれないため、この章では<strong>売上</strong>を分析します。自社に原価データがあれば、同じワークフローを<strong>粗利益</strong>または<strong>限界利益</strong>で実行できます。ビジネス上の解釈が、<em>売上リスク管理</em>から<em>利益最適化</em>へ変わるだけです。</p>
 </div>
 </div>
 <section id="sec-more-skus-fallacy" class="level2">
@@ -690,17 +690,21 @@ window.Quarto = {
 </ul>
 <p>Cランク商品から候補プールを作り始めます。すべてのCランク商品を削除すべきではありませんが、削減を検討する商品はこの群から選びます。</p>
 <p>コードでは、SKUを累積売上構成比で順位づけし、A/B/C階層へ分け、Cランクのロングテールを候補プールとします。</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>ranked <span class="op">=</span> sku_summary.sort_values(<span class="st">"revenue"</span>, ascending<span class="op">=</span><span class="va">False</span>)[<span class="st">"revenue"</span>]</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Classify on the cumulative share *before* each SKU, so the SKU that crosses</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># the 80% line still counts toward A (and a single dominant SKU stays A).</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>cum_before <span class="op">=</span> (ranked.cumsum() <span class="op">/</span> ranked.<span class="bu">sum</span>()).shift(fill_value<span class="op">=</span><span class="dv">0</span>)</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>sku_summary[<span class="st">"abc_revenue"</span>] <span class="op">=</span> pd.cut(cum_before, bins<span class="op">=</span>[<span class="dv">0</span>, <span class="fl">0.80</span>, <span class="fl">0.95</span>, <span class="fl">1.0</span>],</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>                                    labels<span class="op">=</span>[<span class="st">"A"</span>, <span class="st">"B"</span>, <span class="st">"C"</span>], right<span class="op">=</span><span class="va">False</span>)</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Candidate pool = C-rank by revenue (the long tail)</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>candidates <span class="op">=</span> sku_summary[sku_summary[<span class="st">"abc_revenue"</span>] <span class="op">==</span> <span class="st">"C"</span>]</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># df: one row per item sold</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>sku_summary <span class="op">=</span> df.groupby(<span class="st">"PRODUCT_ID"</span>).agg(revenue<span class="op">=</span>(<span class="st">"SALES_VALUE"</span>, <span class="st">"sum"</span>))</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>ranked <span class="op">=</span> sku_summary.sort_values(<span class="st">"revenue"</span>, ascending<span class="op">=</span><span class="va">False</span>)[<span class="st">"revenue"</span>]</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Classify on the cumulative share *before* each SKU, so the SKU that crosses</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co"># the 80% line still counts toward A (and a single dominant SKU stays A).</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>cum_before <span class="op">=</span> (ranked.cumsum() <span class="op">/</span> ranked.<span class="bu">sum</span>()).shift(fill_value<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>sku_summary[<span class="st">"abc_revenue"</span>] <span class="op">=</span> pd.cut(cum_before, bins<span class="op">=</span>[<span class="dv">0</span>, <span class="fl">0.80</span>, <span class="fl">0.95</span>, <span class="fl">1.0</span>],</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>                                    labels<span class="op">=</span>[<span class="st">"A"</span>, <span class="st">"B"</span>, <span class="st">"C"</span>], right<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Candidate pool = C-rank by revenue (the long tail)</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>candidates <span class="op">=</span> sku_summary[sku_summary[<span class="st">"abc_revenue"</span>] <span class="op">==</span> <span class="st">"C"</span>]</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 <p>売上ゼロ／マイナスの除外と、NaNに対して安全なビニングを含む完全な関数は、付属Notebookにあります。</p>
-<p><a href="#fig-revenue-pareto" class="quarto-xref">図&nbsp;<span>1</span></a> は、売上のない38商品を除いた約39,000のDunnhumby食料品SKUについて、売上のパレート曲線を示します。売上は高度に集中しています。SKUの20%未満が売上の80%を生む一方、Cランクのプール（<code>abc_revenue == "C"</code>）はSKUの63%を含みますが、売上の5%しか生みません。このロングテールが候補プールになります。数量が少ないことでこのプールへ入りますが、それだけで結論は決まりません。</p>
+<p><a href="#fig-revenue-pareto" class="quarto-xref">図&nbsp;<span>1</span></a> は、売上のない38商品を除いた約39,000のDunnhumby食料品SKUについて、売上のパレート曲線を示します。売上は高度に集中しています。SKUの20%未満が売上の80%を生む一方、Cランクのプール（<code>abc_revenue == "C"</code>）はSKUの63%を含みますが、売上の5%しか生みません。このロングテールが候補プールになります。</p>
 <div id="fig-revenue-pareto" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="約39,000SKUの売上パレート曲線。SKUの20%未満が売上の80%を生む">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-revenue-pareto-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -722,11 +726,11 @@ window.Quarto = {
 <p>低い共起は代替関係と矛盾しませんが、それを立証するものではありません。異なる買い物の機会や顧客セグメントを反映する場合もあります。</p>
 <p>各Cランク候補について、同じサブカテゴリーの商品を調べます。対象は、移ってきた需要を吸収できるほど大きなA/B売上ランクのSKUに限定し、Liftの低い商品へフラグをつけます。</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>co_occur <span class="op">=</span> <span class="bu">len</span>(cand_baskets <span class="op">&amp;</span> peer_baskets)</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> co_occur <span class="op">==</span> <span class="dv">0</span>:                       <span class="co"># never bought together → strongest signal</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> co_occur <span class="op">==</span> <span class="dv">0</span>:                       <span class="co"># never bought together</span></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    subs.append({<span class="st">"substitute"</span>: peer_id, <span class="st">"lift"</span>: <span class="fl">0.0</span>})</span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="cf">else</span>:</span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    lift <span class="op">=</span> (co_occur <span class="op">/</span> total_baskets) <span class="op">/</span> (p_cand <span class="op">*</span> p_peer)</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> lift <span class="op">&lt;</span> lift_threshold:           <span class="co"># low Lift within a sub-category → likely substitute</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> lift <span class="op">&lt;</span> lift_threshold:           <span class="co"># low Lift: likely substitute</span></span>
 <span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>        subs.append({<span class="st">"substitute"</span>: peer_id, <span class="st">"lift"</span>: <span class="bu">round</span>(lift, <span class="dv">3</span>)})</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 <p>サブカテゴリーのグループ化、A/B売上ランクの代替品プール、最小バスケット数のガードを含む完全な関数は、付属Notebookにあります。</p>
 <p>任意で使える2つの補強があります。利用できる場合、正の交差価格弾力性が代替関係を支持します。新商品や小規模店舗など、バスケットデータが疎な場合は、ブランド、価格階層、使用場面といった属性の類似性を実用的な代替手段にできます。</p>
@@ -781,14 +785,14 @@ window.Quarto = {
 </div>
 </figure>
 </div>
-<p>150商品の行動は、105／28／17に分かれます。調査したロングテールの大半には、カテゴリー内の代替候補があり、バスケット内で特別な役割はありません。このような商品では、共起ゼロ（Lift 0.0、取引データで最も強い代替シグナル）が一般的です。出力は、先にテストする安全性で並べたテスト候補リストです。</p>
+<p>150商品のうち、105が「削除をテスト」、28が「削減前に調査」、17が「維持または慎重にテスト」です。調査したロングテールの大半には、カテゴリー内の代替候補があり、バスケット内で特別な役割はありません。このような商品では、共起ゼロ（Lift 0.0）が一般的です。出力は、先にテストする安全性で並べたテスト候補リストです。</p>
 <p>サブカテゴリー内に代替候補があるSKUは、削除を最も安全にテストできます。代替候補がない17商品は反対です。需要を吸収できるA/B売上ランクの類似商品が5つ未満なので、需要が店舗を離れる可能性があります。当面は商品を維持し、小容量パックや仕入先との条件改善などコストを下げる方法を探すか、削除前に慎重にテストします。</p>
 <p>中央の28商品は、ハロー効果に対するガードレールです。高価値商品と一緒に現れることが多い低価格SKUは、そのバスケットを引きつけている可能性があり、削除するとほかの売上が減るかもしれません。売上だけに頼らず、削減前に調査します。密な食料品データでは、ほぼすべてのSKUが何かと共起するため、このフラグは最も明確なケースだけに使います。また、売上の低いすべてのSKUを候補プールへ入れるべきではありません。来店を促す、カテゴリーの価格イメージの基準になる、カテゴリーの信頼性を示すなど、売上とLiftでは捉えられない役割を持つSKUもあります。</p>
 </section>
 </section>
 <section id="validate-before-scaling" class="level2">
 <h2 class="anchored" data-anchor-id="validate-before-scaling">展開前に検証する</h2>
-<p>スコアリング済みリストの各行は、テストで検証する仮説です。削除を展開する前に、小規模なマッチドストアテストを実施します。処置店舗でSKUを削除し、比較可能な対照店舗は変更せず、サブカテゴリー売上、バスケット当たり売上、バスケット数を監視します。</p>
+<p>スコアリング済みリストの各行は、テストで検証する仮説です。商品の取り扱い終了を全店舗に広げる前に、小規模なマッチドストアテストを実施します。処置店舗でSKUを棚から外し、比較可能な対照店舗は変更せず、サブカテゴリー売上、バスケット当たり売上、バスケット数を監視します。</p>
 <p>削除したSKU自身の売上を評価してはいけません。構造上ゼロになります。問うべきなのは、需要がカテゴリーとバスケットに残るかどうかです。結果から結論が出なければ、削除を拡大しません。</p>
 </section>
 <section id="key-takeaways" class="level2">

@@ -700,6 +700,8 @@ window.Quarto = {
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>stat, p_value <span class="op">=</span> proportions_ztest(conversions, users, alternative<span class="op">=</span><span class="st">"two-sided"</span>)</span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"p-value: </span><span class="sc">{</span>p_value<span class="sc">:.2f}</span><span class="ss">"</span>)     <span class="co"># 0.43</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
 <p>只看 p 值的团队会得出改版没用的结论，然后转向别的事情。这个结论并没有数据支持。p 值为 0.43 只是说明这次测试无法把一个小效应与随机噪声区分开。差值的 95% 置信区间从 −0.36 到 +0.84 个百分点，所以数据既与小幅损失相容，也与可观的收益相容。实验组的版本可能真的更好，但这个样本量无法证明这一点。置信区间里仍然包含值得上线的提升幅度，所以这个结果是无法下结论的。</p>
+<p><strong>配套 Notebook：</strong> <code>sec3.2_ab_test_figures.ipynb</code> 重现了本章的样本量和功效图，并运行了 CUPED 模拟。<br>
+<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.2_ab_test_figures.ipynb">在 GitHub 上查看</a></p>
 <section id="statistical-power" class="level2">
 <h2 class="anchored" data-anchor-id="statistical-power">统计功效</h2>
 <p>统计功效是指，如果某个特定大小的效应真实存在，你的测试能够检测到它的概率。大多数团队以 80% 的功效为目标，这仍然留下 20% 的概率错过一个那么大的效应。</p>
@@ -781,30 +783,49 @@ window.Quarto = {
 <p>形式上，设 <span class="math inline">\(Y\)</span> 为结果，<span class="math inline">\(X\)</span> 为实验前的协变量（例如此前 30 天的购买）。调整后的结果为：</p>
 <p><span class="math display">\[Y_{\text{CUPED}} = Y - \theta \cdot (X - \bar{X})\]</span></p>
 <p>其中 <span class="math inline">\(\theta = \text{Cov}(Y, X) / \text{Var}(X)\)</span>。调整后结果的方差降为 <span class="math inline">\(\text{Var}(Y_{\text{CUPED}}) = \text{Var}(Y)(1 - \rho^2)\)</span>，其中 <span class="math inline">\(\rho\)</span> 是 <span class="math inline">\(X\)</span> 与 <span class="math inline">\(Y\)</span> 之间的皮尔逊相关系数。如果 <span class="math inline">\(\rho = 0.7\)</span>，CUPED 大约能去除一半的方差，相当于样本量翻倍所能带来的精度。Netflix 后来发表的案例研究报告了其大规模在线实验中类似的方差缩减 <span class="citation" data-cites="xie2016netflix">(<a href="../appendix/further-reading.html#ref-xie2016netflix" role="doc-biblioref">Xie 和 Aurisset 2016年</a>)</span>。最常用的协变量是同一指标在实验前时期的测量值，它通常给出最强的相关性。</p>
-<p>在代码中，这一调整只需几行。在一个模拟的营销活动中，实验前消费与实验期间消费的相关系数约为 0.75，它把提升的标准误削减了约三分之一：</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co"># df: one row per customer — pre_spend (prior 30 days), campaign_spend, treatment (0/1)</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>theta <span class="op">=</span> np.cov(df[<span class="st">"campaign_spend"</span>], df[<span class="st">"pre_spend"</span>])[<span class="dv">0</span>, <span class="dv">1</span>] <span class="op">/</span> df[<span class="st">"pre_spend"</span>].var()</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>df[<span class="st">"cuped_spend"</span>] <span class="op">=</span> df[<span class="st">"campaign_spend"</span>] <span class="op">-</span> theta <span class="op">*</span> (</span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    df[<span class="st">"pre_spend"</span>] <span class="op">-</span> df[<span class="st">"pre_spend"</span>].mean()</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> metric <span class="kw">in</span> [<span class="st">"campaign_spend"</span>, <span class="st">"cuped_spend"</span>]:</span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    t <span class="op">=</span> df.loc[df[<span class="st">"treatment"</span>] <span class="op">==</span> <span class="dv">1</span>, metric]</span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    c <span class="op">=</span> df.loc[df[<span class="st">"treatment"</span>] <span class="op">==</span> <span class="dv">0</span>, metric]</span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    se <span class="op">=</span> np.sqrt(t.var() <span class="op">/</span> <span class="bu">len</span>(t) <span class="op">+</span> c.var() <span class="op">/</span> <span class="bu">len</span>(c))</span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span>metric<span class="sc">:15s}</span><span class="ss"> lift=</span><span class="sc">{</span>t<span class="sc">.</span>mean() <span class="op">-</span> c<span class="sc">.</span>mean()<span class="sc">:.2f}</span><span class="ss">  SE=</span><span class="sc">{</span>se<span class="sc">:.3f}</span><span class="ss">"</span>)</span>
-<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="co"># campaign_spend  lift=0.97  SE=0.549</span></span>
-<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="co"># cuped_spend     lift=1.07  SE=0.364   (33.7% smaller SE — like a much bigger sample)</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<p>在代码中，这一调整只需两行：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># df: one row per customer; pre_spend covers the 30 days before the test</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>spend, pre <span class="op">=</span> df[<span class="st">"campaign_spend"</span>], df[<span class="st">"pre_spend"</span>]</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>theta <span class="op">=</span> spend.cov(pre) <span class="op">/</span> pre.var()</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>df[<span class="st">"cuped_spend"</span>] <span class="op">=</span> spend <span class="op">-</span> theta <span class="op">*</span> (pre <span class="op">-</span> pre.mean())</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<p>在一个模拟的营销活动中，实验前消费与实验期间消费的相关系数约为 0.75，用调整后的列而不是原始列来比较实验组和对照组，可以把提升的标准误削减约三分之一：</p>
+<div id="tbl-cuped-result" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-cuped-result-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+表&nbsp;1: 同一个模拟测试在 CUPED 调整前后的结果。
+</figcaption>
+<div aria-describedby="tbl-cuped-result-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">结果指标</th>
+<th style="text-align: right;">提升</th>
+<th style="text-align: right;">标准误</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">原始消费</td>
+<td style="text-align: right;">0.97</td>
+<td style="text-align: right;">0.549</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">CUPED 调整后的消费</td>
+<td style="text-align: right;">1.07</td>
+<td style="text-align: right;">0.364</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
 <p>点估计略有移动（0.97 → 1.07）：CUPED 去除了原始差距中由两组之间实验前偶然不平衡造成的部分，因此它瞄准的仍然是同一个真实效应，同时区间收窄了。配套 Notebook 端到端地模拟了 <code>df</code>（并报告 p 值，这里从 0.08 降到 0.003），你可以改变相关系数，观察精度增益如何缩小或扩大。</p>
 </section>
 <section id="when-a-test-is-inconclusive" class="level2">
 <h2 class="anchored" data-anchor-id="when-a-test-is-inconclusive">当测试无法下结论时</h2>
 <p>回到结账页面的测试。与其问 p 值是否低于 0.05，不如问测试是否足够精确，足以排除一个值得上线的效应。</p>
 <p>观察到的提升是 +0.24 个百分点，95% 区间从 −0.36 到 +0.84 个百分点。这次测试无法下结论：区间太宽，无法支持任何一种结论。只有当区间足够窄、并且排除了任何值得上线的提升时，你才能合理地把一个处理放到一边。无法下结论的结果可能只是意味着测试太小、噪声太大，或者在一个不寻常的时期内运行。</p>
-<p><strong>配套 Notebook：</strong> <code>sec3.2_ab_test_figures.ipynb</code> 重现了本章的样本量和功效图，并运行了 CUPED 模拟。<br>
-<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.2_ab_test_figures.ipynb">在 GitHub 上查看</a></p>
 </section>
 <section id="key-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="key-takeaways">要点</h2>

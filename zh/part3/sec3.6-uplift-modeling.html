@@ -663,6 +663,8 @@ window.Quarto = {
 </figcaption>
 </figure>
 </div>
+<p><strong>配套 Notebook：</strong><code>sec3.6_uplift_modeling.ipynb</code> 在 MineThatData 上构建 S-Learner 增益得分，并用增益曲线与 Qini 曲线、十分位增益和净价值定向策略对其进行评估。<br>
+<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.6_uplift_modeling.ipynb">在 GitHub 上查看</a></p>
 <section id="understanding-the-customers-to-target" class="level2">
 <h2 class="anchored" data-anchor-id="understanding-the-customers-to-target">理解要定向投放的客户</h2>
 <p>要用好增益建模，不妨在脑中勾勒四类客户，按他们对触达的反应来定义。</p>
@@ -729,12 +731,10 @@ window.Quarto = {
 </tr>
 </tbody>
 </table>
-<p><strong>配套 Notebook：</strong><code>sec3.6_uplift_modeling.ipynb</code> 在 MineThatData 上构建 S-Learner 增益得分，并用增益曲线与 Qini 曲线、十分位增益和净价值定向策略对其进行评估。<br>
-<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.6_uplift_modeling.ipynb">在 GitHub 上查看</a></p>
 </section>
 <section id="training-the-uplift-model" class="level2">
 <h2 class="anchored" data-anchor-id="training-the-uplift-model">训练增益模型</h2>
-<p>增益得分就是 CATE。我们重新拟合 §3.5 的元学习器，保留在保留集上对真实效应还原得最好的那一个：S-Learner，它的估计与真值的相关性为 0.77（完整比较见 §3.5 的 <a href="sec3.5-meta-learners.html#tbl-cate-recovery" class="quarto-xref">表&nbsp;<span>1</span></a>）。这样的选择只有在数据是半合成的时候才可能；在真实数据上，真实效应永远观测不到，所以学习器要在随机化保留集上按 Qini 或按各十分位的观测增益来选择，下面的评估一节会讲到。用于选择学习器的保留集，与之后用来确认所选排序优于随机的新保留集是分开的。它预测的 CATE 就是增益得分，拟合用的是与 §3.5 相同的 EconML 调用，所以没有任何新东西需要安装：</p>
+<p>增益得分就是 CATE。我们重新拟合 §3.5 的元学习器，保留在保留集上对真实效应还原得最好的那一个：S-Learner，它的估计与真值的相关性为 0.77（完整比较见 §3.5 的 <a href="sec3.5-meta-learners.html#tbl-cate-recovery" class="quarto-xref">表&nbsp;<span>1</span></a>）。这样的选择只有在数据是半合成的时候才可能；在真实数据上，真实效应永远观测不到，所以学习器要在随机化保留集上按 Qini 或按各十分位的观测增益来选择，下面的评估一节会讲到。用于选择学习器的保留集，与之后用来确认所选排序优于随机的新保留集是分开的。S-Learner 预测的 CATE 就是增益得分，拟合用的是与 §3.5 的 Notebook 相同的 EconML 调用，所以没有任何新东西需要安装：</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> econml.metalearners <span class="im">import</span> SLearner</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> lightgbm <span class="im">import</span> LGBMRegressor</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>

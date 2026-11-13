@@ -634,6 +634,8 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 </div>
 <p>一次全国性电视广告活动在每个市场投放了 8 周，销售额上升了。由于每个市场都接触到了活动，没有任何未处理的市场可以用来比较，而<a href="sec3.3-quasi-experiments.html">上一章</a>的每一种准实验设计都需要这样一个市场。如果没有这次活动，销售额会是多少？</p>
 <p>本章只有一件事要做：构建那条缺失的“无活动”路径，并判断它是否可信到足以作为衡量活动效果的基准。构建它大约需要 15 行代码；验证它占了本章余下的全部篇幅。</p>
+<p><strong>配套 Notebook：</strong><code>sec3.4_causal_impact.ipynb</code> 构建反事实，在安慰剂日期上验证它，在两百次抽样中审计它的区间，然后有意把它弄坏。<br>
+<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.4_causal_impact.ipynb">在 GitHub 上查看</a></p>
 <section id="sec-counterfactual-recipe" class="level2">
 <h2 class="anchored" data-anchor-id="sec-counterfactual-recipe">构建反事实</h2>
 <p><strong>核心思想：</strong>预测没有活动时你本会看到的销售额。效果就是观测到的销售额减去这个预测值。</p>
@@ -673,24 +675,12 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 </tbody>
 </table>
 <p>实操示例是一个全国性快消品牌：四年的周度营收，一次为期 8 周的电视加公关活动，以及活动之后 20 周的观测。两条对照序列：一个子品类需求指数，以及一条没有投放任何媒体的同门产品线。数据是合成的，因此真实的无活动路径是已知的。在写任何代码之前，先定下分析简报：</p>
-<div class="callout callout-style-default callout-note callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">注记</span>分析简报
-</div>
-</div>
-<div class="callout-body-container callout-body">
 <ul>
 <li><strong>业务问题：</strong>这次活动带来了多少增量营收？</li>
 <li><strong>结果变量：</strong>全国周度营收。</li>
 <li><strong>处理：</strong>为期 8 周的电视加公关活动，作为一次合并干预来测量。</li>
 <li><strong>估计目标：</strong>上线后 28 周内的累计增量营收，包括延续效应以及之后的任何回吐。</li>
 </ul>
-</div>
-</div>
 <p>估计目标是一个决定，而且是在这里定下的，而不是等结果出来之后。这就是下面的预测跑 28 周的原因，也是本章后面关于报告窗口的一节是一次核对而非一次选择的原因。</p>
 <div id="fig-panel" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="四年的品牌营收，标出真实的未处理路径，下方是子品类需求指数和同门产品线，8 周投放期以阴影标出。">
 <figure class="quarto-float quarto-float-fig figure">
@@ -706,28 +696,25 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> statsmodels.tsa.statespace.structural <span class="im">import</span> UnobservedComponents</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Fit on the PRE-period only. The campaign is deliberately absent.</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> UnobservedComponents(</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    np.log(y_pre),</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    level<span class="op">=</span><span class="st">"lltrend"</span>,                                   <span class="co"># level and slope</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    freq_seasonal<span class="op">=</span>[{<span class="st">"period"</span>: <span class="dv">52</span>, <span class="st">"harmonics"</span>: <span class="dv">2</span>}],    <span class="co"># annual shape</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    exog<span class="op">=</span>np.log(x_pre),                                <span class="co"># untouched controls</span></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>res <span class="op">=</span> model.fit(disp<span class="op">=</span><span class="dv">0</span>)</span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Simulate 1,000 no-campaign paths across the 28 post-period weeks</span></span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>horizon, draws <span class="op">=</span> <span class="bu">len</span>(y_post), <span class="dv">1000</span></span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>paths <span class="op">=</span> np.exp(</span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    np.asarray(res.simulate(horizon, repetitions<span class="op">=</span>draws, anchor<span class="op">=</span><span class="st">"end"</span>,</span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>                            exog<span class="op">=</span>np.log(x_post))).reshape(horizon, draws)</span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Effect = observed minus counterfactual. The point estimate and the</span></span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="co">#    interval come from the same draws, so both summarize one distribution.</span></span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>counterfactual <span class="op">=</span> paths.mean(axis<span class="op">=</span><span class="dv">1</span>)</span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>weekly_effect <span class="op">=</span> y_post <span class="op">-</span> counterfactual</span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>cumulative <span class="op">=</span> weekly_effect.<span class="bu">sum</span>()</span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>lo, hi <span class="op">=</span> np.percentile((y_post[:, <span class="va">None</span>] <span class="op">-</span> paths).<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">0</span>), [<span class="fl">2.5</span>, <span class="fl">97.5</span>])</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> UnobservedComponents(</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    np.log(y_pre),                                    <span class="co"># pre-period revenue</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    level<span class="op">=</span><span class="st">"lltrend"</span>,                                  <span class="co"># level and slope</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    freq_seasonal<span class="op">=</span>[{<span class="st">"period"</span>: <span class="dv">52</span>, <span class="st">"harmonics"</span>: <span class="dv">2</span>}],   <span class="co"># annual shape</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    exog<span class="op">=</span>np.log(x_pre),                               <span class="co"># the two controls</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>res <span class="op">=</span> model.fit(disp<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="co"># 1,000 no-campaign paths across the 28 post-period weeks, in dollars</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>horizon, draws <span class="op">=</span> <span class="bu">len</span>(y_post), <span class="dv">1000</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>sims <span class="op">=</span> res.simulate(</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    horizon, repetitions<span class="op">=</span>draws, anchor<span class="op">=</span><span class="st">"end"</span>, exog<span class="op">=</span>np.log(x_post)</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>paths <span class="op">=</span> np.exp(np.asarray(sims).reshape(horizon, draws))</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="co"># One total per path: the estimate and the interval share the same draws</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>effects <span class="op">=</span> (y_post[:, <span class="va">None</span>] <span class="op">-</span> paths).<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>cumulative <span class="op">=</span> effects.mean()</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>lo, hi <span class="op">=</span> np.percentile(effects, [<span class="fl">2.5</span>, <span class="fl">97.5</span>])</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
 <p>这段代码里有三个选择很重要。模型只在活动前期间上拟合，这样活动就不可能污染它自己的基线。销售额以对数建模，因为活动带来的提升和季节性都是乘性的，而模拟路径在求和之前会先换算回美元。对照序列作为回归变量进入模型，这样预测就知道活动期间市场发生了什么。模型是否还需要趋势项，或者到底需不需要对照序列，由下一节的回测来定夺。</p>
 </section>
 <section id="sec-preperiod-validation" class="level2">
@@ -918,8 +905,6 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 <li><strong>如果反事实很弱，就不要报告因果数字。</strong>在 13.7% 的回测误差下，输出只是一个撑不起因果结论的预测。</li>
 </ol>
 <p>CausalImpact 不会把观测数据变成一场实验。它给你一种结构化的方式，去追问一条时间序列能否支撑一个可信的反事实。当它不能时，更好的模型也无济于事；转而规划一场地理实验（<a href="../part6/sec6.3-incrementality-experiments.html">第 6.3 节</a>）。</p>
-<p><strong>配套 Notebook：</strong><code>sec3.4_causal_impact.ipynb</code> 构建反事实，在安慰剂日期上验证它，在两百次抽样中审计它的区间，然后有意把它弄坏。<br>
-<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.4_causal_impact.ipynb">在 GitHub 上查看</a></p>
 </section>
 <section id="key-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="key-takeaways">要点</h2>

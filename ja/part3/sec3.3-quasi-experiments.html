@@ -632,6 +632,8 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 <p>A/Bテストは、原因と結果を測定するためのゴールドスタンダードです。誰が処置を受けるかを無作為化すれば、対照群から処置がない場合に何が起きたかが分かります。ただし、いつでも実施できるわけではありません。A/Bテストを選べない場合がある理由は、<a href="../part3/sec3.1-thinking-causally.html#limitations-of-ab-testing">Section 3.1</a>で扱いました。</p>
 <p>無作為化できない場合は、準実験を使います。 準実験は、無作為割り当てを行わずに原因と結果を推定します。閾値、一部の単位を対象外にした展開、開始日など、ビジネスプロセスが残した比較を利用します。しかし、無作為でない展開が自動的に使える代替になるわけではありません。仮定を説明できる比較が残っている必要があり、この章の各デザインには、説明しなければならない仮定があります。</p>
 <p>この章では、回帰不連続デザイン（RDD）、差の差法（DiD）、合成コントロールという3つのデザインを扱います。いずれも、ディスプレイを導入しなかった店舗からなる対照群や、一つの比較対象へ合成する店舗のプールなど、比較対象となる非処置の単位が必要です。4つ目のデザインであるCausalImpactは、非処置の単位が一つもない場合に使います。そのデザインは<a href="sec3.4-causal-impact.html">次の章</a>で扱います。</p>
+<p><strong>付属Notebook：</strong> <code>sec3.3_quasi_experiments.ipynb</code> は、合成データと <code>statsmodels</code>、<code>scipy</code> を使い、RDD、DiD（表、回帰、事前トレンドの確認）、合成コントロールを一通り実行します。<br>
+<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.3_quasi_experiments.ipynb">GitHubで見る</a></p>
 <section id="which-design-fits-your-situation" class="level2">
 <h2 class="anchored" data-anchor-id="which-design-fits-your-situation">状況に合うデザインはどれか？</h2>
 <p>デザインの名称からはどれが適しているか分からないため、ここでは4つを一つの具体的な問題で比較します。100店舗を持つ小売企業が新しい店頭ディスプレイを展開し、それがカテゴリー売上へ与えた影響を知りたい場合です。</p>
@@ -791,14 +793,13 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 <p>2×2の表は論理を示しますが、2つの理由から、実際の報告にそのまま使うものではありません。標準誤差がないため、+$3kがゼロと区別できるかを判断できません。また、実際のデータは2期間ではなく、100店舗の24カ月分の売上です。回帰版なら両方に対応できます。店舗・月ごとに1行とし、各店舗の固定効果、各月の固定効果、導入後期間の処置店舗に対する一つの交互作用項を入れます。店舗効果は店舗間の固定的な差をすべて吸収します。月効果は、その月に全店舗へ影響したトレンドとショックをすべて吸収します。交互作用項がDiD推定値です。</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> statsmodels.formula.api <span class="im">as</span> smf</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co"># df: one row per store-month (store_id, period, treated, post, category_sales)</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> smf.ols(</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"category_sales ~ C(store_id) + C(period) + treated:post"</span>,</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    data<span class="op">=</span>df,</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>).fit(cov_type<span class="op">=</span><span class="st">"cluster"</span>, cov_kwds<span class="op">=</span>{<span class="st">"groups"</span>: df[<span class="st">"store_id"</span>]})</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>coef, se <span class="op">=</span> model.params[<span class="st">"treated:post"</span>], model.bse[<span class="st">"treated:post"</span>]</span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"DiD estimate: </span><span class="sc">{</span>coef<span class="sc">:.2f}</span><span class="ss"> (SE </span><span class="sc">{</span>se<span class="sc">:.2f}</span><span class="ss">)"</span>)   <span class="co"># DiD estimate: 3.02 (SE 0.04)</span></span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> smf.ols(</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"category_sales ~ C(store_id) + C(period) + treated:post"</span>,</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    data<span class="op">=</span>df,</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>).fit(cov_type<span class="op">=</span><span class="st">"cluster"</span>, cov_kwds<span class="op">=</span>{<span class="st">"groups"</span>: df[<span class="st">"store_id"</span>]})</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>coef, se <span class="op">=</span> model.params[<span class="st">"treated:post"</span>], model.bse[<span class="st">"treated:post"</span>]</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"DiD estimate: </span><span class="sc">{</span>coef<span class="sc">:.2f}</span><span class="ss"> (SE </span><span class="sc">{</span>se<span class="sc">:.2f}</span><span class="ss">)"</span>)   <span class="co"># DiD estimate: 3.02 (SE 0.04)</span></span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 <p>標準誤差を店舗単位でクラスタリングすることで、各店舗の反復測定に対応します。同じ回帰で事前トレンドも確認できます。<code>treated:post</code> を各月の <code>treated</code> × 月の項へ置き換え、展開前の項がゼロに近いことを確認します。付属Notebookでは、完全なパネルとこの確認を一通り実行します。</p>
 </section>
 </section>
@@ -832,8 +833,6 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 <li>クーポンがすべての顧客へ送られた。</li>
 </ul>
 <p>比較できる非処置の店舗、地域、顧客がありません。そのため、比較対象を予測する必要があります。施策前に対象系列がどのように動いていたか、そして施策が影響できないほかの系列が施策後にどのように動いたかを使います。そのデザインがCausalImpactであり、<a href="sec3.4-causal-impact.html">次の章</a>で扱います。</p>
-<p><strong>付属Notebook：</strong> <code>sec3.3_quasi_experiments.ipynb</code> は、合成データと <code>statsmodels</code>、<code>scipy</code> を使い、RDD、DiD（表、回帰、事前トレンドの確認）、合成コントロールを一通り実行します。<br>
-<a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part3-causal-inference/sec3.3_quasi_experiments.ipynb">GitHubで見る</a></p>
 </section>
 <section id="key-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="key-takeaways">要点</h2>
