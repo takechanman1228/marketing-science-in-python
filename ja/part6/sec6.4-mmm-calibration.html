@@ -2,13 +2,13 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.10.19">
+<meta name="generator" content="quarto-1.11.9">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="1つのテストに過剰適合せず実験結果をMMMへ取り込む：限界ROASと平均ROAS、Meridian統合、較正プログラム。">
+<meta name="description" content="地域実験でMMMをキャリブレーションする：平均・増分・限界ROASの区別、結果をMeridianの事前分布に変換する方法、キャリブレーション後の計画の使い方。">
 
-<title>6.4 実験によるMMMの較正 – Marketing Science in Python</title>
+<title>6.4 実験によるMMMのキャリブレーション – Marketing Science in Python</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -72,23 +72,24 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../site_libs/quarto-search/fuse.min.js"></script>
 <script src="../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../">
-<link href="../part6/sec6.5-when-tools-disagree.html" rel="next">
+<link href="../appendix/further-reading.html" rel="next">
 <link href="../part6/sec6.3-incrementality-experiments.html" rel="prev">
 <link href="../assets/favicon.png" rel="icon" type="image/png">
 <script src="../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/scrollable-regions/scrollable-regions.js" type="module"></script>
 <script src="../site_libs/quarto-html/popper.min.js"></script>
 <script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-b626d73c4c936ccc3cb08be7d45d1df6.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-447e42e69aaa9833c0ba1b986f430b20.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-743e9765ff591ca41f31e934d0cf4bf8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../site_libs/bootstrap/bootstrap-dark-c9719a0dd22d1eb90e3fd2c145c4e342.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../site_libs/bootstrap/bootstrap-743e9765ff591ca41f31e934d0cf4bf8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-549dcdc79fd547502b4b0b8b8ab3f938.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-1a8a0d276ffdcff0dc8a23f0b0b34c12.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-549dcdc79fd547502b4b0b8b8ab3f938.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
@@ -128,13 +129,13 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 
 
 <link rel="stylesheet" href="../custom.css">
-<meta property="og:title" content="6.4 実験によるMMMの較正 – Marketing Science in Python">
-<meta property="og:description" content="1つのテストに過剰適合せず実験結果をMMMへ取り込む：限界ROASと平均ROAS、Meridian統合、較正プログラム。">
+<meta property="og:title" content="6.4 実験によるMMMのキャリブレーション – Marketing Science in Python">
+<meta property="og:description" content="地域実験でMMMをキャリブレーションする：平均・増分・限界ROASの区別、結果をMeridianの事前分布に変換する方法、キャリブレーション後の計画の使い方。">
 <meta property="og:image" content="https://marketing-science-in-python.com/images/common/book_cover_online.png">
 <meta property="og:site_name" content="Marketing Science in Python">
 <meta property="og:image:alt" content="抽象的なデータストリームが幾何学的ネットワークへ集まる表紙">
-<meta name="twitter:title" content="6.4 実験によるMMMの較正 – Marketing Science in Python">
-<meta name="twitter:description" content="1つのテストに過剰適合せず実験結果をMMMへ取り込む：限界ROASと平均ROAS、Meridian統合、較正プログラム。">
+<meta name="twitter:title" content="6.4 実験によるMMMのキャリブレーション – Marketing Science in Python">
+<meta name="twitter:description" content="地域実験でMMMをキャリブレーションする：平均・増分・限界ROASの区別、結果をMeridianの事前分布に変換する方法、キャリブレーション後の計画の使い方。">
 <meta name="twitter:image" content="https://marketing-science-in-python.com/images/common/book_cover_online.png">
 <meta name="twitter:image:alt" content="抽象的なデータストリームが幾何学的ネットワークへ集まる表紙">
 <meta name="twitter:card" content="summary_large_image">
@@ -149,7 +150,7 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 <!-- msbook-i18n-head:end -->
 </head>
 
-<body class="nav-sidebar floating quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+<body class="nav-sidebar floating quarto-light"><a id="quarto-skip-link" class="visually-hidden-focusable" href="#quarto-document-content">メインコンテンツにスキップ</a><script id="quarto-html-before-body" type="application/javascript">
     const toggleBodyColorMode = (bsSheetEl) => {
       const mode = bsSheetEl.getAttribute("data-mode");
       const bodyEl = window.document.querySelector("body");
@@ -172,6 +173,7 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
       for (let i=0; i < toggles.length; i++) {
         const toggle = toggles[i];
         if (toggle) {
+          toggle.setAttribute("aria-checked", alternate ? "true" : "false");
           if (alternate) {
             toggle.classList.add("alternate");
           } else {
@@ -201,13 +203,19 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
       manageTransitions('#quarto-margin-sidebar .nav-link', true);
       // Switch the toggles
       setColorSchemeToggle(alternate)
-      // Hack to workaround the fact that safari doesn't
-      // properly recolor the scrollbar when toggling (#1455)
+    }
+    // Hack to workaround the fact that safari doesn't
+    // properly recolor the scrollbar when toggling (#1455).
+    // Not run on load: stylesheets are set before first paint there, and
+    // scrolling would undo the scroll to a URL fragment (#14973).
+    // The one pixel nudge keeps the reader where they were.
+    const refreshSafariScrollbar = () => {
       if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
         manageTransitions("body", false);
-        window.scrollTo(0, 1);
+        const scrollY = window.scrollY;
+        window.scrollTo(0, scrollY > 0 ? scrollY - 1 : 1);
         setTimeout(() => {
-          window.scrollTo(0, 0);
+          window.scrollTo(0, scrollY);
           manageTransitions("body", true);
         }, 40);
       }
@@ -301,6 +309,7 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
       // Read the current dark / light value
       let toAlternate = !hasAlternateSentinel();
       toggleColorMode(toAlternate);
+      refreshSafariScrollbar();
       setStyleSentinel(toAlternate);
       toggleGiscusIfUsed(toAlternate, darkModeDefault);
       window.dispatchEvent(new Event('resize'));
@@ -315,13 +324,13 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
-  <nav class="quarto-secondary-nav">
+  <nav class="quarto-secondary-nav" aria-label="ツールバー">
     <div class="container-fluid d-flex">
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="サイドバーを切り替える" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part6/_part6.html">Part 6. メディア投資と最適化</a></li><li class="breadcrumb-item"><a href="../part6/sec6.4-mmm-calibration.html"><span class="chapter-title">6.4 実験によるMMMの較正</span></a></li></ol></nav>
-        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="サイドバーを切り替える" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        <nav class="quarto-page-breadcrumbs" aria-label="パンくずリスト"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part6/_part6.html">Part 6. メディア投資と最適化</a></li><li class="breadcrumb-item"><a href="../part6/sec6.4-mmm-calibration.html"><span class="chapter-title">6.4 実験によるMMMのキャリブレーション</span></a></li></ol></nav>
+        <a class="flex-grow-1" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <!-- msbook-language-switch-mobile:start -->
 <div class="msbook-language-switch-mobile" aria-label="Language"><a lang="en" hreflang="en" href="../../part6/sec6.4-mmm-calibration.html" onclick="this.hash=window.location.hash">EN</a><span aria-hidden="true"> | </span><span lang="ja" aria-current="page">日本語</span><span aria-hidden="true"> | </span><a lang="fr" hreflang="fr" href="../../fr/part6/sec6.4-mmm-calibration.html" onclick="this.hash=window.location.hash">FR</a><span aria-hidden="true"> | </span><a lang="de" hreflang="de" href="../../de/part6/sec6.4-mmm-calibration.html" onclick="this.hash=window.location.hash">DE</a><span aria-hidden="true"> | </span><a lang="zh-Hans" hreflang="zh-Hans" href="../../zh/part6/sec6.4-mmm-calibration.html" onclick="this.hash=window.location.hash">中文</a></div>
@@ -335,7 +344,7 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 <!-- content -->
 <div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
 <!-- sidebar -->
-  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto" aria-label="ウェブサイト">
     <div class="pt-lg-2 mt-2 text-left sidebar-header">
     <div class="sidebar-title mb-0 py-0">
       <a href="../">Marketing Science in Python</a> 
@@ -358,7 +367,7 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
           </li>
       </ul>
     </div>
-  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="ダークモードの切り替え"><i class="bi"></i></a>
+  <button type="button" role="switch" aria-checked="false" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="ダークモードの切り替え" aria-label="ダークモードの切り替え"><i class="bi"></i></button>
 </div>
     </div>
       </div>
@@ -378,12 +387,12 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a href="../part1/_part1.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Part 1. はじめに</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
+ <span class="menu-text" id="quarto-sidebar-section-1-label">Part 1. はじめに</span></a>
+            <button type="button" class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-controls="quarto-sidebar-section-1" aria-expanded="true" aria-label="セクションを切り替え: Part 1. はじめに">
+              <i class="bi bi-chevron-right ms-2" aria-hidden="true"></i>
+            </button> 
       </div>
-      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+      <ul id="quarto-sidebar-section-1" aria-labelledby="quarto-sidebar-section-1-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../part1/sec1.1-what-is-marketing-science.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">1.1 マーケティングサイエンスとは何か？</span></a>
@@ -399,12 +408,12 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a href="../part2/_part2.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Part 2. より良い意思決定のための分析</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
+ <span class="menu-text" id="quarto-sidebar-section-2-label">Part 2. より良い意思決定のための分析</span></a>
+            <button type="button" class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-controls="quarto-sidebar-section-2" aria-expanded="true" aria-label="セクションを切り替え: Part 2. より良い意思決定のための分析">
+              <i class="bi bi-chevron-right ms-2" aria-hidden="true"></i>
+            </button> 
       </div>
-      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+      <ul id="quarto-sidebar-section-2" aria-labelledby="quarto-sidebar-section-2-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../part2/sec2.1-right-question.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.1 正しい問いを設定する</span></a>
@@ -425,12 +434,12 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a href="../part3/_part3.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Part 3. マーケティングのための因果推論</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
+ <span class="menu-text" id="quarto-sidebar-section-3-label">Part 3. マーケティングのための因果推論</span></a>
+            <button type="button" class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-controls="quarto-sidebar-section-3" aria-expanded="true" aria-label="セクションを切り替え: Part 3. マーケティングのための因果推論">
+              <i class="bi bi-chevron-right ms-2" aria-hidden="true"></i>
+            </button> 
       </div>
-      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+      <ul id="quarto-sidebar-section-3" aria-labelledby="quarto-sidebar-section-3-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../part3/sec3.1-thinking-causally.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.1 因果的に考える</span></a>
@@ -466,12 +475,12 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a href="../part4/_part4.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Part 4. 顧客分析</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
+ <span class="menu-text" id="quarto-sidebar-section-4-label">Part 4. 顧客分析</span></a>
+            <button type="button" class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" aria-controls="quarto-sidebar-section-4" aria-expanded="true" aria-label="セクションを切り替え: Part 4. 顧客分析">
+              <i class="bi bi-chevron-right ms-2" aria-hidden="true"></i>
+            </button> 
       </div>
-      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+      <ul id="quarto-sidebar-section-4" aria-labelledby="quarto-sidebar-section-4-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../part4/sec4.1-segmentation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">4.1 顧客セグメンテーション</span></a>
@@ -487,12 +496,12 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a href="../part5/_part5.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Part 5. コマーシャル分析</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
+ <span class="menu-text" id="quarto-sidebar-section-5-label">Part 5. コマーシャル分析</span></a>
+            <button type="button" class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" aria-controls="quarto-sidebar-section-5" aria-expanded="true" aria-label="セクションを切り替え: Part 5. コマーシャル分析">
+              <i class="bi bi-chevron-right ms-2" aria-hidden="true"></i>
+            </button> 
       </div>
-      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+      <ul id="quarto-sidebar-section-5" aria-labelledby="quarto-sidebar-section-5-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../part5/sec5.1-price-elasticity.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.1 価格弾力性と価格設定の意思決定</span></a>
@@ -513,12 +522,12 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a href="../part6/_part6.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Part 6. メディア投資と最適化</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
+ <span class="menu-text" id="quarto-sidebar-section-6-label">Part 6. メディア投資と最適化</span></a>
+            <button type="button" class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" aria-controls="quarto-sidebar-section-6" aria-expanded="true" aria-label="セクションを切り替え: Part 6. メディア投資と最適化">
+              <i class="bi bi-chevron-right ms-2" aria-hidden="true"></i>
+            </button> 
       </div>
-      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+      <ul id="quarto-sidebar-section-6" aria-labelledby="quarto-sidebar-section-6-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../part6/sec6.1-media-measurement-problem.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.1 メディア測定の問題</span></a>
@@ -531,17 +540,12 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part6/sec6.3-incrementality-experiments.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.3 増分効果実験</span></a>
+  <a href="../part6/sec6.3-incrementality-experiments.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.3 インクリメンタリティ実験</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part6/sec6.4-mmm-calibration.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">6.4 実験によるMMMの較正</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../part6/sec6.5-when-tools-disagree.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.5 測定ツールが一致しないときの意思決定</span></a>
+  <a href="../part6/sec6.4-mmm-calibration.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">6.4 実験によるMMMのキャリブレーション</span></a>
   </div>
 </li>
       </ul>
@@ -574,25 +578,26 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 <div class="msbook-language-switch" aria-label="Language"><a lang="en" hreflang="en" href="../../part6/sec6.4-mmm-calibration.html" onclick="this.hash=window.location.hash">English</a><span aria-hidden="true"> | </span><span lang="ja" aria-current="page">日本語</span><span aria-hidden="true"> | </span><a lang="fr" hreflang="fr" href="../../fr/part6/sec6.4-mmm-calibration.html" onclick="this.hash=window.location.hash">Français</a><span aria-hidden="true"> | </span><a lang="de" hreflang="de" href="../../de/part6/sec6.4-mmm-calibration.html" onclick="this.hash=window.location.hash">Deutsch</a><span aria-hidden="true"> | </span><a lang="zh-Hans" hreflang="zh-Hans" href="../../zh/part6/sec6.4-mmm-calibration.html" onclick="this.hash=window.location.hash">中文</a></div>
 <!-- msbook-language-switch:end -->
 
-        <nav id="TOC" role="doc-toc" class="toc-active">
+        <nav id="TOC" role="doc-toc" aria-labelledby="toc-title" class="toc-active">
     <h2 id="toc-title">目次</h2>
    
   <ul>
-  <li><a href="#match-the-evidence-to-the-model-quantity" id="toc-match-the-evidence-to-the-model-quantity" class="nav-link active" data-scroll-target="#match-the-evidence-to-the-model-quantity">証拠をモデルの量に合わせる</a></li>
-  <li><a href="#turn-the-experiment-into-a-prior" id="toc-turn-the-experiment-into-a-prior" class="nav-link" data-scroll-target="#turn-the-experiment-into-a-prior">実験を事前分布へ変換する</a></li>
-  <li><a href="#sec-calibration-what-changed" id="toc-sec-calibration-what-changed" class="nav-link" data-scroll-target="#sec-calibration-what-changed">何が変わったか？</a></li>
-  <li><a href="#before-acting-on-the-calibrated-plan" id="toc-before-acting-on-the-calibrated-plan" class="nav-link" data-scroll-target="#before-acting-on-the-calibrated-plan">較正後の計画で行動する前に</a></li>
+  <li><a href="#what-is-calibration" id="toc-what-is-calibration" class="nav-link active" data-scroll-target="#what-is-calibration">キャリブレーションとは何か</a></li>
+  <li><a href="#step-1-average-incremental-and-marginal-roas" id="toc-step-1-average-incremental-and-marginal-roas" class="nav-link" data-scroll-target="#step-1-average-incremental-and-marginal-roas">ステップ1：平均ROAS、増分ROAS、限界ROAS</a></li>
+  <li><a href="#step-2-converting-the-experiment-into-a-prior" id="toc-step-2-converting-the-experiment-into-a-prior" class="nav-link" data-scroll-target="#step-2-converting-the-experiment-into-a-prior">ステップ2：実験を事前分布に変換する</a></li>
+  <li><a href="#sec-calibration-what-changed" id="toc-sec-calibration-what-changed" class="nav-link" data-scroll-target="#sec-calibration-what-changed">ステップ3：キャリブレーションの前後でモデルを比べる</a></li>
+  <li><a href="#using-the-calibrated-plan" id="toc-using-the-calibrated-plan" class="nav-link" data-scroll-target="#using-the-calibrated-plan">キャリブレーション後の計画を使う</a></li>
   <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways">重要なポイント</a></li>
   </ul>
 <div class="quarto-code-links"><h2>コードリンクス</h2><ul><li><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part6-media-optimization/sec6.2_6.4_mmm_meridian.ipynb"><i class="bi bi-github"></i>sec6.2_6.4_mmm_meridian.ipynb</a></li></ul></div></nav>
     </div>
 <!-- main -->
-<main class="content" id="quarto-document-content">
+<main class="content" id="quarto-document-content" tabindex="-1">
 
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part6/_part6.html">Part 6. メディア投資と最適化</a></li><li class="breadcrumb-item"><a href="../part6/sec6.4-mmm-calibration.html"><span class="chapter-title">6.4 実験によるMMMの較正</span></a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="パンくずリスト"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part6/_part6.html">Part 6. メディア投資と最適化</a></li><li class="breadcrumb-item"><a href="../part6/sec6.4-mmm-calibration.html"><span class="chapter-title">6.4 実験によるMMMのキャリブレーション</span></a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title"><span id="sec-mmm-calibration" class="quarto-section-identifier"><span class="chapter-title">6.4 実験によるMMMの較正</span></span></h1>
+<h1 class="title"><span id="sec-mmm-calibration" class="quarto-section-identifier"><span class="chapter-title">6.4 実験によるMMMのキャリブレーション</span></span></h1>
 </div>
 
 
@@ -613,187 +618,197 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
 <p><strong>日本語版について</strong><br>
 このページは英語版 <em>Marketing Science in Python</em> のAI翻訳です。英語版を正本とし、差異がある場合は英語版を優先してください。コード、Notebook、画像内の文字は英語のままです。 <a href="../../part6/sec6.4-mmm-calibration.html" class="translation-source-link">英語版を読む</a></p>
 </div>
-<p>地域実験を行う前に、MMMはGoogle Searchの30%削減が何を失うかを予測していました。削減1ドルあたり$2.95の売上、90%信用区間は0.34から8.48です。<a href="sec6.3-incrementality-experiments.html">Section 6.3</a>の実験は1.500を測り、95%信頼区間は0.892から2.109でした。モデルはチャネル全体の価値をおおむね正しく捉えていましたが、削減のコストは約2倍高く見積もっており、区間はどちらにせよ行動に移すには広すぎました。どちらも驚くことではありません。Search支出は3年間の履歴でほとんど動かなかったため、モデルのSearch推定値の大部分は出発点の事前分布のままであり、この実験がこのチャネルに関する初めての因果的証拠です。</p>
-<p>較正は、その証拠をモデルへ入れる作業です。実験が測ったのは1つのチャネルの1つの運用点、1つの期間ですが、<a href="sec6.2-mmm-fundamentals.html">Section 6.2</a>のモデルは5チャネルの予算を決めなければなりません。そこで実験結果を事前分布へ変換し、再適合し、比較します。較正で確かめるのは3つです。推定値がどこへ動いたか、不確実性がどれだけ縮んだか、そして配分の推奨が変わったかどうかです。推奨が変わらないこと自体は失敗ではありません。この例の成果は売上なので、MeridianのROIは数値上は売上ROASになります。本文ではROASと呼び、コードではMeridianの名称を保ちます。</p>
-<div id="fig-calibration-workflow" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="5つのステップ：地域テスト、DiD推定、事前分布への変換、MMMの再適合、ガードレールの下での予算決定。そこから次のテストへ戻る。">
+<p>Google Searchについて、いま2つの結果があります。<a href="sec6.2-mmm-fundamentals.html">Section 6.2</a>のMMMは5チャネルすべてを扱いますが、Searchの推定は非常に不確かです。<a href="sec6.3-incrementality-experiments.html">Section 6.3</a>の実験はSearchを精密に測りましたが、測ったのはSearchだけです。</p>
+<p>次の意思決定には、両方が必要です。Searchを削減すると予算が浮きます。それをどこに回すかを決めるには5チャネルすべてを比べる必要があり、それができるのはMMMだけです。そこで、実験がSearchについて明らかにしたことを、MMMに使わせます。</p>
+<section id="what-is-calibration" class="level2">
+<h2 class="anchored" data-anchor-id="what-is-calibration">キャリブレーションとは何か</h2>
+<p><strong>キャリブレーション（calibration）</strong>とは、実験の結果を使ってMMMを改善する作業です。ベイズのMMMでは、事前分布を通じて行います。あるチャネルについての実験の推定値をそのチャネルの事前分布にして、モデルをもう一度適合します（<a href="#fig-calibration-workflow" class="quarto-xref">図&nbsp;<span>1</span></a>）。再適合したモデルは2つの情報源を組み合わせます。テストしたチャネルについては主に実験に頼り、それ以外については履歴データに頼ります。</p>
+<div id="fig-calibration-workflow" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="5つのステップ：地域実験、DiD推定、事前分布への変換、MMMの再適合、ガードレールの下での予算決定。そこから次のテストへ戻る。">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-calibration-workflow-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part6/sec6.4/calibration_workflow.png" class="fig-lg img-fluid figure-img" alt="5つのステップ：地域テスト、DiD推定、事前分布への変換、MMMの再適合、ガードレールの下での予算決定。そこから次のテストへ戻る。">
+<img src="../images/part6/sec6.4/calibration_workflow.png" class="fig-lg img-fluid figure-img" alt="5つのステップ：地域実験、DiD推定、事前分布への変換、MMMの再適合、ガードレールの下での予算決定。そこから次のテストへ戻る。">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-calibration-workflow-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-図&nbsp;1: MMMの較正ワークフロー。
+図&nbsp;1: MMMのキャリブレーションワークフロー。
 </figcaption>
 </figure>
 </div>
-<p><strong>付属ノートブック：</strong> <code>sec6.2_6.4_mmm_meridian.ipynb</code>は<a href="sec6.2-mmm-fundamentals.html">Section 6.2</a>と共通です。Step 14〜18では、テストに対するモデル自身の予測を記録し、実験推定値を事前分布へ変換し、モデルを再適合し、予算を再最適化します。<br>
+<p>今回の事例は、これがなぜ必要かを示しています。テストの前に、ノートブックはSection 6.2のモデルに実験の結果を予測させました。8週間の30%のSearch削減のiROASです。モデルの予測は2.95で、90%区間は0.34から8.48でした。実験の測定値は1.50でした。</p>
+<p>モデルの推定値は測定値の約2倍で、区間も意思決定を支えるには広すぎました。Search支出は3年間ほとんど動かなかったため、モデルはSearchについて事前分布以上の情報をほとんど持っていませんでした。キャリブレーションは、その情報をモデルに与えます。</p>
+<p>キャリブレーションは3つのステップで進めます。本章の残りはこの順に沿っています。</p>
+<ol type="1">
+<li>実験が測ったのが、モデルのどの量なのかを特定する。</li>
+<li>実験の結果を、その量の事前分布に変換する。</li>
+<li>モデルを再適合し、キャリブレーションしていないモデルと比べる。</li>
+</ol>
+<p><strong>付属ノートブック：</strong> <code>sec6.2_6.4_mmm_meridian.ipynb</code>は<a href="sec6.2-mmm-fundamentals.html">Section 6.2</a>と共通です。Step 14〜18がキャリブレーションにあたります。<br>
 <a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part6-media-optimization/sec6.2_6.4_mmm_meridian.ipynb">GitHubで見る</a></p>
-<section id="match-the-evidence-to-the-model-quantity" class="level2">
-<h2 class="anchored" data-anchor-id="match-the-evidence-to-the-model-quantity">証拠をモデルの量に合わせる</h2>
-<p>実験が測ったのは、1つの支出ブロックのリターンです。Searchの予算を8週間、100%から70%へ落としたとき、1ドルあたりいくらの売上を失ったか、という量です。モデルは同じチャネルについて、<strong>平均ROAS</strong>と<strong>限界ROAS</strong>という別の2つのリターンを報告し、この3つは互いに置き換えられません。飽和曲線では最初の1ドルほどよく働くため、曲線が曲がり始めた場所では平均が限界リターンを上回り、支出の上位30%を平均するテストした削減は限界リターンに近い値になります（<a href="#fig-marginal-vs-average" class="quarto-xref">図&nbsp;<span>2</span></a>）。</p>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>量</th>
-<th>何を測るか</th>
-<th>どこから来るか</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>平均ROAS</td>
-<td>支出ゼロから平均したリターン</td>
-<td>モデル</td>
-</tr>
-<tr class="even">
-<td>限界ROAS</td>
-<td>現在の支出における反応曲線の傾き</td>
-<td>モデル</td>
-</tr>
-<tr class="odd">
-<td>テストした削減のリターン</td>
-<td>支出の上位30%における平均リターン</td>
-<td>実験</td>
-</tr>
-</tbody>
-</table>
-<div id="fig-marginal-vs-average" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="限界ROASは現在の支出水準での接線の傾き、平均ROASは飽和曲線上の原点からその点までの傾きである。">
+</section>
+<section id="step-1-average-incremental-and-marginal-roas" class="level2">
+<h2 class="anchored" data-anchor-id="step-1-average-incremental-and-marginal-roas">ステップ1：平均ROAS、増分ROAS、限界ROAS</h2>
+<p>Meridianの事前分布は、特定の量に置きます。チャネルの平均ROASか、限界ROASのどちらかです。実験の結果は、実験が実際に測った量に置かなければなりません。そこで最初のステップでは、3種類のROASを区別します。</p>
+<p>ある市場がSearchに毎週$100を使っているとします。3種類とも、売上の変化を支出の変化で割った値です。違うのは、対象とする支出の範囲です（<a href="#fig-marginal-vs-average" class="quarto-xref">図&nbsp;<span>2</span></a>）。</p>
+<ul>
+<li><strong>平均ROAS</strong>は$0から$100まで、つまり現在の支出の全体が対象です。MMMが報告します。</li>
+<li><strong>30%削減の増分ROAS</strong>は$70から$100まで、つまりテストで減らした支出が対象です。実験が測りました。</li>
+<li><strong>限界ROAS</strong>は$100から$101まで、つまり次の1ドルが対象です。MMMが報告し、オプティマイザーはこれに基づいて配分します。</li>
+</ul>
+<div id="fig-marginal-vs-average" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="同じ反応曲線を3回描き、ゼロから現在の支出までの傾き、70%から100%までの傾き、現在の支出での接線を示す。">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-marginal-vs-average-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part6/sec6.4/marginal_vs_average_roas.png" class="fig-lg img-fluid figure-img" alt="限界ROASは現在の支出水準での接線の傾き、平均ROASは飽和曲線上の原点からその点までの傾きである。">
+<img src="../images/part6/sec6.4/roas_three_views.png" class="fig-lg img-fluid figure-img" alt="同じ反応曲線を3回描き、ゼロから現在の支出までの傾き、70%から100%までの傾き、現在の支出での接線を示す。">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-marginal-vs-average-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-図&nbsp;2: 飽和曲線上の限界ROASと平均ROAS。
+図&nbsp;2: 1つの反応曲線上の3種類のROAS。
 </figcaption>
 </figure>
 </div>
-<p>Meridianの既定の事前分布<code>roi_m</code>は平均ROASに置かれます。期間補正後の推定値1.71をその事前分布に置くと、事後分布もそれに引き寄せられます。ノートブックで試すと、事後の平均ROASは1.96になり、埋め込んだ真値3.30と合いません。モデルは今や、ゼロからのリターンが40%低すぎる曲線でSearchを説明することを強いられています。ここでは限界リターンとテストした削減の予測は、それぞれ1.59と1.44で、なお真値の近くに着地します。Searchの範囲の上端では曲線がほぼ直線なので、狂うのは平均という量だからです。より曲がったチャネルなら、局所的な読みも一緒に狂います。限界リターンが平均のおよそ4分の1しかないTikTokで同じ置き換えをすれば、モデルは4倍近く間違います。測定値は、それに対応するパラメータに置きます。</p>
+<p>飽和する反応曲線では、最初の1ドルのほうが最後の1ドルより多く稼ぎます。そのため、3つのうち平均ROASが最も高くなります。削減のiROASと限界ROASは、どちらも曲線の上端についての値なので、互いに近く、平均より低くなります。</p>
+<p>実験が測ったのは、30%削減のiROASです。これは限界ROASに最も近いので、実験の結果は限界ROASの事前分布に反映します。</p>
+<p><strong>置き場所を間違えるとどうなるか。</strong> Meridianの既定の事前分布<code>roi_m</code>は、平均ROASに置かれます。実験の結果をそこに置くと、モデルは支出の最後の30%で測った数値を、支出全体のリターンとして扱います。ノートブックは比較のためにこの版も適合します。この版はSearchの平均ROASを1.96と推定しますが、データ上の真値は3.30で、約40%低すぎます。平均ROASの事前分布が正しい選択になるのは、チャネルを完全に止める実験の場合だけです。</p>
 </section>
-<section id="turn-the-experiment-into-a-prior" class="level2">
-<h2 class="anchored" data-anchor-id="turn-the-experiment-into-a-prior">実験を事前分布へ変換する</h2>
-<p>Meridianでは、<code>media_prior_type="mroi"</code>を指定して、事前分布を限界ROIに置けます。このパラメータは支出を1%増やしたときのリターンです。実験が測ったのは8週間の30%削減なので、パラメータを観測するのではなく、近似的な変換を通じて事前分布に情報を与えます。曲線の形状、キャリーオーバー、そして8市場から全国への転移についての仮定が、結果の一部として残ります。Searchではブロックと傾きは近く、1.50に対して埋め込んだ真値は1.57です。TV/CTVのような減衰の遅いチャネルではそうならないことを、<a href="sec6.5-when-tools-disagree.html">Section 6.5</a>が示します。</p>
-<p>この変換は3つの部分からなります。<strong>期間</strong>は、テスト期間が取りこぼしたキャリーオーバーの分だけ中心を補正します。8週目に行った削減は9週目と10週目にも売上を失わせるため、Searchの半減期が1週間でも、8週間続けた削減の効果の約12%はウィンドウの後に発生し、中心は1.50から1.71へ動きます。この割合は、毎週同じ変化量と線形のキャリーオーバー重みを仮定した近似であり、飽和と実際の支出経路によって変わりえます。TV/CTVのような減衰の遅いチャネルなら、補正は数倍大きくなります。<strong>支出スケール</strong>は事前分布の幅を広げます。8つのテスト市場は全国の支出率の約5分の1で稼働しており、テストがチャネルの規模から離れるほど、その結果が他の地域にも当てはまると仮定しにくくなります。この項が標準誤差を0.257から0.64へ広げ、後述の変換の不確実性がそれを0.69にします。実験自体の精度は十分でした。事前分布を広げたのは、8市場がチャネル全体の5分の1にすぎないという事実です。ノートブックは各項を出力し、ここではほとんど効かない小さな2項も併せて示します。</p>
-<p><strong>変換の不確実性</strong>が3つ目の部分です。これはMeridianの指針にはなく、本書で加えたものです。30%のブロックと1%の傾きの間の隔たりはモデル化上の仮定なので、中心に対する一定の割合、ここでは15%を幅に加えます。こうすれば、非常に精密な実験でも、傾きを正確に知っていると主張する事前分布は生まれません。他の4チャネルは弱い限界ROI事前分布<code>LogNormal(-0.49, 0.90)</code>を保ちます。これはSection 6.2の弱いROAS事前分布を限界スケールで表し直したものです。これ以上平坦にしてはいけません。飽和曲線上で限界ROIに拡散的な事前分布を置くと平均ROIの上限がなくなり、未較正のチャネルの区間が意味をなさないほど広がります。</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> tensorflow <span class="im">as</span> tf</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> tensorflow_probability <span class="im">as</span> tfp</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> meridian <span class="im">import</span> constants</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> meridian.model <span class="im">import</span> prior_distribution, spec</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>channels <span class="op">=</span> <span class="bu">list</span>(data.media_channel.values)</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>target <span class="op">=</span> channels.index(<span class="st">"Google Search"</span>)</span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Weak marginal-ROI prior for every channel, then the experiment on Search.</span></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>mroi_mu <span class="op">=</span> np.full(<span class="bu">len</span>(channels), <span class="fl">0.2</span> <span class="op">+</span> np.log(<span class="fl">0.5</span>))</span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>mroi_sigma <span class="op">=</span> np.full(<span class="bu">len</span>(channels), <span class="fl">0.9</span>)</span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>mroi_mu[target], mroi_sigma[target] <span class="op">=</span> <span class="fl">0.4635</span>, <span class="fl">0.3877</span>   <span class="co"># centre 1.71, SE 0.69, from the translation above</span></span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>prior <span class="op">=</span> prior_distribution.PriorDistribution(</span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    mroi_m<span class="op">=</span>tfp.distributions.LogNormal(</span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>        loc<span class="op">=</span>tf.constant(mroi_mu, dtype<span class="op">=</span>tf.float32),</span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>        scale<span class="op">=</span>tf.constant(mroi_sigma, dtype<span class="op">=</span>tf.float32),</span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>        name<span class="op">=</span>constants.MROI_M,</span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    ),</span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>    alpha_m<span class="op">=</span>prior.alpha_m,        <span class="co"># Section 6.2's adstock prior, reused as is</span></span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>    ec_m<span class="op">=</span>prior.ec_m,              <span class="co"># Section 6.2's saturation prior, reused as is</span></span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="co"># Same lag, same holdout weeks as Section 6.2, so the only change is the prior.</span></span>
-<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>model_spec <span class="op">=</span> spec.ModelSpec(prior<span class="op">=</span>prior, media_prior_type<span class="op">=</span><span class="st">"mroi"</span>, max_lag<span class="op">=</span><span class="dv">12</span>,</span>
-<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>                            adstock_decay_spec<span class="op">=</span><span class="st">"geometric"</span>, holdout_id<span class="op">=</span>holdout_id)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
-<p>そのうえで、ROASの表を後から書き換えるのではなく、モデルを再適合します。較正したチャネルは証拠へ近づくはずですが、正確に1.500へ着地する必要はありません。尤度、曲線、事前分布のすべてが結果に関与するからです。1つのチャネルを狭めると、相関する他のチャネルとの間で寄与の配分も変わるため、再適合後は全チャネルと全体の適合を読みます。</p>
-</section>
-<section id="sec-calibration-what-changed" class="level2">
-<h2 class="anchored" data-anchor-id="sec-calibration-what-changed">何が変わったか？</h2>
-<p>公平に比較するため、3つの適合を使います。基準となるSection 6.2のモデル、実験なしで限界ROI事前分布へ切り替えた対照適合、そして較正後の適合です。地域テストを見たのは最後の1つだけなので、最後の2列の差は証拠そのものであり、それ以外の要因を含みません。最初の2列の差は事前分布の指定の変更です。最初の行は、支出の対比とウィンドウの長さを実験に揃えています。カレンダー上の日付と地理的な範囲は依然として異なります。</p>
+<section id="step-2-converting-the-experiment-into-a-prior" class="level2">
+<h2 class="anchored" data-anchor-id="step-2-converting-the-experiment-into-a-prior">ステップ2：実験を事前分布に変換する</h2>
+<p><code>media_prior_type="mroi"</code>を指定すると、Meridianは事前分布を限界ROASに置きます。実験のiROASは限界ROASに近いものの、同じではありません。実験が対象としたのは、8市場で8週間行った30%の削減です。限界ROASは、全国での次の1ドルについての値で、後から発生する売上も含みます。この違いのそれぞれに、調整が必要です（<a href="#tbl-translation-terms" class="quarto-xref">表&nbsp;<span>1</span></a>）。</p>
+<div id="tbl-translation-terms" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-translation-terms-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+表&nbsp;1: 3つの調整。付属ノートブックより。
+</figcaption>
+<div aria-describedby="tbl-translation-terms-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <table class="caption-top table">
 <thead>
 <tr class="header">
-<th>Google Search</th>
-<th>6.2の基準</th>
-<th>前（対照）</th>
-<th>後（較正）</th>
+<th style="text-align: left;">調整</th>
+<th style="text-align: left;">何を補正するか</th>
+<th style="text-align: left;">Searchの事前分布への効果</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>テストした削減の予測コスト</td>
-<td>2.95 [0.34, 8.48]</td>
-<td>1.75 [0.16, 6.29]</td>
-<td><strong>1.82 [0.84, 3.32]</strong></td>
+<td style="text-align: left;">期間</td>
+<td style="text-align: left;">8週間の測定期間が終わった後に失われた売上</td>
+<td style="text-align: left;">中心が1.50から1.71へ、標準誤差が0.257から0.29へ</td>
 </tr>
 <tr class="even">
-<td>平均ROAS</td>
-<td>4.06 [0.46, 11.67]</td>
-<td>2.63 [0.22, 9.58]</td>
-<td><strong>2.82 [1.14, 5.26]</strong></td>
+<td style="text-align: left;">支出スケール</td>
+<td style="text-align: left;">テスト市場は全国のSearch支出の約5分の1</td>
+<td style="text-align: left;">標準誤差が0.29から0.64へ</td>
 </tr>
 <tr class="odd">
-<td>限界ROAS</td>
-<td>3.29 [0.36, 9.51]</td>
-<td>1.95 [0.18, 7.03]</td>
-<td><strong>2.00 [0.93, 3.63]</strong></td>
-</tr>
-<tr class="even">
-<td>相対半幅</td>
-<td>1.39</td>
-<td>1.76</td>
-<td><strong>0.67</strong></td>
-</tr>
-<tr class="odd">
-<td>Section 6.2の幅ルール</td>
-<td>広すぎる</td>
-<td>広すぎる</td>
-<td><strong>満たす</strong></td>
-</tr>
-<tr class="even">
-<td>オプティマイザーの移動</td>
-<td>−30.0%</td>
-<td>−30.0%</td>
-<td>−30.0%</td>
+<td style="text-align: left;">変換の不確実性</td>
+<td style="text-align: left;">30%の削減を次の1ドルの代わりに使う</td>
+<td style="text-align: left;">標準誤差が0.64から0.69へ</td>
 </tr>
 </tbody>
 </table>
-<p>較正で大きく変わったのは、点推定値ではなく区間の幅です。対照適合と比べると、較正はSearchの限界リターンを1.95から2.00へ動かし（埋め込んだ真値は1.57）、相対半幅を1.76から0.67へ縮めました。テストした削減に対するモデル予測は、測定値1.50に対して1.75から1.82へ動きました。<a href="#fig-response-curve-calibrated" class="quarto-xref">図&nbsp;<span>3</span></a> は、その変化を曲線に沿って示しています。基準適合は3付近を読み、そのバンドは1桁分の幅にわたります。対照適合は2未満を読み、バンドは同じ幅です。較正後の曲線は、3分の1の幅のバンドで実験の区間を通ります。基準適合と較正後の適合の間のより大きな差は、実験ではなく主に事前分布の指定の変更によるもので、対照の列があるのはそのためです。</p>
-<div id="fig-response-curve-calibrated" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="6.2節の基準、対照適合、較正適合について、支出倍率ごとに、Google Searchの支出を現在の水準から動かしたときのリターンを示す。較正曲線は対照よりはるかに狭いバンドを持ち、支出70%の実験区間を通る。">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-response-curve-calibrated-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part6/sec6.4/response_curve_calibrated.png" class="fig-lg img-fluid figure-img" alt="6.2節の基準、対照適合、較正適合について、支出倍率ごとに、Google Searchの支出を現在の水準から動かしたときのリターンを示す。較正曲線は対照よりはるかに狭いバンドを持ち、支出70%の実験区間を通る。">
 </div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-response-curve-calibrated-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-図&nbsp;3: 3つの適合によるGoogle Searchの反応曲線（90%信用バンド）と、重ねた実験の95%信頼区間。
-</figcaption>
 </figure>
 </div>
-<p>較正後も分からないことが2つあります。平均ROASの行は、埋め込んだ真値3.30に対して2.82に着地し、区間は5.3まで届きます。実験はゼロからのリターンを一度も測っていないので、この行はモデルの外挿であって証拠ではありません。Section 6.2の幅ルールは今や満たされますが、そのルールが確認するのは精度であって収益性ではありません。削減そのものはSection 6.3の閾値で決着しており、解放された予算がOOHとMetaへ向かうのは、両者の限界リターンの区間が2.6と3.6から始まり、Searchの推定値2.0を上回るからです。ただし、Searchの区間上限は上回りません。Searchはすべての列で−30%の下限にとどまり（<a href="#fig-allocation-before-after" class="quarto-xref">図&nbsp;<span>4</span></a>）、TV/CTVとTikTokはわずかに動きますが、その大半は基準適合と対照適合の間、つまり実験ではなく事前分布の指定によるものです。市場でクラスタ化した狭い方の幅で同じ較正を行うと、限界推定値は1.85、半幅は0.48になり、配分はやはり動きません。したがって、実験は所定の利益率とウィンドウの下でテストした削減を支持し、較正はその証拠を配分モデルへ運びます。そしてモデルが提案する再配分は、反応曲線、8市場から全国への転移、そしてオプティマイザーには見えない事業上の制約を条件としたままです。</p>
-<div id="fig-allocation-before-after" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="基準、対照、較正の適合について、チャネル別のオプティマイザー支出変更を示す。Google Searchは3つすべてでマイナス30%の制約下限にあり、TV/CTVとTikTokは基準と対照の適合の間で動く。">
+<p><strong>期間</strong>は、事前分布の中心を引き上げます。8週目に行った削減は、測定を終えた後の9週目と10週目にも売上を減らします。Searchの半減期は1週間なので、効果の約12%が測定期間の外に出ます。TV/CTVのような減衰の遅いチャネルでは、8週間の測定期間は効果の約半分を取りこぼします。</p>
+<p><strong>支出スケール</strong>と<strong>変換の不確実性</strong>は、事前分布の幅を広げます。テストが対象としたのは全国のSearch支出の約5分の1なので、チャネル全体に当てはめると結果の確かさは下がります。変換の不確実性は、中心の15%にあたる最小限の幅を加えます。30%の削減は、次の1ドルの近似にすぎないからです。</p>
+<p>3つの調整を経て、実験の1.50（標準誤差0.257）は、Searchの限界ROASについての、平均1.71、標準偏差0.69の事前分布になります。事前分布は、意図して実験より広くしてあります。実験は、テストした8市場については精密ですが、全国の限界ROASについてはそこまで精密ではありません。事前分布が表すのは後者です。</p>
+<p>期間と支出スケールは、実験を事前分布に変換する方法として<a href="https://developers.google.com/meridian/docs/advanced-modeling/set-custom-priors-past-experiments">Meridianが文書化している</a>調整に従っています。変換の不確実性は本書で加えたものです。Meridianの手順は支出ゼロとの比較による実験を想定していますが、今回の実験は部分的な削減だったからです。</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Imports as in Section 6.2. Both helpers are defined in notebook Step 15.</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>center, se <span class="op">=</span> calibrated_prior_moments(</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    estimate<span class="op">=</span><span class="fl">1.500</span>, standard_error<span class="op">=</span><span class="fl">0.257</span>,</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    capture_proportion<span class="op">=</span><span class="fl">0.8756</span>,       <span class="co"># duration: share of the effect inside 8 weeks</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="co"># taus: duration, spend scale, recency (zero, because the test is recent)</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    taus<span class="op">=</span>[<span class="fl">0.142</span>, <span class="fl">3.606</span>, <span class="fl">0.000</span>],</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    translation_share<span class="op">=</span><span class="fl">0.15</span>,          <span class="co"># translation uncertainty</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>)                                    <span class="co"># -&gt; center 1.71, SE 0.69</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>search_mu, search_sigma <span class="op">=</span> lognormal_from_mean_std(center, se)</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="co"># mroi_mu, mroi_sigma: one entry per channel. Search gets search_mu and</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="co"># search_sigma; the other four keep a weak prior (notebook Step 15).</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>calibrated_prior <span class="op">=</span> prior_distribution.PriorDistribution(</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    mroi_m<span class="op">=</span>tfp.distributions.LogNormal(</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>        loc<span class="op">=</span>tf.constant(mroi_mu, dtype<span class="op">=</span>tf.float32),</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>        scale<span class="op">=</span>tf.constant(mroi_sigma, dtype<span class="op">=</span>tf.float32),</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>        name<span class="op">=</span>constants.MROI_M,</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    <span class="co"># adstock and saturation priors from Section 6.2</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    alpha_m<span class="op">=</span>prior.alpha_m, ec_m<span class="op">=</span>prior.ec_m,</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="co"># Same lag and holdout weeks as Section 6.2, so the only change is the prior.</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>calibrated_spec <span class="op">=</span> spec.ModelSpec(</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>    prior<span class="op">=</span>calibrated_prior, media_prior_type<span class="op">=</span><span class="st">"mroi"</span>, max_lag<span class="op">=</span><span class="dv">12</span>,</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>    adstock_decay_spec<span class="op">=</span><span class="st">"geometric"</span>, holdout_id<span class="op">=</span>holdout_id,</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+<p>残り4チャネルは、弱い事前分布のままにします。そのうえで、同じデータ、同じ設定でモデルをもう一度適合します。</p>
+</section>
+<section id="sec-calibration-what-changed" class="level2">
+<h2 class="anchored" data-anchor-id="sec-calibration-what-changed">ステップ3：キャリブレーションの前後でモデルを比べる</h2>
+<p>実験によって何が変わったかを見るために、Searchの事前分布だけが違う2つの適合を比べます。どちらも限界ROASの事前分布を使います。1つ目はすべてのチャネルに弱い事前分布を置き、2つ目はSearchに実験に基づく事前分布を置きます（<a href="#tbl-calibration-comparison" class="quarto-xref">表&nbsp;<span>2</span></a>）。ここではSection 6.2のモデルを基準にしません。あのモデルは平均ROASの事前分布を使っており、比べると2つの変更が混ざってしまうからです。</p>
+<div id="tbl-calibration-comparison" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-calibration-comparison-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+表&nbsp;2: 実験なしと実験ありのGoogle Searchを、データに埋め込んだ真値と比べる。角括弧は90%信用区間。
+</figcaption>
+<div aria-describedby="tbl-calibration-comparison-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Google Search</th>
+<th style="text-align: left;">実験なし</th>
+<th style="text-align: left;">実験あり</th>
+<th style="text-align: right;">真値</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">限界ROAS</td>
+<td style="text-align: left;">1.95 [0.18, 7.03]</td>
+<td style="text-align: left;">2.00 [0.93, 3.63]</td>
+<td style="text-align: right;">1.57</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">30%削減のiROAS</td>
+<td style="text-align: left;">1.75 [0.16, 6.29]</td>
+<td style="text-align: left;">1.82 [0.84, 3.32]</td>
+<td style="text-align: right;">1.50</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">平均ROAS</td>
+<td style="text-align: left;">2.63 [0.22, 9.58]</td>
+<td style="text-align: left;">2.82 [1.14, 5.26]</td>
+<td style="text-align: right;">3.30</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<p>推定値はほとんど変わりませんでした。限界ROASは、実験なしで1.95、実験ありで2.00です。大きく変わったのは不確実性です。90%区間は[0.18, 7.03]から[0.93, 3.63]になり、幅は半分以下です。</p>
+<p>これによって、モデルがSearchについて使えるようになります。Section 6.2では、区間が広すぎたためSearchの推奨を保留にしました。キャリブレーション後の区間は、その基準を満たします。</p>
+<p>Searchについての予算の推奨は、どちらの適合でも同じです。30%の削減で、オプティマイザーに許された最大幅です（<a href="#fig-allocation-before-after" class="quarto-xref">図&nbsp;<span>3</span></a>）。キャリブレーションは方向を変えず、その推奨を支えられるだけの精度をモデルに与えました。</p>
+<div id="fig-allocation-before-after" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Section 6.2のモデル、実験なしの適合、実験ありの適合について、チャネル別のオプティマイザー支出変更を示す。Google Searchは3つすべてでマイナス30%の上限にある。">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-allocation-before-after-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part6/sec6.4/allocation_before_after.png" class="fig-lg img-fluid figure-img" alt="基準、対照、較正の適合について、チャネル別のオプティマイザー支出変更を示す。Google Searchは3つすべてでマイナス30%の制約下限にあり、TV/CTVとTikTokは基準と対照の適合の間で動く。">
+<img src="../images/part6/sec6.4/allocation_before_after.png" class="fig-lg img-fluid figure-img" alt="Section 6.2のモデル、実験なしの適合、実験ありの適合について、チャネル別のオプティマイザー支出変更を示す。Google Searchは3つすべてでマイナス30%の上限にある。">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-allocation-before-after-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-図&nbsp;4: 3つの適合すべてにおけるオプティマイザー配分。
+図&nbsp;3: 3つの適合でのオプティマイザー配分。
 </figcaption>
 </figure>
 </div>
+<p>残りのチャネルについて、キャリブレーション後のモデルはOOHとMetaの30%増額、TV/CTVの16.4%削減、TikTokの11.4%削減を推奨します。TV/CTVとTikTokの数値は、30.0%と0.2%の削減だったSection 6.2とは異なります。<a href="#fig-allocation-before-after" class="quarto-xref">図&nbsp;<span>3</span></a> は、この変化がどこから来たかを示しています。変化は実験なしの適合ですでに現れているので、原因は限界ROASの事前分布への切り替えです。</p>
 </section>
-<section id="before-acting-on-the-calibrated-plan" class="level2">
-<h2 class="anchored" data-anchor-id="before-acting-on-the-calibrated-plan">較正後の計画で行動する前に</h2>
-<p>レビュー会議で問うべき順番に、4つの問いを示します。</p>
-<ol type="1">
-<li><strong>推定対象の整合性。</strong> 実験は、同じ成果、同じ対比、そして推奨が実際に訪れる運用点を測っているか。</li>
-<li><strong>実験の信頼性。</strong> 意思決定に必要な検出力があり、設計どおり配信され、波及とカレンダーショックがなかったか。</li>
-<li><strong>モデルの健全性。</strong> 再適合後も、適合、反応曲線、他チャネルは妥当か。</li>
-<li><strong>意思決定の安定性。</strong> 正当化できる変換幅の範囲で、推奨行動は維持されるか。その間で反転するなら、点推定値が何を示しても証拠は意思決定を解決していません。</li>
-</ol>
-<p>データ品質と一般的なモデル検証は<a href="sec6.2-mmm-fundamentals.html#sec-mmm-data-requirements">Section 6.2</a>で扱っており、ここで繰り返す必要はありません。</p>
-<p>すべてのチャネルで実験する必要はありません。支出が重要で、モデルの区間が広く、結果が行動を変えうる場所をテストします。Section 6.2の意思決定カードのように、各テストの前にモデルの予測を記録します。次の配分の前にモデルを更新し、次のテストも同じ3つの条件で選びます。</p>
+<section id="using-the-calibrated-plan" class="level2">
+<h2 class="anchored" data-anchor-id="using-the-calibrated-plan">キャリブレーション後の計画を使う</h2>
+<p><span id="sec-measurement-disagreement"></span>キャリブレーション後の計画には2種類の推奨が含まれており、扱い方が違います。</p>
+<p><strong>Searchの削減はテスト済みなので、実行に進めます。</strong> 段階的に展開します。削減をより多くの市場に広げ、無作為に選んだ一部の市場を従来の予算のまま対照として残し、iROASが2.50を下回り続けることを確かめます。</p>
+<p>モデルは、Searchの削減で浮いた予算をOOHとMetaに回し、それぞれ30%増額することを提案しています。どちらかを、無作為化したマッチドペアで30%増額し、開始前にモデルのiROASの予測を記録し、その結果でもう一度キャリブレーションします。一般に、支出が大きく、モデルの区間が広く、結果によって計画が変わりうるチャネルをテストします。</p>
+<p><strong>プラットフォームのダッシュボードが答えるのは、もっと狭い問いです。</strong> Searchのダッシュボードは、<strong>アトリビューション</strong>に基づくROASを報告します。Search広告のクリックに続くすべての注文を数え、広告がなくても発生した注文も含みます。そのため、その数値は通常、実験のiROASより高くなります。ダッシュボードはSearchの中でキーワードやクリエイティブを比べるために使い、Searchの予算を決めるには実験とMMMを使います。</p>
+<p>これがPart 6全体の進め方です。MMMが全チャネルの予算を提案します。実験は、不確かで、かつ影響の大きい推奨をテストします。キャリブレーションが実験の結果をモデルに戻し、次のテストでこのサイクルを繰り返します。</p>
 </section>
 <section id="key-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="key-takeaways">重要なポイント</h2>
 <ul>
-<li>較正の前に推定対象を一致させる。1つの支出ブロックの測定値は、近似的な変換を通じて限界パラメータに情報を与え、その変換に含まれる仮定は幅として一緒に運ばれる。</li>
-<li>モデル全体を再適合し、対照適合を残す。証拠の効果を、事前分布の指定の変更と切り分けるためである。ここでは、証拠はSearchの推定値をほとんど動かさず、区間を3分の2縮めた。</li>
-<li>較正は、配分のどこまでを支持できるようになったかで判断する。実験が削減を決め、較正はそれを配分モデルへ運んだ。そのモデルの再配分は、依然として曲線、転移の仮定、事業上の制約に依存している。</li>
+<li>キャリブレーションは、実験の結果をMMMの事前分布として使う。これによりモデルは、テストしたチャネルについては実験に、それ以外については履歴データに頼る。</li>
+<li>結果は、実験が測った量に置く。部分的な削減は限界ROASに最も近く、平均ROASに置くと、ここでは推定値が約40%低くなった。</li>
+<li>事前分布は実験より広くする。後の週、テストしていない市場、部分的な削減と次の1ドルの差を見込むためである。キャリブレーションはSearchの推定値をほとんど動かさず、区間を大きく狭めた。</li>
 </ul>
 
 
@@ -804,15 +819,50 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
   window.document.addEventListener("DOMContentLoaded", function (event) {
     // Ensure there is a toggle, if there isn't float one in the top right
     if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
-      const a = window.document.createElement('a');
-      a.classList.add('top-right');
-      a.classList.add('quarto-color-scheme-toggle');
-      a.href = "";
-      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const toggle = window.document.createElement('button');
+      toggle.type = "button";
+      toggle.setAttribute("role", "switch");
+      toggle.setAttribute("aria-checked", "false");
+      toggle.classList.add('top-right');
+      toggle.classList.add('quarto-color-scheme-toggle');
+      toggle.setAttribute("aria-label", "ダークモードの切り替え");
+      toggle.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
       const i = window.document.createElement("i");
       i.classList.add('bi');
-      a.appendChild(i);
-      window.document.body.appendChild(a);
+      toggle.appendChild(i);
+      // Put the toggle in a landmark of its own, so that landmark navigation
+      // can reach it.
+      //
+      // The container is always a fresh direct child of body, and the toggle is
+      // never moved into page furniture that the theme or the author controls.
+      // The toggle is positioned against the page, so any ancestor that
+      // establishes a containing block captures it: a positioned element or a
+      // grid for position: absolute, and transform, filter, will-change or
+      // contain for position: fixed. A direct child of body has none of these
+      // to inherit, and the shift when one appears is silent and visual.
+      //
+      // ARIA says a document should have at most one banner, and axe reports a
+      // duplicate whether or not the banners carry distinct labels. So use a
+      // header when the page has no banner yet, and a named region otherwise.
+      //
+      // A header is a banner wherever it sits, unless it is inside sectioning
+      // content, so this cannot just look at the children of body: a custom
+      // page layout wraps the title block header in a plain div. An explicit
+      // role="banner" always counts.
+      const sectioning = 'article, aside, main, nav, section, [role="article"], [role="complementary"], [role="main"], [role="navigation"], [role="region"]';
+      const hasBanner = Array.from(
+        window.document.querySelectorAll('header:not([role]), [role="banner"]')
+      ).some(function(el) {
+        return el.hasAttribute("role") || el.closest(sectioning) === null;
+      });
+      const container = window.document.createElement(hasBanner ? "div" : "header");
+      if (hasBanner) {
+        container.setAttribute("role", "region");
+        container.setAttribute("aria-label", "ダークモードの切り替え");
+      }
+      container.classList.add('quarto-color-scheme-toggle-container');
+      container.appendChild(toggle);
+      window.document.body.appendChild(container);
     }
     setColorSchemeToggle(hasAlternateSentinel())
     const icon = "";
@@ -891,7 +941,8 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }
       // Inspect non-navigation links and adorn them if external
-     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      window.quartoDecorateExternalLinks = function (root) {
+     var links = (root || window.document).querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
       for (var i=0; i<links.length; i++) {
         const link = links[i];
         if (!isInternal(link.href)) {
@@ -900,8 +951,69 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
           if (link.dataset.originalHref !== undefined) {
             link.href = link.dataset.originalHref;
           }
+          if (!link.classList.contains('no-external-icon')) {
+          }
         }
       }
+      };
+      window.quartoDecorateExternalLinks(window.document);
+    // Esc closes the popup (WCAG 1.4.13) and focus leaving both trigger and
+    // popup closes it (WCAG 2.4.11); tippy handles neither for interactive popups.
+    const hideOnEscAndFocusOut = {
+      name: 'hideOnEscAndFocusOut',
+      defaultValue: true,
+      fn(instance) {
+        const dismiss = () => {
+          // A show scheduled by the trigger delay would otherwise reopen it
+          instance.clearDelayTimeouts();
+          instance.hide();
+        };
+        const onKeyDown = (event) => {
+          if (event.key !== 'Escape') {
+            return;
+          }
+          // Keep Esc from also reaching page handlers (e.g. reveal.js overview),
+          // except an open reveal.js slide menu, which Esc should close too.
+          // The menu handles keys only when its keyboard option is on.
+          const menuHandlesEsc = window.Reveal?.getPlugin?.('menu')?.isOpen() &&
+            window.Reveal.getConfig().menu?.keyboard !== false;
+          if (!menuHandlesEsc) {
+            event.stopPropagation();
+          }
+          if (instance.popper.contains(window.document.activeElement)) {
+            // Disabled while refocusing so the focus trigger does not reopen it
+            instance.disable();
+            instance.reference.focus();
+            instance.enable();
+          }
+          dismiss();
+        };
+        const onFocusOut = (event) => {
+          const target = event.relatedTarget;
+          if (target && !instance.reference.contains(target) &&
+              !instance.popper.contains(target)) {
+            dismiss();
+          }
+        };
+        // On the trigger too: a click trigger (code-annotations: select) has no
+        // blur handling. Attached for the instance's lifetime so leaving the
+        // trigger also cancels a show still pending on the trigger delay.
+        instance.reference.addEventListener('focusout', onFocusOut);
+        return {
+          onShow() {
+            window.document.addEventListener('keydown', onKeyDown, true);
+            instance.popper.addEventListener('focusout', onFocusOut);
+          },
+          onHide() {
+            window.document.removeEventListener('keydown', onKeyDown, true);
+            instance.popper.removeEventListener('focusout', onFocusOut);
+          },
+          onDestroy() {
+            instance.reference.removeEventListener('focusout', onFocusOut);
+          },
+        };
+      },
+    };
     function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
       const config = {
         allowHTML: true,
@@ -915,6 +1027,7 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
         interactiveBorder: 10,
         theme: 'quarto',
         placement: 'bottom-start',
+        plugins: [hideOnEscAndFocusOut],
       };
       if (contentFn) {
         config.content = contentFn;
@@ -1077,44 +1190,54 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
           const lineIds = lines.map((line) => {
             return targetCell + "-" + line;
           })
-          let top = null;
-          let height = null;
-          let parent = null;
+          // Each band is positioned against its own containing block, which is
+          // not the offsetParent of the lines, so place it from client rects.
+          const placeBand = (band, firstEl, lastEl, codeBlock) => {
+            const container = band.offsetParent;
+            if (container === null) {
+              return;
+            }
+            const containerRect = container.getBoundingClientRect();
+            // Reveal.js scales slides with a transform, so convert client
+            // pixels back to the CSS pixels of the container.
+            const scale = containerRect.height / container.offsetHeight || 1;
+            const firstRect = firstEl.getBoundingClientRect();
+            const lastRect = lastEl.getBoundingClientRect();
+            const top = (firstRect.top - containerRect.top) / scale - container.clientTop + container.scrollTop;
+            const height = (lastRect.bottom - firstRect.top) / scale;
+            band.style.top = top - 2 + "px";
+            band.style.height = height + 4 + "px";
+            if (codeBlock) {
+              // Without the copy button wrapper, the containing block is wider
+              // than the code block, so span the code block explicitly.
+              const blockRect = codeBlock.getBoundingClientRect();
+              band.style.left = (blockRect.left - containerRect.left) / scale - container.clientLeft + container.scrollLeft + "px";
+              band.style.width = blockRect.width / scale + "px";
+            }
+          };
           if (lineIds.length > 0) {
-              //compute the position of the single el (top and bottom and make a div)
-              const el = window.document.getElementById(lineIds[0]);
-              top = el.offsetTop;
-              height = el.offsetHeight;
-              parent = el.parentElement.parentElement;
-            if (lineIds.length > 1) {
-              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
-              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
-              height = bottom - top;
+            const el = window.document.getElementById(lineIds[0]);
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const parent = el.parentElement.parentElement;
+            // cook up a div (if necessary) and position it
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
             }
-            if (top !== null && height !== null && parent !== null) {
-              // cook up a div (if necessary) and position it 
-              let div = window.document.getElementById("code-annotation-line-highlight");
-              if (div === null) {
-                div = window.document.createElement("div");
-                div.setAttribute("id", "code-annotation-line-highlight");
-                div.style.position = 'absolute';
-                parent.appendChild(div);
-              }
-              div.style.top = top - 2 + "px";
-              div.style.height = height + 4 + "px";
-              div.style.left = 0;
-              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
-              if (gutterDiv === null) {
-                gutterDiv = window.document.createElement("div");
-                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
-                gutterDiv.style.position = 'absolute';
-                const codeCell = window.document.getElementById(targetCell);
-                const gutter = codeCell.querySelector('.code-annotation-gutter');
-                gutter.appendChild(gutterDiv);
-              }
-              gutterDiv.style.top = top - 2 + "px";
-              gutterDiv.style.height = height + 4 + "px";
+            placeBand(div, el, lastEl, parent.closest("div.sourceCode") || parent);
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
             }
+            placeBand(gutterDiv, el, lastEl);
             selectedAnnoteEl = annoteEl;
           }
         };
@@ -1213,15 +1336,18 @@ gtag('config', 'G-YY0LCGYER5', { 'anonymize_ip': true});
     }
   });
   </script>
-<nav class="page-navigation">
+  <script type="application/javascript">
+  window.quartoScrollableRegionsLabels = {"code":"スクロール可能なコード","output":"スクロール可能な出力"};
+  </script>
+<nav class="page-navigation" aria-label="ページ">
   <div class="nav-page nav-page-previous">
-      <a href="../part6/sec6.3-incrementality-experiments.html" class="pagination-link" aria-label="6.3 増分効果実験">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">6.3 増分効果実験</span></span>
+      <a href="../part6/sec6.3-incrementality-experiments.html" class="pagination-link" aria-label="6.3 インクリメンタリティ実験">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">6.3 インクリメンタリティ実験</span></span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="../part6/sec6.5-when-tools-disagree.html" class="pagination-link" aria-label="6.5 測定ツールが一致しないときの意思決定">
-        <span class="nav-page-text"><span class="chapter-title">6.5 測定ツールが一致しないときの意思決定</span></span> <i class="bi bi-arrow-right-short"></i>
+      <a href="../appendix/further-reading.html" class="pagination-link" aria-label="参考文献と追加資料">
+        <span class="nav-page-text">参考文献と追加資料</span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>

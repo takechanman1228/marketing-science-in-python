@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.10.19">
+<meta name="generator" content="quarto-1.11.9">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -77,18 +77,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../assets/favicon.png" rel="icon" type="image/png">
 <script src="../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/scrollable-regions/scrollable-regions.js" type="module"></script>
 <script src="../site_libs/quarto-html/popper.min.js"></script>
 <script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-b626d73c4c936ccc3cb08be7d45d1df6.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-447e42e69aaa9833c0ba1b986f430b20.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-743e9765ff591ca41f31e934d0cf4bf8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../site_libs/bootstrap/bootstrap-dark-c9719a0dd22d1eb90e3fd2c145c4e342.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../site_libs/bootstrap/bootstrap-743e9765ff591ca41f31e934d0cf4bf8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-549dcdc79fd547502b4b0b8b8ab3f938.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-1a8a0d276ffdcff0dc8a23f0b0b34c12.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-549dcdc79fd547502b4b0b8b8ab3f938.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
@@ -178,7 +179,7 @@ window.Quarto = {
 <!-- msbook-i18n-head:end -->
 </head>
 
-<body class="nav-sidebar floating quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+<body class="nav-sidebar floating quarto-light"><a id="quarto-skip-link" class="visually-hidden-focusable" href="#quarto-document-content">メインコンテンツにスキップ</a><script id="quarto-html-before-body" type="application/javascript">
     const toggleBodyColorMode = (bsSheetEl) => {
       const mode = bsSheetEl.getAttribute("data-mode");
       const bodyEl = window.document.querySelector("body");
@@ -201,6 +202,7 @@ window.Quarto = {
       for (let i=0; i < toggles.length; i++) {
         const toggle = toggles[i];
         if (toggle) {
+          toggle.setAttribute("aria-checked", alternate ? "true" : "false");
           if (alternate) {
             toggle.classList.add("alternate");
           } else {
@@ -230,13 +232,19 @@ window.Quarto = {
       manageTransitions('#quarto-margin-sidebar .nav-link', true);
       // Switch the toggles
       setColorSchemeToggle(alternate)
-      // Hack to workaround the fact that safari doesn't
-      // properly recolor the scrollbar when toggling (#1455)
+    }
+    // Hack to workaround the fact that safari doesn't
+    // properly recolor the scrollbar when toggling (#1455).
+    // Not run on load: stylesheets are set before first paint there, and
+    // scrolling would undo the scroll to a URL fragment (#14973).
+    // The one pixel nudge keeps the reader where they were.
+    const refreshSafariScrollbar = () => {
       if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
         manageTransitions("body", false);
-        window.scrollTo(0, 1);
+        const scrollY = window.scrollY;
+        window.scrollTo(0, scrollY > 0 ? scrollY - 1 : 1);
         setTimeout(() => {
-          window.scrollTo(0, 0);
+          window.scrollTo(0, scrollY);
           manageTransitions("body", true);
         }, 40);
       }
@@ -330,6 +338,7 @@ window.Quarto = {
       // Read the current dark / light value
       let toAlternate = !hasAlternateSentinel();
       toggleColorMode(toAlternate);
+      refreshSafariScrollbar();
       setStyleSentinel(toAlternate);
       toggleGiscusIfUsed(toAlternate, darkModeDefault);
       window.dispatchEvent(new Event('resize'));
@@ -344,13 +353,13 @@ window.Quarto = {
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
-  <nav class="quarto-secondary-nav">
+  <nav class="quarto-secondary-nav" aria-label="ツールバー">
     <div class="container-fluid d-flex">
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="サイドバーを切り替える" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part6/_part6.html">Part 6. メディア投資と最適化</a></li><li class="breadcrumb-item"><a href="../part6/sec6.2-mmm-fundamentals.html"><span class="chapter-title">6.2 MMMの構築と最適化</span></a></li></ol></nav>
-        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="サイドバーを切り替える" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        <nav class="quarto-page-breadcrumbs" aria-label="パンくずリスト"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part6/_part6.html">Part 6. メディア投資と最適化</a></li><li class="breadcrumb-item"><a href="../part6/sec6.2-mmm-fundamentals.html"><span class="chapter-title">6.2 MMMの構築と最適化</span></a></li></ol></nav>
+        <a class="flex-grow-1" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <!-- msbook-language-switch-mobile:start -->
 <div class="msbook-language-switch-mobile" aria-label="Language"><a lang="en" hreflang="en" href="../../part6/sec6.2-mmm-fundamentals.html" onclick="this.hash=window.location.hash">EN</a><span aria-hidden="true"> | </span><span lang="ja" aria-current="page">日本語</span><span aria-hidden="true"> | </span><a lang="fr" hreflang="fr" href="../../fr/part6/sec6.2-mmm-fundamentals.html" onclick="this.hash=window.location.hash">FR</a><span aria-hidden="true"> | </span><a lang="de" hreflang="de" href="../../de/part6/sec6.2-mmm-fundamentals.html" onclick="this.hash=window.location.hash">DE</a><span aria-hidden="true"> | </span><a lang="zh-Hans" hreflang="zh-Hans" href="../../zh/part6/sec6.2-mmm-fundamentals.html" onclick="this.hash=window.location.hash">中文</a></div>
@@ -364,7 +373,7 @@ window.Quarto = {
 <!-- content -->
 <div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
 <!-- sidebar -->
-  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto" aria-label="ウェブサイト">
     <div class="pt-lg-2 mt-2 text-left sidebar-header">
     <div class="sidebar-title mb-0 py-0">
       <a href="../">Marketing Science in Python</a> 
@@ -387,7 +396,7 @@ window.Quarto = {
           </li>
       </ul>
     </div>
-  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="ダークモードの切り替え"><i class="bi"></i></a>
+  <button type="button" role="switch" aria-checked="false" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="ダークモードの切り替え" aria-label="ダークモードの切り替え"><i class="bi"></i></button>
 </div>
     </div>
       </div>
@@ -407,12 +416,12 @@ window.Quarto = {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a href="../part1/_part1.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Part 1. はじめに</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
+ <span class="menu-text" id="quarto-sidebar-section-1-label">Part 1. はじめに</span></a>
+            <button type="button" class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-controls="quarto-sidebar-section-1" aria-expanded="true" aria-label="セクションを切り替え: Part 1. はじめに">
+              <i class="bi bi-chevron-right ms-2" aria-hidden="true"></i>
+            </button> 
       </div>
-      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+      <ul id="quarto-sidebar-section-1" aria-labelledby="quarto-sidebar-section-1-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../part1/sec1.1-what-is-marketing-science.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">1.1 マーケティングサイエンスとは何か？</span></a>
@@ -428,12 +437,12 @@ window.Quarto = {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a href="../part2/_part2.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Part 2. より良い意思決定のための分析</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
+ <span class="menu-text" id="quarto-sidebar-section-2-label">Part 2. より良い意思決定のための分析</span></a>
+            <button type="button" class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-controls="quarto-sidebar-section-2" aria-expanded="true" aria-label="セクションを切り替え: Part 2. より良い意思決定のための分析">
+              <i class="bi bi-chevron-right ms-2" aria-hidden="true"></i>
+            </button> 
       </div>
-      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+      <ul id="quarto-sidebar-section-2" aria-labelledby="quarto-sidebar-section-2-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../part2/sec2.1-right-question.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.1 正しい問いを設定する</span></a>
@@ -454,12 +463,12 @@ window.Quarto = {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a href="../part3/_part3.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Part 3. マーケティングのための因果推論</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
+ <span class="menu-text" id="quarto-sidebar-section-3-label">Part 3. マーケティングのための因果推論</span></a>
+            <button type="button" class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-controls="quarto-sidebar-section-3" aria-expanded="true" aria-label="セクションを切り替え: Part 3. マーケティングのための因果推論">
+              <i class="bi bi-chevron-right ms-2" aria-hidden="true"></i>
+            </button> 
       </div>
-      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+      <ul id="quarto-sidebar-section-3" aria-labelledby="quarto-sidebar-section-3-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../part3/sec3.1-thinking-causally.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.1 因果的に考える</span></a>
@@ -495,12 +504,12 @@ window.Quarto = {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a href="../part4/_part4.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Part 4. 顧客分析</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
+ <span class="menu-text" id="quarto-sidebar-section-4-label">Part 4. 顧客分析</span></a>
+            <button type="button" class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" aria-controls="quarto-sidebar-section-4" aria-expanded="true" aria-label="セクションを切り替え: Part 4. 顧客分析">
+              <i class="bi bi-chevron-right ms-2" aria-hidden="true"></i>
+            </button> 
       </div>
-      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+      <ul id="quarto-sidebar-section-4" aria-labelledby="quarto-sidebar-section-4-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../part4/sec4.1-segmentation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">4.1 顧客セグメンテーション</span></a>
@@ -516,12 +525,12 @@ window.Quarto = {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a href="../part5/_part5.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Part 5. コマーシャル分析</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
+ <span class="menu-text" id="quarto-sidebar-section-5-label">Part 5. コマーシャル分析</span></a>
+            <button type="button" class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" aria-controls="quarto-sidebar-section-5" aria-expanded="true" aria-label="セクションを切り替え: Part 5. コマーシャル分析">
+              <i class="bi bi-chevron-right ms-2" aria-hidden="true"></i>
+            </button> 
       </div>
-      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+      <ul id="quarto-sidebar-section-5" aria-labelledby="quarto-sidebar-section-5-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../part5/sec5.1-price-elasticity.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.1 価格弾力性と価格設定の意思決定</span></a>
@@ -542,12 +551,12 @@ window.Quarto = {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a href="../part6/_part6.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Part 6. メディア投資と最適化</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="セクションを切り替え">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
+ <span class="menu-text" id="quarto-sidebar-section-6-label">Part 6. メディア投資と最適化</span></a>
+            <button type="button" class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" aria-controls="quarto-sidebar-section-6" aria-expanded="true" aria-label="セクションを切り替え: Part 6. メディア投資と最適化">
+              <i class="bi bi-chevron-right ms-2" aria-hidden="true"></i>
+            </button> 
       </div>
-      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+      <ul id="quarto-sidebar-section-6" aria-labelledby="quarto-sidebar-section-6-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../part6/sec6.1-media-measurement-problem.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.1 メディア測定の問題</span></a>
@@ -560,17 +569,12 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part6/sec6.3-incrementality-experiments.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.3 増分効果実験</span></a>
+  <a href="../part6/sec6.3-incrementality-experiments.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.3 インクリメンタリティ実験</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part6/sec6.4-mmm-calibration.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.4 実験によるMMMの較正</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../part6/sec6.5-when-tools-disagree.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.5 測定ツールが一致しないときの意思決定</span></a>
+  <a href="../part6/sec6.4-mmm-calibration.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.4 実験によるMMMのキャリブレーション</span></a>
   </div>
 </li>
       </ul>
@@ -603,7 +607,7 @@ window.Quarto = {
 <div class="msbook-language-switch" aria-label="Language"><a lang="en" hreflang="en" href="../../part6/sec6.2-mmm-fundamentals.html" onclick="this.hash=window.location.hash">English</a><span aria-hidden="true"> | </span><span lang="ja" aria-current="page">日本語</span><span aria-hidden="true"> | </span><a lang="fr" hreflang="fr" href="../../fr/part6/sec6.2-mmm-fundamentals.html" onclick="this.hash=window.location.hash">Français</a><span aria-hidden="true"> | </span><a lang="de" hreflang="de" href="../../de/part6/sec6.2-mmm-fundamentals.html" onclick="this.hash=window.location.hash">Deutsch</a><span aria-hidden="true"> | </span><a lang="zh-Hans" hreflang="zh-Hans" href="../../zh/part6/sec6.2-mmm-fundamentals.html" onclick="this.hash=window.location.hash">中文</a></div>
 <!-- msbook-language-switch:end -->
 
-        <nav id="TOC" role="doc-toc" class="toc-active">
+        <nav id="TOC" role="doc-toc" aria-labelledby="toc-title" class="toc-active">
     <h2 id="toc-title">目次</h2>
    
   <ul>
@@ -613,17 +617,26 @@ window.Quarto = {
   <li><a href="#adstock-carryover-effects" id="toc-adstock-carryover-effects" class="nav-link" data-scroll-target="#adstock-carryover-effects">アドストック（キャリーオーバー効果）</a></li>
   <li><a href="#sec-mmm-data-requirements" id="toc-sec-mmm-data-requirements" class="nav-link" data-scroll-target="#sec-mmm-data-requirements">データ要件</a></li>
   <li><a href="#the-bayesian-angle" id="toc-the-bayesian-angle" class="nav-link" data-scroll-target="#the-bayesian-angle">ベイズ的アプローチ</a></li>
-  <li><a href="#a-walkthrough-with-meridian" id="toc-a-walkthrough-with-meridian" class="nav-link" data-scroll-target="#a-walkthrough-with-meridian">Meridianによるウォークスルー</a></li>
+  <li><a href="#choosing-a-library" id="toc-choosing-a-library" class="nav-link" data-scroll-target="#choosing-a-library">ライブラリを選ぶ</a></li>
+  <li><a href="#a-walkthrough-with-meridian" id="toc-a-walkthrough-with-meridian" class="nav-link" data-scroll-target="#a-walkthrough-with-meridian">Meridianによるウォークスルー</a>
+  <ul class="collapse">
+  <li><a href="#data-loading-and-preparation" id="toc-data-loading-and-preparation" class="nav-link" data-scroll-target="#data-loading-and-preparation">データの読み込みと準備</a></li>
+  <li><a href="#saturation-and-adstock-priors" id="toc-saturation-and-adstock-priors" class="nav-link" data-scroll-target="#saturation-and-adstock-priors">飽和とアドストックの事前分布</a></li>
+  <li><a href="#model-training" id="toc-model-training" class="nav-link" data-scroll-target="#model-training">モデルの学習</a></li>
+  <li><a href="#diagnostics" id="toc-diagnostics" class="nav-link" data-scroll-target="#diagnostics">診断</a></li>
+  <li><a href="#model-fit" id="toc-model-fit" class="nav-link" data-scroll-target="#model-fit">モデルの適合</a></li>
+  <li><a href="#media-insights" id="toc-media-insights" class="nav-link" data-scroll-target="#media-insights">チャネル別の推定結果</a></li>
+  </ul></li>
   <li><a href="#budget-allocation" id="toc-budget-allocation" class="nav-link" data-scroll-target="#budget-allocation">予算配分</a></li>
   <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways">重要なポイント</a></li>
   </ul>
 <div class="quarto-code-links"><h2>コードリンクス</h2><ul><li><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part6-media-optimization/sec6.2_6.4_mmm_meridian.ipynb"><i class="bi bi-github"></i>sec6.2_6.4_mmm_meridian.ipynb</a></li></ul></div></nav>
     </div>
 <!-- main -->
-<main class="content" id="quarto-document-content">
+<main class="content" id="quarto-document-content" tabindex="-1">
 
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part6/_part6.html">Part 6. メディア投資と最適化</a></li><li class="breadcrumb-item"><a href="../part6/sec6.2-mmm-fundamentals.html"><span class="chapter-title">6.2 MMMの構築と最適化</span></a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="パンくずリスト"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part6/_part6.html">Part 6. メディア投資と最適化</a></li><li class="breadcrumb-item"><a href="../part6/sec6.2-mmm-fundamentals.html"><span class="chapter-title">6.2 MMMの構築と最適化</span></a></li></ol></nav>
 <div class="quarto-title">
 <h1 class="title"><span id="sec-mmm-fundamentals" class="quarto-section-identifier"><span class="chapter-title">6.2 MMMの構築と最適化</span></span></h1>
 </div>
@@ -650,66 +663,80 @@ window.Quarto = {
 <h2 class="anchored" data-anchor-id="what-is-marketing-mix-modeling">マーケティング・ミックス・モデリングとは何か？</h2>
 <p>マーケティング・ミックス・モデリング（MMM）とは、集計された時系列データ（通常は週次の売上とチャネル別メディア支出）を使って、各マーケティングチャネルが事業成果にどれだけ寄与したかを推定する統計的アプローチです。ユーザーレベルのアトリビューションと違い、MMMは集計データを扱い、個人の追跡を必要としません。そのため、Cookieの消失、App Tracking Transparency、ウォールドガーデンの制約に強いという特徴があります。</p>
 <p>MMMには3つの目的があります。</p>
-<ol type="1">
-<li><strong>測定</strong>：各チャネルの寄与と広告費用対効果（ROAS）を定量化します。</li>
-<li><strong>シミュレーション</strong>：たとえばTV支出を30%削減すると売上はどうなるか、という「もしも」の問いに答えます。</li>
-<li><strong>最適化</strong>：期待成果を最大化するよう、固定予算をチャネル間に配分します。</li>
-</ol>
-<div id="fig-mmm-purpose" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="MMMは、過去のメディア効率の測定、将来の支出変更のシミュレーション、メディア予算の最適化という3つの意思決定を支える。">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-mmm-purpose-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part6/sec6.2/mmm_purpose.png" class="fig-md img-fluid figure-img" alt="MMMは、過去のメディア効率の測定、将来の支出変更のシミュレーション、メディア予算の最適化という3つの意思決定を支える。">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-mmm-purpose-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-図&nbsp;1: MMMの3つの目的：測定、シミュレーション、最適化。
+<div id="tbl-mmm-purpose" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-mmm-purpose-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+表&nbsp;1: MMMの3つの目的。
 </figcaption>
+<div aria-describedby="tbl-mmm-purpose-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th style="text-align: left;">目的</th>
+<th style="text-align: left;">ビジネス上の問いの例</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td style="text-align: left;">効率を測定する</td>
+<td style="text-align: left;">昨年のTVへの支出はどれだけ効率的だったか？</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td style="text-align: left;">シミュレーションする</td>
+<td style="text-align: left;">来年TVへの支出を増やす、または減らすと、売上はどう変わるか？</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td style="text-align: left;">メディア予算を最適化する</td>
+<td style="text-align: left;">売上を最大化するには、メディア予算をどう配分すべきか？</td>
+</tr>
+</tbody>
+</table>
+</div>
 </figure>
 </div>
-<p>MMMへの関心が再び高まっているのは、単なる懐古ではありません。ユーザーレベルの追跡の信頼性が下がるなか、集計モデルはいまやチャネル横断のメディア効果を測る最も実用的な方法になっています。</p>
+<p>MMMへの関心が再び高まっているのは、ユーザーレベルの追跡の信頼性が下がったためです。集計モデルはいまや、チャネル横断のメディア効果を測る最も実用的な方法になっています。</p>
 </section>
 <section id="the-mmm-equation" class="level2">
 <h2 class="anchored" data-anchor-id="the-mmm-equation">MMMの方程式</h2>
 <p>最も単純なMMMは、祝日、販促、その他の非メディア要因を統制し、週次売上をメディア支出で回帰するモデルです。</p>
-<p><span class="math display">\[
-y_t = \beta_0 + \sum_{c=1}^{C} \beta_c \cdot x_{c,t} + \sum_{k} \gamma_k \cdot z_{k,t} + \varepsilon_t
-\]</span></p>
-<p>ここで、<span class="math inline">\(y_t\)</span>は時点<span class="math inline">\(t\)</span>の売上、<span class="math inline">\(x_{c,t}\)</span>はチャネル<span class="math inline">\(c\)</span>への支出、<span class="math inline">\(z_{k,t}\)</span>は統制変数、<span class="math inline">\(\varepsilon_t\)</span>はノイズです。</p>
 <div id="fig-mmm-simple-equation" class="fig-sm quarto-float quarto-figure quarto-figure-center anchored" alt="単純な線形MMMでは、売上をベースライン売上、重み付きメディア入力、重み付き統制変数の和として表す。">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-mmm-simple-equation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="../images/part6/sec6.2/simple_equation.png" class="fig-sm img-fluid figure-img" alt="単純な線形MMMでは、売上をベースライン売上、重み付きメディア入力、重み付き統制変数の和として表す。">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-mmm-simple-equation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-図&nbsp;2: 単純な線形MMM：売上 ~ メディア支出 + 統制変数。
+図&nbsp;1: 単純な線形MMM：売上 ~ メディア支出 + 統制変数。
 </figcaption>
 </figure>
 </div>
+<p>ここで、<span class="math inline">\(y_t\)</span>は時点<span class="math inline">\(t\)</span>の売上、<span class="math inline">\(x_{c,t}\)</span>はチャネル<span class="math inline">\(c\)</span>への支出、<span class="math inline">\(z_{k,t}\)</span>は統制変数、<span class="math inline">\(\varepsilon_t\)</span>はノイズです。</p>
 <p>この単純な回帰だけでは不十分な理由が2つあります。第一に、メディア効果は即時に終わりません。今週のTV広告が翌週以降の購買にも影響しえます（キャリーオーバー）。第二に、メディア効果は線形ではありません。1週間に追加される100番目のGRP（gross rating point、TV視聴者への到達量を表す標準指標）は、最初のGRPほどの効果を生みません（収穫逓減）。</p>
 <p>より現実的なモデルでは、線形結合の前にアドストック（キャリーオーバー）と飽和（収穫逓減）の変換を適用します。</p>
-<p><span class="math display">\[
-y_t = \beta_0 + \sum_{c=1}^{C} \beta_c \cdot \text{Saturation}\bigl(\text{Adstock}(x_{c,t})\bigr) + \sum_{k} \gamma_k \cdot z_{k,t} + \varepsilon_t
-\]</span></p>
 <div id="fig-mmm-full-equation" class="fig-sm quarto-float quarto-figure quarto-figure-center anchored" alt="完全なMMMは、統制変数とランダムノイズを残しつつ、メディア入力にアドストック変換と飽和変換を適用する。">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-mmm-full-equation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="../images/part6/sec6.2/full_equation.png" class="fig-sm img-fluid figure-img" alt="完全なMMMは、統制変数とランダムノイズを残しつつ、メディア入力にアドストック変換と飽和変換を適用する。">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-mmm-full-equation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-図&nbsp;3: 完全なMMM：メディア入力へのアドストック変換と飽和変換。
+図&nbsp;2: 完全なMMM：メディア入力へのアドストック変換と飽和変換。
 </figcaption>
 </figure>
 </div>
 </section>
 <section id="saturation-diminishing-returns" class="level2">
 <h2 class="anchored" data-anchor-id="saturation-diminishing-returns">飽和（収穫逓減）</h2>
-<p>どのメディアチャネルも、いずれは飽和します。 1つのチャネルに多く支出するほど、追加の1ドルが生む収益は小さくなります。最初の100万ドルのTV支出は大きな増分売上を生みますが、1,000万ドル目の効果ははるかに小さくなります。<a href="#fig-saturation-zones" class="quarto-xref">図&nbsp;<span>4</span></a> は、そこから生じる3つの領域を示しています。各ドルがまだ大きく働く過少投資領域、最適範囲、そして追加支出の大部分が無駄になる飽和領域です。</p>
+<p>どのメディアチャネルも、いずれは飽和します。 1つのチャネルに多く支出するほど、追加の1ドルが生む収益は小さくなります。最初の100万ドルのTV支出は大きな増分売上を生みますが、1,000万ドル目の効果ははるかに小さくなります。<a href="#fig-saturation-zones" class="quarto-xref">図&nbsp;<span>3</span></a> は、そこから生じる3つの領域を示しています。1ドルがまだ大きく効く過少投資領域、最適範囲、そして追加支出の大部分が無駄になる飽和領域です。</p>
 <div id="fig-saturation-zones" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="広告支出に対する広告効果の凹型反応曲線を、過少投資領域、最適範囲、飽和（過剰投資）領域に分けている。">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-saturation-zones-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="../images/part6/sec6.2/saturation_zones.png" class="fig-md img-fluid figure-img" alt="広告支出に対する広告効果の凹型反応曲線を、過少投資領域、最適範囲、飽和（過剰投資）領域に分けている。">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-saturation-zones-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-図&nbsp;4: 飽和曲線の3つの領域。
+図&nbsp;3: 飽和：1つのメディアチャネルに多く支出するほど、効果は小さくなる。
 </figcaption>
 </figure>
 </div>
@@ -718,14 +745,14 @@ y_t = \beta_0 + \sum_{c=1}^{C} \beta_c \cdot \text{Saturation}\bigl(\text{Adstoc
 \text{Hill}(x) = \frac{x^S}{x^S + K^S}
 \]</span></p>
 <p>ここで、<span class="math inline">\(K\)</span>（半飽和点、EC50とも呼ばれます）はチャネルが最大効果の50%に達する支出水準で、<span class="math inline">\(S\)</span>（傾き）は曲線がどれほど急に曲がるかを制御します。</p>
-<p>この曲率があるからこそ、予算再配分に価値が生まれます。<a href="#fig-saturation-reallocation" class="quarto-xref">図&nbsp;<span>5</span></a> では、チャネルXは飽和領域の奥深くにある一方、チャネルYにはまだ余地があります。Xの予算を削ると売上を$1M失いますが、その予算をYに追加すると$3Mを得ます。同じ総支出で正味$2Mの増加です。飽和したチャネルの平均ROASの方が高く見えても、そこから過少投資のチャネルへ予算を移すことで、総リターンを増やせる場合があります。平均ROASは、チャネルの増分売上合計を総支出で割った値です。限界ROASは、チャネルが現在位置する点での曲線の傾きで、次の1ドルが生むリターンを表します。</p>
+<p>この曲率があるからこそ、予算再配分に価値が生まれます。<a href="#fig-saturation-reallocation" class="quarto-xref">図&nbsp;<span>4</span></a> では、チャネルXは飽和領域の奥深くにある一方、チャネルYにはまだ余地があります。Xの予算を削ると売上を$1M失いますが、その予算をYに追加すると$3Mを得ます。同じ総支出で正味$2Mの増加です。飽和したチャネルの平均ROASの方が高く見えても、そこから過少投資のチャネルへ予算を移すことで、総リターンを増やせる場合があります。平均ROASは、チャネルの増分売上合計を総支出で割った値です。限界ROASは、チャネルが現在位置する点での曲線の傾きで、次の1ドルが生むリターンを表します。</p>
 <div id="fig-saturation-reallocation" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="2本の飽和曲線。飽和したチャネルXの予算削減で売上を$1M失う一方、より飽和していないチャネルYへの予算追加で$3Mを得て、正味の変化は+$2Mとなる。">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-saturation-reallocation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="../images/part6/sec6.2/saturation_reallocation.png" class="fig-md img-fluid figure-img" alt="2本の飽和曲線。飽和したチャネルXの予算削減で売上を$1M失う一方、より飽和していないチャネルYへの予算追加で$3Mを得て、正味の変化は+$2Mとなる。">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-saturation-reallocation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-図&nbsp;5: 飽和したチャネルから未飽和のチャネルへの予算再配分。
+図&nbsp;4: 飽和したチャネルから未飽和のチャネルへの予算再配分。
 </figcaption>
 </figure>
 </div>
@@ -736,14 +763,14 @@ y_t = \beta_0 + \sum_{c=1}^{C} \beta_c \cdot \text{Saturation}\bigl(\text{Adstoc
 <p><span class="math display">\[
 \text{Adstock}_t = x_t + \lambda \cdot \text{Adstock}_{t-1}
 \]</span></p>
-<p>ここで、<span class="math inline">\(\lambda \in [0, 1]\)</span>は残存率です。<span class="math inline">\(\lambda\)</span>が高いほどキャリーオーバーが長くなります。<a href="#fig-adstock-tv" class="quarto-xref">図&nbsp;<span>6</span></a> と <a href="#fig-adstock-digital" class="quarto-xref">図&nbsp;<span>7</span></a> は、同じ3回の広告フライトを2つの残存率で示しています。TVのような上位ファネルのチャネルに典型的な高い残存率では、各フライトの効果が放映後も長く残り、重複するフライトが積み重なります。デジタルチャネルに典型的な低い残存率では、効果は数日で薄れます。</p>
+<p>ここで、<span class="math inline">\(\lambda \in [0, 1]\)</span>は残存率です。<span class="math inline">\(\lambda\)</span>が高いほどキャリーオーバーが長くなります。<a href="#fig-adstock-tv" class="quarto-xref">図&nbsp;<span>5</span></a> と <a href="#fig-adstock-digital" class="quarto-xref">図&nbsp;<span>6</span></a> は、同じ3回の広告フライトを2つの残存率で示しています。TVのような上位ファネルのチャネルに典型的な高い残存率では、各フライトの効果が放映後も長く残り、重複するフライトが積み重なります。デジタルチャネルに典型的な低い残存率では、効果は数日で薄れます。</p>
 <div id="fig-adstock-tv" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="アドストック率80%で3回のTV広告フライトが26日間に示す広告効果の棒グラフ。各フライトの効果はゆっくり減衰し、次のフライトと重なる。">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-adstock-tv-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="../images/part6/sec6.2/adstock_tv.png" class="fig-md img-fluid figure-img" alt="アドストック率80%で3回のTV広告フライトが26日間に示す広告効果の棒グラフ。各フライトの効果はゆっくり減衰し、次のフライトと重なる。">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-adstock-tv-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-図&nbsp;6: 高い残存率（TV）のアドストック。
+図&nbsp;5: 高い残存率（TV）のアドストック。
 </figcaption>
 </figure>
 </div>
@@ -753,29 +780,59 @@ y_t = \beta_0 + \sum_{c=1}^{C} \beta_c \cdot \text{Saturation}\bigl(\text{Adstoc
 <img src="../images/part6/sec6.2/adstock_digital.png" class="fig-md img-fluid figure-img" alt="アドストック率60%で3回のデジタル広告フライトが26日間に示す広告効果の棒グラフ。各フライトの効果はすばやく減衰する。">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-adstock-digital-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-図&nbsp;7: より低い残存率（デジタル）のアドストック。
+図&nbsp;6: より低い残存率（デジタル）のアドストック。
 </figcaption>
 </figure>
 </div>
-<p>残存率は、効果が半分に低下するまでの期間数、すなわち半減期 <span class="math inline">\(\ln(0.5) / \ln(\lambda)\)</span> として考える方がわかりやすいでしょう。週次粒度では、TVのような上位ファネルのチャネルは一般に数週間の半減期でモデル化される一方、有料検索のような下位ファネルのチャネルは約1週間以内に減衰します。付属デモでは、すべてのチャネルを12週間のウィンドウで幾何アドストックによりモデル化し、ファネル段階ごとに減衰の事前分布を設定します。TV/CTVとOOHは6週間（<span class="math inline">\(\lambda \approx 0.89\)</span>）、MetaとTikTokは3週間（<span class="math inline">\(\lambda \approx 0.79\)</span>）、Google Searchは1週間（<span class="math inline">\(\lambda = 0.5\)</span>）です。これらは事実ではなく、データによって動かされる出発点の事前分布として扱ってください。公表されている指針には幅があり、適切な値はカテゴリーとデータ粒度に依存します。「週次」の残存率を日次データに適用すれば、まったく異なる半減期を意味することになります。</p>
+<p>残存率は、効果が半分に低下するまでの期間数、すなわち半減期 <span class="math inline">\(\ln(0.5) / \ln(\lambda)\)</span> として考える方がわかりやすいでしょう。週次粒度では、TVのような上位ファネルのチャネルは一般に数週間の半減期でモデル化される一方、有料検索のような下位ファネルのチャネルは約1週間以内に減衰します。付属デモでは、すべてのチャネルを12週間のウィンドウで幾何アドストックによりモデル化し、ファネル段階ごとに減衰の事前分布を設定します。TV/CTVとOOHは6週間（<span class="math inline">\(\lambda \approx 0.89\)</span>）、MetaとTikTokは3週間（<span class="math inline">\(\lambda \approx 0.79\)</span>）、Google Searchは1週間（<span class="math inline">\(\lambda = 0.5\)</span>）です。これらは事実ではなく、データで更新される出発点の事前分布として扱ってください。公表されている指針には幅があり、適切な値はカテゴリーとデータ粒度に依存します。「週次」の残存率を日次データに適用すれば、まったく異なる半減期を意味することになります。</p>
 <p>より柔軟な代替手法もあります。Weibullアドストックでは、減衰形状を非単調にできます。接触から数日後に効果がピークを迎えてから減衰させられるため、自然な処理遅延があるメールやダイレクトメールのようなチャネルをよりよく捉えられます。</p>
 </section>
 <section id="sec-mmm-data-requirements" class="level2">
 <h2 class="anchored" data-anchor-id="sec-mmm-data-requirements">データ要件</h2>
-<p>MMMには3種類の入力データが必要です。</p>
-<ol type="1">
-<li><strong>目的変数</strong>：ブランドまたは製品レベルの週次売上高もしくは販売数量。</li>
-<li><strong>メディア支出</strong>：チャネル別の週次支出（TV、ソーシャル、ディスプレイ、検索、ダイレクトメールなど）。</li>
-<li><strong>統制変数</strong>：祝日、季節性指標、販促、価格変更、競合活動、マクロ経済要因など、売上変動を説明しうる非メディア要因。</li>
-</ol>
-<div id="fig-data-requirements" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="MMMには事業成果とチャネルレベルのメディア支出が必要で、利用可能なら季節性やその他の非メディア統制変数を追加する。">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-data-requirements-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part6/sec6.2/data_requirements.png" class="fig-md img-fluid figure-img" alt="MMMには事業成果とチャネルレベルのメディア支出が必要で、利用可能なら季節性やその他の非メディア統制変数を追加する。">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-data-requirements-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-図&nbsp;8: MMMの入力データ：目的変数、チャネル別メディア支出、統制変数。
+<p>MMMには、目的変数、メディア支出、統制変数が必要で、いずれも週次です（<a href="#tbl-data-requirements" class="quarto-xref">表&nbsp;<span>2</span></a>）。</p>
+<div id="tbl-data-requirements" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-data-requirements-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+表&nbsp;2: MMMの入力データ。
 </figcaption>
+<div aria-describedby="tbl-data-requirements-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">変数の種類</th>
+<th style="text-align: left;">データ区分</th>
+<th style="text-align: left;">変数</th>
+<th style="text-align: left;">優先度</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">目的変数</td>
+<td style="text-align: left;">KPI</td>
+<td style="text-align: left;">売上</td>
+<td style="text-align: left;">必須</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">説明変数</td>
+<td style="text-align: left;">メディア</td>
+<td style="text-align: left;">チャネル別のメディア支出</td>
+<td style="text-align: left;">必須</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">説明変数</td>
+<td style="text-align: left;">その他</td>
+<td style="text-align: left;">メディア以外のマーケティング指標（価格、販促、配荷）</td>
+<td style="text-align: left;">任意</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">説明変数</td>
+<td style="text-align: left;">その他</td>
+<td style="text-align: left;">季節性、祝日、天候、マクロ経済</td>
+<td style="text-align: left;">任意</td>
+</tr>
+</tbody>
+</table>
+</div>
 </figure>
 </div>
 <p>推奨される粒度は次のとおりです。</p>
@@ -785,39 +842,110 @@ y_t = \beta_0 + \sum_{c=1}^{C} \beta_c \cdot \text{Saturation}\bigl(\text{Adstoc
 <li><strong>地域</strong>：全国またはブランドレベルが一般的です。国より細かな地域レベルのモデルはより強力になりえますが、より多くのデータと慎重なモデル化が必要です。</li>
 <li><strong>チャネル</strong>：実際に支出が変動するチャネルだけを含めます。毎週同じ金額を使うチャネルでは、モデルはその効果を学習できません。</li>
 </ul>
-<p>ここには、見落としやすい確認事項がもう1つあります。アドストックと飽和はチャネルの寄与を平滑化します。その結果、統制変数で説明できなかった部分よりも、メディアによる売上の週次変動の方が小さくなることがあります。この場合、メディア係数は識別できず、どのような事前分布を選んでも修復できません。推定器にはメディアをベースラインから分離する材料が残っていないからです。モデル適合前にこの2つの量を比較します。付属ノートブックではStep 2bで行っています。</p>
-<p>統制変数が重要である理由はもう1つあります。メディア支出と売上は、仕組み上、トレンドと季節性を共有することが多くあります。共通のカレンダーだけで、互いに無関係な2系列の間に強い相関が作られることがあります。季節性とトレンドの統制変数が、その共有構造をメディア係数に混入させない役割を果たします。</p>
-<div id="fig-example-dataset" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="週次MMMデータセットでは、売上、5つのメディアチャネルの支出系列、季節性、祝日指標を日付でそろえる。">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-example-dataset-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part6/sec6.2/example_dataset.png" class="fig-lg img-fluid figure-img" alt="週次MMMデータセットでは、売上、5つのメディアチャネルの支出系列、季節性、祝日指標を日付でそろえる。">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-example-dataset-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-図&nbsp;9: MMMデータセットの例：日付、売上、チャネル別支出、統制変数。
+<p>見落としやすい確認がもう1つあります。アドストックと飽和はチャネルの寄与をならすため、売上の週ごとの動きのうちメディアで説明できる分が、説明のつかないノイズより小さくなることがあります。そうなると、モデルはメディアとベースラインを分離できず、どの事前分布を使っても直せません。付属ノートブックは、適合の前にStep 2bでこれを確認します。</p>
+<p>統制変数が重要である理由はもう1つあります。メディア支出と売上は、もともとトレンドと季節性を共有することが多くあります。同じ暦で動くだけで、互いに無関係な2系列の間に強い相関が生じることがあります。季節性とトレンドの統制変数が、その共有構造をメディア係数に混入させない役割を果たします。</p>
+<p>以下で使うデモのデータセットはこの形をしています。週ごとに1行、売上、5チャネルそれぞれの支出、そして統制変数です。<a href="#tbl-example-dataset" class="quarto-xref">表&nbsp;<span>3</span></a> に最初の5週間を示します。</p>
+<div id="tbl-example-dataset" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-example-dataset-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+表&nbsp;3: デモデータセットの最初の5週間。6つの統制変数のうち2つを示す。
 </figcaption>
+<div aria-describedby="tbl-example-dataset-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>週</th>
+<th style="text-align: right;">売上（$M）</th>
+<th style="text-align: right;">TV/CTV（$k）</th>
+<th style="text-align: right;">OOH（$k）</th>
+<th style="text-align: right;">Google Search（$k）</th>
+<th style="text-align: right;">Meta（$k）</th>
+<th style="text-align: right;">TikTok（$k）</th>
+<th style="text-align: right;">季節性</th>
+<th style="text-align: right;">クリスマス</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>2020-12-28</td>
+<td style="text-align: right;">21.4</td>
+<td style="text-align: right;">382</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">740</td>
+<td style="text-align: right;">948</td>
+<td style="text-align: right;">402</td>
+<td style="text-align: right;">-0.039</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="even">
+<td>2021-01-04</td>
+<td style="text-align: right;">37.3</td>
+<td style="text-align: right;">836</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">768</td>
+<td style="text-align: right;">1,778</td>
+<td style="text-align: right;">882</td>
+<td style="text-align: right;">0.069</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="odd">
+<td>2021-01-11</td>
+<td style="text-align: right;">38.9</td>
+<td style="text-align: right;">848</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">776</td>
+<td style="text-align: right;">1,612</td>
+<td style="text-align: right;">772</td>
+<td style="text-align: right;">0.188</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td>2021-01-18</td>
+<td style="text-align: right;">41.5</td>
+<td style="text-align: right;">784</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">776</td>
+<td style="text-align: right;">1,619</td>
+<td style="text-align: right;">851</td>
+<td style="text-align: right;">0.305</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="odd">
+<td>2021-01-25</td>
+<td style="text-align: right;">41.5</td>
+<td style="text-align: right;">742</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">777</td>
+<td style="text-align: right;">1,683</td>
+<td style="text-align: right;">755</td>
+<td style="text-align: right;">0.417</td>
+<td style="text-align: right;">0</td>
+</tr>
+</tbody>
+</table>
+</div>
 </figure>
 </div>
 </section>
 <section id="the-bayesian-angle" class="level2">
 <h2 class="anchored" data-anchor-id="the-bayesian-angle">ベイズ的アプローチ</h2>
-<p>実装を見ていく前に、注目すべき設計上の選択が1つあります。現代のMMMは主としてベイズ的です。 その理由は実務的なものです。</p>
+<p>現代のMMMは主としてベイズ的です。実務上の理由が3つあります。</p>
 <ol type="1">
-<li><strong>事前分布にドメイン知識を組み込める。</strong> 過去の実験からTVのROASがおよそ2.0だとチームが知っているなら、それを事前分布として組み込めます。モデルはデータを使ってこの信念を更新します。事前分布がなければ、多重共線性だけが理由で非現実的な推定値が生じることがあります。ただし、データで識別できないチャネルについては、モデルが返す値は事前分布に入れた値そのものです。デモのGoogle Searchがそのチャネルに当たり、<a href="sec6.3-incrementality-experiments.html">Section 6.3</a>で実験によって測定します。</li>
-<li><strong>点推定ではなく信用区間。</strong> 「TV ROAS = 2.3」ではなく、「TV ROAS：中央値2.3、90% CI [1.1, 3.8]」が得られます。区間が広ければ、その推定に基づく大きな予算移動には慎重になる必要があります。</li>
+<li><strong>事前分布にドメイン知識を組み込める。</strong> 過去の実験からTVのROASがおよそ2.0だとチームが知っているなら、それを事前分布として組み込めます。モデルはデータを使ってこの見積もりを更新します。事前分布がなければ、多重共線性だけが理由で非現実的な推定値が生じることがあります。</li>
+<li><strong>点推定ではなく信用区間。</strong> 「TV ROAS = 2.3」ではなく、「TV ROAS：中央値2.3、90% CI [1.1, 3.8]」が得られます。</li>
 <li><strong>実験と自然に統合できる。</strong> 地域リフト実験を実施してチャネルの増分効果を推定したら、その証拠を情報量のある事前分布としてMMMへ渡せます。これにより事後分布が狭まり、識別性が改善します。このワークフローは<a href="sec6.4-mmm-calibration.html">Section 6.4</a>で詳しく扱います。</li>
 </ol>
 <p>これが、MeridianやPyMC-Marketingのようなツールが内部でベイズ推論を使う理由です。</p>
-<div class="callout callout-style-default callout-tip callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">ヒント</span>2026年時点のMMMライブラリ
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>本章の概念を実装するオープンソースライブラリはいくつかあります。最も広く使われている3つを示します。</p>
+</section>
+<section id="choosing-a-library" class="level2">
+<h2 class="anchored" data-anchor-id="choosing-a-library">ライブラリを選ぶ</h2>
+<p>本章の概念を実装するオープンソースライブラリはいくつかあります。2026年時点で最も広く使われている3つを示します。</p>
+<div id="tbl-mmm-libraries" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-mmm-libraries-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+表&nbsp;4: 最も広く使われているオープンソースのMMMライブラリ3つ。
+</figcaption>
+<div aria-describedby="tbl-mmm-libraries-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -829,7 +957,7 @@ y_t = \beta_0 + \sum_{c=1}^{C} \beta_c \cdot \text{Saturation}\bigl(\text{Adstoc
 <tbody>
 <tr class="odd">
 <td><strong>Meridian</strong></td>
-<td>GoogleによるPythonベースのベイズMMM。地域レベルのデータと実験による較正を強く支援する。現在は非推奨となったLightweightMMMの後継。</td>
+<td>GoogleによるPythonベースのベイズMMM。地域レベルのデータと実験によるキャリブレーションを強く支援する。現在は非推奨となったLightweightMMMの後継。</td>
 <td><a href="https://github.com/google/meridian">google/meridian</a></td>
 </tr>
 <tr class="even">
@@ -844,166 +972,283 @@ y_t = \beta_0 + \sum_{c=1}^{C} \beta_c \cdot \text{Saturation}\bigl(\text{Adstoc
 </tr>
 </tbody>
 </table>
-<p>中核となる概念（アドストック、飽和、ベイズ推定、予算最適化）は3つすべてで共通しています。本章でMeridianを使うのは、Pythonベースで始めやすいからです。あまりカスタマイズしなくても、モデル結果と予算最適化について、ステークホルダーと共有できる整った2ページのHTMLレポートを生成します。以下のウォークスルーから両方にリンクしています。</p>
 </div>
+</figure>
 </div>
+<p>3つともキャリーオーバーと飽和をモデル化し、予算配分を支援しますが、推定と不確実性の扱いは異なります。本章では、Python実装、実験によるキャリブレーション、適合結果や予算シナリオを確認しやすいレポートを理由にMeridianを使います。</p>
 </section>
 <section id="a-walkthrough-with-meridian" class="level2">
 <h2 class="anchored" data-anchor-id="a-walkthrough-with-meridian">Meridianによるウォークスルー</h2>
 <p><strong>付属ノートブック：</strong> <code>sec6.2_6.4_mmm_meridian.ipynb</code>は、GoogleのMeridianライブラリを使った完全なMMMワークフローを実演します。<br>
 <a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part6-media-optimization/sec6.2_6.4_mmm_meridian.ipynb">GitHubで見る</a></p>
-<p><strong>データの読み込みと準備。</strong> デモのデータセットには、5つのメディアチャネル（TV/CTV、OOH、Google Search、Meta、TikTok）と祝日・季節性の統制変数を含む157週間の売上データがあります。Meridianは<code>DataFrameInputDataBuilder</code>を使ってpandas DataFrameから入力データを構築します。スケーリングは内部で処理されるため、手動の正規化は不要です。重要なのは、Meridianが<code>media_cols</code>（インプレッションやクリックなどの接触量）に飽和を適用し、<code>media_spend_cols</code>をROASの費用基準として使う点です。</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>channels <span class="op">=</span> [<span class="st">"TV/CTV"</span>, <span class="st">"OOH"</span>, <span class="st">"Google Search"</span>, <span class="st">"Meta"</span>, <span class="st">"TikTok"</span>]</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>media_cols <span class="op">=</span> [</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"tv_ctv_impressions"</span>, <span class="st">"ooh_impressions"</span>, <span class="st">"google_clicks"</span>,</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"meta_impressions"</span>, <span class="st">"tiktok_impressions"</span>,</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>]</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>media_spend_cols <span class="op">=</span> [</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"tv_ctv_spend"</span>, <span class="st">"ooh_spend"</span>, <span class="st">"google_spend"</span>,</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">"meta_spend"</span>, <span class="st">"tiktok_spend"</span>,</span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>]</span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>control_cols <span class="op">=</span> [</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">"seas_sin52"</span>, <span class="st">"seas_cos52"</span>,</span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">"hldy_thanksgiving"</span>, <span class="st">"hldy_christmas"</span>,</span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="st">"trend"</span>, <span class="st">"trend_sq"</span>,</span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>]</span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>builder <span class="op">=</span> data_frame_input_data_builder.DataFrameInputDataBuilder(</span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    kpi_type<span class="op">=</span><span class="st">'revenue'</span>,</span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    default_kpi_column<span class="op">=</span><span class="st">'sales'</span>,</span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    default_time_column<span class="op">=</span><span class="st">'time'</span>,</span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    default_geo_column<span class="op">=</span><span class="st">'geo'</span>,</span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>data <span class="op">=</span> (</span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>    builder</span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>    .with_kpi(df)</span>
-<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>    .with_media(df,</span>
-<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>        media_cols<span class="op">=</span>media_cols,</span>
-<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>        media_spend_cols<span class="op">=</span>media_spend_cols,</span>
-<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>        media_channels<span class="op">=</span>channels)</span>
-<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>    .with_controls(df, control_cols<span class="op">=</span>control_cols)</span>
-<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>    .build()</span>
-<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>飽和とアドストックの事前分布。</strong> Meridianは半飽和点<span class="math inline">\(K\)</span>を独自の単位で測ります。メディアは中央値でスケーリングされ、アドストックの重みは合計が1になるよう正規化されるため、常時出稿しているチャネルはこのスケール上で1付近に位置します。デモでは、飽和にはチャネルに依存しない、緩やかに曲がる曲線を優先する1つの広い事前分布を与え、ファネル構造はアドストック側に持たせています。そして、データが識別できないチャネルについてその選択が何を決めてしまうかを、ノートブックで示しています。</p>
-<p><strong>モデルの学習。</strong> MeridianはMCMCにNo-U-Turn Sampler（NUTS）を使います。まず健全性確認のため事前分布からサンプルを生成し、次に事後分布をサンプリングします。</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>mmm <span class="op">=</span> model.Meridian(input_data<span class="op">=</span>data, model_spec<span class="op">=</span>model_spec)</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>mmm.sample_prior(<span class="dv">500</span>)</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>mmm.sample_posterior(</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    n_chains<span class="op">=</span><span class="dv">4</span>, n_adapt<span class="op">=</span><span class="dv">500</span>, n_burnin<span class="op">=</span><span class="dv">500</span>, n_keep<span class="op">=</span><span class="dv">1000</span>, seed<span class="op">=</span>SEED</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Production runs typically use n_chains=10, n_keep=2000 (≈ 5× compute).</span></span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>診断。</strong> Meridianの<code>ModelReviewer</code>は、自動品質チェック（収束、ベースライン検証、適合度、事前分布から事後分布への変化）を実行し、pass/review/failのステータスを報告します。</p>
-<div id="fig-model-summary" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="チャネル要約では、メディアチャネル間で支出、平均投資収益率、不確実性区間、推定増分成果を比較する。">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-model-summary-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part6/sec6.2/model_summary.png" class="fig-lg img-fluid figure-img" alt="チャネル要約では、メディアチャネル間で支出、平均投資収益率、不確実性区間、推定増分成果を比較する。">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-model-summary-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-図&nbsp;10: Meridianのチャネル別モデル要約。
+<section id="data-loading-and-preparation" class="level3">
+<h3 class="anchored" data-anchor-id="data-loading-and-preparation">データの読み込みと準備</h3>
+<p>デモのデータセットには、5つのメディアチャネル（TV/CTV、OOH、Google Search、Meta、TikTok）と祝日・季節性の統制変数を含む157週間の売上データがあります。Meridianは<code>DataFrameInputDataBuilder</code>を使ってpandas DataFrameから入力データを構築します。スケーリングは内部で処理されるため、手動の正規化は不要です。重要なのは、Meridianが<code>media_cols</code>（インプレッションやクリックなどの接触量）に飽和を適用し、<code>media_spend_cols</code>をROASの費用基準として使う点です。</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> msbook.data <span class="im">import</span> load_mmm_synthetic</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> meridian.data <span class="im">import</span> data_frame_input_data_builder</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> load_mmm_synthetic()   <span class="co"># one row per week, national; notebook Step 2</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>channels <span class="op">=</span> [<span class="st">"TV/CTV"</span>, <span class="st">"OOH"</span>, <span class="st">"Google Search"</span>, <span class="st">"Meta"</span>, <span class="st">"TikTok"</span>]</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>media_cols <span class="op">=</span> [<span class="st">"tv_ctv_impressions"</span>, <span class="st">"ooh_impressions"</span>, <span class="st">"google_clicks"</span>,</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>              <span class="st">"meta_impressions"</span>, <span class="st">"tiktok_impressions"</span>]   <span class="co"># exposure: saturation applies here</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>media_spend_cols <span class="op">=</span> [<span class="st">"tv_ctv_spend"</span>, <span class="st">"ooh_spend"</span>, <span class="st">"google_spend"</span>,</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>                    <span class="st">"meta_spend"</span>, <span class="st">"tiktok_spend"</span>]         <span class="co"># dollars: the cost basis for ROAS</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>control_cols <span class="op">=</span> [<span class="st">"seas_sin52"</span>, <span class="st">"seas_cos52"</span>, <span class="st">"hldy_thanksgiving"</span>, <span class="st">"hldy_christmas"</span>,</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>                <span class="st">"trend"</span>, <span class="st">"trend_sq"</span>]</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>builder <span class="op">=</span> data_frame_input_data_builder.DataFrameInputDataBuilder(</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    kpi_type<span class="op">=</span><span class="st">"revenue"</span>, default_kpi_column<span class="op">=</span><span class="st">"sales"</span>,</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    default_time_column<span class="op">=</span><span class="st">"time"</span>, default_geo_column<span class="op">=</span><span class="st">"geo"</span>,</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>data <span class="op">=</span> (</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    builder.with_kpi(df)</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    .with_media(df, media_cols<span class="op">=</span>media_cols, media_spend_cols<span class="op">=</span>media_spend_cols,</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>                media_channels<span class="op">=</span>channels)</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>    .with_controls(df, control_cols<span class="op">=</span>control_cols)</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>    .build()</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="saturation-and-adstock-priors" class="level3">
+<h3 class="anchored" data-anchor-id="saturation-and-adstock-priors">飽和とアドストックの事前分布</h3>
+<p>Meridianは半飽和点<span class="math inline">\(K\)</span>を独自の単位で測ります。メディアは中央値でスケーリングされ、アドストックの重みは合計が1になるよう正規化されるため、常時出稿しているチャネルはこのスケール上で1付近に位置します。デモでは、飽和の事前分布を全チャネル共通の広いもの1つにし、緩やかに曲がる曲線を優先させています。チャネルごとの違いはアドストックの事前分布だけに持たせます。</p>
+<p>仕様全体は、事前分布オブジェクト1つと<code>ModelSpec</code>1つです。</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> tensorflow <span class="im">as</span> tf</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> tensorflow_probability <span class="im">as</span> tfp</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> meridian <span class="im">import</span> constants</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> meridian.model <span class="im">import</span> prior_distribution, spec</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Adstock centers by funnel stage: 6-week half-lives for TV/CTV and OOH,</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co"># 1 week for Search, 3 weeks for Meta and TikTok.</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>alpha_loc <span class="op">=</span> tf.constant([<span class="fl">0.89</span>, <span class="fl">0.89</span>, <span class="fl">0.50</span>, <span class="fl">0.79</span>, <span class="fl">0.79</span>])</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>prior <span class="op">=</span> prior_distribution.PriorDistribution(</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    roi_m<span class="op">=</span>tfp.distributions.LogNormal(<span class="fl">0.2</span>, <span class="fl">0.9</span>, name<span class="op">=</span>constants.ROI_M),   <span class="co"># weak, every channel</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    alpha_m<span class="op">=</span>tfp.distributions.TruncatedNormal(alpha_loc, <span class="fl">0.1</span>, <span class="fl">0.0</span>, <span class="fl">1.0</span>, name<span class="op">=</span>constants.ALPHA_M),</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    ec_m<span class="op">=</span>tfp.distributions.TruncatedNormal(<span class="fl">5.0</span>, <span class="fl">2.0</span>, <span class="fl">0.1</span>, <span class="fl">30.0</span>, name<span class="op">=</span>constants.EC_M),  <span class="co"># gentle bend</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>rng <span class="op">=</span> np.random.default_rng(<span class="dv">20260520</span>)                     <span class="co"># a random 25% of weeks held out</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>holdout_id <span class="op">=</span> np.zeros(<span class="bu">len</span>(df), dtype<span class="op">=</span><span class="bu">bool</span>)</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>holdout_id[rng.choice(<span class="bu">len</span>(df), <span class="bu">len</span>(df) <span class="op">//</span> <span class="dv">4</span>, replace<span class="op">=</span><span class="va">False</span>)] <span class="op">=</span> <span class="va">True</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>model_spec <span class="op">=</span> spec.ModelSpec(prior<span class="op">=</span>prior, media_prior_type<span class="op">=</span><span class="st">"roi"</span>, max_lag<span class="op">=</span><span class="dv">12</span>,</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>                            adstock_decay_spec<span class="op">=</span><span class="st">"geometric"</span>, holdout_id<span class="op">=</span>holdout_id)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="model-training" class="level3">
+<h3 class="anchored" data-anchor-id="model-training">モデルの学習</h3>
+<p>MeridianはMCMCにNo-U-Turn Sampler（NUTS）を使います。まず健全性確認のため事前分布からサンプルを生成し、次に事後分布をサンプリングします。</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> meridian.model <span class="im">import</span> model</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>SEED <span class="op">=</span> <span class="dv">105</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>mmm <span class="op">=</span> model.Meridian(input_data<span class="op">=</span>data, model_spec<span class="op">=</span>model_spec)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>mmm.sample_prior(<span class="dv">500</span>)</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>mmm.sample_posterior(</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    n_chains<span class="op">=</span><span class="dv">4</span>, n_adapt<span class="op">=</span><span class="dv">500</span>, n_burnin<span class="op">=</span><span class="dv">500</span>, n_keep<span class="op">=</span><span class="dv">1000</span>, seed<span class="op">=</span>SEED</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Production runs typically use n_chains=10, n_keep=2000 (≈ 5× compute).</span></span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="diagnostics" class="level3">
+<h3 class="anchored" data-anchor-id="diagnostics">診断</h3>
+<p>Meridianの<code>ModelReviewer</code>は、自動品質チェック（収束、ベースライン検証、適合度、事前分布から事後分布への変化）を実行し、pass/review/failのステータスを報告します。<a href="#tbl-channel-summary" class="quarto-xref">表&nbsp;<span>5</span></a> に、適合したモデルが各チャネルについて示す内容をまとめます。最後の列は限界ROASの区間幅の半分を推定値で割った値で、予算配分の節でガードレールとして使います。</p>
+<div id="tbl-channel-summary" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-channel-summary-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+表&nbsp;5: チャネル別の事後分布の要約。付属ノートブックより。
 </figcaption>
+<div aria-describedby="tbl-channel-summary-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">チャネル</th>
+<th style="text-align: right;">支出シェア</th>
+<th style="text-align: center;">平均ROAS [90% CI]</th>
+<th style="text-align: center;">限界ROAS [90% CI]</th>
+<th style="text-align: right;">相対半幅</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">TV/CTV</td>
+<td style="text-align: right;">18%</td>
+<td style="text-align: center;">4.21 [1.90, 6.58]</td>
+<td style="text-align: center;">3.18 [1.53, 4.86]</td>
+<td style="text-align: right;">0.52</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">OOH</td>
+<td style="text-align: right;">20%</td>
+<td style="text-align: center;">5.54 [3.67, 7.36]</td>
+<td style="text-align: center;">4.34 [2.94, 5.70]</td>
+<td style="text-align: right;">0.32</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Google Search</td>
+<td style="text-align: right;">21%</td>
+<td style="text-align: center;">4.06 [0.46, 11.67]</td>
+<td style="text-align: center;">3.29 [0.36, 9.51]</td>
+<td style="text-align: right;">1.39</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Meta</td>
+<td style="text-align: right;">19%</td>
+<td style="text-align: center;">7.55 [5.92, 9.06]</td>
+<td style="text-align: center;">6.08 [4.72, 7.33]</td>
+<td style="text-align: right;">0.21</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">TikTok</td>
+<td style="text-align: right;">22%</td>
+<td style="text-align: center;">5.04 [2.94, 6.83]</td>
+<td style="text-align: center;">3.84 [2.21, 5.27]</td>
+<td style="text-align: right;">0.40</td>
+</tr>
+</tbody>
+</table>
+</div>
 </figure>
 </div>
-<p><strong>モデルの適合。</strong> 週単位で25%をランダムにホールドアウトすると、デモではサンプル内R² ≈ 0.97、サンプル外R² ≈ 0.97となります。ここで内外の差が小さいのは予想どおりです。合成データとランダムな（補間）ホールドアウトの組み合わせは、最良に近い条件だからです。現実のノイズ、トレンドが崩れた期間、まとまりのない販促活動を含む本番データでは、サンプル外R²が0.6〜0.7の範囲でも一般的で、許容できます。R²が高くてもメディア推定値が妥当だとは限らないので、推定値の方向と大きさは別に確認します。</p>
-<p><a href="../part5/sec5.3-sales-forecasting.html#sec-rolling-backtest">Section 5.3</a>ではランダム分割を完全に退けているのに、なぜここではランダムホールドアウトなのでしょうか。予測は学習ウィンドウの先を外挿する必要があるため、固定した起点から将来に向かって評価します。MMMは観測済みの期間内で売上の功績を配分するため、ホールドアウトを散在させれば、尤度が見ていない週でも適合した構造が成立するかという有用な問いを立てられます。この数値は補間の診断として読み、モデルが次四半期を予測できる証拠とは解釈しません。</p>
+<p>4つのチャネルの区間は、計画担当者が扱える幅です。Google Searchは違います。限界ROASは0.36かもしれず、9.51かもしれません。本章の残りは、この行を軸に進みます。</p>
+</section>
+<section id="model-fit" class="level3">
+<h3 class="anchored" data-anchor-id="model-fit">モデルの適合</h3>
+<p>週単位で25%をランダムにホールドアウトすると、デモではサンプル内R² ≈ 0.97、サンプル外R² ≈ 0.97となります。ここで内外の差が小さいのは予想どおりです。合成データとランダムな（補間）ホールドアウトの組み合わせは、最良に近い条件だからです。現実のノイズ、トレンドが崩れた期間、まとまりのない販促活動を含む本番データでは、サンプル外R²が0.6〜0.7の範囲でも一般的で、許容できます。R²が高くてもメディア推定値が妥当だとは限らないので、推定値の方向と大きさは別に確認します。</p>
+<p><a href="../part5/sec5.3-sales-forecasting.html#sec-rolling-backtest">Section 5.3</a>ではランダム分割を完全に退けているのに、なぜここではランダムホールドアウトなのでしょうか。予測は学習ウィンドウの先を外挿する必要があるため、固定した起点から将来に向かって評価します。MMMは観測済みの期間内で売上への寄与を配分するため、ホールドアウトを散在させれば、尤度に含めていない週でも適合した構造が成立するかという有用な確認ができます。この数値は補間の診断として読み、モデルが次四半期を予測できる証拠とは解釈しません。</p>
 <div id="fig-in-sample-fit" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="学習中の予測売上は観測売上の大きなトレンドに密接に追随する一方、一部の短期的なピークと谷を捉え損ねている。">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-in-sample-fit-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="../images/part6/sec6.2/in_sample_fit.png" class="fig-lg img-fluid figure-img" alt="学習中の予測売上は観測売上の大きなトレンドに密接に追随する一方、一部の短期的なピークと谷を捉え損ねている。">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-in-sample-fit-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-図&nbsp;11: サンプル内の適合：予測売上と実績売上。
+図&nbsp;7: サンプル内の適合：予測売上と実績売上。
 </figcaption>
 </figure>
 </div>
+<p>青はモデルの推定値、緑は観測売上、オレンジはメディア施策がない場合の推定ベースラインです。青い帯は90%信用区間です。</p>
 <div id="fig-out-of-sample-fit" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="ホールドアウトした週では、予測売上は観測された全体パターンを追うが、週ごとの大きな変動のいくつかを平滑化している。">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-out-of-sample-fit-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="../images/part6/sec6.2/out_of_sample_fit.png" class="fig-lg img-fluid figure-img" alt="ホールドアウトした週では、予測売上は観測された全体パターンを追うが、週ごとの大きな変動のいくつかを平滑化している。">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-out-of-sample-fit-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-図&nbsp;12: サンプル外の適合：予測売上と実績売上。
+図&nbsp;8: サンプル外の適合：予測売上と実績売上。
 </figcaption>
 </figure>
 </div>
-<p><strong>メディアに関する洞察。</strong> モデルは各チャネルについて、信用区間付きのROAS推定値を返します。区間が広いのは、そのチャネルの効果をデータから十分に特定できていないという意味です。点推定だけではそれが隠れてしまいます。区間を見れば、推定値にどれだけの重みを置けるかが分かります。</p>
-<div id="fig-roi-estimates" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="各メディアチャネルのROAS推定値と90%信用区間。区間が広いほど推定の不確実性が高い。">
+<p>2つ目の図は、同じMeridianの出力からホールドアウトした週だけを選んだものです。適合の良さはこの履歴内での補間を支持します。メディア効果の推定精度は、次に示すチャネル別の区間で確認します。</p>
+</section>
+<section id="media-insights" class="level3">
+<h3 class="anchored" data-anchor-id="media-insights">チャネル別の推定結果</h3>
+<p>モデルは各チャネルについて、信用区間付きのROAS推定値を返します。</p>
+<div id="fig-roi-estimates" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="各メディアチャネルのROAS推定値と90%信用区間。区間が広いほど推定の不確実性が高い。">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-roi-estimates-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part6/sec6.2/roi_estimates.png" class="fig-lg img-fluid figure-img" alt="各メディアチャネルのROAS推定値と90%信用区間。区間が広いほど推定の不確実性が高い。">
+<img src="../images/part6/sec6.2/roi_estimates.png" class="fig-md img-fluid figure-img" alt="各メディアチャネルのROAS推定値と90%信用区間。区間が広いほど推定の不確実性が高い。">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-roi-estimates-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-図&nbsp;13: チャネル別ROAS推定値と90%信用区間。
+図&nbsp;9: チャネル別ROAS推定値と90%信用区間。
 </figcaption>
 </figure>
 </div>
+<p>Meridianはこの売上対支出の比率をROIと表示します。本章でいうROASに相当します。追加した破線は貢献利益率40%での損益分岐ROASである2.50を示し、Searchの区間はその両側に広がっています。</p>
 <div id="fig-attribution-over-time" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="推定売上を、大きなベースライン成分と、5つのメディアチャネルによるより小さな時変寄与に分けている。">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-attribution-over-time-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="../images/part6/sec6.2/attribution_over_time.png" class="fig-lg img-fluid figure-img" alt="推定売上を、大きなベースライン成分と、5つのメディアチャネルによるより小さな時変寄与に分けている。">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-attribution-over-time-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-図&nbsp;14: 時系列で見たチャネル寄与とベースライン。
+図&nbsp;10: 時系列で見たチャネル寄与とベースライン。
 </figcaption>
 </figure>
 </div>
+<p>ベースラインは、メディア施策がない場合の売上をMeridianが推定したものです。色分けされた層は各チャネルの推定寄与を示します。縦軸はゼロより上から始まるため、見えている面積で構成比を判断せず、売上軸の目盛りから変化を読み取ります。</p>
 <p>これらのグラフを1つずつ作る必要はありません。<code>summarizer.Summarizer(mmm).output_model_results_summary(...)</code>を1回呼ぶだけで、モデル適合、チャネル寄与、信用区間付きROAS、反応曲線をまとめた、ステークホルダー向けの2ページHTMLレポートが書き出されます。付属ノートブックが生成した例は<a href="https://marketing-science-in-python.com/notebooks/part6-media-optimization/summary_output.html">summary_output.html</a>で確認できます。</p>
+</section>
 </section>
 <section id="budget-allocation" class="level2">
 <h2 class="anchored" data-anchor-id="budget-allocation">予算配分</h2>
 <p>モデルの3つの目的（測定、シミュレーション、最適化）は、ここで合流します。 反応曲線を適合した後、オプティマイザーは固定予算の制約下で予測KPIを最大化する配分を探索します。</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>budget_optimizer <span class="op">=</span> optimizer.BudgetOptimizer(mmm)</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>optimization_results <span class="op">=</span> budget_optimizer.optimize()</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
-<p>これは <a href="#fig-saturation-reallocation" class="quarto-xref">図&nbsp;<span>5</span></a> と同じ飽和の論理を、2チャネルではなくメディアミックス全体に適用したものです。オプティマイザーは、次の1ドルがまだ最も大きく働くチャネルへ予算を移します。</p>
-<div id="fig-budget-optimization" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="チャネル別に最適化前後の予算を比較している。総予算を固定したまま、未飽和のチャネルへ支出が移る。">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> meridian.analysis <span class="im">import</span> optimizer</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>budget_optimizer <span class="op">=</span> optimizer.BudgetOptimizer(mmm)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>optimization_results <span class="op">=</span> budget_optimizer.optimize()</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+<p>これは <a href="#fig-saturation-reallocation" class="quarto-xref">図&nbsp;<span>4</span></a> と同じ飽和の論理を、2チャネルではなくメディアミックス全体に適用したものです。オプティマイザーは、次の1ドルがまだ最も大きく効くチャネルへ予算を移します。</p>
+<div id="fig-budget-optimization" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="オプティマイザーはSearchとTV/CTVを減額してOOHとMetaを増額し、TikTokを小幅に減額する。">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-budget-optimization-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part6/sec6.2/budget_optimization.png" class="fig-lg img-fluid figure-img" alt="チャネル別に最適化前後の予算を比較している。総予算を固定したまま、未飽和のチャネルへ支出が移る。">
+<img src="../images/part6/sec6.2/budget_optimization.png" class="fig-md img-fluid figure-img" alt="オプティマイザーはSearchとTV/CTVを減額してOOHとMetaを増額し、TikTokを小幅に減額する。">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-budget-optimization-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-図&nbsp;15: チャネル別の最適化前後の予算。
+図&nbsp;11: チャネル別の推奨予算変更。
 </figcaption>
 </figure>
 </div>
+<p>ゼロより下の棒は減額、上の棒は増額の提案です。TV/CTV、Search、そしてTikTokの小幅な減額によって空く予算を、OOHとMetaに配分します。</p>
+<div id="fig-mmm-optimized-response-curves" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="各チャネルの適合した反応曲線上で、丸は現在の支出、四角は最適化後の支出を示す。">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-mmm-optimized-response-curves-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part6/sec6.2/optimized_response_curves.png" class="fig-lg img-fluid figure-img" alt="各チャネルの適合した反応曲線上で、丸は現在の支出、四角は最適化後の支出を示す。">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-mmm-optimized-response-curves-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+図&nbsp;12: 反応曲線上の現在と最適化後の支出。
+</figcaption>
+</figure>
+</div>
+<p>丸は現在の支出、四角はオプティマイザーが提案する配分を示します。右への移動は増額、左への移動は減額であり、各位置での曲線の傾きは、次の1ドルがどれだけ増分売上を生むかを表します。</p>
 <p>オプティマイザーにも同じ便利なレポート機能があります。<code>optimization_results.output_optimization_summary(...)</code>は、推奨される再配分をまとめた2ページのHTMLレポートを書き出します（<a href="https://marketing-science-in-python.com/notebooks/part6-media-optimization/optimization_output.html">optimization_output.html</a>）。</p>
-<p>デモでは、オプティマイザーがモデル化された5チャネル（TV/CTV、OOH、Google Search、Meta、TikTok）間で支出を再配分し、限界反応曲線が平坦なチャネルから、残りの余地が大きいチャネルへ予算を移します。総予算は変わらず、ミックスだけが変わります。チームが初めてMMMを導入すると、再配分だけでメディア由来の（増分）売上が5〜10%伸びることは珍しくありません。このデモでは約+3%、総売上に換算するとおよそ+1.2%です。</p>
-<p>オプティマイザーと計画の間には、もう1つルールが必要です。オプティマイザーは事後平均に基づいて予算を動かしますが、計画はモデルが実際に知っていることに基づいて動かすべきです。そこでノートブックは、オプティマイザーが使う量である限界ROASにガードレールを適用します。90%区間の相対半幅（区間幅の半分を推定値で割った値）が0.8を超えるチャネルは、推奨移動がどれほど大きくても現在の支出に据え置きます。区間が広いチャネルは、データがその効果を識別できていないチャネルなので、予算を動かす前に測定します。これはガバナンスルールの例であり、普遍的な統計的閾値ではありません。デモでは推奨移動の74%を承認し、1チャネルを据え置きます。</p>
-<p>オプティマイザーの出力は、最終的なメディア計画ではなく、計画の出発点として使います。モデルは契約、最低支出額、運用上のリードタイムといった現実の制約を考慮しません。それらは別途重ねる必要があります。そしてこのデモでは、モデルが正当化できない推奨が1つ出ます。ノートブックは、その推奨を支えているものがいかに少ないかを示します。飽和の事前分布だけを、ここで使ったものからMeridianのデフォルトに変えると、Searchの提案される移動は30%削減から30%増加へ反転し、どちらの適合も幅ルールを満たしません。履歴データだけではSearchを削減すべきか増額すべきかが決まらないため、提案された削減は実験で検証する必要があります。</p>
+<p><a href="#tbl-optimizer-recommendation" class="quarto-xref">表&nbsp;<span>6</span></a> がモデルの推奨です。総予算を変えずに、オプティマイザーはOOHとMetaへ支出を移し、TV/CTVとGoogle Searchから減らします。いずれも許された30%の上限までで、TikTokは据え置きです。モデルの予測では、これでメディア由来売上が約3%、総売上が約1.2%増えます。</p>
+<div id="tbl-optimizer-recommendation" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-optimizer-recommendation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+表&nbsp;6: オプティマイザーの推奨。付属ノートブックより。
+</figcaption>
+<div aria-describedby="tbl-optimizer-recommendation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <table class="caption-top table">
 <thead>
 <tr class="header">
-<th>検証する意思決定</th>
-<th>値</th>
+<th style="text-align: left;">チャネル</th>
+<th style="text-align: right;">現在の支出</th>
+<th style="text-align: right;">推奨される支出</th>
+<th style="text-align: right;">変化</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>チャネル</td>
-<td>Google Search</td>
+<td style="text-align: left;">OOH</td>
+<td style="text-align: right;">$124.4M</td>
+<td style="text-align: right;">$161.7M</td>
+<td style="text-align: right;">+30.0%</td>
 </tr>
 <tr class="even">
-<td>オプティマイザー</td>
-<td>−30%、制約の下限に固定</td>
+<td style="text-align: left;">Meta</td>
+<td style="text-align: right;">$115.2M</td>
+<td style="text-align: right;">$149.8M</td>
+<td style="text-align: right;">+30.0%</td>
 </tr>
 <tr class="odd">
-<td>ガードレール</td>
-<td>HOLD、区間が広すぎる：限界ROAS [0.36, 9.51]、相対半幅1.39</td>
+<td style="text-align: left;">TikTok</td>
+<td style="text-align: right;">$136.1M</td>
+<td style="text-align: right;">$135.8M</td>
+<td style="text-align: right;">−0.2%</td>
 </tr>
 <tr class="even">
-<td>テスト前予測</td>
-<td>30%削減すると8週間で、削減1ドルあたり$2.95の売上を失う。90%信用区間 [0.34, 8.48]</td>
+<td style="text-align: left;">TV/CTV</td>
+<td style="text-align: right;">$111.8M</td>
+<td style="text-align: right;">$78.3M</td>
+<td style="text-align: right;">−30.0%</td>
 </tr>
 <tr class="odd">
-<td>提案するテスト</td>
-<td>マッチさせた8組の地域でSearchを−30%、8週間</td>
-</tr>
-<tr class="even">
-<td>意思決定ルール</td>
-<td>95% CI上限が2.50未満なら削減（利益率40%で損益分岐）</td>
+<td style="text-align: left;">Google Search</td>
+<td style="text-align: right;">$127.1M</td>
+<td style="text-align: right;">$89.0M</td>
+<td style="text-align: right;">−30.0%</td>
 </tr>
 </tbody>
 </table>
-<p>モデルの予測は、実験を行う前に記録しておきます。そうすれば、結果をこの予測と比較して、チャネルのリターンだけでなくモデルの精度も確認できます。反応曲線は観測データから構築されているため、次のステップはこの推奨を検証することです。<a href="sec6.3-incrementality-experiments.html">Section 6.3</a>でその実験を設計・分析し、<a href="sec6.4-mmm-calibration.html">Section 6.4</a>で結果をモデルへ戻します。</p>
+</div>
+</figure>
+</div>
+<p>ノートブックでは、区間の相対半幅が0.8を超えるチャネルの予算を据え置きます。ここではSearchが該当します。Searchの予算を変える前に増分効果を実験で確かめます。その方法を<a href="sec6.3-incrementality-experiments.html">6.3節</a>で説明し、<a href="sec6.4-mmm-calibration.html">6.4節</a>で結果をモデルに反映します。</p>
 </section>
 <section id="key-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="key-takeaways">重要なポイント</h2>
@@ -1021,15 +1266,50 @@ y_t = \beta_0 + \sum_{c=1}^{C} \beta_c \cdot \text{Saturation}\bigl(\text{Adstoc
   window.document.addEventListener("DOMContentLoaded", function (event) {
     // Ensure there is a toggle, if there isn't float one in the top right
     if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
-      const a = window.document.createElement('a');
-      a.classList.add('top-right');
-      a.classList.add('quarto-color-scheme-toggle');
-      a.href = "";
-      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const toggle = window.document.createElement('button');
+      toggle.type = "button";
+      toggle.setAttribute("role", "switch");
+      toggle.setAttribute("aria-checked", "false");
+      toggle.classList.add('top-right');
+      toggle.classList.add('quarto-color-scheme-toggle');
+      toggle.setAttribute("aria-label", "ダークモードの切り替え");
+      toggle.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
       const i = window.document.createElement("i");
       i.classList.add('bi');
-      a.appendChild(i);
-      window.document.body.appendChild(a);
+      toggle.appendChild(i);
+      // Put the toggle in a landmark of its own, so that landmark navigation
+      // can reach it.
+      //
+      // The container is always a fresh direct child of body, and the toggle is
+      // never moved into page furniture that the theme or the author controls.
+      // The toggle is positioned against the page, so any ancestor that
+      // establishes a containing block captures it: a positioned element or a
+      // grid for position: absolute, and transform, filter, will-change or
+      // contain for position: fixed. A direct child of body has none of these
+      // to inherit, and the shift when one appears is silent and visual.
+      //
+      // ARIA says a document should have at most one banner, and axe reports a
+      // duplicate whether or not the banners carry distinct labels. So use a
+      // header when the page has no banner yet, and a named region otherwise.
+      //
+      // A header is a banner wherever it sits, unless it is inside sectioning
+      // content, so this cannot just look at the children of body: a custom
+      // page layout wraps the title block header in a plain div. An explicit
+      // role="banner" always counts.
+      const sectioning = 'article, aside, main, nav, section, [role="article"], [role="complementary"], [role="main"], [role="navigation"], [role="region"]';
+      const hasBanner = Array.from(
+        window.document.querySelectorAll('header:not([role]), [role="banner"]')
+      ).some(function(el) {
+        return el.hasAttribute("role") || el.closest(sectioning) === null;
+      });
+      const container = window.document.createElement(hasBanner ? "div" : "header");
+      if (hasBanner) {
+        container.setAttribute("role", "region");
+        container.setAttribute("aria-label", "ダークモードの切り替え");
+      }
+      container.classList.add('quarto-color-scheme-toggle-container');
+      container.appendChild(toggle);
+      window.document.body.appendChild(container);
     }
     setColorSchemeToggle(hasAlternateSentinel())
     const icon = "";
@@ -1108,7 +1388,8 @@ y_t = \beta_0 + \sum_{c=1}^{C} \beta_c \cdot \text{Saturation}\bigl(\text{Adstoc
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }
       // Inspect non-navigation links and adorn them if external
-     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      window.quartoDecorateExternalLinks = function (root) {
+     var links = (root || window.document).querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
       for (var i=0; i<links.length; i++) {
         const link = links[i];
         if (!isInternal(link.href)) {
@@ -1117,8 +1398,69 @@ y_t = \beta_0 + \sum_{c=1}^{C} \beta_c \cdot \text{Saturation}\bigl(\text{Adstoc
           if (link.dataset.originalHref !== undefined) {
             link.href = link.dataset.originalHref;
           }
+          if (!link.classList.contains('no-external-icon')) {
+          }
         }
       }
+      };
+      window.quartoDecorateExternalLinks(window.document);
+    // Esc closes the popup (WCAG 1.4.13) and focus leaving both trigger and
+    // popup closes it (WCAG 2.4.11); tippy handles neither for interactive popups.
+    const hideOnEscAndFocusOut = {
+      name: 'hideOnEscAndFocusOut',
+      defaultValue: true,
+      fn(instance) {
+        const dismiss = () => {
+          // A show scheduled by the trigger delay would otherwise reopen it
+          instance.clearDelayTimeouts();
+          instance.hide();
+        };
+        const onKeyDown = (event) => {
+          if (event.key !== 'Escape') {
+            return;
+          }
+          // Keep Esc from also reaching page handlers (e.g. reveal.js overview),
+          // except an open reveal.js slide menu, which Esc should close too.
+          // The menu handles keys only when its keyboard option is on.
+          const menuHandlesEsc = window.Reveal?.getPlugin?.('menu')?.isOpen() &&
+            window.Reveal.getConfig().menu?.keyboard !== false;
+          if (!menuHandlesEsc) {
+            event.stopPropagation();
+          }
+          if (instance.popper.contains(window.document.activeElement)) {
+            // Disabled while refocusing so the focus trigger does not reopen it
+            instance.disable();
+            instance.reference.focus();
+            instance.enable();
+          }
+          dismiss();
+        };
+        const onFocusOut = (event) => {
+          const target = event.relatedTarget;
+          if (target && !instance.reference.contains(target) &&
+              !instance.popper.contains(target)) {
+            dismiss();
+          }
+        };
+        // On the trigger too: a click trigger (code-annotations: select) has no
+        // blur handling. Attached for the instance's lifetime so leaving the
+        // trigger also cancels a show still pending on the trigger delay.
+        instance.reference.addEventListener('focusout', onFocusOut);
+        return {
+          onShow() {
+            window.document.addEventListener('keydown', onKeyDown, true);
+            instance.popper.addEventListener('focusout', onFocusOut);
+          },
+          onHide() {
+            window.document.removeEventListener('keydown', onKeyDown, true);
+            instance.popper.removeEventListener('focusout', onFocusOut);
+          },
+          onDestroy() {
+            instance.reference.removeEventListener('focusout', onFocusOut);
+          },
+        };
+      },
+    };
     function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
       const config = {
         allowHTML: true,
@@ -1132,6 +1474,7 @@ y_t = \beta_0 + \sum_{c=1}^{C} \beta_c \cdot \text{Saturation}\bigl(\text{Adstoc
         interactiveBorder: 10,
         theme: 'quarto',
         placement: 'bottom-start',
+        plugins: [hideOnEscAndFocusOut],
       };
       if (contentFn) {
         config.content = contentFn;
@@ -1294,44 +1637,54 @@ y_t = \beta_0 + \sum_{c=1}^{C} \beta_c \cdot \text{Saturation}\bigl(\text{Adstoc
           const lineIds = lines.map((line) => {
             return targetCell + "-" + line;
           })
-          let top = null;
-          let height = null;
-          let parent = null;
+          // Each band is positioned against its own containing block, which is
+          // not the offsetParent of the lines, so place it from client rects.
+          const placeBand = (band, firstEl, lastEl, codeBlock) => {
+            const container = band.offsetParent;
+            if (container === null) {
+              return;
+            }
+            const containerRect = container.getBoundingClientRect();
+            // Reveal.js scales slides with a transform, so convert client
+            // pixels back to the CSS pixels of the container.
+            const scale = containerRect.height / container.offsetHeight || 1;
+            const firstRect = firstEl.getBoundingClientRect();
+            const lastRect = lastEl.getBoundingClientRect();
+            const top = (firstRect.top - containerRect.top) / scale - container.clientTop + container.scrollTop;
+            const height = (lastRect.bottom - firstRect.top) / scale;
+            band.style.top = top - 2 + "px";
+            band.style.height = height + 4 + "px";
+            if (codeBlock) {
+              // Without the copy button wrapper, the containing block is wider
+              // than the code block, so span the code block explicitly.
+              const blockRect = codeBlock.getBoundingClientRect();
+              band.style.left = (blockRect.left - containerRect.left) / scale - container.clientLeft + container.scrollLeft + "px";
+              band.style.width = blockRect.width / scale + "px";
+            }
+          };
           if (lineIds.length > 0) {
-              //compute the position of the single el (top and bottom and make a div)
-              const el = window.document.getElementById(lineIds[0]);
-              top = el.offsetTop;
-              height = el.offsetHeight;
-              parent = el.parentElement.parentElement;
-            if (lineIds.length > 1) {
-              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
-              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
-              height = bottom - top;
+            const el = window.document.getElementById(lineIds[0]);
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const parent = el.parentElement.parentElement;
+            // cook up a div (if necessary) and position it
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
             }
-            if (top !== null && height !== null && parent !== null) {
-              // cook up a div (if necessary) and position it 
-              let div = window.document.getElementById("code-annotation-line-highlight");
-              if (div === null) {
-                div = window.document.createElement("div");
-                div.setAttribute("id", "code-annotation-line-highlight");
-                div.style.position = 'absolute';
-                parent.appendChild(div);
-              }
-              div.style.top = top - 2 + "px";
-              div.style.height = height + 4 + "px";
-              div.style.left = 0;
-              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
-              if (gutterDiv === null) {
-                gutterDiv = window.document.createElement("div");
-                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
-                gutterDiv.style.position = 'absolute';
-                const codeCell = window.document.getElementById(targetCell);
-                const gutter = codeCell.querySelector('.code-annotation-gutter');
-                gutter.appendChild(gutterDiv);
-              }
-              gutterDiv.style.top = top - 2 + "px";
-              gutterDiv.style.height = height + 4 + "px";
+            placeBand(div, el, lastEl, parent.closest("div.sourceCode") || parent);
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
             }
+            placeBand(gutterDiv, el, lastEl);
             selectedAnnoteEl = annoteEl;
           }
         };
@@ -1430,15 +1783,18 @@ y_t = \beta_0 + \sum_{c=1}^{C} \beta_c \cdot \text{Saturation}\bigl(\text{Adstoc
     }
   });
   </script>
-<nav class="page-navigation">
+  <script type="application/javascript">
+  window.quartoScrollableRegionsLabels = {"code":"スクロール可能なコード","output":"スクロール可能な出力"};
+  </script>
+<nav class="page-navigation" aria-label="ページ">
   <div class="nav-page nav-page-previous">
       <a href="../part6/sec6.1-media-measurement-problem.html" class="pagination-link" aria-label="6.1 メディア測定の問題">
         <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">6.1 メディア測定の問題</span></span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="../part6/sec6.3-incrementality-experiments.html" class="pagination-link" aria-label="6.3 増分効果実験">
-        <span class="nav-page-text"><span class="chapter-title">6.3 増分効果実験</span></span> <i class="bi bi-arrow-right-short"></i>
+      <a href="../part6/sec6.3-incrementality-experiments.html" class="pagination-link" aria-label="6.3 インクリメンタリティ実験">
+        <span class="nav-page-text"><span class="chapter-title">6.3 インクリメンタリティ実験</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>

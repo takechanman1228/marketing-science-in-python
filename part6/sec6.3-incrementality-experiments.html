@@ -2,11 +2,11 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.10.19">
+<meta name="generator" content="quarto-1.11.9">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="Design and analyze a geo incrementality experiment: choosing the experimental unit, estimating lift, and turning the result into a media decision.">
+<meta name="description" content="Design and analyze a geo incrementality experiment: matched markets, difference-in-differences, incremental ROAS, and the break-even decision.">
 
 <title>Incrementality Experiments in Python – Marketing Science in Python</title>
 <style>
@@ -77,18 +77,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../assets/favicon.png" rel="icon" type="image/png">
 <script src="../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/scrollable-regions/scrollable-regions.js" type="module"></script>
 <script src="../site_libs/quarto-html/popper.min.js"></script>
 <script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-b626d73c4c936ccc3cb08be7d45d1df6.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-447e42e69aaa9833c0ba1b986f430b20.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-743e9765ff591ca41f31e934d0cf4bf8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../site_libs/bootstrap/bootstrap-dark-c9719a0dd22d1eb90e3fd2c145c4e342.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../site_libs/bootstrap/bootstrap-743e9765ff591ca41f31e934d0cf4bf8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-549dcdc79fd547502b4b0b8b8ab3f938.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-1a8a0d276ffdcff0dc8a23f0b0b34c12.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-549dcdc79fd547502b4b0b8b8ab3f938.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
@@ -158,12 +159,12 @@ window.Quarto = {
 
 <link rel="stylesheet" href="../custom.css">
 <meta property="og:title" content="Incrementality Experiments in Python">
-<meta property="og:description" content="Design and analyze a geo incrementality experiment: choosing the experimental unit, estimating lift, and turning the result into a media decision.">
+<meta property="og:description" content="Design and analyze a geo incrementality experiment: matched markets, difference-in-differences, incremental ROAS, and the break-even decision.">
 <meta property="og:image" content="https://marketing-science-in-python.com/images/common/book_cover_online.png">
 <meta property="og:site_name" content="Marketing Science in Python">
 <meta property="og:image:alt" content="Abstract data streams converging on a geometric network">
 <meta name="twitter:title" content="Incrementality Experiments in Python">
-<meta name="twitter:description" content="Design and analyze a geo incrementality experiment: choosing the experimental unit, estimating lift, and turning the result into a media decision.">
+<meta name="twitter:description" content="Design and analyze a geo incrementality experiment: matched markets, difference-in-differences, incremental ROAS, and the break-even decision.">
 <meta name="twitter:image" content="https://marketing-science-in-python.com/images/common/book_cover_online.png">
 <meta name="twitter:image:alt" content="Abstract data streams converging on a geometric network">
 <meta name="twitter:card" content="summary_large_image">
@@ -178,7 +179,7 @@ window.Quarto = {
 <!-- msbook-i18n-head:end -->
 </head>
 
-<body class="nav-sidebar floating quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+<body class="nav-sidebar floating quarto-light"><a id="quarto-skip-link" class="visually-hidden-focusable" href="#quarto-document-content">Skip to main content</a><script id="quarto-html-before-body" type="application/javascript">
     const toggleBodyColorMode = (bsSheetEl) => {
       const mode = bsSheetEl.getAttribute("data-mode");
       const bodyEl = window.document.querySelector("body");
@@ -201,6 +202,7 @@ window.Quarto = {
       for (let i=0; i < toggles.length; i++) {
         const toggle = toggles[i];
         if (toggle) {
+          toggle.setAttribute("aria-checked", alternate ? "true" : "false");
           if (alternate) {
             toggle.classList.add("alternate");
           } else {
@@ -230,13 +232,19 @@ window.Quarto = {
       manageTransitions('#quarto-margin-sidebar .nav-link', true);
       // Switch the toggles
       setColorSchemeToggle(alternate)
-      // Hack to workaround the fact that safari doesn't
-      // properly recolor the scrollbar when toggling (#1455)
+    }
+    // Hack to workaround the fact that safari doesn't
+    // properly recolor the scrollbar when toggling (#1455).
+    // Not run on load: stylesheets are set before first paint there, and
+    // scrolling would undo the scroll to a URL fragment (#14973).
+    // The one pixel nudge keeps the reader where they were.
+    const refreshSafariScrollbar = () => {
       if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
         manageTransitions("body", false);
-        window.scrollTo(0, 1);
+        const scrollY = window.scrollY;
+        window.scrollTo(0, scrollY > 0 ? scrollY - 1 : 1);
         setTimeout(() => {
-          window.scrollTo(0, 0);
+          window.scrollTo(0, scrollY);
           manageTransitions("body", true);
         }, 40);
       }
@@ -330,6 +338,7 @@ window.Quarto = {
       // Read the current dark / light value
       let toAlternate = !hasAlternateSentinel();
       toggleColorMode(toAlternate);
+      refreshSafariScrollbar();
       setStyleSentinel(toAlternate);
       toggleGiscusIfUsed(toAlternate, darkModeDefault);
       window.dispatchEvent(new Event('resize'));
@@ -344,13 +353,13 @@ window.Quarto = {
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
-  <nav class="quarto-secondary-nav">
+  <nav class="quarto-secondary-nav" aria-label="Toolbar">
     <div class="container-fluid d-flex">
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part6/_part6.html">Part 6. Media Investment and Optimization</a></li><li class="breadcrumb-item"><a href="../part6/sec6.3-incrementality-experiments.html"><span class="chapter-title">6.3 Incrementality Experiments</span></a></li></ol></nav>
-        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        <nav class="quarto-page-breadcrumbs" aria-label="Breadcrumbs"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part6/_part6.html">Part 6. Media Investment and Optimization</a></li><li class="breadcrumb-item"><a href="../part6/sec6.3-incrementality-experiments.html"><span class="chapter-title">6.3 Incrementality Experiments</span></a></li></ol></nav>
+        <a class="flex-grow-1" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <!-- msbook-language-switch-mobile:start -->
 <div class="msbook-language-switch-mobile" aria-label="Language"><span lang="en" aria-current="page">EN</span><span aria-hidden="true"> | </span><a lang="ja" hreflang="ja" href="../ja/part6/sec6.3-incrementality-experiments.html" onclick="this.hash=window.location.hash">日本語</a><span aria-hidden="true"> | </span><a lang="fr" hreflang="fr" href="../fr/part6/sec6.3-incrementality-experiments.html" onclick="this.hash=window.location.hash">FR</a><span aria-hidden="true"> | </span><a lang="de" hreflang="de" href="../de/part6/sec6.3-incrementality-experiments.html" onclick="this.hash=window.location.hash">DE</a><span aria-hidden="true"> | </span><a lang="zh-Hans" hreflang="zh-Hans" href="../zh/part6/sec6.3-incrementality-experiments.html" onclick="this.hash=window.location.hash">中文</a></div>
@@ -364,7 +373,7 @@ window.Quarto = {
 <!-- content -->
 <div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
 <!-- sidebar -->
-  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto" aria-label="Site">
     <div class="pt-lg-2 mt-2 text-left sidebar-header">
     <div class="sidebar-title mb-0 py-0">
       <a href="../">Marketing Science in Python</a> 
@@ -387,7 +396,7 @@ window.Quarto = {
           </li>
       </ul>
     </div>
-  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+  <button type="button" role="switch" aria-checked="false" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode" aria-label="Toggle dark mode"><i class="bi"></i></button>
 </div>
     </div>
       </div>
@@ -407,12 +416,12 @@ window.Quarto = {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a href="../part1/_part1.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Part 1. Introduction</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
+ <span class="menu-text" id="quarto-sidebar-section-1-label">Part 1. Introduction</span></a>
+            <button type="button" class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-controls="quarto-sidebar-section-1" aria-expanded="true" aria-label="Toggle section: Part 1. Introduction">
+              <i class="bi bi-chevron-right ms-2" aria-hidden="true"></i>
+            </button> 
       </div>
-      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+      <ul id="quarto-sidebar-section-1" aria-labelledby="quarto-sidebar-section-1-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../part1/sec1.1-what-is-marketing-science.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">1.1 What Is Marketing Science?</span></a>
@@ -428,12 +437,12 @@ window.Quarto = {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a href="../part2/_part2.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Part 2. Analysis for Better Decisions</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
+ <span class="menu-text" id="quarto-sidebar-section-2-label">Part 2. Analysis for Better Decisions</span></a>
+            <button type="button" class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-controls="quarto-sidebar-section-2" aria-expanded="true" aria-label="Toggle section: Part 2. Analysis for Better Decisions">
+              <i class="bi bi-chevron-right ms-2" aria-hidden="true"></i>
+            </button> 
       </div>
-      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+      <ul id="quarto-sidebar-section-2" aria-labelledby="quarto-sidebar-section-2-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../part2/sec2.1-right-question.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.1 Framing the Right Question</span></a>
@@ -454,12 +463,12 @@ window.Quarto = {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a href="../part3/_part3.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Part 3. Causal Inference for Marketing</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
+ <span class="menu-text" id="quarto-sidebar-section-3-label">Part 3. Causal Inference for Marketing</span></a>
+            <button type="button" class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-controls="quarto-sidebar-section-3" aria-expanded="true" aria-label="Toggle section: Part 3. Causal Inference for Marketing">
+              <i class="bi bi-chevron-right ms-2" aria-hidden="true"></i>
+            </button> 
       </div>
-      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+      <ul id="quarto-sidebar-section-3" aria-labelledby="quarto-sidebar-section-3-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../part3/sec3.1-thinking-causally.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.1 Causal Thinking</span></a>
@@ -495,12 +504,12 @@ window.Quarto = {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a href="../part4/_part4.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Part 4. Customer Analytics</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
+ <span class="menu-text" id="quarto-sidebar-section-4-label">Part 4. Customer Analytics</span></a>
+            <button type="button" class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" aria-controls="quarto-sidebar-section-4" aria-expanded="true" aria-label="Toggle section: Part 4. Customer Analytics">
+              <i class="bi bi-chevron-right ms-2" aria-hidden="true"></i>
+            </button> 
       </div>
-      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+      <ul id="quarto-sidebar-section-4" aria-labelledby="quarto-sidebar-section-4-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../part4/sec4.1-segmentation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">4.1 Customer Segmentation</span></a>
@@ -516,12 +525,12 @@ window.Quarto = {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a href="../part5/_part5.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Part 5. Commercial Analytics</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
+ <span class="menu-text" id="quarto-sidebar-section-5-label">Part 5. Commercial Analytics</span></a>
+            <button type="button" class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" aria-controls="quarto-sidebar-section-5" aria-expanded="true" aria-label="Toggle section: Part 5. Commercial Analytics">
+              <i class="bi bi-chevron-right ms-2" aria-hidden="true"></i>
+            </button> 
       </div>
-      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+      <ul id="quarto-sidebar-section-5" aria-labelledby="quarto-sidebar-section-5-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../part5/sec5.1-price-elasticity.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.1 Price Elasticity and Pricing Decisions</span></a>
@@ -542,12 +551,12 @@ window.Quarto = {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a href="../part6/_part6.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Part 6. Media Investment and Optimization</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
+ <span class="menu-text" id="quarto-sidebar-section-6-label">Part 6. Media Investment and Optimization</span></a>
+            <button type="button" class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" aria-controls="quarto-sidebar-section-6" aria-expanded="true" aria-label="Toggle section: Part 6. Media Investment and Optimization">
+              <i class="bi bi-chevron-right ms-2" aria-hidden="true"></i>
+            </button> 
       </div>
-      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+      <ul id="quarto-sidebar-section-6" aria-labelledby="quarto-sidebar-section-6-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../part6/sec6.1-media-measurement-problem.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.1 The Media Measurement Problem</span></a>
@@ -566,11 +575,6 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../part6/sec6.4-mmm-calibration.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.4 Calibrating MMM with Experiments</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../part6/sec6.5-when-tools-disagree.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.5 Making Decisions When Measurement Tools Disagree</span></a>
   </div>
 </li>
       </ul>
@@ -603,35 +607,21 @@ window.Quarto = {
 <div class="msbook-language-switch" aria-label="Language"><span lang="en" aria-current="page">English</span><span aria-hidden="true"> | </span><a lang="ja" hreflang="ja" href="../ja/part6/sec6.3-incrementality-experiments.html" onclick="this.hash=window.location.hash">日本語</a><span aria-hidden="true"> | </span><a lang="fr" hreflang="fr" href="../fr/part6/sec6.3-incrementality-experiments.html" onclick="this.hash=window.location.hash">Français</a><span aria-hidden="true"> | </span><a lang="de" hreflang="de" href="../de/part6/sec6.3-incrementality-experiments.html" onclick="this.hash=window.location.hash">Deutsch</a><span aria-hidden="true"> | </span><a lang="zh-Hans" hreflang="zh-Hans" href="../zh/part6/sec6.3-incrementality-experiments.html" onclick="this.hash=window.location.hash">中文</a></div>
 <!-- msbook-language-switch:end -->
 
-        <nav id="TOC" role="doc-toc" class="toc-active">
+        <nav id="TOC" role="doc-toc" aria-labelledby="toc-title" class="toc-active">
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#sec-what-is-incrementality" id="toc-sec-what-is-incrementality" class="nav-link active" data-scroll-target="#sec-what-is-incrementality">What Is Incrementality?</a></li>
-  <li><a href="#sec-experimental-unit" id="toc-sec-experimental-unit" class="nav-link" data-scroll-target="#sec-experimental-unit">Choosing the Experimental Unit</a></li>
-  <li><a href="#sec-geo-four-steps" id="toc-sec-geo-four-steps" class="nav-link" data-scroll-target="#sec-geo-four-steps">The Geo Experiment in Four Steps</a></li>
-  <li><a href="#sec-geo-historical-data" id="toc-sec-geo-historical-data" class="nav-link" data-scroll-target="#sec-geo-historical-data">Step 1: Historical Data</a></li>
-  <li><a href="#sec-geo-pretest-design" id="toc-sec-geo-pretest-design" class="nav-link" data-scroll-target="#sec-geo-pretest-design">Step 2: Pre-Test Design</a>
-  <ul class="collapse">
-  <li><a href="#market-selection-and-assignment" id="toc-market-selection-and-assignment" class="nav-link" data-scroll-target="#market-selection-and-assignment">Market selection and assignment</a></li>
-  <li><a href="#power-and-mde-by-simulation" id="toc-power-and-mde-by-simulation" class="nav-link" data-scroll-target="#power-and-mde-by-simulation">Power and MDE by simulation</a></li>
-  <li><a href="#sec-geo-decision-rule" id="toc-sec-geo-decision-rule" class="nav-link" data-scroll-target="#sec-geo-decision-rule">Decision rule and design freeze</a></li>
-  </ul></li>
-  <li><a href="#sec-geo-run" id="toc-sec-geo-run" class="nav-link" data-scroll-target="#sec-geo-run">Step 3: Run the Geo Test</a></li>
-  <li><a href="#sec-geo-measurement" id="toc-sec-geo-measurement" class="nav-link" data-scroll-target="#sec-geo-measurement">Step 4: Post-Test Measurement</a>
-  <ul class="collapse">
-  <li><a href="#does-the-result-hold-up" id="toc-does-the-result-hold-up" class="nav-link" data-scroll-target="#does-the-result-hold-up">Does the result hold up?</a></li>
-  </ul></li>
-  <li><a href="#sec-geo-lift-to-decision" id="toc-sec-geo-lift-to-decision" class="nav-link" data-scroll-target="#sec-geo-lift-to-decision">From Lift to Decision</a></li>
+  <li><a href="#sec-geo-pretest-design" id="toc-sec-geo-pretest-design" class="nav-link active" data-scroll-target="#sec-geo-pretest-design">Designing the Test</a></li>
+  <li><a href="#sec-geo-measurement" id="toc-sec-geo-measurement" class="nav-link" data-scroll-target="#sec-geo-measurement">Measuring the Effect with Difference-in-Differences</a></li>
   <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways">Key Takeaways</a></li>
   </ul>
 <div class="quarto-code-links"><h2>Code Links</h2><ul><li><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part6-media-optimization/sec6.3_geo_experiment.ipynb"><i class="bi bi-github"></i>sec6.3_geo_experiment.ipynb</a></li></ul></div></nav>
     </div>
 <!-- main -->
-<main class="content" id="quarto-document-content">
+<main class="content" id="quarto-document-content" tabindex="-1">
 
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part6/_part6.html">Part 6. Media Investment and Optimization</a></li><li class="breadcrumb-item"><a href="../part6/sec6.3-incrementality-experiments.html"><span class="chapter-title">6.3 Incrementality Experiments</span></a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="Breadcrumbs"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part6/_part6.html">Part 6. Media Investment and Optimization</a></li><li class="breadcrumb-item"><a href="../part6/sec6.3-incrementality-experiments.html"><span class="chapter-title">6.3 Incrementality Experiments</span></a></li></ol></nav>
 <div class="quarto-title">
 <h1 class="title"><span id="sec-incrementality-experiments" class="quarto-section-identifier"><span class="chapter-title">6.3 Incrementality Experiments</span></span></h1>
 </div>
@@ -650,284 +640,78 @@ window.Quarto = {
 </header>
 
 
-<section id="sec-what-is-incrementality" class="level2">
-<h2 class="anchored" data-anchor-id="sec-what-is-incrementality">What Is Incrementality?</h2>
-<p>The MMM’s optimizer wants to cut Google Search by 30%, all the way to its constraint floor, but the model cannot support the move: Search’s marginal ROAS interval runs from 0.4 to 9.5, too wide to act on. The cause is in the history the <a href="sec6.2-mmm-fundamentals.html">Section 6.2</a> model was fitted on. Search has run always-on at a nearly constant weekly budget for three years, so the model has never seen its spend move, and the estimate is mostly the prior it started with. An estimate like that cannot justify a cut. Before cutting nationally, we need to know what the last 30% of Search spend was actually buying.</p>
-<p>That number is an incremental effect. <strong>Incrementality</strong> is the outcome that would not have happened without the advertising: if a campaign records $120,000 in sales and $100,000 would have come in anyway, the incremental revenue is $20,000. Attribution has nothing to say about the $100,000, and the MMM can only estimate it from variation in the history, of which Search has none. The number cannot come from the existing data, so we need an experiment that changes Search spend deliberately, in chosen markets.</p>
-</section>
-<section id="sec-experimental-unit" class="level2">
-<h2 class="anchored" data-anchor-id="sec-experimental-unit">Choosing the Experimental Unit</h2>
-<p>The first design choice is what gets randomized. A user-based conversion lift study randomizes eligible people: the platform withholds the campaign from a holdout group and compares conversion rates. A geo experiment randomizes markets: media changes for everyone in the test markets, and the outcome is whatever the business measures there. <a href="#fig-experiment-unit-choice" class="quarto-xref">Figure&nbsp;<span>1</span></a> shows the two side by side.</p>
-<div id="fig-experiment-unit-choice" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Left panel: eligible users split into a treatment group that may see the ad and a holdout group from which it is withheld, compared on conversion rates. Right panel: matched markets split into test markets where Search spend is cut 30 percent and control markets where it is unchanged, compared as a difference in differences.">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-experiment-unit-choice-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part6/sec6.3/experiment_unit_choice.png" class="fig-lg img-fluid figure-img" alt="Left panel: eligible users split into a treatment group that may see the ad and a holdout group from which it is withheld, compared on conversion rates. Right panel: matched markets split into test markets where Search spend is cut 30 percent and control markets where it is unchanged, compared as a difference in differences.">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-experiment-unit-choice-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;1: Two ways to create a counterfactual: randomize users, or randomize markets.
-</figcaption>
-</figure>
-</div>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Design question</th>
-<th>User-based lift</th>
-<th>Geo experiment</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>Randomization unit</td>
-<td>Eligible user</td>
-<td>Market or region</td>
-</tr>
-<tr class="even">
-<td>Usually operated by</td>
-<td>Ad platform</td>
-<td>Brand and analyst</td>
-</tr>
-<tr class="odd">
-<td>Primary outcome</td>
-<td>Registered conversions</td>
-<td>Aggregate business KPI</td>
-</tr>
-<tr class="even">
-<td>Main strength</td>
-<td>Individual randomization</td>
-<td>Offline and total-market lift</td>
-</tr>
-<tr class="odd">
-<td>Main constraint</td>
-<td>Identity, tracking, volume</td>
-<td>Few units, spillovers, noise</td>
-</tr>
-</tbody>
-</table>
-<p>User-based lift is the cleaner design when it’s available: individual randomization, large samples, and a console that does the work. But it measures registered conversions among users the platform can identify, so offline sales, halo into other channels, and revenue in the company’s own books sit outside it. Our question is about total revenue in the company’s books, and the decision is a budget cut rather than a campaign setting. That points to geography. A geo experiment reads its outcome from the revenue system, and it aggregates to the geo-week structure the MMM uses, which <a href="sec6.4-mmm-calibration.html">Section 6.4</a> will need. The mechanics of user-based lift are covered in <a href="../appendix/further-reading.html#incrementality-experiments">References and Further Reading</a>.</p>
-</section>
-<section id="sec-geo-four-steps" class="level2">
-<h2 class="anchored" data-anchor-id="sec-geo-four-steps">The Geo Experiment in Four Steps</h2>
-<div id="fig-geo-experiment-flow" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Four numbered cards: historical data (revenue and spend by market and week), pre-test design (KPI, markets, spend change, duration, decision rule), run the geo test (cut spend in test markets, hold control markets steady), and post-test measurement (estimate lift against a counterfactual and decide).">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-geo-experiment-flow-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part6/sec6.3/geo_experiment_flow.png" class="fig-lg img-fluid figure-img" alt="Four numbered cards: historical data (revenue and spend by market and week), pre-test design (KPI, markets, spend change, duration, decision rule), run the geo test (cut spend in test markets, hold control markets steady), and post-test measurement (estimate lift against a counterfactual and decide).">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-geo-experiment-flow-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;2: A geo experiment in four steps.
-</figcaption>
-</figure>
-</div>
-<p>The rest of this chapter follows the four steps in <a href="#fig-geo-experiment-flow" class="quarto-xref">Figure&nbsp;<span>2</span></a>: build the market-week history, design the test and freeze the decision rule, run it, then measure the lift against a credible counterfactual and apply the rule. Each of the next four sections is one step.</p>
-<p><strong>Companion notebook:</strong> <code>sec6.3_geo_experiment.ipynb</code> runs the full experiment on a synthetic 40-market panel whose Search economics match the <a href="sec6.2-mmm-fundamentals.html">Section 6.2</a> model, with planted ground truth, so every estimate below can be checked against the truth.<br>
+<p><span id="sec-what-is-incrementality"></span>The MMM in <a href="sec6.2-mmm-fundamentals.html">Section 6.2</a> recommended cutting Google Search by 30%. Should we just do it? Not yet. Search spend barely changed in three years, so the model never saw what happens when it moves. Its estimate of what the next Search dollar earns runs from 0.4 to 9.5.</p>
+<p>What we need to know is Search’s <strong>incrementality</strong>: the revenue that would not have happened without the ads. Someone who searches for the store by name and clicks the ad might have clicked the ordinary result just below it and bought anyway. The purchase record cannot tell the two cases apart.</p>
+<p>The way to find out is an experiment. We cut Search by 30% in some markets, leave it unchanged in similar markets, and compare revenue. The unchanged markets show what would have happened without the cut, which is called the <strong>counterfactual</strong>. This design is a <strong>geo experiment</strong>.</p>
+<p>The result is reported as <strong>incremental ROAS (iROAS)</strong>: the change in revenue divided by the change in spend. For a cut, it is the revenue lost per dollar saved.</p>
+<p><strong>Companion notebook:</strong> <code>sec6.3_geo_experiment.ipynb</code> runs the experiment on a synthetic 40-market panel. The true effect is planted in the data, so every estimate below can be checked against it.<br>
 <a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part6-media-optimization/sec6.3_geo_experiment.ipynb">View on GitHub</a></p>
-</section>
-<section id="sec-geo-historical-data" class="level2">
-<h2 class="anchored" data-anchor-id="sec-geo-historical-data">Step 1: Historical Data</h2>
-<p>Everything downstream comes from one table: one row per market per week, with revenue, Search spend, and any other local media that could move during the test. The panel here has 40 markets and 96 weeks of history before the test window; two years is comfortable, and one is workable if the outcome isn’t strongly seasonal. Revenue has to come from the company’s own system, at the geography where media can actually be controlled. If Search campaigns can only be set by state, the state is your market. Spend has to be the spend you will really change, not a planned figure. And a market with a known shock in its history, such as a distribution center that opened last year, comes out now, because it cannot serve as a control.</p>
-</section>
 <section id="sec-geo-pretest-design" class="level2">
-<h2 class="anchored" data-anchor-id="sec-geo-pretest-design">Step 2: Pre-Test Design</h2>
-<p>Five decisions define the study, and all of them are made before any result exists.</p>
-<ol type="1">
-<li><strong>KPI.</strong> Revenue, from the company’s own books. That is what the CFO’s question is about and what the MMM models.</li>
-<li><strong>Markets and assignment.</strong> Screen candidate markets on pre-period behavior, form matched pairs, randomize within each pair.</li>
-<li><strong>Spend change.</strong> Cut Search by 30% in the test markets. That is the optimizer’s proposal, so the test measures the policy under consideration rather than a proxy for it.</li>
-<li><strong>Duration and power.</strong> Eight weeks, chosen by simulation on the historical panel.</li>
-<li><strong>Decision rule.</strong> Which result leads to which action, written down now.</li>
-</ol>
-<p>The notebook freezes these choices in one configuration cell:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>DESIGN <span class="op">=</span> {</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"seed"</span>: <span class="dv">20260888</span>,</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"channel"</span>: <span class="st">"Google Search"</span>,</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"test_start"</span>: <span class="st">"2024-02-05"</span>,</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"test_end"</span>: <span class="st">"2024-03-25"</span>,</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"test_weeks"</span>: <span class="dv">8</span>,</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"n_pairs"</span>: <span class="dv">8</span>,</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">"spend_multiplier"</span>: <span class="fl">0.70</span>,      <span class="co"># a 30% pull-back in test markets</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">"contribution_margin"</span>: <span class="fl">0.40</span>,   <span class="co"># sets the decision hurdle below</span></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ...plus `direction`, which records that this test cuts spend so the</span></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="co"># contrast is negative, and the power-simulation grid: durations, spend</span></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="co"># levels, candidate lifts, and the significance level.</span></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>The test cuts spend rather than adding it because the cut is the policy under consideration. A pull-back measures the return on the block of spend between 70% and 100% of today’s budget, which is what the optimizer proposed to remove; a heavy-up would measure the block above it, a different quantity on a curved response. We call the measured quantity the return on the tested cut, and keep “marginal ROAS” for the model’s slope at today’s spend; <a href="sec6.4-mmm-calibration.html">Section 6.4</a> connects the two.</p>
-<section id="market-selection-and-assignment" class="level3">
-<h3 class="anchored" data-anchor-id="market-selection-and-assignment">Market selection and assignment</h3>
-<p>Use historical outcomes only. The notebook scores each of the 40 markets on its correlation with the rest of the business, its size, and its trend, and keeps the 16 strongest candidates. It pairs neighbors by size, checks trend balance within each pair, and flips a coin inside each pair to pick the test market. Screening reduces noise; randomization is what makes the comparison causal. Picking test markets after looking at outcomes, or by hand because they seem typical, removes the randomization the causal reading depends on.</p>
-<p>Spillover can only be prevented at the market-selection stage; no estimator fixes it afterward. The usual routes are commuters who shop in one market and live in another, local television that crosses market borders, and national promotions that move demand everywhere. Use non-overlapping units where the media can actually be controlled, and keep other local activity stable across the selected markets. A control market that receives part of the treatment biases the estimate toward zero without showing it in any fit statistic.</p>
-</section>
-<section id="power-and-mde-by-simulation" class="level3">
-<h3 class="anchored" data-anchor-id="power-and-mde-by-simulation">Power and MDE by simulation</h3>
-<p>Before committing, ask whether this panel can detect an effect the business would care about. The notebook picks pseudo-launch dates in the history, subtracts the revenue a candidate return would lose on the planned cut, reruns the same clustered estimator, and counts how often the effect is detected. Repeating that across durations and cut sizes gives a simulated minimum detectable effect, or MDE.</p>
-<div id="fig-mde-by-duration" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Three curves show that longer tests and larger cuts lower the return detectable with 80 percent power; a 30 percent cut over eight weeks detects returns of about 0.40 and above.">
+<h2 class="anchored" data-anchor-id="sec-geo-pretest-design">Designing the Test</h2>
+<p><span id="sec-experimental-unit"></span><span id="sec-geo-four-steps"></span><span id="sec-geo-historical-data"></span>Three things are decided before the test starts: which markets to compare, what result would justify the cut, and how long to run.</p>
+<p><strong>Which markets.</strong> The test compares pairs of similar markets. Each market is paired with one of similar size and sales history, for example two states with similar sales, and a coin flip decides which of the two gets the cut. Pairing similar markets reduces noise. The coin flip is <strong>randomization</strong>: because we don’t choose which market gets the cut, a difference between the two can be attributed to the cut.</p>
+<p>The panel has 40 markets with 96 weeks of history. The notebook keeps the 16 whose revenue tracks the rest of the business most closely, sorts them by size, and forms eight <strong>matched pairs</strong> (<a href="#fig-market-selection" class="quarto-xref">Figure&nbsp;<span>1</span></a>). In each pair, one market cuts Search by 30% and the other keeps spending as usual.</p>
+<div id="fig-market-selection" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Forty markets screened to sixteen on pre-period behavior, sorted by size into eight pairs, and one market of each pair assigned to the test by coin flip.">
 <figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-mde-by-duration-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part6/sec6.3/mde_by_duration.png" class="fig-lg img-fluid figure-img" alt="Three curves show that longer tests and larger cuts lower the return detectable with 80 percent power; a 30 percent cut over eight weeks detects returns of about 0.40 and above.">
+<div aria-describedby="fig-market-selection-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part6/sec6.3/market_selection.png" class="fig-lg img-fluid figure-img" alt="Forty markets screened to sixteen on pre-period behavior, sorted by size into eight pairs, and one market of each pair assigned to the test by coin flip.">
 </div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-mde-by-duration-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;3: Simulated MDE by test duration and size of the cut.
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-market-selection-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: Market screening, pairing, and assignment.
 </figcaption>
 </figure>
 </div>
-<p>In <a href="#fig-mde-by-duration" class="quarto-xref">Figure&nbsp;<span>3</span></a>, a 30% cut over eight weeks detects a return of about 0.40 and above, while four weeks would need 0.50. These numbers belong to this panel. A 20-50% spend change over four to eight weeks is a common starting point, but the duration and the size of the cut should come from a simulation on your own history.</p>
-</section>
-<section id="sec-geo-decision-rule" class="level3">
-<h3 class="anchored" data-anchor-id="sec-geo-decision-rule">Decision rule and design freeze</h3>
-<p>The MDE says what the test can tell apart from zero. The business question is different: does Search earn enough to keep its budget? That threshold can be set as a number. With a contribution margin of <span class="math inline">\(m\)</span>, a dollar of spend breaks even when it returns <span class="math inline">\(1/m\)</span> of revenue, so at a 40% margin a Search dollar has to bring back $2.50. That hurdle is a business input, not a statistical one, and it settles one decision only: whether this block of spend should stay in the media budget at all. Where the money should go instead is a comparison across all five channels, and that comparison is the job of <a href="sec6.4-mmm-calibration.html">Section 6.4</a>.</p>
-<p>So we write the rule before launch. If the 95% confidence interval for the return on the tested cut sits entirely above 2.50, keep the budget. If it sits entirely below, cut as the optimizer proposed. If it straddles 2.50, hold the national plan and design a follow-up test; extending this one after seeing its result would turn it into a different test. The design has power to spare for a cut verdict when the return is well under the hurdle, little when it sits just under, and none for a keep verdict at these sizes. The notebook shows all three in the units of the decision, by simulating the verdict rather than the p-value:</p>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th style="text-align: right;">True return on the cut</th>
-<th style="text-align: right;">P(cut)</th>
-<th style="text-align: right;">P(hold)</th>
-<th style="text-align: right;">P(keep)</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: right;">1.5</td>
-<td style="text-align: right;">0.99</td>
-<td style="text-align: right;">0.01</td>
-<td style="text-align: right;">0.00</td>
-</tr>
-<tr class="even">
-<td style="text-align: right;">2.0</td>
-<td style="text-align: right;">0.21</td>
-<td style="text-align: right;">0.79</td>
-<td style="text-align: right;">0.00</td>
-</tr>
-<tr class="odd">
-<td style="text-align: right;">2.5</td>
-<td style="text-align: right;">0.00</td>
-<td style="text-align: right;">1.00</td>
-<td style="text-align: right;">0.00</td>
-</tr>
-<tr class="even">
-<td style="text-align: right;">3.0</td>
-<td style="text-align: right;">0.00</td>
-<td style="text-align: right;">1.00</td>
-<td style="text-align: right;">0.00</td>
-</tr>
-</tbody>
-</table>
-<p>Now freeze everything: the market list, the dates, the spend plan, the estimator, the calendar exclusions, the hurdle, the random seed. Don’t let a major event such as Black Friday straddle a test boundary. Changing the design after seeing results leaves room to steer toward the preferred answer, so everything is fixed before any result exists.</p>
-</section>
-</section>
-<section id="sec-geo-run" class="level2">
-<h2 class="anchored" data-anchor-id="sec-geo-run">Step 3: Run the Geo Test</h2>
-<p>The analyst does little in this step, but has to make sure the test runs as designed. Search spend drops 30% in the eight test markets on the launch date and stays there; the control markets run business as usual. Nothing else changes locally: no market-level promotions, no other media shifted in to compensate, no other initiatives in a control market. Record the spend actually delivered by market and week, because the denominator in step four is the spend the experiment removed, not the spend that was planned. A market whose spend didn’t fall as planned stays in the analysis as assigned, and a pair leaves only for a reason fixed in advance, such as lost outcome data. And don’t read the results weekly: an eight-week test read at week three is a noisier test with a higher false-positive rate.</p>
+<p>The paired markets should not share shoppers or media. If people who see the ad in one market shop in the control market next door, part of the effect leaks into the control group and the estimate shrinks toward zero. This is called <strong>spillover</strong>, and it cannot be corrected in the analysis.</p>
+<p><span id="sec-geo-decision-rule"></span><strong>What result justifies the cut.</strong> The cut is worth making if the revenue it loses is worth less than the money it saves. With a contribution margin of <span class="math inline">\(m\)</span>, a dollar of spend breaks even when it returns <span class="math inline">\(1/m\)</span> of revenue. At a 40% margin, a Search dollar has to bring back $2.50. This is the <strong>break-even iROAS</strong>.</p>
+<p>We write the decision rule before the test, using the 95% confidence interval for iROAS:</p>
+<ul>
+<li>Entirely below 2.50: cut.</li>
+<li>Entirely above 2.50: keep the budget.</li>
+<li>Straddling 2.50: hold the national plan and run a follow-up test.</li>
+</ul>
+<p><strong>How long to run.</strong> The required length depends on the size of the cut and on how noisy the markets are. A large cut is visible within a few weeks. A small cut takes longer to separate from ordinary week-to-week movement. A 20-50% spend change over four to eight weeks is a common starting point.</p>
+<p>The notebook checks our design by simulation. It pretends the test launched on past dates, plants a known iROAS in the history, and counts how often the analysis finds it. The share of runs that find the effect is the test’s <strong>power</strong>. The smallest effect found 80% of the time is the <strong>minimum detectable effect (MDE)</strong>. A 20% cut over four weeks has an MDE of 0.70. A 30% cut over eight weeks has an MDE of 0.40, so we use that design.</p>
+<p>MDE measures whether the test can tell an effect from zero. Our decision depends on telling it from 2.50, so the notebook also simulates the decision rule. When the true iROAS is 1.5, the rule returns “cut” 99% of the time. When it is 2.0, it returns “cut” only 21% of the time and “hold” otherwise. If the true value is close to break-even, the test would need to be longer or larger.</p>
+<p>It helps to keep the two thresholds apart. An iROAS too small to tell from zero would still give an interval well below 2.50, and that would be enough to justify the cut.</p>
+<p>All of these choices are fixed before launch: the market list, the dates, the spend plan, the estimator, the break-even, and the random seed. If the design can change after the results are in, it can be adjusted toward the answer someone prefers.</p>
 </section>
 <section id="sec-geo-measurement" class="level2">
-<h2 class="anchored" data-anchor-id="sec-geo-measurement">Step 4: Post-Test Measurement</h2>
-<p>The simplest comparison is revenue in the test markets during the test against the eight weeks before it. In the notebook that comparison gives a return of <strong>0.44</strong>: revenue in the test markets dipped, but only by about 44 cents per dollar of Search removed, so the cut looks nearly free. That number is wrong. Revenue was rising into the test window in every market, control markets included, and the seasonal rise hid most of what the cut cost. This is why step two selected control markets.</p>
-<p>The estimator follows the assignment mechanism, the same principle as in <a href="../part3/sec3.3-quasi-experiments.html">Section 3.3</a>. Randomization within matched pairs is the design, and paired Difference-in-Differences is the estimator that matches it. The basic interaction is:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> smf.ols(<span class="st">"revenue ~ treat * post"</span>, data<span class="op">=</span>analysis).fit(</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    cov_type<span class="op">=</span><span class="st">"cluster"</span>,</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    cov_kwds<span class="op">=</span>{<span class="st">"groups"</span>: analysis[<span class="st">"pair"</span>]},</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>The notebook’s version replaces the <code>treat</code> and <code>post</code> main effects with a fixed effect for each market and a separate test-period term for each pair, so one pair’s local shock isn’t read as lift. The <code>treat:post</code> coefficient is incremental revenue per treated market-week, negative here because the test markets lost revenue relative to their pairs. Dividing its total by the spend the experiment removed gives the return on the tested cut: both numbers are negative, and their ratio is the revenue lost per dollar not spent. The denominator has to be the spend the experiment changed, in these markets, on these dates, not the national Search budget.</p>
-<p>The design-consistent estimate is <strong>1.500</strong>, with SE <strong>0.257</strong> and 95% CI <strong>[0.892, 2.109]</strong>, clustered on the eight matched pairs because the pair is the unit that was randomized, and using the t distribution because there are only eight of them. It recovers the planted truth of 1.500. Each Search dollar removed had been buying about $1.50 of revenue, more than three times what the before-and-after comparison suggested.</p>
-<section id="does-the-result-hold-up" class="level3">
-<h3 class="anchored" data-anchor-id="does-the-result-hold-up">Does the result hold up?</h3>
-<p>Three checks test whether the estimate rests on the design’s assumptions.</p>
-<p>First, the pre-period. The event-study chart in the notebook centers each pair on the week before launch, and the pre-period differences fluctuate around zero rather than drifting. If they drifted, the pairs weren’t parallel, and the DiD would be measuring the drift.</p>
-<p>Second, an alternative counterfactual. A synthetic control aggregates the eight test markets and builds a weighted blend of untreated donors, with non-negative weights that sum to one and minimize pre-period error. Without a close pre-period fit, the synthetic control cannot be used. Here it fits (<a href="#fig-actual-vs-synthetic-gap" class="quarto-xref">Figure&nbsp;<span>4</span></a>), and the synthetic-control estimate is <strong>1.486</strong>, close to the DiD and to the truth. Agreement between two estimators that use the untreated information differently is informative. Averaging several methods into one number is not recommended.</p>
+<h2 class="anchored" data-anchor-id="sec-geo-measurement">Measuring the Effect with Difference-in-Differences</h2>
+<p><span id="sec-geo-run"></span>The test starts on February 5, 2024. Search spend drops 30% in the eight test markets for eight weeks, and nothing else changes in those markets. During the test we record the spend actually delivered, because iROAS is calculated from the spend that was really removed. We also wait until the eight weeks are over before reading the result, because an early look is noisier and produces more false positives.</p>
+<p><strong>Why a before-and-after comparison fails.</strong> The simplest analysis compares revenue in the test markets during the test with the eight weeks before it. That gives an iROAS of 0.44, which would mean the cut costs only 44 cents of revenue per dollar saved. But revenue was rising in every market during those weeks because of the season, including markets where nothing changed. The seasonal rise offset most of the loss from the cut, so the before-and-after number is far too small.</p>
+<p><strong>Difference-in-Differences.</strong> The control markets went through the same season without the cut. <strong>Difference-in-Differences (DiD)</strong>, introduced in <a href="../part3/sec3.3-quasi-experiments.html">Section 3.3</a>, uses them to remove the seasonal movement. It takes the revenue change in each test market and subtracts the change in its paired control:</p>
+<p><span class="math display">\[
+\text{effect} = (\text{test}_{\text{after}} - \text{test}_{\text{before}}) - (\text{control}_{\text{after}} - \text{control}_{\text{before}})
+\]</span></p>
+<p>In a regression, this effect is the coefficient on the interaction of <code>treat</code> and <code>post</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> statsmodels.formula.api <span class="im">as</span> smf</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> smf.ols(<span class="st">"revenue ~ treat * post"</span>, data<span class="op">=</span>analysis).fit(</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    cov_type<span class="op">=</span><span class="st">"cluster"</span>,</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    cov_kwds<span class="op">=</span>{<span class="st">"groups"</span>: analysis[<span class="st">"pair"</span>]},   <span class="co"># one coin flip per pair</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The coefficient shows that each test market lost about $9,900 of revenue per week relative to its control. Over eight markets and eight weeks, the cut lost $633,069 of revenue and saved $421,906 of Search spend. Dividing the two gives an iROAS of <strong>1.50</strong>, with a standard error of 0.257 and a 95% confidence interval of [0.892, 2.109].</p>
+<p>Because the data are synthetic, we can compare this with the truth: the iROAS planted in the panel is 1.500. Two further checks in the notebook give the same answer. A <strong>synthetic control</strong>, which builds a weighted blend of untreated markets to match the test markets before launch, gives 1.486 (<a href="#fig-actual-vs-synthetic-gap" class="quarto-xref">Figure&nbsp;<span>2</span></a>). A <strong>placebo test</strong>, which swaps test and control within each pair, finds an estimate as large as ours in only 2 of the 256 possible assignments (p = 0.008).</p>
 <div id="fig-actual-vs-synthetic-gap" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="The treated aggregate and its weighted synthetic control track closely before launch, then the treated series falls below its counterfactual during the test.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-actual-vs-synthetic-gap-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="../images/part6/sec6.3/actual_vs_synthetic_gap.png" class="fig-lg img-fluid figure-img" alt="The treated aggregate and its weighted synthetic control track closely before launch, then the treated series falls below its counterfactual during the test.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-actual-vs-synthetic-gap-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;4: Observed revenue in the test markets versus their synthetic control.
+Figure&nbsp;2: Observed revenue in the test markets versus their synthetic control.
 </figcaption>
 </figure>
 </div>
-<p>Third, placebos. An in-space placebo asks what the analysis would report under assignments that never happened. With eight pairs, swapping roles inside each pair gives <span class="math inline">\(2^8 = 256\)</span> possible assignments, few enough to enumerate. Their distribution is centered at zero by construction, and only 2 of the 256 produce an estimate at least as extreme as the observed 1.500 (<a href="#fig-placebo-distribution" class="quarto-xref">Figure&nbsp;<span>5</span></a>), a randomization p of 0.008. In-time placebos move the same eight-week window through earlier history; their mean is 0.053, with fake effects on both sides of zero rather than a repeated lift at every date.</p>
-<div id="fig-placebo-distribution" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="A histogram of within-pair placebo ROAS estimates centered near zero, with the observed estimate in the positive tail; earlier fake launches appear as marks along the axis.">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-placebo-distribution-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part6/sec6.3/placebo_distribution.png" class="fig-lg img-fluid figure-img" alt="A histogram of within-pair placebo ROAS estimates centered near zero, with the observed estimate in the positive tail; earlier fake launches appear as marks along the axis.">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-placebo-distribution-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;5: The real estimate against placebo assignments.
-</figcaption>
-</figure>
-</div>
-<p>Because assignment was randomized, the placebo distribution is the design’s own reference distribution. In a non-randomized matched-market study, run the same checks, but don’t borrow the language of randomization: the causal claim then rests on the synthetic counterfactual and on the argument that no unmeasured shock separated the chosen markets. Meta’s <a href="https://facebookincubator.github.io/GeoLift/">GeoLift</a> and Google’s <a href="https://github.com/google/CausalImpact">CausalImpact</a> are built for that setting.</p>
-</section>
-</section>
-<section id="sec-geo-lift-to-decision" class="level2">
-<h2 class="anchored" data-anchor-id="sec-geo-lift-to-decision">From Lift to Decision</h2>
-<p>Now apply the rule we froze. The hurdle was 2.50, and the interval’s upper bound of 2.109 sits below it. The rule says cut. Each dollar removed was buying $1.50 of revenue, 60 cents of contribution at a 40% margin, and even the interval’s upper bound of 2.109 falls short of the 2.50 break-even.</p>
-<p>The decision did not depend on statistical significance. The effect is as significant as this design can make it: two placebo assignments in 256, an interval that excludes zero by a wide margin. Search clearly moves revenue. The budget still goes, because a significant effect (p = 0.008) and an effect large enough to cover its cost (a return of 2.50 or more) are different criteria, and this result meets the first and not the second. The last $421,906 moved revenue, but only $1.50 per dollar, which is 60 cents of margin. A test can establish an effect and still fail to justify the spend.</p>
-<p>One more number matters for the calibration in <a href="sec6.4-mmm-calibration.html">Section 6.4</a>. Clustering on the sixteen markets instead of the eight pairs is common, and it narrows the standard error from 0.257 to 0.176, an interval of [1.126, 1.875]. It also treats the two halves of one coin flip as independent, which they are not, so the pair reading is the one we pre-specified. The verdict is the same either way, because both intervals stop short of 2.50, but the pair interval comes within 0.4 of it. Both widths are used there.</p>
-<p>The result is limited to the effect of a 30% cut in these eight markets over this eight-week window. It is one point on the response curve, and the handoff to the model preserves that scope.</p>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Evidence field</th>
-<th>Frozen value</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>Channel</td>
-<td>Google Search</td>
-</tr>
-<tr class="even">
-<td>Design</td>
-<td>8 randomized matched pairs</td>
-</tr>
-<tr class="odd">
-<td>Dates</td>
-<td>2024-02-05 to 2024-03-25</td>
-</tr>
-<tr class="even">
-<td>Baseline spend, test markets</td>
-<td>$1,406,355</td>
-</tr>
-<tr class="odd">
-<td>Spend removed</td>
-<td>$421,906</td>
-</tr>
-<tr class="even">
-<td>Return on the tested cut (30% block)</td>
-<td>1.500</td>
-</tr>
-<tr class="odd">
-<td>Standard error (clustered on pairs, pre-specified)</td>
-<td>0.257</td>
-</tr>
-<tr class="even">
-<td>Standard error (clustered on markets)</td>
-<td>0.176</td>
-</tr>
-<tr class="odd">
-<td>95% CI (pair-clustered t)</td>
-<td>[0.892, 2.109]</td>
-</tr>
-<tr class="even">
-<td>Randomization p</td>
-<td>0.008</td>
-</tr>
-<tr class="odd">
-<td>Tested markets’ share of national Search spend</td>
-<td>19.9%</td>
-</tr>
-<tr class="even">
-<td>Estimand</td>
-<td>Revenue effect of a 30% cut in selected markets over 8 weeks</td>
-</tr>
-</tbody>
-</table>
-<p>The evidence supports the 30% cut in the tested operating range. Rolling it out nationally assumes the other 32 markets behave like these eight, so it goes out under the same guardrail, with delivered spend and revenue tracked against this prediction. Whether the released budget earns more elsewhere is a question for the model that sees all five channels, and <a href="sec6.4-mmm-calibration.html">Section 6.4</a> asks it.</p>
+<p><span id="sec-geo-lift-to-decision"></span><strong>Comparing with break-even.</strong> Each dollar cut from Search lost about $1.50 of revenue, and break-even is $2.50. The entire confidence interval is below 2.50, so by the rule written before the test, the cut is justified. In dollar terms, saving $100 of Search spend lost about $150 of revenue, which carried $60 of contribution at a 40% margin. The business is $40 better off.</p>
+<p>The effect is statistically significant (p = 0.008), so Search ads do generate revenue. At the current spend level they generate less than they cost, and the decision depends on that comparison.</p>
+<p>The experiment covered a 30% cut over eight weeks in eight markets, which hold 19.9% of national Search spend. It tells us that the last 30% of Search spend does not pay for itself. It does not tell us where the saved budget should go, because no other channel was changed. <a href="sec6.4-mmm-calibration.html">Section 6.4</a> takes this result back to the MMM to answer that.</p>
 </section>
 <section id="key-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="key-takeaways">Key Takeaways</h2>
 <ul>
-<li>Incrementality is the outcome that would not have happened without the ad. Choose the unit and the design before the estimator, simulate power on your own history, and freeze the decision rule.</li>
-<li>Decide against the business hurdle, not against significance: a test can establish an effect and still fail to justify the spend. Hand off the estimand, its uncertainty, and its operating point, not just a ROAS.</li>
+<li>Incrementality is the revenue that would not have happened without the ads. A geo experiment measures it by changing spend in some markets and using similar markets as the counterfactual.</li>
+<li>Decide the markets, the decision rule, and the test length before launch, and check by simulation that the test can tell the iROAS from break-even, not only from zero.</li>
+<li>Judge the result against break-even iROAS, not against zero. Search’s ads clearly generated revenue, but at 1.50 they returned less than they cost, so the cut is justified.</li>
 </ul>
 
 
@@ -938,15 +722,50 @@ Figure&nbsp;5: The real estimate against placebo assignments.
   window.document.addEventListener("DOMContentLoaded", function (event) {
     // Ensure there is a toggle, if there isn't float one in the top right
     if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
-      const a = window.document.createElement('a');
-      a.classList.add('top-right');
-      a.classList.add('quarto-color-scheme-toggle');
-      a.href = "";
-      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const toggle = window.document.createElement('button');
+      toggle.type = "button";
+      toggle.setAttribute("role", "switch");
+      toggle.setAttribute("aria-checked", "false");
+      toggle.classList.add('top-right');
+      toggle.classList.add('quarto-color-scheme-toggle');
+      toggle.setAttribute("aria-label", "Toggle dark mode");
+      toggle.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
       const i = window.document.createElement("i");
       i.classList.add('bi');
-      a.appendChild(i);
-      window.document.body.appendChild(a);
+      toggle.appendChild(i);
+      // Put the toggle in a landmark of its own, so that landmark navigation
+      // can reach it.
+      //
+      // The container is always a fresh direct child of body, and the toggle is
+      // never moved into page furniture that the theme or the author controls.
+      // The toggle is positioned against the page, so any ancestor that
+      // establishes a containing block captures it: a positioned element or a
+      // grid for position: absolute, and transform, filter, will-change or
+      // contain for position: fixed. A direct child of body has none of these
+      // to inherit, and the shift when one appears is silent and visual.
+      //
+      // ARIA says a document should have at most one banner, and axe reports a
+      // duplicate whether or not the banners carry distinct labels. So use a
+      // header when the page has no banner yet, and a named region otherwise.
+      //
+      // A header is a banner wherever it sits, unless it is inside sectioning
+      // content, so this cannot just look at the children of body: a custom
+      // page layout wraps the title block header in a plain div. An explicit
+      // role="banner" always counts.
+      const sectioning = 'article, aside, main, nav, section, [role="article"], [role="complementary"], [role="main"], [role="navigation"], [role="region"]';
+      const hasBanner = Array.from(
+        window.document.querySelectorAll('header:not([role]), [role="banner"]')
+      ).some(function(el) {
+        return el.hasAttribute("role") || el.closest(sectioning) === null;
+      });
+      const container = window.document.createElement(hasBanner ? "div" : "header");
+      if (hasBanner) {
+        container.setAttribute("role", "region");
+        container.setAttribute("aria-label", "Toggle dark mode");
+      }
+      container.classList.add('quarto-color-scheme-toggle-container');
+      container.appendChild(toggle);
+      window.document.body.appendChild(container);
     }
     setColorSchemeToggle(hasAlternateSentinel())
     const icon = "";
@@ -1025,7 +844,8 @@ Figure&nbsp;5: The real estimate against placebo assignments.
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }
       // Inspect non-navigation links and adorn them if external
-     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      window.quartoDecorateExternalLinks = function (root) {
+     var links = (root || window.document).querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
       for (var i=0; i<links.length; i++) {
         const link = links[i];
         if (!isInternal(link.href)) {
@@ -1034,8 +854,69 @@ Figure&nbsp;5: The real estimate against placebo assignments.
           if (link.dataset.originalHref !== undefined) {
             link.href = link.dataset.originalHref;
           }
+          if (!link.classList.contains('no-external-icon')) {
+          }
         }
       }
+      };
+      window.quartoDecorateExternalLinks(window.document);
+    // Esc closes the popup (WCAG 1.4.13) and focus leaving both trigger and
+    // popup closes it (WCAG 2.4.11); tippy handles neither for interactive popups.
+    const hideOnEscAndFocusOut = {
+      name: 'hideOnEscAndFocusOut',
+      defaultValue: true,
+      fn(instance) {
+        const dismiss = () => {
+          // A show scheduled by the trigger delay would otherwise reopen it
+          instance.clearDelayTimeouts();
+          instance.hide();
+        };
+        const onKeyDown = (event) => {
+          if (event.key !== 'Escape') {
+            return;
+          }
+          // Keep Esc from also reaching page handlers (e.g. reveal.js overview),
+          // except an open reveal.js slide menu, which Esc should close too.
+          // The menu handles keys only when its keyboard option is on.
+          const menuHandlesEsc = window.Reveal?.getPlugin?.('menu')?.isOpen() &&
+            window.Reveal.getConfig().menu?.keyboard !== false;
+          if (!menuHandlesEsc) {
+            event.stopPropagation();
+          }
+          if (instance.popper.contains(window.document.activeElement)) {
+            // Disabled while refocusing so the focus trigger does not reopen it
+            instance.disable();
+            instance.reference.focus();
+            instance.enable();
+          }
+          dismiss();
+        };
+        const onFocusOut = (event) => {
+          const target = event.relatedTarget;
+          if (target && !instance.reference.contains(target) &&
+              !instance.popper.contains(target)) {
+            dismiss();
+          }
+        };
+        // On the trigger too: a click trigger (code-annotations: select) has no
+        // blur handling. Attached for the instance's lifetime so leaving the
+        // trigger also cancels a show still pending on the trigger delay.
+        instance.reference.addEventListener('focusout', onFocusOut);
+        return {
+          onShow() {
+            window.document.addEventListener('keydown', onKeyDown, true);
+            instance.popper.addEventListener('focusout', onFocusOut);
+          },
+          onHide() {
+            window.document.removeEventListener('keydown', onKeyDown, true);
+            instance.popper.removeEventListener('focusout', onFocusOut);
+          },
+          onDestroy() {
+            instance.reference.removeEventListener('focusout', onFocusOut);
+          },
+        };
+      },
+    };
     function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
       const config = {
         allowHTML: true,
@@ -1049,6 +930,7 @@ Figure&nbsp;5: The real estimate against placebo assignments.
         interactiveBorder: 10,
         theme: 'quarto',
         placement: 'bottom-start',
+        plugins: [hideOnEscAndFocusOut],
       };
       if (contentFn) {
         config.content = contentFn;
@@ -1211,44 +1093,54 @@ Figure&nbsp;5: The real estimate against placebo assignments.
           const lineIds = lines.map((line) => {
             return targetCell + "-" + line;
           })
-          let top = null;
-          let height = null;
-          let parent = null;
+          // Each band is positioned against its own containing block, which is
+          // not the offsetParent of the lines, so place it from client rects.
+          const placeBand = (band, firstEl, lastEl, codeBlock) => {
+            const container = band.offsetParent;
+            if (container === null) {
+              return;
+            }
+            const containerRect = container.getBoundingClientRect();
+            // Reveal.js scales slides with a transform, so convert client
+            // pixels back to the CSS pixels of the container.
+            const scale = containerRect.height / container.offsetHeight || 1;
+            const firstRect = firstEl.getBoundingClientRect();
+            const lastRect = lastEl.getBoundingClientRect();
+            const top = (firstRect.top - containerRect.top) / scale - container.clientTop + container.scrollTop;
+            const height = (lastRect.bottom - firstRect.top) / scale;
+            band.style.top = top - 2 + "px";
+            band.style.height = height + 4 + "px";
+            if (codeBlock) {
+              // Without the copy button wrapper, the containing block is wider
+              // than the code block, so span the code block explicitly.
+              const blockRect = codeBlock.getBoundingClientRect();
+              band.style.left = (blockRect.left - containerRect.left) / scale - container.clientLeft + container.scrollLeft + "px";
+              band.style.width = blockRect.width / scale + "px";
+            }
+          };
           if (lineIds.length > 0) {
-              //compute the position of the single el (top and bottom and make a div)
-              const el = window.document.getElementById(lineIds[0]);
-              top = el.offsetTop;
-              height = el.offsetHeight;
-              parent = el.parentElement.parentElement;
-            if (lineIds.length > 1) {
-              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
-              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
-              height = bottom - top;
+            const el = window.document.getElementById(lineIds[0]);
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const parent = el.parentElement.parentElement;
+            // cook up a div (if necessary) and position it
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
             }
-            if (top !== null && height !== null && parent !== null) {
-              // cook up a div (if necessary) and position it 
-              let div = window.document.getElementById("code-annotation-line-highlight");
-              if (div === null) {
-                div = window.document.createElement("div");
-                div.setAttribute("id", "code-annotation-line-highlight");
-                div.style.position = 'absolute';
-                parent.appendChild(div);
-              }
-              div.style.top = top - 2 + "px";
-              div.style.height = height + 4 + "px";
-              div.style.left = 0;
-              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
-              if (gutterDiv === null) {
-                gutterDiv = window.document.createElement("div");
-                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
-                gutterDiv.style.position = 'absolute';
-                const codeCell = window.document.getElementById(targetCell);
-                const gutter = codeCell.querySelector('.code-annotation-gutter');
-                gutter.appendChild(gutterDiv);
-              }
-              gutterDiv.style.top = top - 2 + "px";
-              gutterDiv.style.height = height + 4 + "px";
+            placeBand(div, el, lastEl, parent.closest("div.sourceCode") || parent);
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
             }
+            placeBand(gutterDiv, el, lastEl);
             selectedAnnoteEl = annoteEl;
           }
         };
@@ -1347,7 +1239,10 @@ Figure&nbsp;5: The real estimate against placebo assignments.
     }
   });
   </script>
-<nav class="page-navigation">
+  <script type="application/javascript">
+  window.quartoScrollableRegionsLabels = {"code":"Scrollable code","output":"Scrollable output"};
+  </script>
+<nav class="page-navigation" aria-label="Page">
   <div class="nav-page nav-page-previous">
       <a href="../part6/sec6.2-mmm-fundamentals.html" class="pagination-link" aria-label="6.2 Building and Optimizing an MMM">
         <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">6.2 Building and Optimizing an MMM</span></span>

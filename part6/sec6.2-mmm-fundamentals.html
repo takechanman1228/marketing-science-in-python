@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.10.19">
+<meta name="generator" content="quarto-1.11.9">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -77,18 +77,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../assets/favicon.png" rel="icon" type="image/png">
 <script src="../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/scrollable-regions/scrollable-regions.js" type="module"></script>
 <script src="../site_libs/quarto-html/popper.min.js"></script>
 <script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-b626d73c4c936ccc3cb08be7d45d1df6.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-447e42e69aaa9833c0ba1b986f430b20.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-743e9765ff591ca41f31e934d0cf4bf8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../site_libs/bootstrap/bootstrap-dark-c9719a0dd22d1eb90e3fd2c145c4e342.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../site_libs/bootstrap/bootstrap-743e9765ff591ca41f31e934d0cf4bf8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-549dcdc79fd547502b4b0b8b8ab3f938.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-1a8a0d276ffdcff0dc8a23f0b0b34c12.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-549dcdc79fd547502b4b0b8b8ab3f938.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
@@ -178,7 +179,7 @@ window.Quarto = {
 <!-- msbook-i18n-head:end -->
 </head>
 
-<body class="nav-sidebar floating quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+<body class="nav-sidebar floating quarto-light"><a id="quarto-skip-link" class="visually-hidden-focusable" href="#quarto-document-content">Skip to main content</a><script id="quarto-html-before-body" type="application/javascript">
     const toggleBodyColorMode = (bsSheetEl) => {
       const mode = bsSheetEl.getAttribute("data-mode");
       const bodyEl = window.document.querySelector("body");
@@ -201,6 +202,7 @@ window.Quarto = {
       for (let i=0; i < toggles.length; i++) {
         const toggle = toggles[i];
         if (toggle) {
+          toggle.setAttribute("aria-checked", alternate ? "true" : "false");
           if (alternate) {
             toggle.classList.add("alternate");
           } else {
@@ -230,13 +232,19 @@ window.Quarto = {
       manageTransitions('#quarto-margin-sidebar .nav-link', true);
       // Switch the toggles
       setColorSchemeToggle(alternate)
-      // Hack to workaround the fact that safari doesn't
-      // properly recolor the scrollbar when toggling (#1455)
+    }
+    // Hack to workaround the fact that safari doesn't
+    // properly recolor the scrollbar when toggling (#1455).
+    // Not run on load: stylesheets are set before first paint there, and
+    // scrolling would undo the scroll to a URL fragment (#14973).
+    // The one pixel nudge keeps the reader where they were.
+    const refreshSafariScrollbar = () => {
       if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
         manageTransitions("body", false);
-        window.scrollTo(0, 1);
+        const scrollY = window.scrollY;
+        window.scrollTo(0, scrollY > 0 ? scrollY - 1 : 1);
         setTimeout(() => {
-          window.scrollTo(0, 0);
+          window.scrollTo(0, scrollY);
           manageTransitions("body", true);
         }, 40);
       }
@@ -330,6 +338,7 @@ window.Quarto = {
       // Read the current dark / light value
       let toAlternate = !hasAlternateSentinel();
       toggleColorMode(toAlternate);
+      refreshSafariScrollbar();
       setStyleSentinel(toAlternate);
       toggleGiscusIfUsed(toAlternate, darkModeDefault);
       window.dispatchEvent(new Event('resize'));
@@ -344,13 +353,13 @@ window.Quarto = {
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
-  <nav class="quarto-secondary-nav">
+  <nav class="quarto-secondary-nav" aria-label="Toolbar">
     <div class="container-fluid d-flex">
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part6/_part6.html">Part 6. Media Investment and Optimization</a></li><li class="breadcrumb-item"><a href="../part6/sec6.2-mmm-fundamentals.html"><span class="chapter-title">6.2 Building and Optimizing an MMM</span></a></li></ol></nav>
-        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        <nav class="quarto-page-breadcrumbs" aria-label="Breadcrumbs"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part6/_part6.html">Part 6. Media Investment and Optimization</a></li><li class="breadcrumb-item"><a href="../part6/sec6.2-mmm-fundamentals.html"><span class="chapter-title">6.2 Building and Optimizing an MMM</span></a></li></ol></nav>
+        <a class="flex-grow-1" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <!-- msbook-language-switch-mobile:start -->
 <div class="msbook-language-switch-mobile" aria-label="Language"><span lang="en" aria-current="page">EN</span><span aria-hidden="true"> | </span><a lang="ja" hreflang="ja" href="../ja/part6/sec6.2-mmm-fundamentals.html" onclick="this.hash=window.location.hash">日本語</a><span aria-hidden="true"> | </span><a lang="fr" hreflang="fr" href="../fr/part6/sec6.2-mmm-fundamentals.html" onclick="this.hash=window.location.hash">FR</a><span aria-hidden="true"> | </span><a lang="de" hreflang="de" href="../de/part6/sec6.2-mmm-fundamentals.html" onclick="this.hash=window.location.hash">DE</a><span aria-hidden="true"> | </span><a lang="zh-Hans" hreflang="zh-Hans" href="../zh/part6/sec6.2-mmm-fundamentals.html" onclick="this.hash=window.location.hash">中文</a></div>
@@ -364,7 +373,7 @@ window.Quarto = {
 <!-- content -->
 <div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
 <!-- sidebar -->
-  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto" aria-label="Site">
     <div class="pt-lg-2 mt-2 text-left sidebar-header">
     <div class="sidebar-title mb-0 py-0">
       <a href="../">Marketing Science in Python</a> 
@@ -387,7 +396,7 @@ window.Quarto = {
           </li>
       </ul>
     </div>
-  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+  <button type="button" role="switch" aria-checked="false" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode" aria-label="Toggle dark mode"><i class="bi"></i></button>
 </div>
     </div>
       </div>
@@ -407,12 +416,12 @@ window.Quarto = {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a href="../part1/_part1.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Part 1. Introduction</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
+ <span class="menu-text" id="quarto-sidebar-section-1-label">Part 1. Introduction</span></a>
+            <button type="button" class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-controls="quarto-sidebar-section-1" aria-expanded="true" aria-label="Toggle section: Part 1. Introduction">
+              <i class="bi bi-chevron-right ms-2" aria-hidden="true"></i>
+            </button> 
       </div>
-      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+      <ul id="quarto-sidebar-section-1" aria-labelledby="quarto-sidebar-section-1-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../part1/sec1.1-what-is-marketing-science.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">1.1 What Is Marketing Science?</span></a>
@@ -428,12 +437,12 @@ window.Quarto = {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a href="../part2/_part2.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Part 2. Analysis for Better Decisions</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
+ <span class="menu-text" id="quarto-sidebar-section-2-label">Part 2. Analysis for Better Decisions</span></a>
+            <button type="button" class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-controls="quarto-sidebar-section-2" aria-expanded="true" aria-label="Toggle section: Part 2. Analysis for Better Decisions">
+              <i class="bi bi-chevron-right ms-2" aria-hidden="true"></i>
+            </button> 
       </div>
-      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+      <ul id="quarto-sidebar-section-2" aria-labelledby="quarto-sidebar-section-2-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../part2/sec2.1-right-question.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.1 Framing the Right Question</span></a>
@@ -454,12 +463,12 @@ window.Quarto = {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a href="../part3/_part3.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Part 3. Causal Inference for Marketing</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
+ <span class="menu-text" id="quarto-sidebar-section-3-label">Part 3. Causal Inference for Marketing</span></a>
+            <button type="button" class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-controls="quarto-sidebar-section-3" aria-expanded="true" aria-label="Toggle section: Part 3. Causal Inference for Marketing">
+              <i class="bi bi-chevron-right ms-2" aria-hidden="true"></i>
+            </button> 
       </div>
-      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+      <ul id="quarto-sidebar-section-3" aria-labelledby="quarto-sidebar-section-3-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../part3/sec3.1-thinking-causally.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.1 Causal Thinking</span></a>
@@ -495,12 +504,12 @@ window.Quarto = {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a href="../part4/_part4.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Part 4. Customer Analytics</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
+ <span class="menu-text" id="quarto-sidebar-section-4-label">Part 4. Customer Analytics</span></a>
+            <button type="button" class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" aria-controls="quarto-sidebar-section-4" aria-expanded="true" aria-label="Toggle section: Part 4. Customer Analytics">
+              <i class="bi bi-chevron-right ms-2" aria-hidden="true"></i>
+            </button> 
       </div>
-      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+      <ul id="quarto-sidebar-section-4" aria-labelledby="quarto-sidebar-section-4-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../part4/sec4.1-segmentation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">4.1 Customer Segmentation</span></a>
@@ -516,12 +525,12 @@ window.Quarto = {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a href="../part5/_part5.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Part 5. Commercial Analytics</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
+ <span class="menu-text" id="quarto-sidebar-section-5-label">Part 5. Commercial Analytics</span></a>
+            <button type="button" class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" aria-controls="quarto-sidebar-section-5" aria-expanded="true" aria-label="Toggle section: Part 5. Commercial Analytics">
+              <i class="bi bi-chevron-right ms-2" aria-hidden="true"></i>
+            </button> 
       </div>
-      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+      <ul id="quarto-sidebar-section-5" aria-labelledby="quarto-sidebar-section-5-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../part5/sec5.1-price-elasticity.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.1 Price Elasticity and Pricing Decisions</span></a>
@@ -542,12 +551,12 @@ window.Quarto = {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a href="../part6/_part6.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Part 6. Media Investment and Optimization</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
+ <span class="menu-text" id="quarto-sidebar-section-6-label">Part 6. Media Investment and Optimization</span></a>
+            <button type="button" class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" aria-controls="quarto-sidebar-section-6" aria-expanded="true" aria-label="Toggle section: Part 6. Media Investment and Optimization">
+              <i class="bi bi-chevron-right ms-2" aria-hidden="true"></i>
+            </button> 
       </div>
-      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+      <ul id="quarto-sidebar-section-6" aria-labelledby="quarto-sidebar-section-6-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../part6/sec6.1-media-measurement-problem.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.1 The Media Measurement Problem</span></a>
@@ -566,11 +575,6 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../part6/sec6.4-mmm-calibration.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.4 Calibrating MMM with Experiments</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../part6/sec6.5-when-tools-disagree.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.5 Making Decisions When Measurement Tools Disagree</span></a>
   </div>
 </li>
       </ul>
@@ -603,7 +607,7 @@ window.Quarto = {
 <div class="msbook-language-switch" aria-label="Language"><span lang="en" aria-current="page">English</span><span aria-hidden="true"> | </span><a lang="ja" hreflang="ja" href="../ja/part6/sec6.2-mmm-fundamentals.html" onclick="this.hash=window.location.hash">日本語</a><span aria-hidden="true"> | </span><a lang="fr" hreflang="fr" href="../fr/part6/sec6.2-mmm-fundamentals.html" onclick="this.hash=window.location.hash">Français</a><span aria-hidden="true"> | </span><a lang="de" hreflang="de" href="../de/part6/sec6.2-mmm-fundamentals.html" onclick="this.hash=window.location.hash">Deutsch</a><span aria-hidden="true"> | </span><a lang="zh-Hans" hreflang="zh-Hans" href="../zh/part6/sec6.2-mmm-fundamentals.html" onclick="this.hash=window.location.hash">中文</a></div>
 <!-- msbook-language-switch:end -->
 
-        <nav id="TOC" role="doc-toc" class="toc-active">
+        <nav id="TOC" role="doc-toc" aria-labelledby="toc-title" class="toc-active">
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
@@ -613,17 +617,26 @@ window.Quarto = {
   <li><a href="#adstock-carryover-effects" id="toc-adstock-carryover-effects" class="nav-link" data-scroll-target="#adstock-carryover-effects">Adstock (Carryover Effects)</a></li>
   <li><a href="#sec-mmm-data-requirements" id="toc-sec-mmm-data-requirements" class="nav-link" data-scroll-target="#sec-mmm-data-requirements">Data Requirements</a></li>
   <li><a href="#the-bayesian-angle" id="toc-the-bayesian-angle" class="nav-link" data-scroll-target="#the-bayesian-angle">The Bayesian Angle</a></li>
-  <li><a href="#a-walkthrough-with-meridian" id="toc-a-walkthrough-with-meridian" class="nav-link" data-scroll-target="#a-walkthrough-with-meridian">A Walkthrough with Meridian</a></li>
+  <li><a href="#choosing-a-library" id="toc-choosing-a-library" class="nav-link" data-scroll-target="#choosing-a-library">Choosing a Library</a></li>
+  <li><a href="#a-walkthrough-with-meridian" id="toc-a-walkthrough-with-meridian" class="nav-link" data-scroll-target="#a-walkthrough-with-meridian">A Walkthrough with Meridian</a>
+  <ul class="collapse">
+  <li><a href="#data-loading-and-preparation" id="toc-data-loading-and-preparation" class="nav-link" data-scroll-target="#data-loading-and-preparation">Data Loading and Preparation</a></li>
+  <li><a href="#saturation-and-adstock-priors" id="toc-saturation-and-adstock-priors" class="nav-link" data-scroll-target="#saturation-and-adstock-priors">Saturation and Adstock Priors</a></li>
+  <li><a href="#model-training" id="toc-model-training" class="nav-link" data-scroll-target="#model-training">Model Training</a></li>
+  <li><a href="#diagnostics" id="toc-diagnostics" class="nav-link" data-scroll-target="#diagnostics">Diagnostics</a></li>
+  <li><a href="#model-fit" id="toc-model-fit" class="nav-link" data-scroll-target="#model-fit">Model Fit</a></li>
+  <li><a href="#media-insights" id="toc-media-insights" class="nav-link" data-scroll-target="#media-insights">Media Insights</a></li>
+  </ul></li>
   <li><a href="#budget-allocation" id="toc-budget-allocation" class="nav-link" data-scroll-target="#budget-allocation">Budget Allocation</a></li>
   <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways">Key Takeaways</a></li>
   </ul>
 <div class="quarto-code-links"><h2>Code Links</h2><ul><li><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part6-media-optimization/sec6.2_6.4_mmm_meridian.ipynb"><i class="bi bi-github"></i>sec6.2_6.4_mmm_meridian.ipynb</a></li></ul></div></nav>
     </div>
 <!-- main -->
-<main class="content" id="quarto-document-content">
+<main class="content" id="quarto-document-content" tabindex="-1">
 
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part6/_part6.html">Part 6. Media Investment and Optimization</a></li><li class="breadcrumb-item"><a href="../part6/sec6.2-mmm-fundamentals.html"><span class="chapter-title">6.2 Building and Optimizing an MMM</span></a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="Breadcrumbs"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part6/_part6.html">Part 6. Media Investment and Optimization</a></li><li class="breadcrumb-item"><a href="../part6/sec6.2-mmm-fundamentals.html"><span class="chapter-title">6.2 Building and Optimizing an MMM</span></a></li></ol></nav>
 <div class="quarto-title">
 <h1 class="title"><span id="sec-mmm-fundamentals" class="quarto-section-identifier"><span class="chapter-title">6.2 Building and Optimizing an MMM</span></span></h1>
 </div>
@@ -646,66 +659,80 @@ window.Quarto = {
 <h2 class="anchored" data-anchor-id="what-is-marketing-mix-modeling">What Is Marketing Mix Modeling?</h2>
 <p>Marketing Mix Modeling (MMM) is a statistical approach that uses aggregated time-series data (typically weekly sales and media spend by channel) to estimate how much each marketing channel contributes to business outcomes. Unlike user-level attribution, MMM works with aggregate data and does not require individual tracking, which makes it resilient to cookie loss, App Tracking Transparency, and walled-garden restrictions.</p>
 <p>MMM serves three purposes:</p>
-<ol type="1">
-<li><strong>Measure</strong>: quantify each channel’s contribution and return on ad spend (ROAS).</li>
-<li><strong>Simulate</strong>: answer “what if” questions, such as what happens to sales if we cut TV spend by 30%?</li>
-<li><strong>Optimize</strong>: allocate a fixed budget across channels to maximize the expected outcome.</li>
-</ol>
-<div id="fig-mmm-purpose" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="MMM supports three decisions: measure past media efficiency, simulate future spending changes, and optimize the media budget.">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-mmm-purpose-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part6/sec6.2/mmm_purpose.png" class="fig-md img-fluid figure-img" alt="MMM supports three decisions: measure past media efficiency, simulate future spending changes, and optimize the media budget.">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-mmm-purpose-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;1: The three purposes of MMM: measure, simulate, optimize.
+<div id="tbl-mmm-purpose" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-mmm-purpose-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;1: The three purposes of MMM.
 </figcaption>
+<div aria-describedby="tbl-mmm-purpose-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th style="text-align: left;">Purpose</th>
+<th style="text-align: left;">Example of business question</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td style="text-align: left;">To measure efficiency</td>
+<td style="text-align: left;">How efficient was our spending on TV last year?</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td style="text-align: left;">To simulate</td>
+<td style="text-align: left;">How would our sales change if we spent more/less on TV next year?</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td style="text-align: left;">To optimize media budget</td>
+<td style="text-align: left;">How should my media budget be allocated to maximize sales?</td>
+</tr>
+</tbody>
+</table>
+</div>
 </figure>
 </div>
-<p>The renewed interest in MMM is not just nostalgia. As user-level tracking becomes less reliable, aggregate modeling is now the most practical way to measure cross-channel media effectiveness.</p>
+<p>Interest in MMM has returned because user-level tracking has become less reliable. Aggregate modeling is now the most practical way to measure cross-channel media effectiveness.</p>
 </section>
 <section id="the-mmm-equation" class="level2">
 <h2 class="anchored" data-anchor-id="the-mmm-equation">The MMM Equation</h2>
 <p>At its simplest, MMM is a regression of weekly sales on media spend, controlling for holidays, promotions, and other non-media drivers:</p>
-<p><span class="math display">\[
-y_t = \beta_0 + \sum_{c=1}^{C} \beta_c \cdot x_{c,t} + \sum_{k} \gamma_k \cdot z_{k,t} + \varepsilon_t
-\]</span></p>
-<p>where <span class="math inline">\(y_t\)</span> is sales at time <span class="math inline">\(t\)</span>, <span class="math inline">\(x_{c,t}\)</span> is spend in channel <span class="math inline">\(c\)</span>, <span class="math inline">\(z_{k,t}\)</span> are control variables, and <span class="math inline">\(\varepsilon_t\)</span> is noise.</p>
 <div id="fig-mmm-simple-equation" class="fig-sm quarto-float quarto-figure quarto-figure-center anchored" alt="A simple linear MMM represents sales as baseline sales plus weighted media inputs and weighted control variables.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-mmm-simple-equation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="../images/part6/sec6.2/simple_equation.png" class="fig-sm img-fluid figure-img" alt="A simple linear MMM represents sales as baseline sales plus weighted media inputs and weighted control variables.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-mmm-simple-equation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;2: Simple linear MMM: sales ~ media spend + controls.
+Figure&nbsp;1: Simple linear MMM: sales ~ media spend + controls.
 </figcaption>
 </figure>
 </div>
+<p>where <span class="math inline">\(y_t\)</span> is sales at time <span class="math inline">\(t\)</span>, <span class="math inline">\(x_{c,t}\)</span> is spend in channel <span class="math inline">\(c\)</span>, <span class="math inline">\(z_{k,t}\)</span> are control variables, and <span class="math inline">\(\varepsilon_t\)</span> is noise.</p>
 <p>This simple regression is not enough for two reasons. First, media effects are not immediate: a TV ad this week can still influence purchases in the following weeks (carryover). Second, media effects are not linear: the hundredth GRP (gross rating point, a standard measure of TV audience delivery) in a week adds less than the first (diminishing returns).</p>
 <p>A more realistic model applies adstock (carryover) and saturation (diminishing returns) transforms before the linear combination:</p>
-<p><span class="math display">\[
-y_t = \beta_0 + \sum_{c=1}^{C} \beta_c \cdot \text{Saturation}\bigl(\text{Adstock}(x_{c,t})\bigr) + \sum_{k} \gamma_k \cdot z_{k,t} + \varepsilon_t
-\]</span></p>
 <div id="fig-mmm-full-equation" class="fig-sm quarto-float quarto-figure quarto-figure-center anchored" alt="A full MMM applies adstock and saturation transformations to media inputs while retaining control variables and random noise.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-mmm-full-equation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="../images/part6/sec6.2/full_equation.png" class="fig-sm img-fluid figure-img" alt="A full MMM applies adstock and saturation transformations to media inputs while retaining control variables and random noise.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-mmm-full-equation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;3: Full MMM: adstock and saturation transforms on media inputs.
+Figure&nbsp;2: Full MMM: adstock and saturation transforms on media inputs.
 </figcaption>
 </figure>
 </div>
 </section>
 <section id="saturation-diminishing-returns" class="level2">
 <h2 class="anchored" data-anchor-id="saturation-diminishing-returns">Saturation (Diminishing Returns)</h2>
-<p>Every media channel eventually saturates: the more you spend on one channel, the less each additional dollar earns. The first million dollars of TV spend drives significant incremental sales; the tenth million drives far less. <a href="#fig-saturation-zones" class="quarto-xref">Figure&nbsp;<span>4</span></a> shows the three regimes this creates: an under-investment zone where each dollar still works hard, an optimal range, and a saturation zone where additional spend is largely wasted.</p>
+<p>Every media channel eventually saturates: the more you spend on one channel, the less each additional dollar earns. The first million dollars of TV spend drives significant incremental sales; the tenth million drives far less. <a href="#fig-saturation-zones" class="quarto-xref">Figure&nbsp;<span>3</span></a> shows the three regimes this creates: an under-investment zone where each dollar still works hard, an optimal range, and a saturation zone where additional spend is largely wasted.</p>
 <div id="fig-saturation-zones" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="A concave response curve of ad effect versus ad spending, divided into an under-investment zone, an optimal range, and a saturation (over-investment) zone.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-saturation-zones-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="../images/part6/sec6.2/saturation_zones.png" class="fig-md img-fluid figure-img" alt="A concave response curve of ad effect versus ad spending, divided into an under-investment zone, an optimal range, and a saturation (over-investment) zone.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-saturation-zones-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;4: The three zones of the saturation curve.
+Figure&nbsp;3: Saturation: the more you spend on one media channel, the less effective it is.
 </figcaption>
 </figure>
 </div>
@@ -714,14 +741,14 @@ Figure&nbsp;4: The three zones of the saturation curve.
 \text{Hill}(x) = \frac{x^S}{x^S + K^S}
 \]</span></p>
 <p>where <span class="math inline">\(K\)</span> (the half-saturation point, often called EC50) is the spend level at which the channel reaches 50% of its maximum effect, and <span class="math inline">\(S\)</span> (the slope) controls how sharply the curve bends.</p>
-<p>This curvature is what makes budget reallocation valuable. In <a href="#fig-saturation-reallocation" class="quarto-xref">Figure&nbsp;<span>5</span></a>, channel X sits deep in its saturation zone while channel Y still has headroom. Trimming budget on X costs $1M in sales, while adding that budget to Y gains $3M: a net gain of $2M on the same total spend. Shifting budget from saturated channels to under-invested ones can increase total return, even if the saturated channel’s average ROAS looks higher. Average ROAS divides a channel’s total incremental revenue by its total spend; marginal ROAS is the slope of the curve where the channel sits now, and that is what the next dollar earns.</p>
+<p>This curvature is what makes budget reallocation valuable. In <a href="#fig-saturation-reallocation" class="quarto-xref">Figure&nbsp;<span>4</span></a>, channel X sits deep in its saturation zone while channel Y still has headroom. Trimming budget on X costs $1M in sales, while adding that budget to Y gains $3M: a net gain of $2M on the same total spend. Shifting budget from saturated channels to under-invested ones can increase total return, even if the saturated channel’s average ROAS looks higher. Average ROAS divides a channel’s total incremental revenue by its total spend; marginal ROAS is the slope of the curve where the channel sits now, and that is what the next dollar earns.</p>
 <div id="fig-saturation-reallocation" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Two saturation curves: decreasing budget on saturated channel X loses $1M in sales while increasing budget on less saturated channel Y gains $3M, a net change of +$2M.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-saturation-reallocation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="../images/part6/sec6.2/saturation_reallocation.png" class="fig-md img-fluid figure-img" alt="Two saturation curves: decreasing budget on saturated channel X loses $1M in sales while increasing budget on less saturated channel Y gains $3M, a net change of +$2M.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-saturation-reallocation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;5: Reallocating budget from a saturated channel to an unsaturated one.
+Figure&nbsp;4: Reallocating budget from a saturated channel to an unsaturated one.
 </figcaption>
 </figure>
 </div>
@@ -732,14 +759,14 @@ Figure&nbsp;5: Reallocating budget from a saturated channel to an unsaturated on
 <p><span class="math display">\[
 \text{Adstock}_t = x_t + \lambda \cdot \text{Adstock}_{t-1}
 \]</span></p>
-<p>where <span class="math inline">\(\lambda \in [0, 1]\)</span> is the retention rate. A higher <span class="math inline">\(\lambda\)</span> means longer carryover. <a href="#fig-adstock-tv" class="quarto-xref">Figure&nbsp;<span>6</span></a> and <a href="#fig-adstock-digital" class="quarto-xref">Figure&nbsp;<span>7</span></a> show the same three ad flights under two retention rates. At a high rate, typical of upper-funnel channels like TV, each flight’s effect lingers well after it airs, and overlapping flights stack on top of each other. At a lower rate, typical of digital channels, the effect fades within days.</p>
+<p>where <span class="math inline">\(\lambda \in [0, 1]\)</span> is the retention rate. A higher <span class="math inline">\(\lambda\)</span> means longer carryover. <a href="#fig-adstock-tv" class="quarto-xref">Figure&nbsp;<span>5</span></a> and <a href="#fig-adstock-digital" class="quarto-xref">Figure&nbsp;<span>6</span></a> show the same three ad flights under two retention rates. At a high rate, typical of upper-funnel channels like TV, each flight’s effect lingers well after it airs, and overlapping flights stack on top of each other. At a lower rate, typical of digital channels, the effect fades within days.</p>
 <div id="fig-adstock-tv" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="Bar chart of ad effect over 26 days for three TV ad flights with an adstock rate of 80%; each flight's effect decays slowly and stacks with the next.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-adstock-tv-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="../images/part6/sec6.2/adstock_tv.png" class="fig-md img-fluid figure-img" alt="Bar chart of ad effect over 26 days for three TV ad flights with an adstock rate of 80%; each flight's effect decays slowly and stacks with the next.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-adstock-tv-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;6: Adstock with a high retention rate (TV).
+Figure&nbsp;5: Adstock with a high retention rate (TV).
 </figcaption>
 </figure>
 </div>
@@ -749,7 +776,7 @@ Figure&nbsp;6: Adstock with a high retention rate (TV).
 <img src="../images/part6/sec6.2/adstock_digital.png" class="fig-md img-fluid figure-img" alt="Bar chart of ad effect over 26 days for three digital ad flights with an adstock rate of 60%; each flight's effect decays quickly.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-adstock-digital-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;7: Adstock with a lower retention rate (digital).
+Figure&nbsp;6: Adstock with a lower retention rate (digital).
 </figcaption>
 </figure>
 </div>
@@ -758,20 +785,50 @@ Figure&nbsp;7: Adstock with a lower retention rate (digital).
 </section>
 <section id="sec-mmm-data-requirements" class="level2">
 <h2 class="anchored" data-anchor-id="sec-mmm-data-requirements">Data Requirements</h2>
-<p>MMM requires three categories of input data:</p>
-<ol type="1">
-<li><strong>Target variable</strong>: weekly revenue or sales volume at the brand or product level.</li>
-<li><strong>Media spend</strong>: weekly spend per channel (TV, social, display, search, direct mail, etc.).</li>
-<li><strong>Control variables</strong>: holidays, seasonality indicators, promotions, pricing changes, competitor activity, macroeconomic factors, or any non-media driver that might explain sales variation.</li>
-</ol>
-<div id="fig-data-requirements" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="MMM requires a business outcome and channel-level media spending, with seasonality and other non-media controls added when available.">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-data-requirements-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part6/sec6.2/data_requirements.png" class="fig-md img-fluid figure-img" alt="MMM requires a business outcome and channel-level media spending, with seasonality and other non-media controls added when available.">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-data-requirements-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;8: MMM input data: target, media spend by channel, controls.
+<p>MMM needs a target variable, media spend, and control variables, all weekly (<a href="#tbl-data-requirements" class="quarto-xref">Table&nbsp;<span>2</span></a>).</p>
+<div id="tbl-data-requirements" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-data-requirements-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;2: MMM input data.
 </figcaption>
+<div aria-describedby="tbl-data-requirements-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Variable type</th>
+<th style="text-align: left;">Data category</th>
+<th style="text-align: left;">Variables</th>
+<th style="text-align: left;">Priority</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Objective variable</td>
+<td style="text-align: left;">KPI</td>
+<td style="text-align: left;">Sales</td>
+<td style="text-align: left;">Must</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Explanatory variable</td>
+<td style="text-align: left;">Media</td>
+<td style="text-align: left;">Media spending, per channel</td>
+<td style="text-align: left;">Must</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Explanatory variable</td>
+<td style="text-align: left;">Other</td>
+<td style="text-align: left;">Non-media marketing metrics (price, promotion, product distribution)</td>
+<td style="text-align: left;">Optional</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Explanatory variable</td>
+<td style="text-align: left;">Other</td>
+<td style="text-align: left;">Seasonality, holiday, weather, macro economy</td>
+<td style="text-align: left;">Optional</td>
+</tr>
+</tbody>
+</table>
+</div>
 </figure>
 </div>
 <p>Recommended granularity:</p>
@@ -781,39 +838,110 @@ Figure&nbsp;8: MMM input data: target, media spend by channel, controls.
 <li><strong>Geography</strong>: National or brand-level is typical. Sub-national (geo-level) models can be more powerful, but they need more data and careful modeling.</li>
 <li><strong>Channels</strong>: Only include channels where spend actually varies. If a channel spends the same amount every week, the model cannot learn its effect.</li>
 </ul>
-<p>One check belongs with these and is easy to skip. Adstock and saturation smooth a channel’s contribution, so media can end up moving sales less from week to week than whatever the control variables fail to explain. When that happens the media coefficients are not identified, and no choice of prior repairs it: the estimator has nothing left to separate media from baseline with. Compare the two quantities before fitting. The companion notebook does it in Step 2b.</p>
+<p>One more check is easy to skip. Adstock and saturation smooth a channel’s contribution, so media may explain less of the week-to-week movement in sales than unexplained noise does. When that happens, the model cannot separate media from baseline, and no prior fixes it. The companion notebook checks this before fitting, in Step 2b.</p>
 <p>One more reason the control variables matter: media spend and sales usually share trend and seasonality by construction, and a shared calendar alone can manufacture a strong correlation between two series that have nothing to do with each other. The seasonality and trend controls are what keep that shared structure out of the media coefficients.</p>
-<div id="fig-example-dataset" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="The weekly MMM dataset aligns sales, five media-channel spending series, seasonality, and a holiday indicator by date.">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-example-dataset-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part6/sec6.2/example_dataset.png" class="fig-lg img-fluid figure-img" alt="The weekly MMM dataset aligns sales, five media-channel spending series, seasonality, and a holiday indicator by date.">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-example-dataset-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;9: Example MMM dataset: date, sales, spend by channel, controls.
+<p>The demo dataset used below has that shape: one row per week, sales, spend for each of five channels, and the controls. <a href="#tbl-example-dataset" class="quarto-xref">Table&nbsp;<span>3</span></a> shows its first five weeks.</p>
+<div id="tbl-example-dataset" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-example-dataset-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;3: The first five weeks of the demo dataset, with two of its six controls.
 </figcaption>
+<div aria-describedby="tbl-example-dataset-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Week</th>
+<th style="text-align: right;">Sales ($M)</th>
+<th style="text-align: right;">TV/CTV ($k)</th>
+<th style="text-align: right;">OOH ($k)</th>
+<th style="text-align: right;">Google Search ($k)</th>
+<th style="text-align: right;">Meta ($k)</th>
+<th style="text-align: right;">TikTok ($k)</th>
+<th style="text-align: right;">Seasonality</th>
+<th style="text-align: right;">Christmas</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>2020-12-28</td>
+<td style="text-align: right;">21.4</td>
+<td style="text-align: right;">382</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">740</td>
+<td style="text-align: right;">948</td>
+<td style="text-align: right;">402</td>
+<td style="text-align: right;">-0.039</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="even">
+<td>2021-01-04</td>
+<td style="text-align: right;">37.3</td>
+<td style="text-align: right;">836</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">768</td>
+<td style="text-align: right;">1,778</td>
+<td style="text-align: right;">882</td>
+<td style="text-align: right;">0.069</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="odd">
+<td>2021-01-11</td>
+<td style="text-align: right;">38.9</td>
+<td style="text-align: right;">848</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">776</td>
+<td style="text-align: right;">1,612</td>
+<td style="text-align: right;">772</td>
+<td style="text-align: right;">0.188</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td>2021-01-18</td>
+<td style="text-align: right;">41.5</td>
+<td style="text-align: right;">784</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">776</td>
+<td style="text-align: right;">1,619</td>
+<td style="text-align: right;">851</td>
+<td style="text-align: right;">0.305</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="odd">
+<td>2021-01-25</td>
+<td style="text-align: right;">41.5</td>
+<td style="text-align: right;">742</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">777</td>
+<td style="text-align: right;">1,683</td>
+<td style="text-align: right;">755</td>
+<td style="text-align: right;">0.417</td>
+<td style="text-align: right;">0</td>
+</tr>
+</tbody>
+</table>
+</div>
 </figure>
 </div>
 </section>
 <section id="the-bayesian-angle" class="level2">
 <h2 class="anchored" data-anchor-id="the-bayesian-angle">The Bayesian Angle</h2>
-<p>Before walking through an implementation, one design choice deserves attention: modern MMM is predominantly Bayesian. The reason is practical.</p>
+<p>Modern MMM is predominantly Bayesian, for three practical reasons.</p>
 <ol type="1">
-<li><strong>Priors encode domain knowledge.</strong> If your team knows from past experiments that TV ROAS is roughly 2.0, you can encode that as a prior. The model updates this belief with the data. Without priors, the model might produce implausible estimates simply because of multicollinearity. For a channel the data cannot identify, though, the number the model returns is the number you put in the prior. The demo’s Google Search is that channel, and <a href="sec6.3-incrementality-experiments.html">Section 6.3</a> measures it with an experiment.</li>
-<li><strong>Credible intervals, not point estimates.</strong> Instead of “TV ROAS = 2.3,” you get “TV ROAS: median 2.3, 90% CI [1.1, 3.8].” A wide interval means you should be cautious about large budget shifts based on that estimate.</li>
+<li><strong>Priors encode domain knowledge.</strong> If your team knows from past experiments that TV ROAS is roughly 2.0, you can encode that as a prior. The model updates this belief with the data. Without priors, the model might produce implausible estimates simply because of multicollinearity.</li>
+<li><strong>Credible intervals, not point estimates.</strong> Instead of “TV ROAS = 2.3,” you get “TV ROAS: median 2.3, 90% CI [1.1, 3.8].”</li>
 <li><strong>Natural integration with experiments.</strong> When you run a geo-lift experiment and estimate a channel’s incremental effect, you can feed that evidence into the MMM as an informative prior. This tightens the posterior and improves identifiability, a workflow we develop in detail in <a href="sec6.4-mmm-calibration.html">Section 6.4</a>.</li>
 </ol>
 <p>That’s why tools like Meridian and PyMC-Marketing use Bayesian inference under the hood.</p>
-<div class="callout callout-style-default callout-tip callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Tip</span>MMM Libraries in 2026
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Several open-source libraries implement the concepts in this chapter. The three most widely used:</p>
+</section>
+<section id="choosing-a-library" class="level2">
+<h2 class="anchored" data-anchor-id="choosing-a-library">Choosing a Library</h2>
+<p>Several open-source libraries implement the concepts in this chapter. The three most widely used, as of 2026:</p>
+<div id="tbl-mmm-libraries" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-mmm-libraries-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;4: The three most widely used open-source MMM libraries.
+</figcaption>
+<div aria-describedby="tbl-mmm-libraries-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -840,67 +968,147 @@ Figure&nbsp;9: Example MMM dataset: date, sales, spend by channel, controls.
 </tr>
 </tbody>
 </table>
-<p>The core concepts (adstock, saturation, Bayesian estimation, and budget optimization) are the same across all three. This chapter uses Meridian because it is Python-based and easy to get started with: even without much customization, it produces polished two-page HTML reports of the model results and the budget optimization that you can share with stakeholders. The walkthrough below links to both.</p>
 </div>
+</figure>
 </div>
+<p>All three model carryover and saturation and support budget allocation, but their estimation and uncertainty procedures differ. This chapter uses Meridian for its Python implementation, experimental calibration, and reports that make fitted outcomes and budget scenarios easy to inspect.</p>
 </section>
 <section id="a-walkthrough-with-meridian" class="level2">
 <h2 class="anchored" data-anchor-id="a-walkthrough-with-meridian">A Walkthrough with Meridian</h2>
 <p><strong>Companion notebook:</strong> <code>sec6.2_6.4_mmm_meridian.ipynb</code> demonstrates a complete MMM workflow with Google’s Meridian library.<br>
 <a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part6-media-optimization/sec6.2_6.4_mmm_meridian.ipynb">View on GitHub</a></p>
-<p><strong>Data loading and preparation.</strong> The demo dataset contains 157 weeks of sales data with 5 media channels (TV/CTV, OOH, Google Search, Meta, TikTok) and holiday/seasonality controls. Meridian uses a <code>DataFrameInputDataBuilder</code> to construct its input data from a pandas DataFrame. Scaling is handled internally; no manual normalization is needed. The important detail is that Meridian applies saturation to <code>media_cols</code> (exposure volume such as impressions or clicks), while <code>media_spend_cols</code> are used as the cost basis for ROAS.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>channels <span class="op">=</span> [<span class="st">"TV/CTV"</span>, <span class="st">"OOH"</span>, <span class="st">"Google Search"</span>, <span class="st">"Meta"</span>, <span class="st">"TikTok"</span>]</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>media_cols <span class="op">=</span> [</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"tv_ctv_impressions"</span>, <span class="st">"ooh_impressions"</span>, <span class="st">"google_clicks"</span>,</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"meta_impressions"</span>, <span class="st">"tiktok_impressions"</span>,</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>]</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>media_spend_cols <span class="op">=</span> [</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"tv_ctv_spend"</span>, <span class="st">"ooh_spend"</span>, <span class="st">"google_spend"</span>,</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">"meta_spend"</span>, <span class="st">"tiktok_spend"</span>,</span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>]</span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>control_cols <span class="op">=</span> [</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">"seas_sin52"</span>, <span class="st">"seas_cos52"</span>,</span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">"hldy_thanksgiving"</span>, <span class="st">"hldy_christmas"</span>,</span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="st">"trend"</span>, <span class="st">"trend_sq"</span>,</span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>]</span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>builder <span class="op">=</span> data_frame_input_data_builder.DataFrameInputDataBuilder(</span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    kpi_type<span class="op">=</span><span class="st">'revenue'</span>,</span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    default_kpi_column<span class="op">=</span><span class="st">'sales'</span>,</span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    default_time_column<span class="op">=</span><span class="st">'time'</span>,</span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    default_geo_column<span class="op">=</span><span class="st">'geo'</span>,</span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>data <span class="op">=</span> (</span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>    builder</span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>    .with_kpi(df)</span>
-<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>    .with_media(df,</span>
-<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>        media_cols<span class="op">=</span>media_cols,</span>
-<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>        media_spend_cols<span class="op">=</span>media_spend_cols,</span>
-<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>        media_channels<span class="op">=</span>channels)</span>
-<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>    .with_controls(df, control_cols<span class="op">=</span>control_cols)</span>
-<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>    .build()</span>
-<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>Saturation and adstock priors.</strong> Meridian measures the half-saturation point <span class="math inline">\(K\)</span> in its own units: media scaled by its median, with adstock weights normalized to sum to one, so an always-on channel sits near 1 on that scale. The demo gives saturation one wide, channel-independent prior that favors gently bending curves, keeps the funnel structure on adstock, and shows in the notebook what that choice decides for a channel the data cannot identify.</p>
-<p><strong>Model training.</strong> Meridian uses the No-U-Turn Sampler (NUTS) for MCMC. We first draw from the prior for sanity checks, then sample the posterior.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>mmm <span class="op">=</span> model.Meridian(input_data<span class="op">=</span>data, model_spec<span class="op">=</span>model_spec)</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>mmm.sample_prior(<span class="dv">500</span>)</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>mmm.sample_posterior(</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    n_chains<span class="op">=</span><span class="dv">4</span>, n_adapt<span class="op">=</span><span class="dv">500</span>, n_burnin<span class="op">=</span><span class="dv">500</span>, n_keep<span class="op">=</span><span class="dv">1000</span>, seed<span class="op">=</span>SEED</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Production runs typically use n_chains=10, n_keep=2000 (≈ 5× compute).</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>Diagnostics.</strong> Meridian’s <code>ModelReviewer</code> runs automated quality checks (convergence, baseline validation, goodness of fit, and prior-posterior shift) and reports a pass/review/fail status.</p>
-<div id="fig-model-summary" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="The channel summary compares spend, mean return on investment, uncertainty intervals, and estimated incremental outcomes across media channels.">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-model-summary-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part6/sec6.2/model_summary.png" class="fig-lg img-fluid figure-img" alt="The channel summary compares spend, mean return on investment, uncertainty intervals, and estimated incremental outcomes across media channels.">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-model-summary-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;10: Meridian model summary by channel.
+<section id="data-loading-and-preparation" class="level3">
+<h3 class="anchored" data-anchor-id="data-loading-and-preparation">Data Loading and Preparation</h3>
+<p>The demo dataset contains 157 weeks of sales data with 5 media channels (TV/CTV, OOH, Google Search, Meta, TikTok) and holiday/seasonality controls. Meridian uses a <code>DataFrameInputDataBuilder</code> to construct its input data from a pandas DataFrame. Scaling is handled internally; no manual normalization is needed. The important detail is that Meridian applies saturation to <code>media_cols</code> (exposure volume such as impressions or clicks), while <code>media_spend_cols</code> are used as the cost basis for ROAS.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> msbook.data <span class="im">import</span> load_mmm_synthetic</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> meridian.data <span class="im">import</span> data_frame_input_data_builder</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> load_mmm_synthetic()   <span class="co"># one row per week, national; notebook Step 2</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>channels <span class="op">=</span> [<span class="st">"TV/CTV"</span>, <span class="st">"OOH"</span>, <span class="st">"Google Search"</span>, <span class="st">"Meta"</span>, <span class="st">"TikTok"</span>]</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>media_cols <span class="op">=</span> [<span class="st">"tv_ctv_impressions"</span>, <span class="st">"ooh_impressions"</span>, <span class="st">"google_clicks"</span>,</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>              <span class="st">"meta_impressions"</span>, <span class="st">"tiktok_impressions"</span>]   <span class="co"># exposure: saturation applies here</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>media_spend_cols <span class="op">=</span> [<span class="st">"tv_ctv_spend"</span>, <span class="st">"ooh_spend"</span>, <span class="st">"google_spend"</span>,</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>                    <span class="st">"meta_spend"</span>, <span class="st">"tiktok_spend"</span>]         <span class="co"># dollars: the cost basis for ROAS</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>control_cols <span class="op">=</span> [<span class="st">"seas_sin52"</span>, <span class="st">"seas_cos52"</span>, <span class="st">"hldy_thanksgiving"</span>, <span class="st">"hldy_christmas"</span>,</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>                <span class="st">"trend"</span>, <span class="st">"trend_sq"</span>]</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>builder <span class="op">=</span> data_frame_input_data_builder.DataFrameInputDataBuilder(</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    kpi_type<span class="op">=</span><span class="st">"revenue"</span>, default_kpi_column<span class="op">=</span><span class="st">"sales"</span>,</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    default_time_column<span class="op">=</span><span class="st">"time"</span>, default_geo_column<span class="op">=</span><span class="st">"geo"</span>,</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>data <span class="op">=</span> (</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    builder.with_kpi(df)</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    .with_media(df, media_cols<span class="op">=</span>media_cols, media_spend_cols<span class="op">=</span>media_spend_cols,</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>                media_channels<span class="op">=</span>channels)</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>    .with_controls(df, control_cols<span class="op">=</span>control_cols)</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>    .build()</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="saturation-and-adstock-priors" class="level3">
+<h3 class="anchored" data-anchor-id="saturation-and-adstock-priors">Saturation and Adstock Priors</h3>
+<p>Meridian measures the half-saturation point <span class="math inline">\(K\)</span> in its own units: media scaled by its median, with adstock weights normalized to sum to one, so an always-on channel sits near 1 on that scale. The demo uses one wide saturation prior for every channel, one that favors gently bending curves, and lets channels differ only through their adstock priors.</p>
+<p>The whole specification is one prior object and one <code>ModelSpec</code>.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> tensorflow <span class="im">as</span> tf</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> tensorflow_probability <span class="im">as</span> tfp</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> meridian <span class="im">import</span> constants</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> meridian.model <span class="im">import</span> prior_distribution, spec</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Adstock centers by funnel stage: 6-week half-lives for TV/CTV and OOH,</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co"># 1 week for Search, 3 weeks for Meta and TikTok.</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>alpha_loc <span class="op">=</span> tf.constant([<span class="fl">0.89</span>, <span class="fl">0.89</span>, <span class="fl">0.50</span>, <span class="fl">0.79</span>, <span class="fl">0.79</span>])</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>prior <span class="op">=</span> prior_distribution.PriorDistribution(</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    roi_m<span class="op">=</span>tfp.distributions.LogNormal(<span class="fl">0.2</span>, <span class="fl">0.9</span>, name<span class="op">=</span>constants.ROI_M),   <span class="co"># weak, every channel</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    alpha_m<span class="op">=</span>tfp.distributions.TruncatedNormal(alpha_loc, <span class="fl">0.1</span>, <span class="fl">0.0</span>, <span class="fl">1.0</span>, name<span class="op">=</span>constants.ALPHA_M),</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    ec_m<span class="op">=</span>tfp.distributions.TruncatedNormal(<span class="fl">5.0</span>, <span class="fl">2.0</span>, <span class="fl">0.1</span>, <span class="fl">30.0</span>, name<span class="op">=</span>constants.EC_M),  <span class="co"># gentle bend</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>rng <span class="op">=</span> np.random.default_rng(<span class="dv">20260520</span>)                     <span class="co"># a random 25% of weeks held out</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>holdout_id <span class="op">=</span> np.zeros(<span class="bu">len</span>(df), dtype<span class="op">=</span><span class="bu">bool</span>)</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>holdout_id[rng.choice(<span class="bu">len</span>(df), <span class="bu">len</span>(df) <span class="op">//</span> <span class="dv">4</span>, replace<span class="op">=</span><span class="va">False</span>)] <span class="op">=</span> <span class="va">True</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>model_spec <span class="op">=</span> spec.ModelSpec(prior<span class="op">=</span>prior, media_prior_type<span class="op">=</span><span class="st">"roi"</span>, max_lag<span class="op">=</span><span class="dv">12</span>,</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>                            adstock_decay_spec<span class="op">=</span><span class="st">"geometric"</span>, holdout_id<span class="op">=</span>holdout_id)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="model-training" class="level3">
+<h3 class="anchored" data-anchor-id="model-training">Model Training</h3>
+<p>Meridian uses the No-U-Turn Sampler (NUTS) for MCMC. We first draw from the prior for sanity checks, then sample the posterior.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> meridian.model <span class="im">import</span> model</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>SEED <span class="op">=</span> <span class="dv">105</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>mmm <span class="op">=</span> model.Meridian(input_data<span class="op">=</span>data, model_spec<span class="op">=</span>model_spec)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>mmm.sample_prior(<span class="dv">500</span>)</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>mmm.sample_posterior(</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    n_chains<span class="op">=</span><span class="dv">4</span>, n_adapt<span class="op">=</span><span class="dv">500</span>, n_burnin<span class="op">=</span><span class="dv">500</span>, n_keep<span class="op">=</span><span class="dv">1000</span>, seed<span class="op">=</span>SEED</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Production runs typically use n_chains=10, n_keep=2000 (≈ 5× compute).</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="diagnostics" class="level3">
+<h3 class="anchored" data-anchor-id="diagnostics">Diagnostics</h3>
+<p>Meridian’s <code>ModelReviewer</code> runs automated quality checks (convergence, baseline validation, goodness of fit, and prior-posterior shift) and reports a pass/review/fail status. <a href="#tbl-channel-summary" class="quarto-xref">Table&nbsp;<span>5</span></a> collects what the fitted model says about each channel. The last column is half the marginal interval’s width divided by its estimate, which the budget section uses as its guardrail.</p>
+<div id="tbl-channel-summary" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-channel-summary-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;5: Posterior summary by channel, from the companion notebook.
 </figcaption>
+<div aria-describedby="tbl-channel-summary-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Channel</th>
+<th style="text-align: right;">Spend share</th>
+<th style="text-align: center;">Average ROAS [90% CI]</th>
+<th style="text-align: center;">Marginal ROAS [90% CI]</th>
+<th style="text-align: right;">Relative half-width</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">TV/CTV</td>
+<td style="text-align: right;">18%</td>
+<td style="text-align: center;">4.21 [1.90, 6.58]</td>
+<td style="text-align: center;">3.18 [1.53, 4.86]</td>
+<td style="text-align: right;">0.52</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">OOH</td>
+<td style="text-align: right;">20%</td>
+<td style="text-align: center;">5.54 [3.67, 7.36]</td>
+<td style="text-align: center;">4.34 [2.94, 5.70]</td>
+<td style="text-align: right;">0.32</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Google Search</td>
+<td style="text-align: right;">21%</td>
+<td style="text-align: center;">4.06 [0.46, 11.67]</td>
+<td style="text-align: center;">3.29 [0.36, 9.51]</td>
+<td style="text-align: right;">1.39</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Meta</td>
+<td style="text-align: right;">19%</td>
+<td style="text-align: center;">7.55 [5.92, 9.06]</td>
+<td style="text-align: center;">6.08 [4.72, 7.33]</td>
+<td style="text-align: right;">0.21</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">TikTok</td>
+<td style="text-align: right;">22%</td>
+<td style="text-align: center;">5.04 [2.94, 6.83]</td>
+<td style="text-align: center;">3.84 [2.21, 5.27]</td>
+<td style="text-align: right;">0.40</td>
+</tr>
+</tbody>
+</table>
+</div>
 </figure>
 </div>
-<p><strong>Model fit.</strong> With a random 25% week-level holdout, the demo recovers in-sample R² ≈ 0.97 and out-of-sample R² ≈ 0.97. A tight in/out gap is expected here: synthetic data plus a random (interpolation) holdout is close to a best case. On production data with real noise, broken-trend periods, and lumpy promotional activity, out-of-sample R² in the 0.6 to 0.7 range is typical and acceptable. A high R² does not validate the media estimates; check their direction and size separately.</p>
+<p>Four channels have intervals a planner can work with. Google Search does not: its marginal ROAS could be 0.36 or 9.51, and the rest of this chapter turns on that row.</p>
+</section>
+<section id="model-fit" class="level3">
+<h3 class="anchored" data-anchor-id="model-fit">Model Fit</h3>
+<p>With a random 25% week-level holdout, the demo recovers in-sample R² ≈ 0.97 and out-of-sample R² ≈ 0.97. A tight in/out gap is expected here: synthetic data plus a random (interpolation) holdout is close to a best case. On production data with real noise, broken-trend periods, and lumpy promotional activity, out-of-sample R² in the 0.6 to 0.7 range is typical and acceptable. A high R² does not validate the media estimates; check their direction and size separately.</p>
 <p>Why a random holdout, when <a href="../part5/sec5.3-sales-forecasting.html#sec-rolling-backtest">Section 5.3</a> rejects random splits outright? A forecast has to extrapolate beyond its training window, so it is scored from a fixed origin forward. An MMM apportions credit for sales inside a period it has observed, so a scattered holdout asks the useful question: whether the fitted structure holds on weeks the likelihood never saw. Read the number as an interpolation diagnostic, not as evidence that the model can predict next quarter.</p>
 <div id="fig-in-sample-fit" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Predicted sales closely follow the broad trend in observed sales during training, while missing some short-term peaks and dips.">
 <figure class="quarto-float quarto-float-fig figure">
@@ -908,98 +1116,135 @@ Figure&nbsp;10: Meridian model summary by channel.
 <img src="../images/part6/sec6.2/in_sample_fit.png" class="fig-lg img-fluid figure-img" alt="Predicted sales closely follow the broad trend in observed sales during training, while missing some short-term peaks and dips.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-in-sample-fit-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;11: In-sample fit: predicted vs.&nbsp;actual sales.
+Figure&nbsp;7: In-sample fit: predicted vs.&nbsp;actual sales.
 </figcaption>
 </figure>
 </div>
+<p>Blue is the model estimate, green is observed revenue, and orange is the estimated baseline without media. The shaded blue band is the 90% credible interval.</p>
 <div id="fig-out-of-sample-fit" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="On held-out weeks, predicted sales track the overall observed pattern but smooth over several large week-to-week deviations.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-out-of-sample-fit-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="../images/part6/sec6.2/out_of_sample_fit.png" class="fig-lg img-fluid figure-img" alt="On held-out weeks, predicted sales track the overall observed pattern but smooth over several large week-to-week deviations.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-out-of-sample-fit-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;12: Out-of-sample fit: predicted vs.&nbsp;actual sales.
+Figure&nbsp;8: Out-of-sample fit: predicted vs.&nbsp;actual sales.
 </figcaption>
 </figure>
 </div>
-<p><strong>Media insights.</strong> The model gives ROAS estimates with credible intervals for each channel. A wide interval means the data have not pinned down that channel’s effect. Point estimates alone hide this; the interval shows how much weight the estimate can carry.</p>
-<div id="fig-roi-estimates" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="ROAS estimates with 90% credible intervals for each media channel. Wide intervals indicate high uncertainty in the estimate.">
+<p>The second chart selects only the held-out weeks from the same Meridian output. The close fit supports interpolation within this history; the channel intervals below determine how precisely media effects are estimated.</p>
+</section>
+<section id="media-insights" class="level3">
+<h3 class="anchored" data-anchor-id="media-insights">Media Insights</h3>
+<p>The model gives ROAS estimates with credible intervals for each channel.</p>
+<div id="fig-roi-estimates" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="ROAS estimates with 90% credible intervals for each media channel. Wide intervals indicate high uncertainty in the estimate.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-roi-estimates-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part6/sec6.2/roi_estimates.png" class="fig-lg img-fluid figure-img" alt="ROAS estimates with 90% credible intervals for each media channel. Wide intervals indicate high uncertainty in the estimate.">
+<img src="../images/part6/sec6.2/roi_estimates.png" class="fig-md img-fluid figure-img" alt="ROAS estimates with 90% credible intervals for each media channel. Wide intervals indicate high uncertainty in the estimate.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-roi-estimates-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;13: ROAS estimates with 90% credible intervals by channel.
+Figure&nbsp;9: ROAS estimates with 90% credible intervals by channel.
 </figcaption>
 </figure>
 </div>
+<p>Meridian labels this revenue-to-spend ratio ROI; it is the ROAS used in this chapter. The added dashed line marks break-even ROAS of 2.50 at a 40% contribution margin, and Search’s interval spans both sides of it.</p>
 <div id="fig-attribution-over-time" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Estimated sales are separated into a large baseline component and smaller time-varying contributions from five media channels.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-attribution-over-time-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="../images/part6/sec6.2/attribution_over_time.png" class="fig-lg img-fluid figure-img" alt="Estimated sales are separated into a large baseline component and smaller time-varying contributions from five media channels.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-attribution-over-time-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;14: Channel contributions and baseline over time.
+Figure&nbsp;10: Channel contributions and baseline over time.
 </figcaption>
 </figure>
 </div>
+<p>The baseline is Meridian’s estimate of revenue without media, and the colored layers show estimated channel contributions. Read changes against the revenue axis, which starts above zero, rather than judging shares from the visible areas.</p>
 <p>You do not have to build these charts one by one. A single call, <code>summarizer.Summarizer(mmm).output_model_results_summary(...)</code>, writes a stakeholder-ready two-page HTML report covering model fit, channel contributions, ROAS with credible intervals, and response curves. See the one the companion notebook produced: <a href="https://marketing-science-in-python.com/notebooks/part6-media-optimization/summary_output.html">summary_output.html</a>.</p>
+</section>
 </section>
 <section id="budget-allocation" class="level2">
 <h2 class="anchored" data-anchor-id="budget-allocation">Budget Allocation</h2>
 <p>The model’s three purposes (measure, simulate, optimize) converge here. Once the response curves are fitted, the optimizer searches for the allocation that maximizes predicted KPI under a fixed budget constraint:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>budget_optimizer <span class="op">=</span> optimizer.BudgetOptimizer(mmm)</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>optimization_results <span class="op">=</span> budget_optimizer.optimize()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>This is the same saturation logic from <a href="#fig-saturation-reallocation" class="quarto-xref">Figure&nbsp;<span>5</span></a>, now applied to the full media mix instead of two channels: the optimizer shifts budget toward the channels where the next dollar still does the most work.</p>
-<div id="fig-budget-optimization" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Pre- vs. post-optimization budget by channel; spend shifts toward unsaturated channels while total budget is held fixed.">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> meridian.analysis <span class="im">import</span> optimizer</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>budget_optimizer <span class="op">=</span> optimizer.BudgetOptimizer(mmm)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>optimization_results <span class="op">=</span> budget_optimizer.optimize()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>This is the same saturation logic from <a href="#fig-saturation-reallocation" class="quarto-xref">Figure&nbsp;<span>4</span></a>, now applied to the full media mix instead of two channels: the optimizer shifts budget toward the channels where the next dollar still does the most work.</p>
+<div id="fig-budget-optimization" class="fig-md quarto-float quarto-figure quarto-figure-center anchored" alt="The optimizer cuts Search and TV/CTV to fund increases in OOH and Meta, with a small cut to TikTok.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-budget-optimization-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part6/sec6.2/budget_optimization.png" class="fig-lg img-fluid figure-img" alt="Pre- vs. post-optimization budget by channel; spend shifts toward unsaturated channels while total budget is held fixed.">
+<img src="../images/part6/sec6.2/budget_optimization.png" class="fig-md img-fluid figure-img" alt="The optimizer cuts Search and TV/CTV to fund increases in OOH and Meta, with a small cut to TikTok.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-budget-optimization-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;15: Pre- vs.&nbsp;post-optimization budget by channel.
+Figure&nbsp;11: Recommended budget changes by channel.
 </figcaption>
 </figure>
 </div>
+<p>Bars below zero are proposed cuts; bars above zero are proposed increases. OOH and Meta receive the budget released by TV/CTV, Search, and the small TikTok reduction.</p>
+<div id="fig-mmm-optimized-response-curves" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="Dots mark current spend and squares mark optimized spend on each channel's fitted response curve.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-mmm-optimized-response-curves-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part6/sec6.2/optimized_response_curves.png" class="fig-lg img-fluid figure-img" alt="Dots mark current spend and squares mark optimized spend on each channel's fitted response curve.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-mmm-optimized-response-curves-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;12: Current and optimized spend on response curves.
+</figcaption>
+</figure>
+</div>
+<p>The dots mark current spending and the squares mark the optimizer’s proposed allocation. Moving right increases spend and moving left reduces it; the curve’s slope at each position shows how much incremental revenue the next dollar earns.</p>
 <p>The optimizer ships the same reporting convenience: <code>optimization_results.output_optimization_summary(...)</code> writes a two-page HTML report of the recommended reallocation (<a href="https://marketing-science-in-python.com/notebooks/part6-media-optimization/optimization_output.html">optimization_output.html</a>).</p>
-<p>In the demo, the optimizer reallocates spend across the five modeled channels (TV/CTV, OOH, Google Search, Meta, and TikTok), moving budget away from channels with flatter marginal response curves toward channels with more remaining headroom. The total budget stays the same; only the mix changes. Gains of 5–10% in media-driven (incremental) sales from reallocation alone are common when teams first implement MMM; this demo shows about +3%, which works out to roughly +1.2% of total sales.</p>
-<p>One more rule sits between the optimizer and the plan. The optimizer moves budget on posterior means; the plan should move on what the model actually knows. So the notebook applies a guardrail on the quantity the optimizer uses, marginal ROAS: a channel whose 90% interval has a relative half-width above 0.8 (half the interval’s width, divided by the estimate) is held at current spend, however large the recommended shift. A channel with a wide interval is one the data have not identified, so measure it before moving its budget. This is an illustrative governance rule, not a universal statistical cutoff. In the demo it clears 74% of the recommended move and holds one channel.</p>
-<p>Use the optimizer’s output as a starting point for planning, not as a final media plan. The model does not account for real-world constraints like contracts, minimum spend levels, or operational lead times. Those need to be layered on separately. And in this demo it produces one recommendation it cannot defend. The notebook shows how little holds it up: change only the saturation prior, from the one used here to Meridian’s default, and Search’s proposed move reverses from a 30% cut to a 30% increase, with both fits failing the width rule. The history alone does not settle whether Search should be cut or increased, so the proposed cut needs to be tested.</p>
+<p><a href="#tbl-optimizer-recommendation" class="quarto-xref">Table&nbsp;<span>6</span></a> is the model’s recommendation. With the total budget held constant, the optimizer moves spend toward OOH and Meta and away from TV/CTV and Google Search, each to the 30% limit it was allowed, and leaves TikTok where it is. The model predicts that this raises media-driven sales by about 3%, or about 1.2% of total sales.</p>
+<div id="tbl-optimizer-recommendation" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-optimizer-recommendation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;6: The optimizer’s recommendation, from the companion notebook.
+</figcaption>
+<div aria-describedby="tbl-optimizer-recommendation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <table class="caption-top table">
 <thead>
 <tr class="header">
-<th>Decision to validate</th>
-<th>Value</th>
+<th style="text-align: left;">Channel</th>
+<th style="text-align: right;">Current spend</th>
+<th style="text-align: right;">Recommended spend</th>
+<th style="text-align: right;">Change</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>Channel</td>
-<td>Google Search</td>
+<td style="text-align: left;">OOH</td>
+<td style="text-align: right;">$124.4M</td>
+<td style="text-align: right;">$161.7M</td>
+<td style="text-align: right;">+30.0%</td>
 </tr>
 <tr class="even">
-<td>Optimizer</td>
-<td>−30%, pinned at the constraint floor</td>
+<td style="text-align: left;">Meta</td>
+<td style="text-align: right;">$115.2M</td>
+<td style="text-align: right;">$149.8M</td>
+<td style="text-align: right;">+30.0%</td>
 </tr>
 <tr class="odd">
-<td>Guardrail</td>
-<td>HOLD, interval too wide: marginal ROAS [0.36, 9.51], relative half-width 1.39</td>
+<td style="text-align: left;">TikTok</td>
+<td style="text-align: right;">$136.1M</td>
+<td style="text-align: right;">$135.8M</td>
+<td style="text-align: right;">−0.2%</td>
 </tr>
 <tr class="even">
-<td>Pre-test prediction</td>
-<td>A 30% cut gives up $2.95 of revenue per dollar removed over 8 weeks, 90% credible interval [0.34, 8.48]</td>
+<td style="text-align: left;">TV/CTV</td>
+<td style="text-align: right;">$111.8M</td>
+<td style="text-align: right;">$78.3M</td>
+<td style="text-align: right;">−30.0%</td>
 </tr>
 <tr class="odd">
-<td>Proposed test</td>
-<td>−30% Search in 8 matched geo pairs, 8 weeks</td>
-</tr>
-<tr class="even">
-<td>Decision rule</td>
-<td>Cut if the 95% CI upper bound is below 2.50 (break-even at 40% margin)</td>
+<td style="text-align: left;">Google Search</td>
+<td style="text-align: right;">$127.1M</td>
+<td style="text-align: right;">$89.0M</td>
+<td style="text-align: right;">−30.0%</td>
 </tr>
 </tbody>
 </table>
-<p>The model’s prediction is recorded before the experiment runs, so the result can be compared with it and the model’s accuracy checked along with the channel’s return. Since the response curves are built from observational data, the next step is to validate this one. <a href="sec6.3-incrementality-experiments.html">Section 6.3</a> designs and analyzes that experiment; <a href="sec6.4-mmm-calibration.html">Section 6.4</a> feeds the result back into the model.</p>
+</div>
+</figure>
+</div>
+<p>The notebook holds any channel whose interval has a relative half-width above 0.8, which here is Search. Before changing the Search budget, run an incrementality test. <a href="sec6.3-incrementality-experiments.html">Section 6.3</a> shows how, and <a href="sec6.4-mmm-calibration.html">Section 6.4</a> feeds the result back into the model.</p>
 </section>
 <section id="key-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="key-takeaways">Key Takeaways</h2>
@@ -1017,15 +1262,50 @@ Figure&nbsp;15: Pre- vs.&nbsp;post-optimization budget by channel.
   window.document.addEventListener("DOMContentLoaded", function (event) {
     // Ensure there is a toggle, if there isn't float one in the top right
     if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
-      const a = window.document.createElement('a');
-      a.classList.add('top-right');
-      a.classList.add('quarto-color-scheme-toggle');
-      a.href = "";
-      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const toggle = window.document.createElement('button');
+      toggle.type = "button";
+      toggle.setAttribute("role", "switch");
+      toggle.setAttribute("aria-checked", "false");
+      toggle.classList.add('top-right');
+      toggle.classList.add('quarto-color-scheme-toggle');
+      toggle.setAttribute("aria-label", "Toggle dark mode");
+      toggle.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
       const i = window.document.createElement("i");
       i.classList.add('bi');
-      a.appendChild(i);
-      window.document.body.appendChild(a);
+      toggle.appendChild(i);
+      // Put the toggle in a landmark of its own, so that landmark navigation
+      // can reach it.
+      //
+      // The container is always a fresh direct child of body, and the toggle is
+      // never moved into page furniture that the theme or the author controls.
+      // The toggle is positioned against the page, so any ancestor that
+      // establishes a containing block captures it: a positioned element or a
+      // grid for position: absolute, and transform, filter, will-change or
+      // contain for position: fixed. A direct child of body has none of these
+      // to inherit, and the shift when one appears is silent and visual.
+      //
+      // ARIA says a document should have at most one banner, and axe reports a
+      // duplicate whether or not the banners carry distinct labels. So use a
+      // header when the page has no banner yet, and a named region otherwise.
+      //
+      // A header is a banner wherever it sits, unless it is inside sectioning
+      // content, so this cannot just look at the children of body: a custom
+      // page layout wraps the title block header in a plain div. An explicit
+      // role="banner" always counts.
+      const sectioning = 'article, aside, main, nav, section, [role="article"], [role="complementary"], [role="main"], [role="navigation"], [role="region"]';
+      const hasBanner = Array.from(
+        window.document.querySelectorAll('header:not([role]), [role="banner"]')
+      ).some(function(el) {
+        return el.hasAttribute("role") || el.closest(sectioning) === null;
+      });
+      const container = window.document.createElement(hasBanner ? "div" : "header");
+      if (hasBanner) {
+        container.setAttribute("role", "region");
+        container.setAttribute("aria-label", "Toggle dark mode");
+      }
+      container.classList.add('quarto-color-scheme-toggle-container');
+      container.appendChild(toggle);
+      window.document.body.appendChild(container);
     }
     setColorSchemeToggle(hasAlternateSentinel())
     const icon = "";
@@ -1104,7 +1384,8 @@ Figure&nbsp;15: Pre- vs.&nbsp;post-optimization budget by channel.
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }
       // Inspect non-navigation links and adorn them if external
-     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      window.quartoDecorateExternalLinks = function (root) {
+     var links = (root || window.document).querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
       for (var i=0; i<links.length; i++) {
         const link = links[i];
         if (!isInternal(link.href)) {
@@ -1113,8 +1394,69 @@ Figure&nbsp;15: Pre- vs.&nbsp;post-optimization budget by channel.
           if (link.dataset.originalHref !== undefined) {
             link.href = link.dataset.originalHref;
           }
+          if (!link.classList.contains('no-external-icon')) {
+          }
         }
       }
+      };
+      window.quartoDecorateExternalLinks(window.document);
+    // Esc closes the popup (WCAG 1.4.13) and focus leaving both trigger and
+    // popup closes it (WCAG 2.4.11); tippy handles neither for interactive popups.
+    const hideOnEscAndFocusOut = {
+      name: 'hideOnEscAndFocusOut',
+      defaultValue: true,
+      fn(instance) {
+        const dismiss = () => {
+          // A show scheduled by the trigger delay would otherwise reopen it
+          instance.clearDelayTimeouts();
+          instance.hide();
+        };
+        const onKeyDown = (event) => {
+          if (event.key !== 'Escape') {
+            return;
+          }
+          // Keep Esc from also reaching page handlers (e.g. reveal.js overview),
+          // except an open reveal.js slide menu, which Esc should close too.
+          // The menu handles keys only when its keyboard option is on.
+          const menuHandlesEsc = window.Reveal?.getPlugin?.('menu')?.isOpen() &&
+            window.Reveal.getConfig().menu?.keyboard !== false;
+          if (!menuHandlesEsc) {
+            event.stopPropagation();
+          }
+          if (instance.popper.contains(window.document.activeElement)) {
+            // Disabled while refocusing so the focus trigger does not reopen it
+            instance.disable();
+            instance.reference.focus();
+            instance.enable();
+          }
+          dismiss();
+        };
+        const onFocusOut = (event) => {
+          const target = event.relatedTarget;
+          if (target && !instance.reference.contains(target) &&
+              !instance.popper.contains(target)) {
+            dismiss();
+          }
+        };
+        // On the trigger too: a click trigger (code-annotations: select) has no
+        // blur handling. Attached for the instance's lifetime so leaving the
+        // trigger also cancels a show still pending on the trigger delay.
+        instance.reference.addEventListener('focusout', onFocusOut);
+        return {
+          onShow() {
+            window.document.addEventListener('keydown', onKeyDown, true);
+            instance.popper.addEventListener('focusout', onFocusOut);
+          },
+          onHide() {
+            window.document.removeEventListener('keydown', onKeyDown, true);
+            instance.popper.removeEventListener('focusout', onFocusOut);
+          },
+          onDestroy() {
+            instance.reference.removeEventListener('focusout', onFocusOut);
+          },
+        };
+      },
+    };
     function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
       const config = {
         allowHTML: true,
@@ -1128,6 +1470,7 @@ Figure&nbsp;15: Pre- vs.&nbsp;post-optimization budget by channel.
         interactiveBorder: 10,
         theme: 'quarto',
         placement: 'bottom-start',
+        plugins: [hideOnEscAndFocusOut],
       };
       if (contentFn) {
         config.content = contentFn;
@@ -1290,44 +1633,54 @@ Figure&nbsp;15: Pre- vs.&nbsp;post-optimization budget by channel.
           const lineIds = lines.map((line) => {
             return targetCell + "-" + line;
           })
-          let top = null;
-          let height = null;
-          let parent = null;
+          // Each band is positioned against its own containing block, which is
+          // not the offsetParent of the lines, so place it from client rects.
+          const placeBand = (band, firstEl, lastEl, codeBlock) => {
+            const container = band.offsetParent;
+            if (container === null) {
+              return;
+            }
+            const containerRect = container.getBoundingClientRect();
+            // Reveal.js scales slides with a transform, so convert client
+            // pixels back to the CSS pixels of the container.
+            const scale = containerRect.height / container.offsetHeight || 1;
+            const firstRect = firstEl.getBoundingClientRect();
+            const lastRect = lastEl.getBoundingClientRect();
+            const top = (firstRect.top - containerRect.top) / scale - container.clientTop + container.scrollTop;
+            const height = (lastRect.bottom - firstRect.top) / scale;
+            band.style.top = top - 2 + "px";
+            band.style.height = height + 4 + "px";
+            if (codeBlock) {
+              // Without the copy button wrapper, the containing block is wider
+              // than the code block, so span the code block explicitly.
+              const blockRect = codeBlock.getBoundingClientRect();
+              band.style.left = (blockRect.left - containerRect.left) / scale - container.clientLeft + container.scrollLeft + "px";
+              band.style.width = blockRect.width / scale + "px";
+            }
+          };
           if (lineIds.length > 0) {
-              //compute the position of the single el (top and bottom and make a div)
-              const el = window.document.getElementById(lineIds[0]);
-              top = el.offsetTop;
-              height = el.offsetHeight;
-              parent = el.parentElement.parentElement;
-            if (lineIds.length > 1) {
-              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
-              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
-              height = bottom - top;
+            const el = window.document.getElementById(lineIds[0]);
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const parent = el.parentElement.parentElement;
+            // cook up a div (if necessary) and position it
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
             }
-            if (top !== null && height !== null && parent !== null) {
-              // cook up a div (if necessary) and position it 
-              let div = window.document.getElementById("code-annotation-line-highlight");
-              if (div === null) {
-                div = window.document.createElement("div");
-                div.setAttribute("id", "code-annotation-line-highlight");
-                div.style.position = 'absolute';
-                parent.appendChild(div);
-              }
-              div.style.top = top - 2 + "px";
-              div.style.height = height + 4 + "px";
-              div.style.left = 0;
-              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
-              if (gutterDiv === null) {
-                gutterDiv = window.document.createElement("div");
-                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
-                gutterDiv.style.position = 'absolute';
-                const codeCell = window.document.getElementById(targetCell);
-                const gutter = codeCell.querySelector('.code-annotation-gutter');
-                gutter.appendChild(gutterDiv);
-              }
-              gutterDiv.style.top = top - 2 + "px";
-              gutterDiv.style.height = height + 4 + "px";
+            placeBand(div, el, lastEl, parent.closest("div.sourceCode") || parent);
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
             }
+            placeBand(gutterDiv, el, lastEl);
             selectedAnnoteEl = annoteEl;
           }
         };
@@ -1426,7 +1779,10 @@ Figure&nbsp;15: Pre- vs.&nbsp;post-optimization budget by channel.
     }
   });
   </script>
-<nav class="page-navigation">
+  <script type="application/javascript">
+  window.quartoScrollableRegionsLabels = {"code":"Scrollable code","output":"Scrollable output"};
+  </script>
+<nav class="page-navigation" aria-label="Page">
   <div class="nav-page nav-page-previous">
       <a href="../part6/sec6.1-media-measurement-problem.html" class="pagination-link" aria-label="6.1 The Media Measurement Problem">
         <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">6.1 The Media Measurement Problem</span></span>

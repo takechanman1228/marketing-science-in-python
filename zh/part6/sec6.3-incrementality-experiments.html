@@ -2,13 +2,13 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-Hans" xml:lang="zh-Hans"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.10.19">
+<meta name="generator" content="quarto-1.11.9">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="设计并分析一次地理增量效应实验：选择实验单元、估计提升，并把结果转化为媒体决策。">
+<meta name="description" content="设计并分析地理增量实验：匹配市场、双重差分、增量 ROAS 和盈亏平衡决策。">
 
-<title>基于 Python 的增量效应实验 – Marketing Science in Python</title>
+<title>用 Python 做增量实验 – Marketing Science in Python</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -77,18 +77,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../assets/favicon.png" rel="icon" type="image/png">
 <script src="../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/scrollable-regions/scrollable-regions.js" type="module"></script>
 <script src="../site_libs/quarto-html/popper.min.js"></script>
 <script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-b626d73c4c936ccc3cb08be7d45d1df6.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-447e42e69aaa9833c0ba1b986f430b20.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-743e9765ff591ca41f31e934d0cf4bf8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../site_libs/bootstrap/bootstrap-dark-c9719a0dd22d1eb90e3fd2c145c4e342.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../site_libs/bootstrap/bootstrap-743e9765ff591ca41f31e934d0cf4bf8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-549dcdc79fd547502b4b0b8b8ab3f938.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-1a8a0d276ffdcff0dc8a23f0b0b34c12.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-549dcdc79fd547502b4b0b8b8ab3f938.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
@@ -157,13 +158,13 @@ window.Quarto = {
 </script>
 
 <link rel="stylesheet" href="../custom.css">
-<meta property="og:title" content="基于 Python 的增量效应实验">
-<meta property="og:description" content="设计并分析一次地理增量效应实验：选择实验单元、估计提升，并把结果转化为媒体决策。">
+<meta property="og:title" content="用 Python 做增量实验">
+<meta property="og:description" content="设计并分析地理增量实验：匹配市场、双重差分、增量 ROAS 和盈亏平衡决策。">
 <meta property="og:image" content="https://marketing-science-in-python.com/images/common/book_cover_online.png">
 <meta property="og:site_name" content="Marketing Science in Python">
 <meta property="og:image:alt" content="抽象数据流汇聚成几何网络的封面">
-<meta name="twitter:title" content="基于 Python 的增量效应实验">
-<meta name="twitter:description" content="设计并分析一次地理增量效应实验：选择实验单元、估计提升，并把结果转化为媒体决策。">
+<meta name="twitter:title" content="用 Python 做增量实验">
+<meta name="twitter:description" content="设计并分析地理增量实验：匹配市场、双重差分、增量 ROAS 和盈亏平衡决策。">
 <meta name="twitter:image" content="https://marketing-science-in-python.com/images/common/book_cover_online.png">
 <meta name="twitter:image:alt" content="抽象数据流汇聚成几何网络的封面">
 <meta name="twitter:card" content="summary_large_image">
@@ -178,7 +179,7 @@ window.Quarto = {
 <!-- msbook-i18n-head:end -->
 </head>
 
-<body class="nav-sidebar floating quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+<body class="nav-sidebar floating quarto-light"><a id="quarto-skip-link" class="visually-hidden-focusable" href="#quarto-document-content">跳至主要内容</a><script id="quarto-html-before-body" type="application/javascript">
     const toggleBodyColorMode = (bsSheetEl) => {
       const mode = bsSheetEl.getAttribute("data-mode");
       const bodyEl = window.document.querySelector("body");
@@ -201,6 +202,7 @@ window.Quarto = {
       for (let i=0; i < toggles.length; i++) {
         const toggle = toggles[i];
         if (toggle) {
+          toggle.setAttribute("aria-checked", alternate ? "true" : "false");
           if (alternate) {
             toggle.classList.add("alternate");
           } else {
@@ -230,13 +232,19 @@ window.Quarto = {
       manageTransitions('#quarto-margin-sidebar .nav-link', true);
       // Switch the toggles
       setColorSchemeToggle(alternate)
-      // Hack to workaround the fact that safari doesn't
-      // properly recolor the scrollbar when toggling (#1455)
+    }
+    // Hack to workaround the fact that safari doesn't
+    // properly recolor the scrollbar when toggling (#1455).
+    // Not run on load: stylesheets are set before first paint there, and
+    // scrolling would undo the scroll to a URL fragment (#14973).
+    // The one pixel nudge keeps the reader where they were.
+    const refreshSafariScrollbar = () => {
       if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
         manageTransitions("body", false);
-        window.scrollTo(0, 1);
+        const scrollY = window.scrollY;
+        window.scrollTo(0, scrollY > 0 ? scrollY - 1 : 1);
         setTimeout(() => {
-          window.scrollTo(0, 0);
+          window.scrollTo(0, scrollY);
           manageTransitions("body", true);
         }, 40);
       }
@@ -330,6 +338,7 @@ window.Quarto = {
       // Read the current dark / light value
       let toAlternate = !hasAlternateSentinel();
       toggleColorMode(toAlternate);
+      refreshSafariScrollbar();
       setStyleSentinel(toAlternate);
       toggleGiscusIfUsed(toAlternate, darkModeDefault);
       window.dispatchEvent(new Event('resize'));
@@ -344,13 +353,13 @@ window.Quarto = {
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
-  <nav class="quarto-secondary-nav">
+  <nav class="quarto-secondary-nav" aria-label="工具栏">
     <div class="container-fluid d-flex">
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part6/_part6.html">第 6 部分：媒体投资与优化</a></li><li class="breadcrumb-item"><a href="../part6/sec6.3-incrementality-experiments.html"><span class="chapter-title">6.3 增量效应实验</span></a></li></ol></nav>
-        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        <nav class="quarto-page-breadcrumbs" aria-label="路径"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part6/_part6.html">第 6 部分：媒体投资与优化</a></li><li class="breadcrumb-item"><a href="../part6/sec6.3-incrementality-experiments.html"><span class="chapter-title">6.3 增量效应实验</span></a></li></ol></nav>
+        <a class="flex-grow-1" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <!-- msbook-language-switch-mobile:start -->
 <div class="msbook-language-switch-mobile" aria-label="Language"><a lang="en" hreflang="en" href="../../part6/sec6.3-incrementality-experiments.html" onclick="this.hash=window.location.hash">EN</a><span aria-hidden="true"> | </span><a lang="ja" hreflang="ja" href="../../ja/part6/sec6.3-incrementality-experiments.html" onclick="this.hash=window.location.hash">日本語</a><span aria-hidden="true"> | </span><a lang="fr" hreflang="fr" href="../../fr/part6/sec6.3-incrementality-experiments.html" onclick="this.hash=window.location.hash">FR</a><span aria-hidden="true"> | </span><a lang="de" hreflang="de" href="../../de/part6/sec6.3-incrementality-experiments.html" onclick="this.hash=window.location.hash">DE</a><span aria-hidden="true"> | </span><span lang="zh-Hans" aria-current="page">中文</span></div>
@@ -364,7 +373,7 @@ window.Quarto = {
 <!-- content -->
 <div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
 <!-- sidebar -->
-  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto" aria-label="网站">
     <div class="pt-lg-2 mt-2 text-left sidebar-header">
     <div class="sidebar-title mb-0 py-0">
       <a href="../">Marketing Science in Python</a> 
@@ -387,7 +396,7 @@ window.Quarto = {
           </li>
       </ul>
     </div>
-  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="切换深色模式"><i class="bi"></i></a>
+  <button type="button" role="switch" aria-checked="false" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="切换深色模式" aria-label="切换深色模式"><i class="bi"></i></button>
 </div>
     </div>
       </div>
@@ -407,12 +416,12 @@ window.Quarto = {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a href="../part1/_part1.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">第 1 部分：引言</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
+ <span class="menu-text" id="quarto-sidebar-section-1-label">第 1 部分：引言</span></a>
+            <button type="button" class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-controls="quarto-sidebar-section-1" aria-expanded="true" aria-label="展开或折叠此栏: 第 1 部分：引言">
+              <i class="bi bi-chevron-right ms-2" aria-hidden="true"></i>
+            </button> 
       </div>
-      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+      <ul id="quarto-sidebar-section-1" aria-labelledby="quarto-sidebar-section-1-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../part1/sec1.1-what-is-marketing-science.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">1.1 什么是营销科学？</span></a>
@@ -428,12 +437,12 @@ window.Quarto = {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a href="../part2/_part2.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">第 2 部分：为更好的决策而分析</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
+ <span class="menu-text" id="quarto-sidebar-section-2-label">第 2 部分：为更好的决策而分析</span></a>
+            <button type="button" class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-controls="quarto-sidebar-section-2" aria-expanded="true" aria-label="展开或折叠此栏: 第 2 部分：为更好的决策而分析">
+              <i class="bi bi-chevron-right ms-2" aria-hidden="true"></i>
+            </button> 
       </div>
-      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+      <ul id="quarto-sidebar-section-2" aria-labelledby="quarto-sidebar-section-2-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../part2/sec2.1-right-question.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">2.1 界定正确的问题</span></a>
@@ -454,12 +463,12 @@ window.Quarto = {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a href="../part3/_part3.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">第 3 部分：面向营销的因果推断</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
+ <span class="menu-text" id="quarto-sidebar-section-3-label">第 3 部分：面向营销的因果推断</span></a>
+            <button type="button" class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-controls="quarto-sidebar-section-3" aria-expanded="true" aria-label="展开或折叠此栏: 第 3 部分：面向营销的因果推断">
+              <i class="bi bi-chevron-right ms-2" aria-hidden="true"></i>
+            </button> 
       </div>
-      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+      <ul id="quarto-sidebar-section-3" aria-labelledby="quarto-sidebar-section-3-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../part3/sec3.1-thinking-causally.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">3.1 因果思维</span></a>
@@ -495,12 +504,12 @@ window.Quarto = {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a href="../part4/_part4.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">第 4 部分：客户分析</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
+ <span class="menu-text" id="quarto-sidebar-section-4-label">第 4 部分：客户分析</span></a>
+            <button type="button" class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" aria-controls="quarto-sidebar-section-4" aria-expanded="true" aria-label="展开或折叠此栏: 第 4 部分：客户分析">
+              <i class="bi bi-chevron-right ms-2" aria-hidden="true"></i>
+            </button> 
       </div>
-      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+      <ul id="quarto-sidebar-section-4" aria-labelledby="quarto-sidebar-section-4-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../part4/sec4.1-segmentation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">4.1 客户细分</span></a>
@@ -516,12 +525,12 @@ window.Quarto = {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a href="../part5/_part5.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">第 5 部分：商业分析</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
+ <span class="menu-text" id="quarto-sidebar-section-5-label">第 5 部分：商业分析</span></a>
+            <button type="button" class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" aria-controls="quarto-sidebar-section-5" aria-expanded="true" aria-label="展开或折叠此栏: 第 5 部分：商业分析">
+              <i class="bi bi-chevron-right ms-2" aria-hidden="true"></i>
+            </button> 
       </div>
-      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+      <ul id="quarto-sidebar-section-5" aria-labelledby="quarto-sidebar-section-5-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../part5/sec5.1-price-elasticity.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">5.1 价格弹性与定价决策</span></a>
@@ -542,12 +551,12 @@ window.Quarto = {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a href="../part6/_part6.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">第 6 部分：媒体投资与优化</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
+ <span class="menu-text" id="quarto-sidebar-section-6-label">第 6 部分：媒体投资与优化</span></a>
+            <button type="button" class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" aria-controls="quarto-sidebar-section-6" aria-expanded="true" aria-label="展开或折叠此栏: 第 6 部分：媒体投资与优化">
+              <i class="bi bi-chevron-right ms-2" aria-hidden="true"></i>
+            </button> 
       </div>
-      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+      <ul id="quarto-sidebar-section-6" aria-labelledby="quarto-sidebar-section-6-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../part6/sec6.1-media-measurement-problem.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.1 媒体测量问题</span></a>
@@ -566,11 +575,6 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../part6/sec6.4-mmm-calibration.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.4 用实验校准 MMM</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../part6/sec6.5-when-tools-disagree.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">6.5 当测量工具意见不一时如何决策</span></a>
   </div>
 </li>
       </ul>
@@ -603,35 +607,21 @@ window.Quarto = {
 <div class="msbook-language-switch" aria-label="Language"><a lang="en" hreflang="en" href="../../part6/sec6.3-incrementality-experiments.html" onclick="this.hash=window.location.hash">English</a><span aria-hidden="true"> | </span><a lang="ja" hreflang="ja" href="../../ja/part6/sec6.3-incrementality-experiments.html" onclick="this.hash=window.location.hash">日本語</a><span aria-hidden="true"> | </span><a lang="fr" hreflang="fr" href="../../fr/part6/sec6.3-incrementality-experiments.html" onclick="this.hash=window.location.hash">Français</a><span aria-hidden="true"> | </span><a lang="de" hreflang="de" href="../../de/part6/sec6.3-incrementality-experiments.html" onclick="this.hash=window.location.hash">Deutsch</a><span aria-hidden="true"> | </span><span lang="zh-Hans" aria-current="page">中文</span></div>
 <!-- msbook-language-switch:end -->
 
-        <nav id="TOC" role="doc-toc" class="toc-active">
+        <nav id="TOC" role="doc-toc" aria-labelledby="toc-title" class="toc-active">
     <h2 id="toc-title">目录</h2>
    
   <ul>
-  <li><a href="#sec-what-is-incrementality" id="toc-sec-what-is-incrementality" class="nav-link active" data-scroll-target="#sec-what-is-incrementality">什么是增量效应？</a></li>
-  <li><a href="#sec-experimental-unit" id="toc-sec-experimental-unit" class="nav-link" data-scroll-target="#sec-experimental-unit">选择实验单元</a></li>
-  <li><a href="#sec-geo-four-steps" id="toc-sec-geo-four-steps" class="nav-link" data-scroll-target="#sec-geo-four-steps">四步完成地理实验</a></li>
-  <li><a href="#sec-geo-historical-data" id="toc-sec-geo-historical-data" class="nav-link" data-scroll-target="#sec-geo-historical-data">第 1 步：历史数据</a></li>
-  <li><a href="#sec-geo-pretest-design" id="toc-sec-geo-pretest-design" class="nav-link" data-scroll-target="#sec-geo-pretest-design">第 2 步：测试前设计</a>
-  <ul class="collapse">
-  <li><a href="#market-selection-and-assignment" id="toc-market-selection-and-assignment" class="nav-link" data-scroll-target="#market-selection-and-assignment">市场筛选与分配</a></li>
-  <li><a href="#power-and-mde-by-simulation" id="toc-power-and-mde-by-simulation" class="nav-link" data-scroll-target="#power-and-mde-by-simulation">用模拟确定统计功效与 MDE</a></li>
-  <li><a href="#sec-geo-decision-rule" id="toc-sec-geo-decision-rule" class="nav-link" data-scroll-target="#sec-geo-decision-rule">决策规则与设计冻结</a></li>
-  </ul></li>
-  <li><a href="#sec-geo-run" id="toc-sec-geo-run" class="nav-link" data-scroll-target="#sec-geo-run">第 3 步：运行地理测试</a></li>
-  <li><a href="#sec-geo-measurement" id="toc-sec-geo-measurement" class="nav-link" data-scroll-target="#sec-geo-measurement">第 4 步：测试后测量</a>
-  <ul class="collapse">
-  <li><a href="#does-the-result-hold-up" id="toc-does-the-result-hold-up" class="nav-link" data-scroll-target="#does-the-result-hold-up">结果站得住吗？</a></li>
-  </ul></li>
-  <li><a href="#sec-geo-lift-to-decision" id="toc-sec-geo-lift-to-decision" class="nav-link" data-scroll-target="#sec-geo-lift-to-decision">从提升到决策</a></li>
+  <li><a href="#sec-geo-pretest-design" id="toc-sec-geo-pretest-design" class="nav-link active" data-scroll-target="#sec-geo-pretest-design">设计实验</a></li>
+  <li><a href="#sec-geo-measurement" id="toc-sec-geo-measurement" class="nav-link" data-scroll-target="#sec-geo-measurement">用双重差分衡量效果</a></li>
   <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways">要点</a></li>
   </ul>
 <div class="quarto-code-links"><h2>代码链接</h2><ul><li><a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part6-media-optimization/sec6.3_geo_experiment.ipynb"><i class="bi bi-github"></i>sec6.3_geo_experiment.ipynb</a></li></ul></div></nav>
     </div>
 <!-- main -->
-<main class="content" id="quarto-document-content">
+<main class="content" id="quarto-document-content" tabindex="-1">
 
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part6/_part6.html">第 6 部分：媒体投资与优化</a></li><li class="breadcrumb-item"><a href="../part6/sec6.3-incrementality-experiments.html"><span class="chapter-title">6.3 增量效应实验</span></a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="路径"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part6/_part6.html">第 6 部分：媒体投资与优化</a></li><li class="breadcrumb-item"><a href="../part6/sec6.3-incrementality-experiments.html"><span class="chapter-title">6.3 增量效应实验</span></a></li></ol></nav>
 <div class="quarto-title">
 <h1 class="title"><span id="sec-incrementality-experiments" class="quarto-section-identifier"><span class="chapter-title">6.3 增量效应实验</span></span></h1>
 </div>
@@ -654,284 +644,78 @@ window.Quarto = {
 <p><strong>关于中文版</strong><br>
 本页是英文版 <em>Marketing Science in Python</em> 的AI翻译。英文版为正式版本，如有出入，以英文版为准。代码、Notebook 和图片中的文字保持英文。 <a href="../../part6/sec6.3-incrementality-experiments.html" class="translation-source-link">阅读英文版</a></p>
 </div>
-<section id="sec-what-is-incrementality" class="level2">
-<h2 class="anchored" data-anchor-id="sec-what-is-incrementality">什么是增量效应？</h2>
-<p>MMM 的优化器想把 Google Search 削减 30%，一直削到它的约束下限，但模型无法支撑这一举动：Search 的边际 ROAS 区间从 0.4 延伸到 9.5，宽得无法据此行动。原因在于<a href="sec6.2-mmm-fundamentals.html">第 6.2 节</a>模型所拟合的历史数据。三年来，Search 一直以几乎不变的周预算常开投放，所以模型从未见过它的支出变动，估计值大体上就是它起步时的先验。这样的估计不足以为削减提供依据。在全国范围削减之前，我们需要知道 Search 支出的最后 30% 到底买到了什么。</p>
-<p>那个数字就是增量效应。<strong>增量效应</strong>（incrementality）是指没有广告就不会发生的成果：如果一次活动录得 $120,000 的销售额，而其中 $100,000 本来也会到账，那么增量收入就是 $20,000。归因对那 $100,000 无话可说，而 MMM 只能从历史中的变动来估计它，Search 恰恰没有这种变动。这个数字无法从现有数据中得出，所以我们需要一次实验，在选定的市场里有意改变 Search 支出。</p>
-</section>
-<section id="sec-experimental-unit" class="level2">
-<h2 class="anchored" data-anchor-id="sec-experimental-unit">选择实验单元</h2>
-<p>第一个设计选择是随机化什么。基于用户的转化提升研究随机化的是符合条件的人：平台对一个保留组（holdout）不投放该活动，然后比较转化率。地理实验随机化的是市场：测试市场里的所有人都会经历媒体变动，结果就是企业在那里测量到的任何指标。<a href="#fig-experiment-unit-choice" class="quarto-xref">图&nbsp;<span>1</span></a> 把两者并排展示。</p>
-<div id="fig-experiment-unit-choice" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="左图：符合条件的用户被分成可能看到广告的实验组和被屏蔽广告的保留组，比较转化率。右图：匹配的市场被分成 Search 支出削减 30% 的测试市场和保持不变的对照市场，用双重差分进行比较。">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-experiment-unit-choice-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part6/sec6.3/experiment_unit_choice.png" class="fig-lg img-fluid figure-img" alt="左图：符合条件的用户被分成可能看到广告的实验组和被屏蔽广告的保留组，比较转化率。右图：匹配的市场被分成 Search 支出削减 30% 的测试市场和保持不变的对照市场，用双重差分进行比较。">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-experiment-unit-choice-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-图&nbsp;1: 创建反事实的两种方式：随机化用户，或随机化市场。
-</figcaption>
-</figure>
-</div>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>设计问题</th>
-<th>基于用户的提升测试</th>
-<th>地理实验</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>随机化单元</td>
-<td>符合条件的用户</td>
-<td>市场或区域</td>
-</tr>
-<tr class="even">
-<td>通常由谁运作</td>
-<td>广告平台</td>
-<td>品牌方与分析师</td>
-</tr>
-<tr class="odd">
-<td>主要结果指标</td>
-<td>记录到的转化</td>
-<td>汇总的业务 KPI</td>
-</tr>
-<tr class="even">
-<td>主要优势</td>
-<td>个体层面的随机化</td>
-<td>线下与全市场的提升</td>
-</tr>
-<tr class="odd">
-<td>主要限制</td>
-<td>身份识别、追踪、量级</td>
-<td>单元少、溢出效应、噪声</td>
-</tr>
-</tbody>
-</table>
-<p>在可用的情况下，基于用户的提升测试是更干净的设计：个体随机化、大样本，还有一个替你干活的控制台。但它测量的是平台能识别的用户中记录到的转化，因此线下销售、向其他渠道的光环效应，以及公司自己账簿上的收入都落在它之外。我们的问题关乎公司账簿上的总收入，而这个决策是一次预算削减，不是一项活动设置。这就指向了地理。地理实验从收入系统读取结果，并能汇总到 MMM 所用的地理-周结构，这正是<a href="sec6.4-mmm-calibration.html">第 6.4 节</a>将要用到的。基于用户的提升测试的机制在<a href="../appendix/further-reading.html#incrementality-experiments">参考文献与延伸阅读</a>中介绍。</p>
-</section>
-<section id="sec-geo-four-steps" class="level2">
-<h2 class="anchored" data-anchor-id="sec-geo-four-steps">四步完成地理实验</h2>
-<div id="fig-geo-experiment-flow" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="四张编号卡片：历史数据（按市场和周汇总的收入与支出）、测试前设计（KPI、市场、支出变动、时长、决策规则）、运行地理测试（在测试市场削减支出，对照市场保持稳定），以及测试后测量（相对于反事实估计提升并做出决策）。">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-geo-experiment-flow-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part6/sec6.3/geo_experiment_flow.png" class="fig-lg img-fluid figure-img" alt="四张编号卡片：历史数据（按市场和周汇总的收入与支出）、测试前设计（KPI、市场、支出变动、时长、决策规则）、运行地理测试（在测试市场削减支出，对照市场保持稳定），以及测试后测量（相对于反事实估计提升并做出决策）。">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-geo-experiment-flow-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-图&nbsp;2: 地理实验的四个步骤。
-</figcaption>
-</figure>
-</div>
-<p>本章余下部分遵循 <a href="#fig-geo-experiment-flow" class="quarto-xref">图&nbsp;<span>2</span></a> 中的四个步骤：构建市场-周历史数据，设计测试并冻结决策规则，运行测试，然后相对于一个可信的反事实测量提升，并应用规则。接下来的四节各对应一个步骤。</p>
-<p><strong>配套 Notebook：</strong><code>sec6.3_geo_experiment.ipynb</code> 在一个包含 40 个市场的合成面板上运行完整实验，其 Search 的经济特性与<a href="sec6.2-mmm-fundamentals.html">第 6.2 节</a>的模型一致，并植入了真实值，因此下文的每一个估计都可以对照真实值核验。<br>
+<p><span id="sec-what-is-incrementality"></span><a href="sec6.2-mmm-fundamentals.html">第 6.2 节</a>的 MMM 建议将 Google Search 支出削减 30%。要直接照做吗？先等等。过去三年，Search 支出几乎没变，模型没有见过支出变化后的情况。它估计，Search 每多花一美元的回报在 0.4 到 9.5 之间。</p>
+<p>我们需要知道 Search 的<strong>增量效应</strong>，也就是没有这些广告就不会产生的收入。有些人搜索店铺名称后点击广告，但即使没有广告，他们也可能点击下方的自然搜索结果并购买。购买记录无法区分这两种情况。</p>
+<p>可以用实验来回答。我们在部分市场将 Search 支出削减 30%，在相似市场保持支出不变，再比较收入。支出未变的市场反映了不削减预算时可能发生的情况，也就是<strong>反事实</strong>。这种设计称为<strong>地理实验</strong>。</p>
+<p>实验结果用<strong>增量 ROAS（iROAS）</strong> 表示，即收入变化除以支出变化。对于削减预算的实验，它表示每节省一美元损失多少收入。</p>
+<p><strong>配套笔记本：</strong> <code>sec6.3_geo_experiment.ipynb</code> 在包含 40 个市场的合成面板上运行实验。真实效应预先植入数据，因此可以用它核对下面的每个估计值。<br>
 <a href="https://github.com/takechanman1228/marketing-science-in-python/blob/main/notebooks/part6-media-optimization/sec6.3_geo_experiment.ipynb">在 GitHub 上查看</a></p>
-</section>
-<section id="sec-geo-historical-data" class="level2">
-<h2 class="anchored" data-anchor-id="sec-geo-historical-data">第 1 步：历史数据</h2>
-<p>下游的一切都来自一张表：每个市场每周一行，包含收入、Search 支出，以及测试期间可能变动的任何其他本地媒体。这里的面板有 40 个市场，测试窗口之前有 96 周的历史；两年很充裕，如果结果的季节性不强，一年也可行。收入必须来自公司自己的系统，并且要在媒体真正可以被控制的地理粒度上。如果 Search 活动只能按州设置，那么州就是你的市场。支出必须是你真正会改变的支出，而不是计划数字。而历史上有已知冲击的市场，比如去年开了一个配送中心的市场，现在就要剔除，因为它无法充当对照。</p>
-</section>
 <section id="sec-geo-pretest-design" class="level2">
-<h2 class="anchored" data-anchor-id="sec-geo-pretest-design">第 2 步：测试前设计</h2>
-<p>五项决定定义了这项研究，而且全部在任何结果出现之前做出。</p>
-<ol type="1">
-<li><strong>KPI。</strong> 收入，来自公司自己的账簿。这是 CFO 的问题所关心的，也是 MMM 所建模的。</li>
-<li><strong>市场与分配。</strong> 按测试前的表现筛选候选市场，组成匹配对，在每一对内部随机分配。</li>
-<li><strong>支出变动。</strong> 在测试市场把 Search 削减 30%。这是优化器的提案，因此测试测量的是正在考虑的政策本身，而不是它的替代物。</li>
-<li><strong>时长与统计功效。</strong> 八周，通过在历史面板上模拟选定。</li>
-<li><strong>决策规则。</strong> 哪种结果导向哪种行动，现在就写下来。</li>
-</ol>
-<p>Notebook 把这些选择冻结在一个配置单元格里：</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>DESIGN <span class="op">=</span> {</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"seed"</span>: <span class="dv">20260888</span>,</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"channel"</span>: <span class="st">"Google Search"</span>,</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"test_start"</span>: <span class="st">"2024-02-05"</span>,</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"test_end"</span>: <span class="st">"2024-03-25"</span>,</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"test_weeks"</span>: <span class="dv">8</span>,</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"n_pairs"</span>: <span class="dv">8</span>,</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">"spend_multiplier"</span>: <span class="fl">0.70</span>,      <span class="co"># a 30% pull-back in test markets</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">"contribution_margin"</span>: <span class="fl">0.40</span>,   <span class="co"># sets the decision hurdle below</span></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ...plus `direction`, which records that this test cuts spend so the</span></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="co"># contrast is negative, and the power-simulation grid: durations, spend</span></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="co"># levels, candidate lifts, and the significance level.</span></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
-<p>测试选择削减支出而不是加量，因为削减才是正在考虑的政策。缩减测量的是当前预算 70% 到 100% 之间那一段支出的回报，也就是优化器提议移除的部分；加量测量的则是其上方的那一段，在弯曲的响应曲线上是另一个量。我们把测得的这个量称为所测削减的回报，而把“边际 ROAS”留给模型在当前支出水平上的斜率；<a href="sec6.4-mmm-calibration.html">第 6.4 节</a>会把两者联系起来。</p>
-<section id="market-selection-and-assignment" class="level3">
-<h3 class="anchored" data-anchor-id="market-selection-and-assignment">市场筛选与分配</h3>
-<p>只使用历史结果。Notebook 根据每个市场与业务整体的相关性、规模和趋势为 40 个市场打分，保留最强的 16 个候选。它按规模把相邻的市场配对，检查每对内部的趋势平衡，然后在每对内部抛硬币选出测试市场。筛选降低噪声；随机化才是让比较具有因果性的关键。看过结果之后再挑选测试市场，或者因为它们看起来很典型而手工挑选，会去掉因果解读所依赖的随机化。</p>
-<p>溢出效应只能在市场筛选阶段预防；事后没有任何估计量能修复它。常见的途径有：通勤者在一个市场购物、在另一个市场居住，本地电视跨越市场边界，以及全国性促销处处推动需求。使用互不重叠、媒体真正可控的单元，并让所选市场的其他本地活动保持稳定。一个接收到部分处理的对照市场会把估计值向零偏移，而这在任何拟合统计量里都看不出来。</p>
-</section>
-<section id="power-and-mde-by-simulation" class="level3">
-<h3 class="anchored" data-anchor-id="power-and-mde-by-simulation">用模拟确定统计功效与 MDE</h3>
-<p>在做出承诺之前，先问这个面板能否检测出企业会在意的效应。Notebook 在历史中挑选伪启动日期，减去某个候选回报在计划削减下会损失的收入，重新运行同一个聚类估计量，并统计效应被检测到的次数。在不同时长和削减幅度上重复这一过程，就得到模拟的最小可检测效应，即 MDE。</p>
-<div id="fig-mde-by-duration" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="三条曲线显示，更长的测试和更大的削减会降低在 80% 统计功效下可检测的回报；八周内削减 30% 可以检测约 0.40 及以上的回报。">
+<h2 class="anchored" data-anchor-id="sec-geo-pretest-design">设计实验</h2>
+<p><span id="sec-experimental-unit"></span><span id="sec-geo-four-steps"></span><span id="sec-geo-historical-data"></span>实验开始前，要确定比较哪些市场、什么结果足以支持削减预算，以及实验持续多久。</p>
+<p><strong>选哪些市场。</strong> 实验比较成对的相似市场。按规模和历史销售额配对，例如选择销售额相近的两个州，再掷硬币决定在哪个市场削减预算。配对能减少噪声，掷硬币则实现了<strong>随机分配</strong>。由于削减预算的市场不是由我们选定的，两组的差异可以归因于预算削减。</p>
+<p>面板包含 40 个市场、96 周的历史数据。笔记本选出收入走势最接近其余业务的 16 个市场，按规模排序，组成八个<strong>匹配对</strong>（<a href="#fig-market-selection" class="quarto-xref">图&nbsp;<span>1</span></a>）。每对中，一个市场将 Search 支出削减 30%，另一个保持原有支出。</p>
+<div id="fig-market-selection" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="根据实验前的走势从 40 个市场中筛出 16 个，按规模组成八对，再掷硬币选出每对中的实验市场。">
 <figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-mde-by-duration-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part6/sec6.3/mde_by_duration.png" class="fig-lg img-fluid figure-img" alt="三条曲线显示，更长的测试和更大的削减会降低在 80% 统计功效下可检测的回报；八周内削减 30% 可以检测约 0.40 及以上的回报。">
+<div aria-describedby="fig-market-selection-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="../images/part6/sec6.3/market_selection.png" class="fig-lg img-fluid figure-img" alt="根据实验前的走势从 40 个市场中筛出 16 个，按规模组成八对，再掷硬币选出每对中的实验市场。">
 </div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-mde-by-duration-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-图&nbsp;3: 按测试时长和削减幅度模拟的 MDE。
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-market-selection-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+图&nbsp;1: 市场筛选、配对和分组。
 </figcaption>
 </figure>
 </div>
-<p>在 <a href="#fig-mde-by-duration" class="quarto-xref">图&nbsp;<span>3</span></a> 中，八周内削减 30% 可以检测约 0.40 及以上的回报，而四周则需要 0.50。这些数字属于这个面板。四到八周内 20-50% 的支出变动是常见的起点，但测试时长和削减幅度应当来自在你自己的历史数据上做的模拟。</p>
-</section>
-<section id="sec-geo-decision-rule" class="level3">
-<h3 class="anchored" data-anchor-id="sec-geo-decision-rule">决策规则与设计冻结</h3>
-<p>MDE 说的是测试能把什么与零区分开。业务问题则不同：Search 赚得够不够多，值得保住它的预算？这个门槛可以设定为一个数字。在边际贡献率为 <span class="math inline">\(m\)</span> 时，一美元支出带回 <span class="math inline">\(1/m\)</span> 的收入才能保本，所以在 40% 的边际贡献率下，一美元 Search 支出必须带回 $2.50。这个门槛是业务输入，不是统计输入，它只裁定一件事：这一段支出到底该不该留在媒体预算里。钱应该改投到哪里，则是横跨全部五个渠道的比较，而那项比较是<a href="sec6.4-mmm-calibration.html">第 6.4 节</a>的工作。</p>
-<p>所以我们在启动前就写下规则。如果所测削减回报的 95% 置信区间整体位于 2.50 之上，保留预算。如果整体位于其下，按优化器的提议削减。如果跨越 2.50，维持全国计划并设计后续测试；看到结果之后再延长这次测试，会把它变成另一次测试。当回报远低于门槛时，这个设计有充裕的功效给出削减裁定；当回报刚好在门槛之下时功效很小；而在这些规模下，给出保留裁定的功效为零。Notebook 用决策本身的单位展示了这三种情况，模拟的是裁定而不是 p 值：</p>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th style="text-align: right;">削减的真实回报</th>
-<th style="text-align: right;">P(削减)</th>
-<th style="text-align: right;">P(维持)</th>
-<th style="text-align: right;">P(保留)</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: right;">1.5</td>
-<td style="text-align: right;">0.99</td>
-<td style="text-align: right;">0.01</td>
-<td style="text-align: right;">0.00</td>
-</tr>
-<tr class="even">
-<td style="text-align: right;">2.0</td>
-<td style="text-align: right;">0.21</td>
-<td style="text-align: right;">0.79</td>
-<td style="text-align: right;">0.00</td>
-</tr>
-<tr class="odd">
-<td style="text-align: right;">2.5</td>
-<td style="text-align: right;">0.00</td>
-<td style="text-align: right;">1.00</td>
-<td style="text-align: right;">0.00</td>
-</tr>
-<tr class="even">
-<td style="text-align: right;">3.0</td>
-<td style="text-align: right;">0.00</td>
-<td style="text-align: right;">1.00</td>
-<td style="text-align: right;">0.00</td>
-</tr>
-</tbody>
-</table>
-<p>现在冻结一切：市场清单、日期、支出计划、估计量、日历排除项、门槛、随机种子。不要让黑色星期五这样的重大事件横跨测试边界。看到结果之后再改设计，就留下了把答案引向自己偏好方向的余地，所以一切都在任何结果出现之前固定下来。</p>
-</section>
-</section>
-<section id="sec-geo-run" class="level2">
-<h2 class="anchored" data-anchor-id="sec-geo-run">第 3 步：运行地理测试</h2>
-<p>这一步分析师要做的事不多，但必须确保测试按设计运行。在启动日，八个测试市场的 Search 支出下降 30% 并保持不变；对照市场照常运行。本地没有任何其他变动：没有市场层面的促销，没有其他媒体调进来补偿，对照市场里也没有其他举措。按市场和周记录实际投放的支出，因为第四步的分母是实验移除的支出，而不是计划中的支出。支出没有按计划下降的市场按原分配留在分析中，一对市场只能因为事先定好的理由退出，比如结果数据丢失。而且不要每周去看结果：一个八周的测试在第三周就读数，是一个噪声更大、假阳性率更高的测试。</p>
+<p>配对市场不应共享顾客或广告覆盖范围。如果在实验市场看到广告的人转而在邻近的对照市场购物，一部分效果就会进入对照组，使估计值向零收缩。这叫作<strong>溢出效应</strong>，无法在分析阶段修正。</p>
+<p><span id="sec-geo-decision-rule"></span><strong>什么结果支持削减预算。</strong> 如果损失的收入所对应的价值低于节省的费用，削减预算就划算。设贡献利润率为 <span class="math inline">\(m\)</span>，每花一美元需要带来 <span class="math inline">\(1/m\)</span> 美元的收入才能盈亏平衡。利润率为 40% 时，Search 每花一美元需要带回 $2.50。这就是 <strong>iROAS 的盈亏平衡点</strong>。</p>
+<p>实验前，按 iROAS 的 95% 置信区间制定决策规则：</p>
+<ul>
+<li>整个区间低于 2.50：削减预算。</li>
+<li>整个区间高于 2.50：保持预算。</li>
+<li>区间跨过 2.50：维持全国预算方案，开展后续实验。</li>
+</ul>
+<p><strong>做多久。</strong> 时长取决于削减幅度和市场波动。大幅削减的影响几周内就可能看出来；小幅削减需要更长时间才能与每周的正常波动区分开。常见的起点是在四到八周内将支出调整 20% 到 50%。</p>
+<p>笔记本通过模拟检验实验设计。它把启动日期设在过去，在历史数据中植入已知的 iROAS，再统计分析有多少次能检出这个效应。检出比例就是实验的<strong>统计功效</strong>。能在 80% 的模拟中检出的最小效应，称为<strong>最小可检测效应（MDE）</strong>。四周内削减 20% 时，MDE 为 0.70；八周内削减 30% 时，MDE 为 0.40，因此我们采用后一种设计。</p>
+<p>MDE 衡量实验能否区分效应和零。我们的决策需要区分效应和 2.50，因此笔记本也模拟了决策规则。真实 iROAS 为 1.5 时，99% 的模拟建议削减。真实值为 2.0 时，只有 21% 建议削减，其余建议维持预算。真实值越接近盈亏平衡点，实验就越需要延长或扩大规模。</p>
+<p>要把两个阈值分开看。即使 iROAS 小到无法与零区分，只要整个区间远低于 2.50，也足以支持削减预算。</p>
+<p>市场名单、日期、支出计划、估计方法、盈亏平衡点和随机种子都在实验前确定。如果能在看到结果后更改设计，就可能把实验调整到某人想要的结论。</p>
 </section>
 <section id="sec-geo-measurement" class="level2">
-<h2 class="anchored" data-anchor-id="sec-geo-measurement">第 4 步：测试后测量</h2>
-<p>最简单的比较是测试期间测试市场的收入对比测试前的八周。在 Notebook 里，这一比较给出的回报是 <strong>0.44</strong>：测试市场的收入下滑了，但每移除一美元 Search 支出只下滑了约 44 美分，所以削减看起来几乎是免费的。这个数字是错的。进入测试窗口时每个市场的收入都在上升，对照市场也不例外，季节性上涨掩盖了削减代价的大部分。这正是第二步选择对照市场的原因。</p>
-<p>估计量要跟随分配机制，原则与<a href="../part3/sec3.3-quasi-experiments.html">第 3.3 节</a>相同。匹配对内部的随机化是设计，配对的双重差分就是与之匹配的估计量。基本的交互项是：</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> smf.ols(<span class="st">"revenue ~ treat * post"</span>, data<span class="op">=</span>analysis).fit(</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    cov_type<span class="op">=</span><span class="st">"cluster"</span>,</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    cov_kwds<span class="op">=</span>{<span class="st">"groups"</span>: analysis[<span class="st">"pair"</span>]},</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Notebook 的版本把 <code>treat</code> 和 <code>post</code> 主效应替换为每个市场的固定效应和每对市场各自的测试期项，这样某一对市场的本地冲击就不会被读作提升。<code>treat:post</code> 系数是每个受处理市场-周的增量收入，这里为负，因为测试市场相对于它们的配对市场损失了收入。用它的总和除以实验移除的支出，就得到所测削减的回报：两个数都是负数，其比值是每少花一美元所损失的收入。分母必须是实验改变的支出，在这些市场、这些日期上，而不是全国 Search 预算。</p>
-<p>与设计一致的估计值是 <strong>1.500</strong>，标准误 <strong>0.257</strong>，95% 置信区间 <strong>[0.892, 2.109]</strong>，按八个匹配对聚类，因为配对才是被随机化的单元，并使用 t 分布，因为只有八对。它恢复了植入的真实值 1.500。每移除一美元 Search 支出，原本大约买到 $1.50 的收入，是前后对比所暗示的三倍还多。</p>
-<section id="does-the-result-hold-up" class="level3">
-<h3 class="anchored" data-anchor-id="does-the-result-hold-up">结果站得住吗？</h3>
-<p>三项检查用来检验这个估计是否建立在设计的假设之上。</p>
-<p>第一，测试前期间。Notebook 里的事件研究图把每对市场对齐到启动前一周，测试前期间的差异在零附近波动而不是漂移。如果它们漂移了，配对就不平行，DiD 测的就会是漂移。</p>
-<p>第二，另一个反事实。合成控制把八个测试市场汇总起来，用未处理的捐赠单元构建一个加权组合，权重非负、和为一，并使测试前误差最小。如果测试前期间拟合不紧密，合成控制就不能使用。这里它拟合得很好（<a href="#fig-actual-vs-synthetic-gap" class="quarto-xref">图&nbsp;<span>4</span></a>），合成控制的估计值是 <strong>1.486</strong>，接近 DiD，也接近真实值。两个以不同方式使用未处理信息的估计量彼此一致，这是有信息量的。不建议把多种方法平均成一个数字。</p>
+<h2 class="anchored" data-anchor-id="sec-geo-measurement">用双重差分衡量效果</h2>
+<p><span id="sec-geo-run"></span>实验从 2024 年 2 月 5 日开始。八个实验市场将 Search 支出削减 30%，持续八周，其余条件不变。实验期间要记录实际支出，因为 iROAS 根据实际节省的费用计算。等满八周再看结果，因为过早查看会受到更多噪声干扰，也更容易出现假阳性。</p>
+<p><strong>为什么不能只做前后对比。</strong> 最简单的分析是比较实验市场在实验期间与之前八周的收入。得到的 iROAS 为 0.44，似乎每节省一美元只损失 44 美分收入。但受季节影响，当时所有市场的收入都在增长，连预算没变的市场也一样。季节性增长抵消了大部分削减造成的损失，所以前后对比给出的数值偏低。</p>
+<p><strong>双重差分。</strong> 对照市场经历了同样的季节变化，但没有削减预算。<a href="../part3/sec3.3-quasi-experiments.html">第 3.3 节</a>介绍的<strong>双重差分（DiD）</strong>利用这些市场扣除季节影响。先计算每个实验市场的收入变化，再减去与之配对的对照市场的收入变化：</p>
+<p><span class="math display">\[
+\text{effect} = (\text{test}_{\text{after}} - \text{test}_{\text{before}}) - (\text{control}_{\text{after}} - \text{control}_{\text{before}})
+\]</span></p>
+<p>在回归中，这个效应是 <code>treat</code> 和 <code>post</code> 交互项的系数：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> statsmodels.formula.api <span class="im">as</span> smf</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> smf.ols(<span class="st">"revenue ~ treat * post"</span>, data<span class="op">=</span>analysis).fit(</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    cov_type<span class="op">=</span><span class="st">"cluster"</span>,</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    cov_kwds<span class="op">=</span>{<span class="st">"groups"</span>: analysis[<span class="st">"pair"</span>]},   <span class="co"># one coin flip per pair</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<p>系数表明，每个实验市场相对于对应的对照市场，每周损失约 $9,900 的收入。八个市场、八周合计减少收入 $633,069，节省 Search 支出 $421,906。两者相除得到 iROAS <strong>1.50</strong>，标准误为 0.257，95% 置信区间为 [0.892, 2.109]。</p>
+<p>数据是合成的，因此可以核对真实值：面板中植入的 iROAS 为 1.500。笔记本做了两项额外检验，结果一致。<strong>合成对照</strong>对未接受干预的市场加权，使其贴合实验开始前的实验市场，得到 1.486（<a href="#fig-actual-vs-synthetic-gap" class="quarto-xref">图&nbsp;<span>2</span></a>）。<strong>安慰剂检验</strong>在每对市场内交换实验组与对照组。256 种分配中，只有 2 种得到至少与我们一样大的估计值（p = 0.008）。</p>
 <div id="fig-actual-vs-synthetic-gap" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="受处理的汇总序列与其加权合成控制在启动前走势紧密贴合，随后受处理序列在测试期间落到其反事实之下。">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-actual-vs-synthetic-gap-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="../images/part6/sec6.3/actual_vs_synthetic_gap.png" class="fig-lg img-fluid figure-img" alt="受处理的汇总序列与其加权合成控制在启动前走势紧密贴合，随后受处理序列在测试期间落到其反事实之下。">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-actual-vs-synthetic-gap-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-图&nbsp;4: 测试市场的实际收入与其合成控制的对比。
+图&nbsp;2: 测试市场的实际收入与其合成控制的对比。
 </figcaption>
 </figure>
 </div>
-<p>第三，安慰剂检验。空间安慰剂问的是，在从未发生过的分配下，分析会报告什么。八对市场，在每对内部交换角色，得到 <span class="math inline">\(2^8 = 256\)</span> 种可能的分配，少到可以穷举。按构造，它们的分布以零为中心，而 256 种中只有 2 种给出的估计值至少与观测到的 1.500 一样极端（<a href="#fig-placebo-distribution" class="quarto-xref">图&nbsp;<span>5</span></a>），随机化 p 值为 0.008。时间安慰剂把同样的八周窗口在更早的历史中移动；它们的均值是 0.053，假效应分布在零的两侧，而不是每个日期都出现重复的提升。</p>
-<div id="fig-placebo-distribution" class="fig-lg quarto-float quarto-figure quarto-figure-center anchored" alt="配对内安慰剂 ROAS 估计值的直方图，中心靠近零，观测到的估计值位于正尾；更早的伪启动以刻度标记显示在轴上。">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-placebo-distribution-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="../images/part6/sec6.3/placebo_distribution.png" class="fig-lg img-fluid figure-img" alt="配对内安慰剂 ROAS 估计值的直方图，中心靠近零，观测到的估计值位于正尾；更早的伪启动以刻度标记显示在轴上。">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-placebo-distribution-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-图&nbsp;5: 真实估计值与安慰剂分配的对比。
-</figcaption>
-</figure>
-</div>
-<p>因为分配是随机化的，安慰剂分布就是设计自身的参考分布。在非随机化的匹配市场研究中，做同样的检查，但不要借用随机化的语言：那时的因果主张依赖于合成反事实，以及“没有未测量的冲击把所选市场分开”这一论证。Meta 的 <a href="https://facebookincubator.github.io/GeoLift/">GeoLift</a> 和 Google 的 <a href="https://github.com/google/CausalImpact">CausalImpact</a> 正是为这种情境而建。</p>
-</section>
-</section>
-<section id="sec-geo-lift-to-decision" class="level2">
-<h2 class="anchored" data-anchor-id="sec-geo-lift-to-decision">从提升到决策</h2>
-<p>现在应用我们冻结的规则。门槛是 2.50，而区间上限 2.109 位于其下。规则说：削减。每移除一美元原本买到 $1.50 的收入，在 40% 边际贡献率下是 60 美分的贡献，即便是区间上限 2.109，也达不到 2.50 的盈亏平衡点。</p>
-<p>这个决策并不依赖统计显著性。效应的显著性已达到这个设计所能达到的极致：256 种安慰剂分配中只有两种，区间以很大的余量排除了零。Search 显然推动了收入。预算仍然要削，因为显著的效应（p = 0.008）和大到足以覆盖自身成本的效应（回报达到 2.50 或以上）是两个不同的标准，而这个结果满足第一个，不满足第二个。最后这 $421,906 推动了收入，但每美元只有 $1.50，也就是 60 美分的毛利。一次测试可以确立一个效应，却仍然无法为这笔支出辩护。</p>
-<p>还有一个数字对<a href="sec6.4-mmm-calibration.html">第 6.4 节</a>的校准很重要。按十六个市场而不是八对聚类很常见，它把标准误从 0.257 收窄到 0.176，区间变为 [1.126, 1.875]。但它也把同一次抛硬币的两半当作相互独立，而它们并不独立，所以按配对的读数才是我们预先指定的那个。两种方式的裁定相同，因为两个区间都止步于 2.50 之前，但配对区间离它只有不到 0.4。两个宽度在那里都会用到。</p>
-<p>这个结果仅限于在这八个市场、这八周窗口内削减 30% 的效应。它是响应曲线上的一个点，交接给模型时要保留这一范围。</p>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>证据字段</th>
-<th>冻结值</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>渠道</td>
-<td>Google Search</td>
-</tr>
-<tr class="even">
-<td>设计</td>
-<td>8 个随机化匹配对</td>
-</tr>
-<tr class="odd">
-<td>日期</td>
-<td>2024-02-05 至 2024-03-25</td>
-</tr>
-<tr class="even">
-<td>测试市场的基线支出</td>
-<td>$1,406,355</td>
-</tr>
-<tr class="odd">
-<td>移除的支出</td>
-<td>$421,906</td>
-</tr>
-<tr class="even">
-<td>所测削减的回报（30% 区段）</td>
-<td>1.500</td>
-</tr>
-<tr class="odd">
-<td>标准误（按配对聚类，预先指定）</td>
-<td>0.257</td>
-</tr>
-<tr class="even">
-<td>标准误（按市场聚类）</td>
-<td>0.176</td>
-</tr>
-<tr class="odd">
-<td>95% 置信区间（配对聚类 t 分布）</td>
-<td>[0.892, 2.109]</td>
-</tr>
-<tr class="even">
-<td>随机化 p 值</td>
-<td>0.008</td>
-</tr>
-<tr class="odd">
-<td>测试市场占全国 Search 支出的份额</td>
-<td>19.9%</td>
-</tr>
-<tr class="even">
-<td>估计目标</td>
-<td>在所选市场 8 周内削减 30% 对收入的效应</td>
-</tr>
-</tbody>
-</table>
-<p>证据支持在所测的运行区间内削减 30%。把它推广到全国，是在假设其余 32 个市场的表现与这八个相同，所以推广要在同样的护栏下进行，并把实际投放的支出和收入与这一预测对照追踪。释放出来的预算在别处能否赚得更多，是留给那个看得见全部五个渠道的模型的问题，<a href="sec6.4-mmm-calibration.html">第 6.4 节</a>会提出它。</p>
+<p><span id="sec-geo-lift-to-decision"></span><strong>与盈亏平衡点比较。</strong> Search 每少花一美元，收入约减少 $1.50，盈亏平衡点则为 $2.50。整个置信区间都低于 2.50，因此按事先确定的规则，应削减预算。具体来说，节省 $100 的 Search 支出会减少约 $150 收入。贡献利润率为 40%，因此少了 $60 贡献利润，企业净得 $40。</p>
+<p>该效应具有统计显著性（p = 0.008），说明 Search 广告确实带来了收入。但在当前支出水平下，广告带来的收益低于成本，决策取决于这项比较。</p>
+<p>实验在八个市场将预算削减 30%，持续八周。这些市场占全国 Search 支出的 19.9%。结果表明，Search 支出中最后的 30% 不划算。至于节省的预算应该投到哪里，这次实验没有改变其他渠道的支出，无法回答。<a href="sec6.4-mmm-calibration.html">第 6.4 节</a>会把结果带回 MMM 来回答这个问题。</p>
 </section>
 <section id="key-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="key-takeaways">要点</h2>
 <ul>
-<li>增量效应是没有广告就不会发生的成果。先选择单元和设计，再选择估计量；在你自己的历史数据上模拟统计功效；冻结决策规则。</li>
-<li>依据业务门槛而不是显著性做决定：一次测试可以确立一个效应，却仍然无法为这笔支出辩护。交接估计目标、它的不确定性和它的运行点，而不只是一个 ROAS。</li>
+<li>增量效应是没有广告就不会产生的收入。地理实验通过改变部分市场的支出，并用相似市场作为反事实来估计它。</li>
+<li>启动前确定市场、决策规则和实验时长。通过模拟检查实验除了能区分 iROAS 和零，还能区分 iROAS 和盈亏平衡点。</li>
+<li>用盈亏平衡 iROAS 判断结果。Search 广告确实带来了收入，但 1.50 的 iROAS 不足以覆盖广告成本，因此应该削减预算。</li>
 </ul>
 
 
@@ -942,15 +726,50 @@ window.Quarto = {
   window.document.addEventListener("DOMContentLoaded", function (event) {
     // Ensure there is a toggle, if there isn't float one in the top right
     if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
-      const a = window.document.createElement('a');
-      a.classList.add('top-right');
-      a.classList.add('quarto-color-scheme-toggle');
-      a.href = "";
-      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const toggle = window.document.createElement('button');
+      toggle.type = "button";
+      toggle.setAttribute("role", "switch");
+      toggle.setAttribute("aria-checked", "false");
+      toggle.classList.add('top-right');
+      toggle.classList.add('quarto-color-scheme-toggle');
+      toggle.setAttribute("aria-label", "切换深色模式");
+      toggle.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
       const i = window.document.createElement("i");
       i.classList.add('bi');
-      a.appendChild(i);
-      window.document.body.appendChild(a);
+      toggle.appendChild(i);
+      // Put the toggle in a landmark of its own, so that landmark navigation
+      // can reach it.
+      //
+      // The container is always a fresh direct child of body, and the toggle is
+      // never moved into page furniture that the theme or the author controls.
+      // The toggle is positioned against the page, so any ancestor that
+      // establishes a containing block captures it: a positioned element or a
+      // grid for position: absolute, and transform, filter, will-change or
+      // contain for position: fixed. A direct child of body has none of these
+      // to inherit, and the shift when one appears is silent and visual.
+      //
+      // ARIA says a document should have at most one banner, and axe reports a
+      // duplicate whether or not the banners carry distinct labels. So use a
+      // header when the page has no banner yet, and a named region otherwise.
+      //
+      // A header is a banner wherever it sits, unless it is inside sectioning
+      // content, so this cannot just look at the children of body: a custom
+      // page layout wraps the title block header in a plain div. An explicit
+      // role="banner" always counts.
+      const sectioning = 'article, aside, main, nav, section, [role="article"], [role="complementary"], [role="main"], [role="navigation"], [role="region"]';
+      const hasBanner = Array.from(
+        window.document.querySelectorAll('header:not([role]), [role="banner"]')
+      ).some(function(el) {
+        return el.hasAttribute("role") || el.closest(sectioning) === null;
+      });
+      const container = window.document.createElement(hasBanner ? "div" : "header");
+      if (hasBanner) {
+        container.setAttribute("role", "region");
+        container.setAttribute("aria-label", "切换深色模式");
+      }
+      container.classList.add('quarto-color-scheme-toggle-container');
+      container.appendChild(toggle);
+      window.document.body.appendChild(container);
     }
     setColorSchemeToggle(hasAlternateSentinel())
     const icon = "";
@@ -1029,7 +848,8 @@ window.Quarto = {
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }
       // Inspect non-navigation links and adorn them if external
-     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      window.quartoDecorateExternalLinks = function (root) {
+     var links = (root || window.document).querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
       for (var i=0; i<links.length; i++) {
         const link = links[i];
         if (!isInternal(link.href)) {
@@ -1038,8 +858,69 @@ window.Quarto = {
           if (link.dataset.originalHref !== undefined) {
             link.href = link.dataset.originalHref;
           }
+          if (!link.classList.contains('no-external-icon')) {
+          }
         }
       }
+      };
+      window.quartoDecorateExternalLinks(window.document);
+    // Esc closes the popup (WCAG 1.4.13) and focus leaving both trigger and
+    // popup closes it (WCAG 2.4.11); tippy handles neither for interactive popups.
+    const hideOnEscAndFocusOut = {
+      name: 'hideOnEscAndFocusOut',
+      defaultValue: true,
+      fn(instance) {
+        const dismiss = () => {
+          // A show scheduled by the trigger delay would otherwise reopen it
+          instance.clearDelayTimeouts();
+          instance.hide();
+        };
+        const onKeyDown = (event) => {
+          if (event.key !== 'Escape') {
+            return;
+          }
+          // Keep Esc from also reaching page handlers (e.g. reveal.js overview),
+          // except an open reveal.js slide menu, which Esc should close too.
+          // The menu handles keys only when its keyboard option is on.
+          const menuHandlesEsc = window.Reveal?.getPlugin?.('menu')?.isOpen() &&
+            window.Reveal.getConfig().menu?.keyboard !== false;
+          if (!menuHandlesEsc) {
+            event.stopPropagation();
+          }
+          if (instance.popper.contains(window.document.activeElement)) {
+            // Disabled while refocusing so the focus trigger does not reopen it
+            instance.disable();
+            instance.reference.focus();
+            instance.enable();
+          }
+          dismiss();
+        };
+        const onFocusOut = (event) => {
+          const target = event.relatedTarget;
+          if (target && !instance.reference.contains(target) &&
+              !instance.popper.contains(target)) {
+            dismiss();
+          }
+        };
+        // On the trigger too: a click trigger (code-annotations: select) has no
+        // blur handling. Attached for the instance's lifetime so leaving the
+        // trigger also cancels a show still pending on the trigger delay.
+        instance.reference.addEventListener('focusout', onFocusOut);
+        return {
+          onShow() {
+            window.document.addEventListener('keydown', onKeyDown, true);
+            instance.popper.addEventListener('focusout', onFocusOut);
+          },
+          onHide() {
+            window.document.removeEventListener('keydown', onKeyDown, true);
+            instance.popper.removeEventListener('focusout', onFocusOut);
+          },
+          onDestroy() {
+            instance.reference.removeEventListener('focusout', onFocusOut);
+          },
+        };
+      },
+    };
     function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
       const config = {
         allowHTML: true,
@@ -1053,6 +934,7 @@ window.Quarto = {
         interactiveBorder: 10,
         theme: 'quarto',
         placement: 'bottom-start',
+        plugins: [hideOnEscAndFocusOut],
       };
       if (contentFn) {
         config.content = contentFn;
@@ -1215,44 +1097,54 @@ window.Quarto = {
           const lineIds = lines.map((line) => {
             return targetCell + "-" + line;
           })
-          let top = null;
-          let height = null;
-          let parent = null;
+          // Each band is positioned against its own containing block, which is
+          // not the offsetParent of the lines, so place it from client rects.
+          const placeBand = (band, firstEl, lastEl, codeBlock) => {
+            const container = band.offsetParent;
+            if (container === null) {
+              return;
+            }
+            const containerRect = container.getBoundingClientRect();
+            // Reveal.js scales slides with a transform, so convert client
+            // pixels back to the CSS pixels of the container.
+            const scale = containerRect.height / container.offsetHeight || 1;
+            const firstRect = firstEl.getBoundingClientRect();
+            const lastRect = lastEl.getBoundingClientRect();
+            const top = (firstRect.top - containerRect.top) / scale - container.clientTop + container.scrollTop;
+            const height = (lastRect.bottom - firstRect.top) / scale;
+            band.style.top = top - 2 + "px";
+            band.style.height = height + 4 + "px";
+            if (codeBlock) {
+              // Without the copy button wrapper, the containing block is wider
+              // than the code block, so span the code block explicitly.
+              const blockRect = codeBlock.getBoundingClientRect();
+              band.style.left = (blockRect.left - containerRect.left) / scale - container.clientLeft + container.scrollLeft + "px";
+              band.style.width = blockRect.width / scale + "px";
+            }
+          };
           if (lineIds.length > 0) {
-              //compute the position of the single el (top and bottom and make a div)
-              const el = window.document.getElementById(lineIds[0]);
-              top = el.offsetTop;
-              height = el.offsetHeight;
-              parent = el.parentElement.parentElement;
-            if (lineIds.length > 1) {
-              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
-              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
-              height = bottom - top;
+            const el = window.document.getElementById(lineIds[0]);
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const parent = el.parentElement.parentElement;
+            // cook up a div (if necessary) and position it
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
             }
-            if (top !== null && height !== null && parent !== null) {
-              // cook up a div (if necessary) and position it 
-              let div = window.document.getElementById("code-annotation-line-highlight");
-              if (div === null) {
-                div = window.document.createElement("div");
-                div.setAttribute("id", "code-annotation-line-highlight");
-                div.style.position = 'absolute';
-                parent.appendChild(div);
-              }
-              div.style.top = top - 2 + "px";
-              div.style.height = height + 4 + "px";
-              div.style.left = 0;
-              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
-              if (gutterDiv === null) {
-                gutterDiv = window.document.createElement("div");
-                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
-                gutterDiv.style.position = 'absolute';
-                const codeCell = window.document.getElementById(targetCell);
-                const gutter = codeCell.querySelector('.code-annotation-gutter');
-                gutter.appendChild(gutterDiv);
-              }
-              gutterDiv.style.top = top - 2 + "px";
-              gutterDiv.style.height = height + 4 + "px";
+            placeBand(div, el, lastEl, parent.closest("div.sourceCode") || parent);
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
             }
+            placeBand(gutterDiv, el, lastEl);
             selectedAnnoteEl = annoteEl;
           }
         };
@@ -1351,7 +1243,10 @@ window.Quarto = {
     }
   });
   </script>
-<nav class="page-navigation">
+  <script type="application/javascript">
+  window.quartoScrollableRegionsLabels = {"code":"可滚动的代码","output":"可滚动的输出"};
+  </script>
+<nav class="page-navigation" aria-label="页面">
   <div class="nav-page nav-page-previous">
       <a href="../part6/sec6.2-mmm-fundamentals.html" class="pagination-link" aria-label="6.2 构建并优化一个 MMM">
         <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">6.2 构建并优化一个 MMM</span></span>
